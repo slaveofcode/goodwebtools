@@ -254,7 +254,6 @@ export default function PasswordGen() {
           className="accent-accent"
         />
         Avoid ambiguous characters
-        <span className="ml-1 font-mono text-xs text-muted-foreground">(I l 1 O 0 …)</span>
       </label>
     </div>
   );
