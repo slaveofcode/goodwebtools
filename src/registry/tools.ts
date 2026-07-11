@@ -7,7 +7,7 @@ export const tools: ToolDef[] = [
     name: 'Hash File',
     category: 'Dev',
     route: '/tools/hash-demo',
-    keywords: ['hash', 'sha256', 'checksum', 'demo', 'validation'],
+    keywords: ['hash', 'sha', 'sha256', 'sha-256', 'checksum', 'demo', 'validation'],
     icon: Hash,
     summary: 'Generate SHA-256 hash (validation demo)',
     load: () => import('@/islands/demo/HashDemo'),
