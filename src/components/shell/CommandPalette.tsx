@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Command } from 'cmdk';
 import { searchTools } from '@/registry/tools';
 import { categories } from '@/registry/categories';
@@ -6,6 +6,7 @@ import { categories } from '@/registry/categories';
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
   const results = searchTools(search);
 
   useEffect(() => {
@@ -19,13 +20,23 @@ export function CommandPalette() {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
+  useEffect(() => {
+    if (open) {
+      // Focus input when palette opens
+      setTimeout(() => inputRef.current?.focus(), 10);
+    } else {
+      // Clear search when closed
+      setSearch('');
+    }
+  }, [open]);
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setOpen(false)}>
       <div className="container mx-auto px-4 pt-[20vh]">
         <Command className="bg-background border rounded-lg shadow-2xl max-w-2xl mx-auto" onClick={e => e.stopPropagation()}>
-          <Command.Input value={search} onValueChange={setSearch} placeholder="Search tools..." className="w-full px-4 py-3 bg-transparent border-b outline-none" />
+          <Command.Input ref={inputRef} value={search} onValueChange={setSearch} placeholder="Search tools..." className="w-full px-4 py-3 bg-transparent border-b outline-none" />
           <Command.List className="max-h-96 overflow-y-auto p-2">
             <Command.Empty className="px-4 py-8 text-center">No tools found.</Command.Empty>
             {categories.map(category => {
