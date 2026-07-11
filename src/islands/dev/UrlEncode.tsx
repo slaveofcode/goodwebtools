@@ -41,6 +41,14 @@ export default function UrlEncode() {
 
   return (
     <div className="space-y-4">
+      <TextArea
+        label="Input"
+        value={input}
+        onChange={e => handleInputChange(e.target.value)}
+        placeholder="https://example.com/?q=hello world"
+        monospace={false}
+      />
+
       <div className="flex flex-wrap gap-2">
         <Button
           variant={activeMode === 'encode' ? 'primary' : 'secondary'}
@@ -60,14 +68,6 @@ export default function UrlEncode() {
           Clear
         </Button>
       </div>
-
-      <TextArea
-        label="Input"
-        value={input}
-        onChange={e => handleInputChange(e.target.value)}
-        placeholder="https://example.com/?q=hello world"
-        monospace={false}
-      />
 
       {error && <Alert variant="error">{error}</Alert>}
 

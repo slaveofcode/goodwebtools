@@ -55,6 +55,14 @@ export default function JsonFormat() {
 
   return (
     <div className="space-y-4">
+      <TextArea
+        label="Input JSON"
+        value={input}
+        onChange={e => handleInputChange(e.target.value)}
+        placeholder='{"hello": "world"}'
+        rows={10}
+      />
+
       <div className="flex flex-wrap gap-2">
         {MODE_LABELS.map(({ mode, label }) => (
           <Button
@@ -70,14 +78,6 @@ export default function JsonFormat() {
           Clear
         </Button>
       </div>
-
-      <TextArea
-        label="Input JSON"
-        value={input}
-        onChange={e => handleInputChange(e.target.value)}
-        placeholder='{"hello": "world"}'
-        rows={10}
-      />
 
       {error && <Alert variant="error">{error}</Alert>}
 

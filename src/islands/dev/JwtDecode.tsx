@@ -44,13 +44,6 @@ export default function JwtDecode() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <Button onClick={decode}>Decode</Button>
-        <Button variant="ghost" onClick={() => { setInput(''); setHeader(''); setPayload(''); setError(''); }}>
-          Clear
-        </Button>
-      </div>
-
       <TextArea
         label="JWT"
         value={input}
@@ -58,6 +51,13 @@ export default function JwtDecode() {
         placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0In0.signature"
         rows={4}
       />
+
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={decode}>Decode</Button>
+        <Button variant="ghost" onClick={() => { setInput(''); setHeader(''); setPayload(''); setError(''); }}>
+          Clear
+        </Button>
+      </div>
 
       <p className="text-xs text-muted-foreground">
         Decoding only — the signature is <strong>not</strong> verified. Nothing leaves your browser.

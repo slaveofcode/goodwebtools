@@ -120,6 +120,14 @@ export default function CsvJson() {
 
   return (
     <div className="space-y-4">
+      <TextArea
+        label="Input"
+        value={input}
+        onChange={e => handleInputChange(e.target.value)}
+        placeholder={'name,age\nAlice,30\nBob,25'}
+        rows={10}
+      />
+
       <div className="flex flex-wrap gap-2">
         <Button
           variant={activeMode === 'toJson' ? 'primary' : 'secondary'}
@@ -139,14 +147,6 @@ export default function CsvJson() {
           Clear
         </Button>
       </div>
-
-      <TextArea
-        label="Input"
-        value={input}
-        onChange={e => handleInputChange(e.target.value)}
-        placeholder={'name,age\nAlice,30\nBob,25'}
-        rows={10}
-      />
 
       {error && <Alert variant="error">{error}</Alert>}
 

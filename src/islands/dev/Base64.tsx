@@ -54,6 +54,14 @@ export default function Base64() {
 
   return (
     <div className="space-y-4">
+      <TextArea
+        label="Input"
+        value={input}
+        onChange={e => handleInputChange(e.target.value)}
+        placeholder="Text to encode, or Base64 to decode"
+        monospace={false}
+      />
+
       <div className="flex flex-wrap gap-2">
         <Button
           variant={activeMode === 'encode' ? 'primary' : 'secondary'}
@@ -73,14 +81,6 @@ export default function Base64() {
           Clear
         </Button>
       </div>
-
-      <TextArea
-        label="Input"
-        value={input}
-        onChange={e => handleInputChange(e.target.value)}
-        placeholder="Text to encode, or Base64 to decode"
-        monospace={false}
-      />
 
       {error && <Alert variant="error">{error}</Alert>}
 
