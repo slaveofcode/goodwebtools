@@ -114,7 +114,7 @@ interface ToolDef {
 
 interface AssetRef {
   url: string;
-  size: number;              // Bytes
+  byteSize: number;          // Size in bytes
   type: 'wasm' | 'model' | 'font' | 'image' | 'other';
   description: string;
 }
@@ -264,14 +264,14 @@ Fetch-once, cache-forever for WASM/models with expiration.
 **API:**
 ```typescript
 class AssetCache {
-  private readonly DEFAULT_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
-  private readonly PROGRESS_THRESHOLD = 1_024_000; // 1 MB
+  private readonly DEFAULT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+  private readonly PROGRESS_THRESHOLD_BYTES = 1_024_000; // 1 MB
   
   // Fetch asset, return cached bytes if available
   async fetch(url: string, options?: {
     integrity?: string;     // SRI hash
-    maxAge?: number;        // TTL in milliseconds
-    onProgress?: (loaded: number, total: number) => void;
+    maxAgeMs?: number;      // TTL in milliseconds
+    onProgress?: (loadedBytes: number, totalBytes: number) => void;
     showProgress?: boolean; // Auto-detect if > 1MB
   }): Promise<ArrayBuffer>
   
@@ -680,15 +680,15 @@ workbox: {
 // AssetCache with progress
 async fetch(url: string, options?: {
   integrity?: string;
-  maxAge?: number;
-  onProgress?: (loaded: number, total: number) => void;
+  maxAgeMs?: number;
+  onProgress?: (loadedBytes: number, totalBytes: number) => void;
   showProgress?: boolean; // Auto-detect if > 1MB
 }): Promise<ArrayBuffer> {
   const response = await fetch(url);
-  const total = parseInt(response.headers.get('content-length') || '0');
+  const totalBytes = parseInt(response.headers.get('content-length') || '0');
   
   // Auto-show progress for files > 1MB
-  const shouldShowProgress = options?.showProgress ?? (total > 1_024_000);
+  const shouldShowProgress = options?.showProgress ?? (totalBytes > this.PROGRESS_THRESHOLD_BYTES);
   
   if (!shouldShowProgress || !response.body) {
     return await response.arrayBuffer();
@@ -697,23 +697,23 @@ async fetch(url: string, options?: {
   // Stream with progress
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
-  let loaded = 0;
+  let loadedBytes = 0;
   
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     
     chunks.push(value);
-    loaded += value.length;
-    options?.onProgress?.(loaded, total);
+    loadedBytes += value.length;
+    options?.onProgress?.(loadedBytes, totalBytes);
   }
   
   // Concatenate chunks
-  const data = new Uint8Array(loaded);
-  let offset = 0;
+  const data = new Uint8Array(loadedBytes);
+  let offsetBytes = 0;
   for (const chunk of chunks) {
-    data.set(chunk, offset);
-    offset += chunk.length;
+    data.set(chunk, offsetBytes);
+    offsetBytes += chunk.length;
   }
   
   return data.buffer;
@@ -724,9 +724,9 @@ async fetch(url: string, options?: {
 
 ```typescript
 if (modelStatus === 'loading') {
-  const percent = (downloadProgress.loaded / downloadProgress.total) * 100;
-  const mbLoaded = (downloadProgress.loaded / 1024 / 1024).toFixed(1);
-  const mbTotal = (downloadProgress.total / 1024 / 1024).toFixed(1);
+  const percentComplete = (downloadProgress.loadedBytes / downloadProgress.totalBytes) * 100;
+  const loadedMB = (downloadProgress.loadedBytes / 1024 / 1024).toFixed(1);
+  const totalMB = (downloadProgress.totalBytes / 1024 / 1024).toFixed(1);
   
   return (
     <div className="flex flex-col items-center gap-4 p-8">
@@ -734,10 +734,10 @@ if (modelStatus === 'loading') {
       <div className="text-center">
         <p className="font-medium">Downloading model...</p>
         <p className="text-sm text-muted-foreground">
-          {mbLoaded} MB / {mbTotal} MB ({percent.toFixed(0)}%)
+          {loadedMB} MB / {totalMB} MB ({percentComplete.toFixed(0)}%)
         </p>
       </div>
-      <ProgressBar percent={percent} />
+      <ProgressBar percent={percentComplete} />
       <p className="text-xs text-muted-foreground">
         This download happens once and is cached for 30 days
       </p>
