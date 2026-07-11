@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 255 255 255;
+  --foreground: 23 23 23;
+  --border: 229 229 229;
+  --muted: 250 250 250;
+  --accent: 37 99 235;
+}
+
+.dark {
+  --background: 10 10 10;
+  --foreground: 250 250 250;
+  --border: 38 38 38;
+  --muted: 23 23 23;
+  --accent: 96 165 250;
+}
