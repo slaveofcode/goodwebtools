@@ -1,19 +1,34 @@
-import { useState } from 'react';
-import { proxy } from 'comlink';
-import { useWorker } from '@/hooks/useWorker';
+import { useState, useEffect } from 'react';
+import { wrap, proxy } from 'comlink';
+import type { Remote } from 'comlink';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { ResultActions } from '@/components/ui/ResultActions';
 import type { HashWorkerAPI } from '@/tools/demo/hash.worker';
-import HashWorkerUrl from '@/tools/demo/hash.worker?worker&url';
+import HashWorker from '@/tools/demo/hash.worker?worker';
 
 export default function HashDemo() {
   const [hash, setHash] = useState<string>('');
   const [progress, setProgress] = useState(0);
   const [fileName, setFileName] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [worker, setWorker] = useState<Remote<HashWorkerAPI> | null>(null);
 
-  const worker = useWorker<HashWorkerAPI>('hash-demo', HashWorkerUrl as any);
+  useEffect(() => {
+    console.log('Initializing worker...');
+    const workerInstance = new HashWorker();
+    console.log('Worker instance created:', workerInstance);
+
+    const wrappedWorker = wrap<HashWorkerAPI>(workerInstance);
+    console.log('Worker wrapped with Comlink');
+
+    setWorker(wrappedWorker);
+
+    return () => {
+      console.log('Terminating worker...');
+      workerInstance.terminate();
+    };
+  }, []);
 
   const handleFile = async (files: File[]) => {
     console.log('handleFile called with:', files.length, 'files');
