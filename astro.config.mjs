@@ -1,11 +1,67 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
+import AstroPWA from '@vite-pwa/astro';
 
 export default defineConfig({
   output: 'static',
   integrations: [
     react(),
-    tailwind()
+    tailwind(),
+    AstroPWA({
+      mode: 'production',
+      base: '/',
+      scope: '/',
+      includeAssets: ['icon-192.png', 'icon-512.png'],
+      registerType: 'autoUpdate',
+      manifest: {
+        name: 'GoodWebTools',
+        short_name: 'GWT',
+        description: 'Privacy-first client-side utilities',
+        theme_color: '#0a0a0a',
+        background_color: '#0a0a0a',
+        icons: [
+          {
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      },
+      workbox: {
+        navigateFallback: '/404',
+        globPatterns: ['**/*.{css,js,html,svg,png,ico,txt,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
+      },
+      devOptions: {
+        enabled: false,
+        navigateFallbackAllowlist: [/^\//]
+      },
+      experimental: {
+        directoryAndTrailingSlashHandler: true
+      }
+    })
   ]
 });
