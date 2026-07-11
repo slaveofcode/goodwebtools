@@ -13,6 +13,7 @@ Phase 0 establishes the architectural foundation for GoodWebTools.com - a privac
 
 - **Astro + React + Tailwind** static site with View Transitions
 - **Layered services architecture** for maximum code reuse across 50+ planned tools
+- **Command palette with fuzzy search** (⌘K/Ctrl+K) - instant tool discovery across all tools
 - **Full PWA support** with offline capability (the privacy proof)
 - **Cloudflare Pages deployment** with cross-origin isolation headers
 - **Hash File demo tool** to validate the complete pipeline
@@ -138,10 +139,68 @@ const hashDemo: ToolDef = {
 ### How It's Used
 
 1. **Dynamic routing** - `[tool].astro` looks up the tool by route, loads its island
-2. **Command palette** - Searches across `name`, `keywords`, `summary`
+2. **Universal search (Command Palette)** - Fuzzy search across `name`, `keywords`, `summary`, and `category`
 3. **Homepage grid** - Groups tools by `category`, displays `icon` + `name` + `summary`
 4. **Lazy loading** - `load()` only called when tool page is accessed
 5. **Asset prefetch** - Optional: prefetch hints for `assets` when hovering tool card
+
+### Search Functionality
+
+**The registry powers instant, client-side search via the command palette (⌘K/Ctrl+K):**
+
+**Search algorithm:**
+```typescript
+function searchTools(query: string, tools: ToolDef[]): ToolDef[] {
+  const lowerQuery = query.toLowerCase();
+  
+  return tools
+    .map(tool => ({
+      tool,
+      score: calculateScore(tool, lowerQuery)
+    }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(({ tool }) => tool);
+}
+
+function calculateScore(tool: ToolDef, query: string): number {
+  let score = 0;
+  
+  // Exact name match (highest priority)
+  if (tool.name.toLowerCase().includes(query)) score += 100;
+  
+  // Keyword match
+  if (tool.keywords.some(k => k.toLowerCase().includes(query))) score += 50;
+  
+  // Summary match
+  if (tool.summary.toLowerCase().includes(query)) score += 30;
+  
+  // Category match
+  if (tool.category.toLowerCase().includes(query)) score += 20;
+  
+  // Fuzzy match bonus (for typos)
+  score += fuzzyMatch(query, tool.name.toLowerCase());
+  
+  return score;
+}
+```
+
+**Search features:**
+- **Instant results** - All tools indexed in memory, no backend calls
+- **Fuzzy matching** - Handles typos and partial matches
+- **Ranked results** - Most relevant tools shown first
+- **Keyboard shortcuts:**
+  - `⌘K` or `Ctrl+K` - Open search palette
+  - `Escape` - Close palette
+  - `↑↓` - Navigate results
+  - `Enter` - Open selected tool
+  - `Tab` - Cycle through categories
+
+**Example searches:**
+- `"pdf"` → Shows all PDF tools (merge, split, compress, etc.)
+- `"hash"` → Shows Hash File demo
+- `"image compress"` → Shows image compressor
+- `"sha256"` → Matches Hash File via keywords
 
 ---
 
@@ -278,17 +337,32 @@ The shell (`src/components/shell/ShellIsland.tsx`) survives page navigation via 
 1. **Top navigation bar:**
    - Logo/site name (links to home)
    - Theme toggle (light/dark)
-   - ⌘K shortcut hint
+   - Search button with ⌘K shortcut hint (triggers command palette)
 
-2. **Command palette** (via `cmdk`):
-   - Triggered by ⌘K / Ctrl+K
-   - Fuzzy search across tool registry
-   - Keyboard navigation (arrow keys, Enter to navigate)
-   - Shows tool icon, name, category, and summary
+2. **Command Palette - Universal Tool Search** (via `cmdk`):
+   - **Keyboard shortcut:** ⌘K (Mac) / Ctrl+K (Windows/Linux)
+   - **Fuzzy search** across all available tools:
+     - Searches tool `name` (e.g., "PDF Merge")
+     - Searches `keywords` (e.g., "hash", "checksum", "sha256")
+     - Searches `summary` descriptions
+     - Searches `category` (e.g., "PDF", "Image", "Dev")
+   - **Keyboard-first navigation:**
+     - Arrow keys to navigate results
+     - Enter to open selected tool
+     - Escape to close palette
+     - Tab to cycle through categories
+   - **Results display:**
+     - Tool icon (from lucide-react)
+     - Tool name (highlighted matching text)
+     - Category badge
+     - Short summary
+   - **Instant results** - no latency, all tools indexed client-side
+   - **Accessible** - ARIA labels, screen reader support
 
 3. **Global state** (via Nanostores):
    - Current theme ('light' | 'dark')
    - Worker status (for progress indicators)
+   - Search history (recent tools, optional)
    - Persisted to localStorage
 
 ### Theme System
