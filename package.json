@@ -10,7 +10,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "eslint src --ext .ts,.tsx,.astro",
+    "lint:fix": "eslint src --ext .ts,.tsx,.astro --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,astro,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,astro,css}\""
   },
   "repository": {
     "type": "git",
@@ -41,7 +45,11 @@
     "@testing-library/react": "^14.3.1",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
+    "@typescript-eslint/eslint-plugin": "^8.63.0",
+    "@typescript-eslint/parser": "^8.63.0",
     "@vite-pwa/astro": "^1.2.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-astro": "^2.1.1",
     "jsdom": "^23.2.0",
     "prettier": "^3.9.5",
     "prettier-plugin-astro": "^0.12.3",
