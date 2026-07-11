@@ -34,8 +34,11 @@
     "astro": "^4.16.19",
     "cmdk": "^0.2.1",
     "comlink": "^4.4.2",
+    "dompurify": "^3.4.12",
     "lucide-react": "^0.294.0",
+    "marked": "^18.0.6",
     "nanostores": "^0.9.5",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwindcss": "^3.4.19"
@@ -43,6 +46,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^8.63.0",

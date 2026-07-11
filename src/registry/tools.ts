@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -88,6 +88,28 @@ export const tools: ToolDef[] = [
     icon: Table,
     summary: 'Convert between CSV and JSON',
     load: () => import('@/islands/dev/CsvJson'),
+    status: 'stable'
+  },
+  {
+    id: 'markdown',
+    name: 'Markdown Preview',
+    category: 'Dev',
+    route: '/tools/markdown',
+    keywords: ['markdown', 'md', 'preview', 'render', 'html', 'readme'],
+    icon: FileText,
+    summary: 'Live Markdown editor and preview',
+    load: () => import('@/islands/dev/Markdown'),
+    status: 'stable'
+  },
+  {
+    id: 'qr-gen',
+    name: 'QR Code Generator',
+    category: 'Dev',
+    route: '/tools/qr-gen',
+    keywords: ['qr', 'qrcode', 'qr code', 'generate', 'barcode', 'url'],
+    icon: QrCode,
+    summary: 'Generate a QR code from text or a URL',
+    load: () => import('@/islands/dev/QrGen'),
     status: 'stable'
   },
   {
