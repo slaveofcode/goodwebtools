@@ -9,10 +9,10 @@ export function Alert({ variant, children }: AlertProps) {
   const isError = variant === 'error';
   return (
     <div
-      className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${
+      className={`flex items-start gap-2 border-2 border-border p-3 text-sm font-medium shadow-brutal-sm ${
         isError
-          ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
-          : 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400'
+          ? 'bg-red-400 text-black'
+          : 'bg-green-400 text-black'
       }`}
     >
       {isError ? (

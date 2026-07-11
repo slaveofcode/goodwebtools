@@ -19,23 +19,27 @@ const tool = getToolById(toolId)!;
 <Base title={tool.name} description={tool.summary}>
   <main class="container mx-auto max-w-4xl px-4 py-8">
     <nav aria-label="Breadcrumb" class="mb-4">
-      <ol class="flex items-center gap-1 text-sm text-muted-foreground">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
         <li>
-          <a href="/" class="transition-colors hover:text-accent">Home</a>
+          <a
+            href="/"
+            class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal"
+            >Home</a
+          >
         </li>
         <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
-        <li aria-current="page" class="font-medium text-foreground">{tool.name}</li>
+        <li aria-current="page" class="text-foreground">{tool.name}</li>
       </ol>
     </nav>
 
     <div class="mb-6">
       <div class="mb-2 flex items-center gap-2">
-        <span class={`inline-block h-2 w-2 rounded-full ${categoryColors[tool.category]}`}></span>
-        <span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <span class={`inline-block h-4 w-4 border-2 border-border ${categoryColors[tool.category]}`}></span>
+        <span class="text-xs font-bold uppercase tracking-wide text-muted-foreground">
           {tool.category}
         </span>
       </div>
-      <h1 class="mb-1 text-3xl font-bold">{tool.name}</h1>
+      <h1 class="mb-1 text-3xl font-bold uppercase tracking-tight">{tool.name}</h1>
       <p class="text-muted-foreground">{tool.summary}</p>
     </div>
     <ToolHost client:load toolId={toolId} />

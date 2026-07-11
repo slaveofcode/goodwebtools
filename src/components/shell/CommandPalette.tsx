@@ -33,28 +33,45 @@ export function CommandPalette() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setOpen(false)}>
+    <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setOpen(false)}>
       <div className="container mx-auto px-4 pt-[20vh]">
-        <Command className="bg-background border rounded-lg shadow-2xl max-w-2xl mx-auto" onClick={e => e.stopPropagation()}>
-          <Command.Input ref={inputRef} value={search} onValueChange={setSearch} placeholder="Search tools..." className="w-full px-4 py-3 bg-transparent border-b outline-none" />
+        <Command
+          className="mx-auto max-w-2xl border-[3px] border-border bg-background shadow-brutal-lg"
+          onClick={e => e.stopPropagation()}
+        >
+          <Command.Input
+            ref={inputRef}
+            value={search}
+            onValueChange={setSearch}
+            placeholder="SEARCH TOOLS..."
+            className="w-full border-b-2 border-border bg-transparent px-4 py-3 font-bold uppercase tracking-wide outline-none placeholder:text-muted-foreground"
+          />
           <Command.List className="max-h-96 overflow-y-auto p-2">
-            <Command.Empty className="px-4 py-8 text-center">No tools found.</Command.Empty>
+            <Command.Empty className="px-4 py-8 text-center font-bold uppercase">
+              No tools found.
+            </Command.Empty>
             {categories.map(category => {
               const categoryTools = results.filter(t => t.category === category);
               if (categoryTools.length === 0) return null;
               return (
-                <Command.Group key={category} heading={category}>
+                <Command.Group
+                  key={category}
+                  heading={category}
+                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-muted-foreground"
+                >
                   {categoryTools.map(tool => (
                     <Command.Item
                       key={tool.id}
                       value={tool.name}
-                      onSelect={() => { window.location.href = tool.route; }}
-                      className="flex items-center gap-3 px-3 py-2 rounded cursor-pointer hover:bg-muted"
+                      onSelect={() => {
+                        window.location.href = tool.route;
+                      }}
+                      className="flex cursor-pointer items-center gap-3 border-2 border-transparent px-3 py-2 data-[selected=true]:border-border data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
                     >
-                      <tool.icon className="w-5 h-5" />
+                      <tool.icon className="h-5 w-5" />
                       <div className="flex-1">
-                        <p className="font-medium">{tool.name}</p>
-                        <p className="text-sm text-muted-foreground">{tool.summary}</p>
+                        <p className="font-bold">{tool.name}</p>
+                        <p className="text-sm opacity-80">{tool.summary}</p>
                       </div>
                     </Command.Item>
                   ))}

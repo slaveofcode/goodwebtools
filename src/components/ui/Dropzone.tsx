@@ -37,7 +37,7 @@ export function Dropzone({ onDrop, accept, multiple = true, children }: Dropzone
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${isDragging ? 'border-accent bg-accent/10' : 'border-border hover:border-accent/50'}`}
+      className={`cursor-pointer border-[3px] border-dashed p-8 text-center transition-all ${isDragging ? 'border-accent bg-accent/10 shadow-brutal' : 'border-border hover:shadow-brutal'}`}
     >
       <input type="file" id="file-input" accept={accept} multiple={multiple} onChange={handleFileInput} className="hidden" />
       <label htmlFor="file-input" className="cursor-pointer">

@@ -17,24 +17,30 @@ export function ToolGrid() {
         return (
           <section key={category}>
             <div className="mb-4 flex items-center gap-2">
-              <span className={`inline-block h-2.5 w-2.5 rounded-full ${categoryColors[category]}`} />
-              <h2 className="text-lg font-semibold">{category}</h2>
-              <span className="text-sm text-muted-foreground">({categoryTools.length})</span>
+              <span
+                className={`inline-block h-4 w-4 border-2 border-border ${categoryColors[category]}`}
+              />
+              <h2 className="text-xl font-bold uppercase tracking-tight">{category}</h2>
+              <span className="text-sm font-bold text-muted-foreground">
+                ({categoryTools.length})
+              </span>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {categoryTools.map(tool => {
                 const Icon = tool.icon;
                 return (
                   <a
                     key={tool.id}
                     href={tool.route}
-                    className="group flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-4 transition-colors hover:border-accent hover:bg-muted/60"
+                    className="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal press-brutal"
                   >
-                    <span className="mt-0.5 rounded-lg bg-background p-2 text-accent shadow-sm">
+                    <span
+                      className={`mt-0.5 border-2 border-border p-2 text-black ${categoryColors[tool.category]}`}
+                    >
                       <Icon className="h-5 w-5" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block font-medium group-hover:text-accent">{tool.name}</span>
+                      <span className="block font-bold">{tool.name}</span>
                       <span className="block text-sm text-muted-foreground">{tool.summary}</span>
                     </span>
                   </a>
