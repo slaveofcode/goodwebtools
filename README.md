@@ -31,6 +31,10 @@ Open http://localhost:4321
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run test` - Run tests
+- `npm run lint` - Lint code
+- `npm run lint:fix` - Fix linting issues
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
 
 ### Architecture
 
@@ -51,6 +55,16 @@ Open http://localhost:4321
 - Hash demo tool
 
 **Next:** Phase 1 - Dev/Office utilities
+
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+**Quick deploy to Cloudflare Pages:**
+```bash
+npm run build
+npx wrangler pages deploy dist --project-name=goodwebtools
+```
 
 ## License
 
