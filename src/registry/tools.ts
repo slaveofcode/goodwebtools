@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -132,6 +132,28 @@ export const tools: ToolDef[] = [
     icon: Clock,
     summary: 'Convert between Unix time and dates',
     load: () => import('@/islands/dev/Timestamp'),
+    status: 'stable'
+  },
+  {
+    id: 'base-convert',
+    name: 'Number Base Converter',
+    category: 'Dev',
+    route: '/tools/base-convert',
+    keywords: ['base', 'binary', 'octal', 'decimal', 'hex', 'hexadecimal', 'radix', 'convert', 'number'],
+    icon: Calculator,
+    summary: 'Convert numbers between binary, octal, decimal, and hex',
+    load: () => import('@/islands/dev/BaseConvert'),
+    status: 'stable'
+  },
+  {
+    id: 'color-convert',
+    name: 'Color Converter',
+    category: 'Dev',
+    route: '/tools/color-convert',
+    keywords: ['color', 'colour', 'hex', 'rgb', 'hsl', 'convert', 'picker', 'palette'],
+    icon: Palette,
+    summary: 'Convert colors between HEX, RGB, and HSL',
+    load: () => import('@/islands/dev/ColorConvert'),
     status: 'stable'
   },
   {
