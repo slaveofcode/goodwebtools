@@ -17,20 +17,10 @@ export default function HashDemo() {
   useEffect(() => {
     console.log('Initializing worker...');
     const workerInstance = new HashWorker();
-    console.log('Worker instance created:', workerInstance);
+    console.log('Worker instance created');
 
     const wrappedWorker = wrap<HashWorkerAPI>(workerInstance);
     console.log('Worker wrapped with Comlink');
-    console.log('Wrapped worker type:', typeof wrappedWorker);
-    console.log('Wrapped worker keys:', Object.keys(wrappedWorker));
-    console.log('Has hashFile?', 'hashFile' in wrappedWorker);
-
-    // Test if hashFile exists as a property
-    if (wrappedWorker.hashFile) {
-      console.log('hashFile type:', typeof wrappedWorker.hashFile);
-    } else {
-      console.error('hashFile method not found on wrapped worker!');
-    }
 
     setWorker(wrappedWorker);
 
