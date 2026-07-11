@@ -6,6 +6,10 @@ describe('DownloadService', () => {
   let mockLink: HTMLAnchorElement;
 
   beforeEach(() => {
+    // jsdom does not implement the blob-URL APIs — stub them.
+    URL.createObjectURL = vi.fn(() => 'blob:mock');
+    URL.revokeObjectURL = vi.fn();
+
     downloadService = new DownloadService();
     mockLink = document.createElement('a');
     vi.spyOn(document, 'createElement').mockReturnValue(mockLink);
@@ -25,10 +29,15 @@ describe('DownloadService', () => {
   });
 
   it('should clean up blob URL after download', async () => {
+    // Revocation is deferred via setTimeout — advance timers to trigger it.
+    vi.useFakeTimers();
     const revokeSpy = vi.spyOn(URL, 'revokeObjectURL');
     const blob = new Blob(['test'], { type: 'text/plain' });
+
     await downloadService.download(blob, 'test.txt');
+    vi.runAllTimers();
 
     expect(revokeSpy).toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });
