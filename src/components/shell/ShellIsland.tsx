@@ -11,7 +11,7 @@ export function ShellIsland() {
   return (
     <>
       <header className="border-b-[3px] border-border bg-background">
-        <div className="container mx-auto px-4">
+        <div className="page-container">
           <div className="flex h-16 items-center justify-between">
             <a
               href="/"

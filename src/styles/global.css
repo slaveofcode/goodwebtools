@@ -43,6 +43,17 @@ body {
   font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
 }
 
+/*
+ * Fluid page container: full-width with adaptive gutters, capped on ultrawide
+ * so text/code tools don't hit unreadable line lengths. Shared by the header
+ * and every page so content aligns with the nav.
+ */
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-[100rem] px-4 sm:px-6 lg:px-8;
+  }
+}
+
 /* Neo-Brutalism utilities ------------------------------------------------- */
 
 /* Hard offset shadows — no blur, solid block */

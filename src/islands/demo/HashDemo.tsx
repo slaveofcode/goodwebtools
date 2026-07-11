@@ -61,7 +61,7 @@ export default function HashDemo() {
     : null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       <Dropzone onDrop={handleFile} accept="*/*" multiple={false}>
         <div className="space-y-2">
           <p className="text-lg">Drop file here or click to browse</p>
