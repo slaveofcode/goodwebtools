@@ -37,6 +37,8 @@ function strengthLabel(length: number, poolSize: number): { label: string; color
 }
 
 export default function PasswordGen() {
+  const [minLength, setMinLength] = useState(8);
+  const [maxLength, setMaxLength] = useState(32);
   const [length, setLength] = useState(16);
   const [enabled, setEnabled] = useState<Record<SetKey, boolean>>({
     lowercase: true,
@@ -48,11 +50,25 @@ export default function PasswordGen() {
 
   const regenerate = () => setPassword(generatePassword(length, enabled));
 
+  // Keep length inside the [min, max] bounds whenever those change.
+  useEffect(() => {
+    setLength(prev => Math.min(Math.max(prev, minLength), maxLength));
+  }, [minLength, maxLength]);
+
   // Regenerate whenever options change.
   useEffect(() => {
     setPassword(generatePassword(length, enabled));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [length, enabled]);
+
+  const clampMin = (value: number) => {
+    const safe = Math.min(Math.max(value || 1, 1), maxLength);
+    setMinLength(safe);
+  };
+  const clampMax = (value: number) => {
+    const safe = Math.max(Math.min(value || 128, 128), minLength);
+    setMaxLength(safe);
+  };
 
   const poolSize = (Object.keys(SETS) as SetKey[])
     .filter(key => enabled[key])
@@ -77,6 +93,31 @@ export default function PasswordGen() {
         <span className={`font-medium ${strength.color}`}>{strength.label}</span>
       </div>
 
+      <div className="flex flex-wrap items-end gap-4">
+        <label className="space-y-1 text-sm">
+          <span className="block text-muted-foreground">Min chars</span>
+          <input
+            type="number"
+            min={1}
+            max={maxLength}
+            value={minLength}
+            onChange={e => clampMin(Number(e.target.value))}
+            className="w-24 rounded-lg border border-border bg-muted/40 px-2 py-1.5 text-sm outline-none focus:border-accent"
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="block text-muted-foreground">Max chars</span>
+          <input
+            type="number"
+            min={minLength}
+            max={128}
+            value={maxLength}
+            onChange={e => clampMax(Number(e.target.value))}
+            className="w-24 rounded-lg border border-border bg-muted/40 px-2 py-1.5 text-sm outline-none focus:border-accent"
+          />
+        </label>
+      </div>
+
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Length</span>
@@ -84,8 +125,8 @@ export default function PasswordGen() {
         </div>
         <input
           type="range"
-          min={6}
-          max={64}
+          min={minLength}
+          max={maxLength}
           value={length}
           onChange={e => setLength(Number(e.target.value))}
           className="w-full accent-accent"
