@@ -1,4 +1,4 @@
-import { PDFDocument, degrees } from 'pdf-lib';
+import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 
 const PDF_MIME = 'application/pdf';
 
@@ -54,6 +54,48 @@ export async function rotatePdf(file: File, turnDegrees: number): Promise<Blob> 
     page.setRotation(degrees((current + turnDegrees) % 360));
   });
   return toBlob(await src.save());
+}
+
+/**
+ * Remove the given 1-indexed pages, keeping the rest in order.
+ * Throws if the removal would leave no pages.
+ */
+export async function deletePages(file: File, removeList: number[]): Promise<Blob> {
+  const src = await PDFDocument.load(await readBytes(file));
+  const total = src.getPageCount();
+  const remove = new Set(removeList.map(n => n - 1).filter(i => i >= 0 && i < total));
+  const keep: number[] = [];
+  for (let i = 0; i < total; i++) if (!remove.has(i)) keep.push(i);
+  if (keep.length === 0) throw new Error('Cannot remove every page.');
+
+  const out = await PDFDocument.create();
+  const pages = await out.copyPages(src, keep);
+  pages.forEach(page => out.addPage(page));
+  return toBlob(await out.save());
+}
+
+/** Draw a diagonal, semi-transparent text watermark across every page. */
+export async function addWatermark(file: File, text: string): Promise<Blob> {
+  const doc = await PDFDocument.load(await readBytes(file));
+  const font = await doc.embedFont(StandardFonts.HelveticaBold);
+
+  doc.getPages().forEach(page => {
+    const { width, height } = page.getSize();
+    const fontSize = Math.max(width, height) / 14;
+    const textWidth = font.widthOfTextAtSize(text, fontSize);
+    // Anchor so the 45°-rotated text runs through the page centre.
+    const angle = Math.PI / 4;
+    page.drawText(text, {
+      x: width / 2 - (textWidth / 2) * Math.cos(angle),
+      y: height / 2 - (textWidth / 2) * Math.sin(angle),
+      size: fontSize,
+      font,
+      color: rgb(0.5, 0.5, 0.5),
+      opacity: 0.25,
+      rotate: degrees(45),
+    });
+  });
+  return toBlob(await doc.save());
 }
 
 /** Build a PDF from images (one image per page, page sized to the image). */

@@ -70,12 +70,23 @@ Open http://localhost:4321
 - Timestamp Converter
 - Hash File (SHA-256, worker-based)
 
+🚧 **Phase 2 — PDF suite (6 tools, in progress):**
+- Merge PDFs (reorderable)
+- Split PDF (extract page range)
+- Rotate PDF (90/180/270°)
+- Delete PDF pages
+- Watermark PDF (diagonal text)
+- Images → PDF (PNG/JPG)
+
+All powered by `pdf-lib`, fully client-side.
+
 ## Design
 
 **Neo-Brutalism** — thick outlines, hard offset shadows, sharp corners, bold
 Space Grotesk (self-hosted, same-origin to preserve zero external requests).
+Fluid-width, mobile-first layout.
 
-**Next:** Phase 2 — PDF suite
+**Next:** PDF → image, compress, password (Phase 2 cont.); then Phase 3 — Image basics
 
 ## Deployment
 

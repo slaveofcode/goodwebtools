@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -198,6 +198,28 @@ export const tools: ToolDef[] = [
     icon: FileImage,
     summary: 'Combine PNG/JPG images into a PDF',
     load: () => import('@/islands/pdf/ImagesToPdf'),
+    status: 'stable'
+  },
+  {
+    id: 'pdf-delete',
+    name: 'Delete PDF Pages',
+    category: 'PDF',
+    route: '/tools/pdf-delete',
+    keywords: ['pdf', 'delete', 'remove', 'pages', 'drop', 'trim'],
+    icon: FileX,
+    summary: 'Remove pages from a PDF',
+    load: () => import('@/islands/pdf/PdfDelete'),
+    status: 'stable'
+  },
+  {
+    id: 'pdf-watermark',
+    name: 'Watermark PDF',
+    category: 'PDF',
+    route: '/tools/pdf-watermark',
+    keywords: ['pdf', 'watermark', 'stamp', 'confidential', 'draft', 'text'],
+    icon: Stamp,
+    summary: 'Add a diagonal text watermark to a PDF',
+    load: () => import('@/islands/pdf/PdfWatermark'),
     status: 'stable'
   },
   {
