@@ -24,7 +24,12 @@ export function getToolByRoute(route: string): ToolDef | undefined {
 }
 
 export function searchTools(query: string): ToolDef[] {
-  const lowerQuery = query.toLowerCase();
+  // Return all tools if query is empty
+  if (!query || query.trim() === '') {
+    return tools;
+  }
+
+  const lowerQuery = query.toLowerCase().trim();
 
   return tools
     .map(tool => ({
@@ -39,10 +44,24 @@ export function searchTools(query: string): ToolDef[] {
 function calculateScore(tool: ToolDef, query: string): number {
   let score = 0;
 
-  if (tool.name.toLowerCase().includes(query)) score += 100;
+  const lowerName = tool.name.toLowerCase();
+  const lowerSummary = tool.summary.toLowerCase();
+  const lowerCategory = tool.category.toLowerCase();
+
+  // Exact name match
+  if (lowerName === query) score += 200;
+  // Name contains query
+  if (lowerName.includes(query)) score += 100;
+
+  // Keywords match
+  if (tool.keywords.some(k => k.toLowerCase() === query)) score += 150;
   if (tool.keywords.some(k => k.toLowerCase().includes(query))) score += 50;
-  if (tool.summary.toLowerCase().includes(query)) score += 30;
-  if (tool.category.toLowerCase().includes(query)) score += 20;
+
+  // Summary/description match (including subtitle)
+  if (lowerSummary.includes(query)) score += 30;
+
+  // Category match
+  if (lowerCategory.includes(query)) score += 20;
 
   return score;
 }
