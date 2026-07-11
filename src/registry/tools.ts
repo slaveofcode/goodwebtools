@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -66,6 +66,28 @@ export const tools: ToolDef[] = [
     icon: KeySquare,
     summary: 'Generate strong random passwords',
     load: () => import('@/islands/dev/PasswordGen'),
+    status: 'stable'
+  },
+  {
+    id: 'text-diff',
+    name: 'Text Diff',
+    category: 'Dev',
+    route: '/tools/text-diff',
+    keywords: ['diff', 'compare', 'text', 'difference', 'changes', 'merge'],
+    icon: FileDiff,
+    summary: 'Compare two texts line by line',
+    load: () => import('@/islands/dev/TextDiff'),
+    status: 'stable'
+  },
+  {
+    id: 'csv-json',
+    name: 'CSV ↔ JSON',
+    category: 'Dev',
+    route: '/tools/csv-json',
+    keywords: ['csv', 'json', 'convert', 'spreadsheet', 'table', 'transform'],
+    icon: Table,
+    summary: 'Convert between CSV and JSON',
+    load: () => import('@/islands/dev/CsvJson'),
     status: 'stable'
   },
   {
