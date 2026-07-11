@@ -543,6 +543,25 @@ confident rather than generic. Sourced via the `ui-ux-pro-max` design skill.
 - Space Grotesk `woff2` is served **same-origin** from `/fonts/` and preloaded.
 - **No Google Fonts CDN** — loading fonts cross-origin would break the "zero external requests" privacy guarantee. Self-hosting keeps every asset first-party.
 
+**[DECISION] Layout — fluid width, mobile-first:**
+- Content pages are **fluid width**, not a narrow centered column. A single
+  `.page-container` (`mx-auto w-full max-w-[100rem] px-4 sm:px-6 lg:px-8`) is
+  shared by the header and every page so content aligns with the nav and uses
+  the available width. Capped at **100rem (1600px)** so text/code tools don't
+  hit unreadable line lengths on ultrawide monitors.
+- **Mobile-first & responsive:** base layout is single-column with `px-4`
+  gutters; gutters widen at `sm`/`lg`. Every multi-pane tool (Markdown editor,
+  QR, diff) uses `grid-cols-1 md:grid-cols-2` so it collapses to one column on
+  phones. Tool-card grid scales `1 → 2 → 3 → 4` columns across breakpoints.
+- **Long-form reading** (privacy page) keeps a narrower `max-w-3xl` measure for
+  readability; tool surfaces stay fluid.
+
+```css
+@layer components {
+  .page-container { @apply mx-auto w-full max-w-[100rem] px-4 sm:px-6 lg:px-8; }
+}
+```
+
 **Configuration:**
 - Manual toggle only (no auto system preference)
 - Tailwind dark mode via `class` strategy: `<html class="dark">`
