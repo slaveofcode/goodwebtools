@@ -5,6 +5,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { ResultActions } from '@/components/ui/ResultActions';
 import type { HashWorkerAPI } from '@/tools/demo/hash.worker';
+import HashWorkerUrl from '@/tools/demo/hash.worker?worker&url';
 
 export default function HashDemo() {
   const [hash, setHash] = useState<string>('');
@@ -12,10 +13,7 @@ export default function HashDemo() {
   const [fileName, setFileName] = useState('');
   const [processing, setProcessing] = useState(false);
 
-  const worker = useWorker<HashWorkerAPI>(
-    'hash-demo',
-    new URL('@/tools/demo/hash.worker.ts', import.meta.url)
-  );
+  const worker = useWorker<HashWorkerAPI>('hash-demo', HashWorkerUrl as any);
 
   const handleFile = async (files: File[]) => {
     console.log('handleFile called with:', files.length, 'files');
