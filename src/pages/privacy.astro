@@ -1,0 +1,40 @@
+---
+import Base from '@/layouts/Base.astro';
+---
+
+<Base title="Privacy" description="How we protect your privacy">
+  <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <h1 class="text-4xl font-bold mb-6">Privacy & Verifiability</h1>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold mb-4">No Data Leaves Your Device</h2>
+      <p class="text-muted-foreground mb-4">
+        All processing happens in your browser. No files, images, or documents are ever uploaded to a server.
+      </p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold mb-4">Verify It Yourself</h2>
+      <ol class="list-decimal list-inside space-y-2 text-muted-foreground">
+        <li>Open Developer Tools (F12)</li>
+        <li>Go to the Network tab</li>
+        <li>Use any tool and process a file</li>
+        <li>Watch: zero network requests to external servers</li>
+      </ol>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold mb-4">Works Offline</h2>
+      <p class="text-muted-foreground mb-4">
+        After first use, tools work with your network completely off. This is the strongest proof that nothing leaves your device.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-semibold mb-4">Open Source</h2>
+      <p class="text-muted-foreground">
+        The code is open source and will be available on GitHub at launch. You can audit it yourself or run it locally.
+      </p>
+    </section>
+  </main>
+</Base>

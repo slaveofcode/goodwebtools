@@ -1,16 +1,10 @@
 ---
-import '../styles/global.css';
+import Base from '@/layouts/Base.astro';
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GoodWebTools</title>
-  </head>
-  <body>
-    <h1>GoodWebTools</h1>
-    <p>Privacy-first client-side utilities</p>
-  </body>
-</html>
+<Base title="Home">
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-4">GoodWebTools</h1>
+    <p class="text-muted text-lg">Privacy-first client-side utilities</p>
+  </main>
+</Base>
