@@ -1,24 +1,21 @@
 ---
 import Base from '@/layouts/Base.astro';
 import { tools } from '@/registry/tools';
+import HashDemo from '@/islands/demo/HashDemo';
 
 export async function getStaticPaths() {
   return tools.map(tool => ({
-    params: { tool: tool.id },
-    props: { tool }
+    params: { tool: tool.id }
   }));
 }
-
-const { tool } = Astro.props;
-const ToolComponent = (await tool.load()).default;
 ---
 
-<Base title={tool.name} description={tool.summary}>
+<Base title="Hash File" description="Generate SHA-256 hash">
   <main class="container mx-auto px-4 py-8">
     <div class="mb-6">
-      <h1 class="text-3xl font-bold mb-2">{tool.name}</h1>
-      <p class="text-muted-foreground">{tool.summary}</p>
+      <h1 class="text-3xl font-bold mb-2">Hash File</h1>
+      <p class="text-muted-foreground">Generate SHA-256 hash (validation demo)</p>
     </div>
-    <ToolComponent client:load />
+    <HashDemo client:load />
   </main>
 </Base>
