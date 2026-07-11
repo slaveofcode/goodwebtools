@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { wrap, proxy } from 'comlink';
 import type { Remote } from 'comlink';
 import { Dropzone } from '@/components/ui/Dropzone';
@@ -12,54 +12,42 @@ export default function HashDemo() {
   const [progress, setProgress] = useState(0);
   const [fileName, setFileName] = useState('');
   const [processing, setProcessing] = useState(false);
-  const [worker, setWorker] = useState<Remote<HashWorkerAPI> | null>(null);
+  const [ready, setReady] = useState(false);
+
+  // Store the Comlink proxy in a ref. Comlink proxies are callable functions,
+  // so keeping them in useState causes React to treat them as functional
+  // updaters and invoke them. A ref sidesteps that entirely.
+  const workerApiRef = useRef<Remote<HashWorkerAPI> | null>(null);
 
   useEffect(() => {
-    console.log('Initializing worker...');
     const workerInstance = new HashWorker();
-    console.log('Worker instance created');
-
-    const wrappedWorker = wrap<HashWorkerAPI>(workerInstance);
-    console.log('Worker wrapped with Comlink');
-
-    setWorker(wrappedWorker);
+    workerApiRef.current = wrap<HashWorkerAPI>(workerInstance);
+    setReady(true);
 
     return () => {
-      console.log('Terminating worker...');
       workerInstance.terminate();
+      workerApiRef.current = null;
+      setReady(false);
     };
   }, []);
 
   const handleFile = async (files: File[]) => {
-    console.log('handleFile called with:', files.length, 'files');
-    console.log('Worker available:', !!worker);
-
-    if (files.length === 0 || !worker) {
-      console.warn('No files or worker not ready');
-      return;
-    }
+    const workerApi = workerApiRef.current;
+    if (files.length === 0 || !workerApi) return;
 
     const file = files[0];
-    console.log('Processing file:', file.name, file.size, 'bytes');
     setFileName(file.name);
     setProcessing(true);
     setProgress(0);
+    setHash('');
 
     try {
-      console.log('Reading file buffer...');
-      const buffer = await file.arrayBuffer();
-      console.log('Buffer size:', buffer.byteLength);
-
-      console.log('Calling worker.hashFile...');
-      const result = await worker.hashFile(
-        buffer,
-        proxy((pct) => {
-          console.log('Progress:', pct);
-          setProgress(pct);
-        })
+      const fileBuffer = await file.arrayBuffer();
+      const hashHex = await workerApi.hashFile(
+        fileBuffer,
+        proxy((percent: number) => setProgress(percent))
       );
-      console.log('Hash result:', result);
-      setHash(result);
+      setHash(hashHex);
     } catch (error) {
       console.error('Hash failed:', error);
       alert('Error: ' + (error instanceof Error ? error.message : String(error)));
@@ -77,7 +65,9 @@ export default function HashDemo() {
       <Dropzone onDrop={handleFile} accept="*/*" multiple={false}>
         <div className="space-y-2">
           <p className="text-lg">Drop file here or click to browse</p>
-          <p className="text-sm text-muted-foreground">Generate SHA-256 hash</p>
+          <p className="text-sm text-muted-foreground">
+            {ready ? 'Generate SHA-256 hash' : 'Loading worker...'}
+          </p>
         </div>
       </Dropzone>
 
