@@ -59,12 +59,14 @@ gwt/
 │   │   ├── worker.service.ts    # WorkerPool
 │   │   ├── asset.service.ts     # AssetCache
 │   │   ├── download.service.ts  # DownloadService
-│   │   └── progress.service.ts  # Progress/Toast
+│   │   ├── progress.service.ts  # Progress/Toast
+│   │   └── persistence.service.ts  # PersistenceService (auto-save, unsaved work guard)
 │   ├── registry/                # Tool registry
 │   │   ├── tools.ts             # Tool manifest (ToolDef[])
 │   │   └── categories.ts        # Category definitions
 │   ├── hooks/                   # React hooks
-│   │   └── useWorker.ts         # Worker integration hook
+│   │   ├── useWorker.ts         # Worker integration hook
+│   │   └── usePersistence.ts    # Persistence & unsaved work guard hook
 │   └── styles/
 │       └── global.css           # Tailwind imports + base styles
 ├── public/
@@ -206,7 +208,7 @@ function calculateScore(tool: ToolDef, query: string): number {
 
 ## 3. Shared Services Architecture
 
-Five core singleton services that all tools share.
+Six core singleton services that all tools share.
 
 ### 1. FileService
 
@@ -323,6 +325,163 @@ class ProgressService {
   toast(message: string, type: 'success' | 'error' | 'info'): void
 }
 ```
+
+### 6. PersistenceService
+
+Data persistence and unsaved work protection for stateful tools (Excalidraw, diagrams, editors).
+
+**API:**
+```typescript
+class PersistenceService {
+  // Auto-save to IndexedDB (for drafts)
+  async autoSave(toolId: string, data: any): Promise<void>
+  async loadAutoSave(toolId: string): Promise<any | null>
+  async clearAutoSave(toolId: string): Promise<void>
+  
+  // Save to user's disk (File System Access API)
+  async saveToFile(data: Blob, suggestedName: string, fileHandle?: FileSystemFileHandle): Promise<FileSystemFileHandle | null>
+  async loadFromFile(accept?: string[]): Promise<{ data: ArrayBuffer; handle: FileSystemFileHandle } | null>
+  
+  // Track unsaved changes
+  markDirty(toolId: string): void
+  markClean(toolId: string): void
+  isDirty(toolId: string): boolean
+  
+  // Confirm before navigation if dirty
+  enableNavigationGuard(toolId: string): void
+  disableNavigationGuard(toolId: string): void
+}
+```
+
+**Features:**
+
+1. **Auto-save to IndexedDB:**
+   - Periodic auto-save every 30 seconds (configurable)
+   - Per-tool storage with toolId as key
+   - Automatic on tool mount/unmount
+   - "Draft recovered" notification on reload
+
+2. **Save to disk (File System Access API):**
+   - "Save" button uses File System Access API when available
+   - Keeps file handle for quick re-save (no dialog)
+   - "Save As" to pick new location
+   - Fallback to download blob if API unavailable
+   - Suggested file extensions per tool (`.excalidraw`, `.json`, etc.)
+
+3. **Unsaved work protection:**
+   - Track dirty state per tool
+   - Browser `beforeunload` event warning: "You have unsaved work. Leave anyway?"
+   - Astro View Transitions navigation guard (same warning)
+   - Toast reminder: "Don't forget to save your work"
+   - Clear dirty flag after successful save
+
+**Implementation:**
+
+```typescript
+// Example: Excalidraw tool integration
+export default function ExcalidrawTool() {
+  const [elements, setElements] = useState([]);
+  const [fileHandle, setFileHandle] = useState<FileSystemFileHandle | null>(null);
+  const persistence = usePersistence('excalidraw');
+  
+  // Load auto-save on mount
+  useEffect(() => {
+    const loadDraft = async () => {
+      const draft = await persistence.loadAutoSave();
+      if (draft) {
+        setElements(draft.elements);
+        toast('Draft recovered', 'info');
+      }
+    };
+    loadDraft();
+  }, []);
+  
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (elements.length > 0) {
+        persistence.autoSave({ elements });
+      }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [elements]);
+  
+  // Track changes
+  const handleChange = (newElements: any[]) => {
+    setElements(newElements);
+    persistence.markDirty();
+  };
+  
+  // Save to file
+  const handleSave = async () => {
+    const blob = new Blob([JSON.stringify({ elements })], { type: 'application/json' });
+    const handle = await persistence.saveToFile(blob, 'drawing.excalidraw', fileHandle);
+    if (handle) {
+      setFileHandle(handle);
+      persistence.markClean();
+      toast('Saved successfully', 'success');
+    }
+  };
+  
+  // Load from file
+  const handleLoad = async () => {
+    const result = await persistence.loadFromFile(['.excalidraw', '.json']);
+    if (result) {
+      const data = JSON.parse(new TextDecoder().decode(result.data));
+      setElements(data.elements);
+      setFileHandle(result.handle);
+      persistence.markClean();
+    }
+  };
+  
+  // Enable navigation guard
+  useEffect(() => {
+    persistence.enableNavigationGuard();
+    return () => persistence.disableNavigationGuard();
+  }, []);
+  
+  return (
+    <div>
+      <div className="toolbar">
+        <button onClick={handleLoad}>Open</button>
+        <button onClick={handleSave}>Save</button>
+        <button onClick={() => handleSave()}>Save As</button>
+      </div>
+      <Excalidraw elements={elements} onChange={handleChange} />
+    </div>
+  );
+}
+```
+
+**Navigation guard implementation:**
+
+```typescript
+// Browser beforeunload
+window.addEventListener('beforeunload', (e) => {
+  if (persistenceService.isDirty('excalidraw')) {
+    e.preventDefault();
+    e.returnValue = ''; // Modern browsers show generic message
+  }
+});
+
+// Astro View Transitions guard
+document.addEventListener('astro:before-swap', (e) => {
+  if (persistenceService.isDirty('excalidraw')) {
+    const confirmed = confirm('You have unsaved work. Leave anyway?');
+    if (!confirmed) {
+      e.preventDefault();
+    }
+  }
+});
+```
+
+**Tools that use PersistenceService:**
+- Excalidraw/whiteboard (Phase 6)
+- Diagram/flowchart tools (Phase 6)
+- Multi-cursor text editor (Phase 1)
+- Markdown editor (Phase 1)
+- HTML playground (Phase 1)
+- Any tool with stateful editing
 
 ---
 
