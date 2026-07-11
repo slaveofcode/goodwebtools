@@ -53,20 +53,27 @@ Open http://localhost:4321
 - Shared services (File, Worker, Asset, Download, Progress, Persistence)
 - Registry-driven dynamic tool routing (`ToolHost`)
 
-✅ **Phase 1 — Dev utilities (12 tools):**
+✅ **Phase 1 — Dev utilities (14 tools):**
 - JSON Formatter/Validator
 - Base64 Encode/Decode
 - URL Encode/Decode
 - JWT Decoder (decode-only)
 - UUID v4 Generator
-- Password Generator (crypto RNG + strength meter)
+- Password Generator (Bitwarden-style: unbiased RNG, guaranteed types, min numbers/special)
 - Text Diff (line-level)
 - CSV ↔ JSON converter
+- Number Base Converter (bin/oct/dec/hex)
+- Color Converter (HEX/RGB/HSL)
 - Markdown Preview (sanitized)
 - QR Code Generator
 - QR Code Reader
 - Timestamp Converter
 - Hash File (SHA-256, worker-based)
+
+## Design
+
+**Neo-Brutalism** — thick outlines, hard offset shadows, sharp corners, bold
+Space Grotesk (self-hosted, same-origin to preserve zero external requests).
 
 **Next:** Phase 2 — PDF suite
 
