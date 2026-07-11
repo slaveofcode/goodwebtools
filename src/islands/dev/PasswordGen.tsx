@@ -12,11 +12,29 @@ const SETS = {
 
 type SetKey = keyof typeof SETS;
 
-function generatePassword(length: number, enabled: Record<SetKey, boolean>): string {
-  const pool = (Object.keys(SETS) as SetKey[])
+// Characters that are easy to confuse in many fonts (O/0, I/l/1, etc.).
+const AMBIGUOUS = 'Il1O0oB8S5Z2|`';
+
+function buildPool(enabled: Record<SetKey, boolean>, avoidAmbiguous: boolean): string {
+  let pool = (Object.keys(SETS) as SetKey[])
     .filter(key => enabled[key])
     .map(key => SETS[key])
     .join('');
+  if (avoidAmbiguous) {
+    pool = pool
+      .split('')
+      .filter(char => !AMBIGUOUS.includes(char))
+      .join('');
+  }
+  return pool;
+}
+
+function generatePassword(
+  length: number,
+  enabled: Record<SetKey, boolean>,
+  avoidAmbiguous: boolean
+): string {
+  const pool = buildPool(enabled, avoidAmbiguous);
   if (!pool) return '';
 
   const randomValues = new Uint32Array(length);
@@ -46,9 +64,10 @@ export default function PasswordGen() {
     numbers: true,
     symbols: true,
   });
+  const [avoidAmbiguous, setAvoidAmbiguous] = useState(false);
   const [password, setPassword] = useState('');
 
-  const regenerate = () => setPassword(generatePassword(length, enabled));
+  const regenerate = () => setPassword(generatePassword(length, enabled, avoidAmbiguous));
 
   // Keep length inside the [min, max] bounds whenever those change.
   useEffect(() => {
@@ -57,9 +76,9 @@ export default function PasswordGen() {
 
   // Regenerate whenever options change.
   useEffect(() => {
-    setPassword(generatePassword(length, enabled));
+    setPassword(generatePassword(length, enabled, avoidAmbiguous));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [length, enabled]);
+  }, [length, enabled, avoidAmbiguous]);
 
   const clampMin = (value: number) => {
     const safe = Math.min(Math.max(value || 1, 1), maxLength);
@@ -70,9 +89,8 @@ export default function PasswordGen() {
     setMaxLength(safe);
   };
 
-  const poolSize = (Object.keys(SETS) as SetKey[])
-    .filter(key => enabled[key])
-    .reduce((total, key) => total + SETS[key].length, 0);
+  // Strength uses the actual pool size (shrinks when ambiguous chars are excluded).
+  const poolSize = buildPool(enabled, avoidAmbiguous).length;
   const strength = strengthLabel(length, poolSize);
 
   const toggle = (key: SetKey) =>
@@ -149,6 +167,17 @@ export default function PasswordGen() {
           </label>
         ))}
       </div>
+
+      <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
+        <input
+          type="checkbox"
+          checked={avoidAmbiguous}
+          onChange={() => setAvoidAmbiguous(prev => !prev)}
+          className="accent-accent"
+        />
+        Avoid ambiguous characters
+        <span className="ml-1 font-mono text-xs text-muted-foreground">(I l 1 O 0 …)</span>
+      </label>
     </div>
   );
 }
