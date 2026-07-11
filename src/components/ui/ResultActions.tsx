@@ -1,4 +1,6 @@
+import { Download } from 'lucide-react';
 import { downloadService } from '@/services/download.service';
+import { Button } from './Button';
 
 export interface ResultActionsProps {
   blob: Blob | null;
@@ -13,12 +15,9 @@ export function ResultActions({ blob, filename, disabled }: ResultActionsProps) 
   };
 
   return (
-    <button
-      onClick={handleDownload}
-      disabled={disabled || !blob}
-      className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 disabled:opacity-50"
-    >
-      Download
-    </button>
+    <Button onClick={handleDownload} disabled={disabled || !blob}>
+      <Download className="h-4 w-4" />
+      Download {filename}
+    </Button>
   );
 }

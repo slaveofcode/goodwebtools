@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -154,6 +154,50 @@ export const tools: ToolDef[] = [
     icon: Palette,
     summary: 'Convert colors between HEX, RGB, and HSL',
     load: () => import('@/islands/dev/ColorConvert'),
+    status: 'stable'
+  },
+  {
+    id: 'pdf-merge',
+    name: 'Merge PDFs',
+    category: 'PDF',
+    route: '/tools/pdf-merge',
+    keywords: ['pdf', 'merge', 'combine', 'join', 'concatenate', 'append'],
+    icon: FilePlus2,
+    summary: 'Combine multiple PDFs into one',
+    load: () => import('@/islands/pdf/PdfMerge'),
+    status: 'stable'
+  },
+  {
+    id: 'pdf-split',
+    name: 'Split PDF',
+    category: 'PDF',
+    route: '/tools/pdf-split',
+    keywords: ['pdf', 'split', 'extract', 'pages', 'range', 'separate'],
+    icon: Scissors,
+    summary: 'Extract a range of pages into a new PDF',
+    load: () => import('@/islands/pdf/PdfSplit'),
+    status: 'stable'
+  },
+  {
+    id: 'pdf-rotate',
+    name: 'Rotate PDF',
+    category: 'PDF',
+    route: '/tools/pdf-rotate',
+    keywords: ['pdf', 'rotate', 'turn', 'orientation', 'landscape', 'portrait'],
+    icon: RotateCw,
+    summary: 'Rotate every page of a PDF',
+    load: () => import('@/islands/pdf/PdfRotate'),
+    status: 'stable'
+  },
+  {
+    id: 'images-to-pdf',
+    name: 'Images to PDF',
+    category: 'PDF',
+    route: '/tools/images-to-pdf',
+    keywords: ['image', 'images', 'jpg', 'jpeg', 'png', 'pdf', 'convert', 'combine'],
+    icon: FileImage,
+    summary: 'Combine PNG/JPG images into a PDF',
+    load: () => import('@/islands/pdf/ImagesToPdf'),
     status: 'stable'
   },
   {
