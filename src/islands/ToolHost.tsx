@@ -1,8 +1,43 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { Component, lazy, Suspense, useMemo, type ReactNode } from 'react';
 import { getToolById } from '@/registry/tools';
 
 interface ToolHostProps {
   toolId: string;
+}
+
+interface BoundaryProps {
+  children: ReactNode;
+}
+
+interface BoundaryState {
+  error: Error | null;
+}
+
+/** Catches render/hydration errors in a tool so it never silently blanks out. */
+class ToolErrorBoundary extends Component<BoundaryProps, BoundaryState> {
+  state: BoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: Error): BoundaryState {
+    return { error };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('Tool crashed:', error);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="space-y-2 border-2 border-border bg-red-400 p-4 text-black shadow-brutal-sm">
+          <p className="font-bold uppercase">This tool hit an error</p>
+          <pre className="overflow-auto whitespace-pre-wrap break-words text-sm">
+            {this.state.error.message}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 /**
@@ -19,16 +54,16 @@ export default function ToolHost({ toolId }: ToolHostProps) {
   }, [toolId]);
 
   if (!tool || !LazyTool) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">Tool not found.</div>
-    );
+    return <div className="py-12 text-center text-muted-foreground">Tool not found.</div>;
   }
 
   return (
-    <Suspense
-      fallback={<div className="py-12 text-center text-muted-foreground">Loading tool…</div>}
-    >
-      <LazyTool />
-    </Suspense>
+    <ToolErrorBoundary>
+      <Suspense
+        fallback={<div className="py-12 text-center text-muted-foreground">Loading tool…</div>}
+      >
+        <LazyTool />
+      </Suspense>
+    </ToolErrorBoundary>
   );
 }
