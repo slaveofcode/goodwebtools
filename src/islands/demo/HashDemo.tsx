@@ -18,22 +18,38 @@ export default function HashDemo() {
   );
 
   const handleFile = async (files: File[]) => {
-    if (files.length === 0 || !worker) return;
+    console.log('handleFile called with:', files.length, 'files');
+    console.log('Worker available:', !!worker);
+
+    if (files.length === 0 || !worker) {
+      console.warn('No files or worker not ready');
+      return;
+    }
 
     const file = files[0];
+    console.log('Processing file:', file.name, file.size, 'bytes');
     setFileName(file.name);
     setProcessing(true);
     setProgress(0);
 
     try {
+      console.log('Reading file buffer...');
       const buffer = await file.arrayBuffer();
+      console.log('Buffer size:', buffer.byteLength);
+
+      console.log('Calling worker.hashFile...');
       const result = await worker.hashFile(
         buffer,
-        proxy((pct) => setProgress(pct))
+        proxy((pct) => {
+          console.log('Progress:', pct);
+          setProgress(pct);
+        })
       );
+      console.log('Hash result:', result);
       setHash(result);
     } catch (error) {
       console.error('Hash failed:', error);
+      alert('Error: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setProcessing(false);
     }
