@@ -1,5 +1,6 @@
 ---
 import { ViewTransitions } from 'astro:transitions';
+import { ShellIsland } from '@/components/shell/ShellIsland';
 import '../styles/global.css';
 
 export interface Props {
@@ -27,6 +28,7 @@ const { title, description = 'Privacy-first client-side utilities' } = Astro.pro
     </script>
   </head>
   <body class="bg-background text-foreground min-h-screen">
+    <ShellIsland client:load transition:persist />
     <slot />
   </body>
 </html>
