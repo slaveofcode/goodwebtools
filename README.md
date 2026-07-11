@@ -45,16 +45,30 @@ Open http://localhost:4321
 - **Comlink** - Worker communication
 - **Vitest** - Testing
 
-## Phase 0 Status
+## Status
 
-✅ Foundation complete:
-- Tool registry with search
+✅ **Phase 0 — Foundation complete:**
+- Tool registry with search + command palette (⌘K)
 - Theme system (light/dark)
 - Shared services (File, Worker, Asset, Download, Progress, Persistence)
-- Command palette (⌘K)
-- Hash demo tool
+- Registry-driven dynamic tool routing (`ToolHost`)
 
-**Next:** Phase 1 - Dev/Office utilities
+✅ **Phase 1 — Dev utilities (12 tools):**
+- JSON Formatter/Validator
+- Base64 Encode/Decode
+- URL Encode/Decode
+- JWT Decoder (decode-only)
+- UUID v4 Generator
+- Password Generator (crypto RNG + strength meter)
+- Text Diff (line-level)
+- CSV ↔ JSON converter
+- Markdown Preview (sanitized)
+- QR Code Generator
+- QR Code Reader
+- Timestamp Converter
+- Hash File (SHA-256, worker-based)
+
+**Next:** Phase 2 — PDF suite
 
 ## Deployment
 

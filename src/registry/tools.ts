@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -110,6 +110,28 @@ export const tools: ToolDef[] = [
     icon: QrCode,
     summary: 'Generate a QR code from text or a URL',
     load: () => import('@/islands/dev/QrGen'),
+    status: 'stable'
+  },
+  {
+    id: 'qr-read',
+    name: 'QR Code Reader',
+    category: 'Dev',
+    route: '/tools/qr-read',
+    keywords: ['qr', 'qrcode', 'read', 'scan', 'decode', 'reader'],
+    icon: ScanLine,
+    summary: 'Decode a QR code from an image',
+    load: () => import('@/islands/dev/QrRead'),
+    status: 'stable'
+  },
+  {
+    id: 'timestamp',
+    name: 'Timestamp Converter',
+    category: 'Dev',
+    route: '/tools/timestamp',
+    keywords: ['timestamp', 'unix', 'epoch', 'date', 'time', 'iso', 'convert'],
+    icon: Clock,
+    summary: 'Convert between Unix time and dates',
+    load: () => import('@/islands/dev/Timestamp'),
     status: 'stable'
   },
   {
