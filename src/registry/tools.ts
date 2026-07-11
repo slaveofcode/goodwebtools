@@ -1,17 +1,83 @@
-import { Hash } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
+  {
+    id: 'json-format',
+    name: 'JSON Formatter',
+    category: 'Dev',
+    route: '/tools/json-format',
+    keywords: ['json', 'format', 'beautify', 'prettify', 'minify', 'validate', 'lint'],
+    icon: Braces,
+    summary: 'Format, minify, and validate JSON',
+    load: () => import('@/islands/dev/JsonFormat'),
+    status: 'stable'
+  },
+  {
+    id: 'base64',
+    name: 'Base64 Encode / Decode',
+    category: 'Dev',
+    route: '/tools/base64',
+    keywords: ['base64', 'encode', 'decode', 'btoa', 'atob', 'binary'],
+    icon: Binary,
+    summary: 'Encode and decode Base64 text',
+    load: () => import('@/islands/dev/Base64'),
+    status: 'stable'
+  },
+  {
+    id: 'url-encode',
+    name: 'URL Encode / Decode',
+    category: 'Dev',
+    route: '/tools/url-encode',
+    keywords: ['url', 'uri', 'encode', 'decode', 'percent', 'escape', 'querystring'],
+    icon: Link,
+    summary: 'Encode and decode URL components',
+    load: () => import('@/islands/dev/UrlEncode'),
+    status: 'stable'
+  },
+  {
+    id: 'jwt-decode',
+    name: 'JWT Decoder',
+    category: 'Dev',
+    route: '/tools/jwt-decode',
+    keywords: ['jwt', 'json web token', 'decode', 'header', 'payload', 'claims', 'auth'],
+    icon: KeyRound,
+    summary: 'Decode JWT header and payload (no verification)',
+    load: () => import('@/islands/dev/JwtDecode'),
+    status: 'stable'
+  },
+  {
+    id: 'uuid-gen',
+    name: 'UUID Generator',
+    category: 'Dev',
+    route: '/tools/uuid-gen',
+    keywords: ['uuid', 'guid', 'v4', 'generate', 'random', 'id', 'identifier'],
+    icon: Fingerprint,
+    summary: 'Generate random UUID v4 identifiers',
+    load: () => import('@/islands/dev/UuidGen'),
+    status: 'stable'
+  },
+  {
+    id: 'password-gen',
+    name: 'Password Generator',
+    category: 'Dev',
+    route: '/tools/password-gen',
+    keywords: ['password', 'passphrase', 'generate', 'random', 'secure', 'strong', 'secret'],
+    icon: KeySquare,
+    summary: 'Generate strong random passwords',
+    load: () => import('@/islands/dev/PasswordGen'),
+    status: 'stable'
+  },
   {
     id: 'hash-demo',
     name: 'Hash File',
     category: 'Dev',
     route: '/tools/hash-demo',
-    keywords: ['hash', 'sha', 'sha256', 'sha-256', 'checksum', 'demo', 'validation', 'generate', 'file'],
+    keywords: ['hash', 'sha', 'sha256', 'sha-256', 'checksum', 'generate', 'file'],
     icon: Hash,
-    summary: 'Generate SHA-256 hash (validation demo)',
+    summary: 'Generate SHA-256 hash of a file',
     load: () => import('@/islands/demo/HashDemo'),
-    status: 'experimental'
+    status: 'beta'
   }
 ];
 

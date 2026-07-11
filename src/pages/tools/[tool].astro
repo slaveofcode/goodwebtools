@@ -1,21 +1,32 @@
 ---
 import Base from '@/layouts/Base.astro';
-import { tools } from '@/registry/tools';
-import HashDemo from '@/islands/demo/HashDemo';
+import ToolHost from '@/islands/ToolHost';
+import { tools, getToolById } from '@/registry/tools';
+import { categoryColors } from '@/registry/categories';
 
-export async function getStaticPaths() {
+export function getStaticPaths() {
   return tools.map(tool => ({
-    params: { tool: tool.id }
+    params: { tool: tool.id },
+    props: { toolId: tool.id },
   }));
 }
+
+const { toolId } = Astro.props;
+const tool = getToolById(toolId)!;
 ---
 
-<Base title="Hash File" description="Generate SHA-256 hash">
-  <main class="container mx-auto px-4 py-8">
+<Base title={tool.name} description={tool.summary}>
+  <main class="container mx-auto max-w-4xl px-4 py-8">
     <div class="mb-6">
-      <h1 class="text-3xl font-bold mb-2">Hash File</h1>
-      <p class="text-muted-foreground">Generate SHA-256 hash (validation demo)</p>
+      <div class="mb-2 flex items-center gap-2">
+        <span class={`inline-block h-2 w-2 rounded-full ${categoryColors[tool.category]}`}></span>
+        <span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {tool.category}
+        </span>
+      </div>
+      <h1 class="mb-1 text-3xl font-bold">{tool.name}</h1>
+      <p class="text-muted-foreground">{tool.summary}</p>
     </div>
-    <HashDemo client:load />
+    <ToolHost client:load toolId={toolId} />
   </main>
 </Base>
