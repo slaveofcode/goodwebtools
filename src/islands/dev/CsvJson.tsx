@@ -83,31 +83,59 @@ function jsonToCsv(text: string): string {
   return lines.join('\n');
 }
 
+type Mode = 'toJson' | 'toCsv';
+
 export default function CsvJson() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
+  const [activeMode, setActiveMode] = useState<Mode | null>(null);
 
-  const run = (mode: 'toJson' | 'toCsv') => {
+  const run = (mode: Mode, source = input) => {
+    setActiveMode(mode);
     setError('');
-    if (!input.trim()) {
+    if (!source.trim()) {
       setOutput('');
       return;
     }
     try {
-      setOutput(mode === 'toJson' ? csvToJson(input) : jsonToCsv(input));
+      setOutput(mode === 'toJson' ? csvToJson(source) : jsonToCsv(source));
     } catch (e) {
       setOutput('');
       setError(e instanceof Error ? e.message : 'Conversion failed');
     }
   };
 
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    if (activeMode) run(activeMode, value);
+  };
+
+  const clear = () => {
+    setInput('');
+    setOutput('');
+    setError('');
+    setActiveMode(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => run('toJson')}>CSV → JSON</Button>
-        <Button variant="secondary" onClick={() => run('toCsv')}>JSON → CSV</Button>
-        <Button variant="ghost" onClick={() => { setInput(''); setOutput(''); setError(''); }}>
+        <Button
+          variant={activeMode === 'toJson' ? 'primary' : 'secondary'}
+          aria-pressed={activeMode === 'toJson'}
+          onClick={() => run('toJson')}
+        >
+          CSV → JSON
+        </Button>
+        <Button
+          variant={activeMode === 'toCsv' ? 'primary' : 'secondary'}
+          aria-pressed={activeMode === 'toCsv'}
+          onClick={() => run('toCsv')}
+        >
+          JSON → CSV
+        </Button>
+        <Button variant="ghost" onClick={clear}>
           Clear
         </Button>
       </div>
@@ -115,7 +143,7 @@ export default function CsvJson() {
       <TextArea
         label="Input"
         value={input}
-        onChange={e => setInput(e.target.value)}
+        onChange={e => handleInputChange(e.target.value)}
         placeholder={'name,age\nAlice,30\nBob,25'}
         rows={10}
       />

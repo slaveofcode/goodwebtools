@@ -17,31 +17,59 @@ function decodeBase64(base64: string): string {
   return new TextDecoder().decode(bytes);
 }
 
+type Mode = 'encode' | 'decode';
+
 export default function Base64() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
+  const [activeMode, setActiveMode] = useState<Mode | null>(null);
 
-  const run = (mode: 'encode' | 'decode') => {
+  const run = (mode: Mode, source = input) => {
+    setActiveMode(mode);
     setError('');
-    if (!input) {
+    if (!source) {
       setOutput('');
       return;
     }
     try {
-      setOutput(mode === 'encode' ? encodeBase64(input) : decodeBase64(input));
+      setOutput(mode === 'encode' ? encodeBase64(source) : decodeBase64(source));
     } catch {
       setOutput('');
       setError(mode === 'decode' ? 'Invalid Base64 input' : 'Encoding failed');
     }
   };
 
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    if (activeMode) run(activeMode, value);
+  };
+
+  const clear = () => {
+    setInput('');
+    setOutput('');
+    setError('');
+    setActiveMode(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => run('encode')}>Encode →</Button>
-        <Button variant="secondary" onClick={() => run('decode')}>← Decode</Button>
-        <Button variant="ghost" onClick={() => { setInput(''); setOutput(''); setError(''); }}>
+        <Button
+          variant={activeMode === 'encode' ? 'primary' : 'secondary'}
+          aria-pressed={activeMode === 'encode'}
+          onClick={() => run('encode')}
+        >
+          Encode →
+        </Button>
+        <Button
+          variant={activeMode === 'decode' ? 'primary' : 'secondary'}
+          aria-pressed={activeMode === 'decode'}
+          onClick={() => run('decode')}
+        >
+          ← Decode
+        </Button>
+        <Button variant="ghost" onClick={clear}>
           Clear
         </Button>
       </div>
@@ -49,7 +77,7 @@ export default function Base64() {
       <TextArea
         label="Input"
         value={input}
-        onChange={e => setInput(e.target.value)}
+        onChange={e => handleInputChange(e.target.value)}
         placeholder="Text to encode, or Base64 to decode"
         monospace={false}
       />
