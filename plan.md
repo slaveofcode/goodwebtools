@@ -41,6 +41,7 @@ Resolved: **Astro shell + React islands, static output, hosted on Cloudflare Pag
 | Meta-framework | **Astro** (`output: 'static'`) | Islands architecture: static HTML by default, hydrate only interactive tools. Per-page code-splitting for free. Uses Vite under the hood, so WASM/worker ergonomics are intact. |
 | Interactive UI | **React 18 islands** (`@astrojs/react`) | Chosen over Vue for concrete ecosystem fit: Excalidraw/tldraw are React-only, Monaco's best wrapper is React, most WASM/ONNX demos are React. |
 | Styling | **Tailwind CSS** (`@astrojs/tailwind`) | Fast, consistent, tree-shaken. |
+| Design language | **Neo-Brutalism** | Thick outlines, hard offset shadows (no blur), sharp corners, bold uppercase **Space Grotesk** (self-hosted, same-origin). Distinctive over generic; sourced via the `ui-ux-pro-max` skill. |
 | Routing | **Astro file-based pages** + View Transitions (`<ClientRouter />`) | Each tool = its own page/route → only that tool's island + deps load. `transition:persist` keeps the shell (command palette, worker pool) alive across navigations. |
 | State | Zustand or React Context (per-island) | Most state is per-tool local; shell state lives in a persisted island. |
 | Workers | **Comlink** | Ergonomic worker RPC, hides postMessage plumbing. Framework-agnostic. |

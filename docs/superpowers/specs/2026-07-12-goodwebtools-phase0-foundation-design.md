@@ -524,49 +524,91 @@ The shell (`src/components/shell/ShellIsland.tsx`) survives page navigation via 
    - Search history (recent tools, optional)
    - Persisted to localStorage
 
-### Theme System
+### Design System — Neo-Brutalism
+
+**[DECISION]** The visual language is **Neo-Brutalism**: cream/near-black surfaces,
+thick solid outlines, hard offset shadows (no blur), sharp corners, and bold
+uppercase display type. Chosen to make a utility suite feel distinctive and
+confident rather than generic. Sourced via the `ui-ux-pro-max` design skill.
+
+**Design principles:**
+- **Thick borders** — 2–3px solid outlines (`--border`) on every surface, input, and control
+- **Hard offset shadows** — solid blocks, *no blur* (e.g. `4px 4px 0 0`), color = `--shadow`
+- **Sharp corners** — global `border-radius: 0` (badges/dots may be pills)
+- **Bold typography** — self-hosted **Space Grotesk**, headings/labels uppercase, weights 400–700
+- **Mechanical press** — interactive elements lift on hover (larger shadow) and slam down on active (shadow collapses, element shifts into it); disabled by `prefers-reduced-motion`
+- **High-saturation color blocking** — category color chips, violet accent, black/white frames
+
+**Typography — privacy-safe self-hosting:**
+- Space Grotesk `woff2` is served **same-origin** from `/fonts/` and preloaded.
+- **No Google Fonts CDN** — loading fonts cross-origin would break the "zero external requests" privacy guarantee. Self-hosting keeps every asset first-party.
 
 **Configuration:**
 - Manual toggle only (no auto system preference)
 - Tailwind dark mode via `class` strategy: `<html class="dark">`
 - Theme stored in localStorage, applied on load to prevent flash
-- Smooth transition via CSS transitions on theme change
 
 **Tailwind configuration:**
 ```javascript
 // tailwind.config.mjs
-module.exports = {
+export default {
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
-        border: 'var(--border)',
-        muted: 'var(--muted)',
-        accent: 'var(--accent)',
-      }
+        background: 'rgb(var(--background) / <alpha-value>)',
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
+        border: 'rgb(var(--border) / <alpha-value>)',
+        muted: 'rgb(var(--muted) / <alpha-value>)',
+        'muted-foreground': 'rgb(var(--muted-foreground) / <alpha-value>)',
+        accent: 'rgb(var(--accent) / <alpha-value>)',
+        'accent-foreground': 'rgb(var(--accent-foreground) / <alpha-value>)',
+      },
+      fontFamily: { sans: ['Space Grotesk', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+      borderRadius: { DEFAULT: '0px', sm: '0px', md: '0px', lg: '0px', xl: '0px', full: '9999px' },
+      boxShadow: {
+        brutal: '4px 4px 0 0 rgb(var(--shadow))',
+        'brutal-sm': '2px 2px 0 0 rgb(var(--shadow))',
+        'brutal-lg': '6px 6px 0 0 rgb(var(--shadow))',
+      },
     }
   }
 }
 ```
 
-**CSS variables (minimal/clean palette):**
+**CSS variables (Neo-Brutalism palette):**
 ```css
 :root {
-  --background: 255 255 255;     /* White */
-  --foreground: 23 23 23;        /* Near black */
-  --border: 229 229 229;         /* Light gray */
-  --muted: 250 250 250;          /* Subtle gray */
-  --accent: 37 99 235;           /* Blue accent */
+  --background: 255 253 245;      /* Cream */
+  --foreground: 10 10 10;         /* Near black */
+  --border: 10 10 10;             /* Solid black outlines */
+  --muted: 255 255 255;           /* White surface blocks */
+  --muted-foreground: 82 82 82;   /* Gray text */
+  --accent: 124 58 237;           /* Violet */
+  --accent-foreground: 255 255 255;
+  --shadow: 10 10 10;             /* Hard offset shadow */
 }
 
 .dark {
-  --background: 10 10 10;        /* Near black */
-  --foreground: 250 250 250;     /* Off white */
-  --border: 38 38 38;            /* Dark gray */
-  --muted: 23 23 23;             /* Subtle dark */
-  --accent: 96 165 250;          /* Lighter blue */
+  --background: 10 10 10;         /* Near black */
+  --foreground: 250 250 250;      /* Off white */
+  --border: 250 250 250;          /* Light outlines pop on dark */
+  --muted: 26 26 26;              /* Dark surface blocks */
+  --muted-foreground: 163 163 163;
+  --accent: 167 139 250;          /* Lighter violet */
+  --accent-foreground: 10 10 10;
+  --shadow: 250 250 250;          /* Light hard shadow on dark */
+}
+```
+
+**Brutalist utility classes (global.css):**
+```css
+.shadow-brutal    { box-shadow: 4px 4px 0 0 rgb(var(--shadow)); }
+.press-brutal     { transition: transform 100ms, box-shadow 100ms; }
+.press-brutal:hover  { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 0 rgb(var(--shadow)); }
+.press-brutal:active { transform: translate(2px,2px);  box-shadow: 0 0 0 0 rgb(var(--shadow)); }
+@media (prefers-reduced-motion: reduce) {
+  .press-brutal, .press-brutal:hover, .press-brutal:active { transition: none; transform: none; }
 }
 ```
 
@@ -708,8 +750,8 @@ VitePWA({
     name: 'GoodWebTools',
     short_name: 'GWT',
     description: 'Privacy-first client-side utilities',
-    theme_color: '#2563eb',
-    background_color: '#ffffff',
+    theme_color: '#fffdf5',
+    background_color: '#fffdf5',
     display: 'standalone',
     icons: [
       { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },

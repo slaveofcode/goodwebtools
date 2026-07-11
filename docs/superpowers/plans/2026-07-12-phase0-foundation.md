@@ -166,28 +166,60 @@ Create `tsconfig.json`:
 
 - [ ] **Step 6: Create global styles**
 
-Create `src/styles/global.css`:
+Create `src/styles/global.css` (**Neo-Brutalism** palette + brutalist utilities; Space Grotesk self-hosted same-origin to preserve zero external requests):
 ```css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk.woff2') format('woff2');
+}
+
 :root {
-  --background: 255 255 255;
-  --foreground: 23 23 23;
-  --border: 229 229 229;
-  --muted: 250 250 250;
-  --accent: 37 99 235;
+  --background: 255 253 245;      /* Cream */
+  --foreground: 10 10 10;
+  --border: 10 10 10;            /* Solid black outlines */
+  --muted: 255 255 255;
+  --muted-foreground: 82 82 82;
+  --accent: 124 58 237;         /* Violet */
+  --accent-foreground: 255 255 255;
+  --shadow: 10 10 10;
 }
 
 .dark {
   --background: 10 10 10;
   --foreground: 250 250 250;
-  --border: 38 38 38;
-  --muted: 23 23 23;
-  --accent: 96 165 250;
+  --border: 250 250 250;        /* Light outlines pop on dark */
+  --muted: 26 26 26;
+  --muted-foreground: 163 163 163;
+  --accent: 167 139 250;
+  --accent-foreground: 10 10 10;
+  --shadow: 250 250 250;
+}
+
+body { font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; }
+
+/* Hard offset shadows (no blur) + mechanical press */
+.shadow-brutal    { box-shadow: 4px 4px 0 0 rgb(var(--shadow)); }
+.shadow-brutal-sm { box-shadow: 2px 2px 0 0 rgb(var(--shadow)); }
+.press-brutal        { transition: transform 100ms ease, box-shadow 100ms ease; }
+.press-brutal:hover  { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 0 rgb(var(--shadow)); }
+.press-brutal:active { transform: translate(2px,2px);  box-shadow: 0 0 0 0 rgb(var(--shadow)); }
+@media (prefers-reduced-motion: reduce) {
+  .press-brutal, .press-brutal:hover, .press-brutal:active { transition: none; transform: none; }
 }
 ```
+
+> **[DESIGN] Neo-Brutalism:** thick outlines, hard offset shadows, sharp corners
+> (global `border-radius: 0`), bold uppercase Space Grotesk. All controls use
+> `border-2 border-border` + `shadow-brutal` + `press-brutal`. Font is
+> **self-hosted** (`public/fonts/space-grotesk.woff2`, preloaded) — never the
+> Google Fonts CDN, which would violate the no-egress privacy guarantee.
 
 - [ ] **Step 7: Create minimal homepage**
 
@@ -567,7 +599,17 @@ export default {
         foreground: 'rgb(var(--foreground) / <alpha-value>)',
         border: 'rgb(var(--border) / <alpha-value>)',
         muted: 'rgb(var(--muted) / <alpha-value>)',
+        'muted-foreground': 'rgb(var(--muted-foreground) / <alpha-value>)',
         accent: 'rgb(var(--accent) / <alpha-value>)',
+        'accent-foreground': 'rgb(var(--accent-foreground) / <alpha-value>)',
+      },
+      fontFamily: { sans: ['Space Grotesk', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+      // Neo-Brutalism: sharp corners everywhere (pills only for dots/badges)
+      borderRadius: { DEFAULT: '0px', sm: '0px', md: '0px', lg: '0px', xl: '0px', '2xl': '0px', full: '9999px' },
+      boxShadow: {
+        brutal: '4px 4px 0 0 rgb(var(--shadow))',
+        'brutal-sm': '2px 2px 0 0 rgb(var(--shadow))',
+        'brutal-lg': '6px 6px 0 0 rgb(var(--shadow))',
       },
     },
   },
