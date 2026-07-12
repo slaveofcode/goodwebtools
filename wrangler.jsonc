@@ -1,12 +1,18 @@
 {
-  // Deploy the static Astro build (dist/) to Cloudflare as an assets-only
-  // Worker. No `main` = no server code; Cloudflare serves the static files.
-  // Build first (`npm run build`), then `npx wrangler deploy`.
+  // Deploys the static Astro build (dist/) plus a small Worker that streams ML
+  // model files from R2 at /models/*. Build first (`npm run build`), then
+  // `npx wrangler deploy`. The R2 bucket must exist:
+  //   npx wrangler r2 bucket create goodwebtools-models
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "goodwebtools",
   "compatibility_date": "2026-07-13",
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "404-page"
-  }
+  },
+  "r2_buckets": [
+    { "binding": "MODELS", "bucket_name": "goodwebtools-models" }
+  ]
 }
