@@ -5,6 +5,15 @@ import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
 import { LoadFileButton, fileExt } from '@/components/ui/LoadFileButton';
 import { CodeBlock, type CodeLanguage } from '@/components/ui/CodeBlock';
+import { DownloadTextButton } from '@/components/ui/DownloadTextButton';
+
+const MIME_BY_EXT: Record<string, string> = {
+  json: 'application/json',
+  yaml: 'text/yaml;charset=utf-8',
+  yml: 'text/yaml;charset=utf-8',
+  xml: 'application/xml',
+  toml: 'application/toml;charset=utf-8',
+};
 
 export interface BiConverterProps {
   /** Left-hand format label, e.g. "JSON". */
@@ -100,7 +109,14 @@ export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholde
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">Result</span>
-            <CopyButton value={output} />
+            <div className="flex gap-2">
+              <DownloadTextButton
+                text={output}
+                filename={`converted.${mode === 'toRight' ? rightLabel.toLowerCase() : 'json'}`}
+                mime={MIME_BY_EXT[mode === 'toRight' ? rightLabel.toLowerCase() : 'json']}
+              />
+              <CopyButton value={output} />
+            </div>
           </div>
           <CodeBlock code={output} language={mode === 'toRight' ? rightLang : 'json'} />
         </div>

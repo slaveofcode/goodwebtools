@@ -5,6 +5,7 @@ import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
 import { LoadFileButton } from '@/components/ui/LoadFileButton';
 import { CodeBlock } from '@/components/ui/CodeBlock';
+import { DownloadTextButton } from '@/components/ui/DownloadTextButton';
 
 type Mode = 'format2' | 'format4' | 'minify';
 
@@ -96,7 +97,10 @@ export default function JsonFormat() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">Result</span>
-            <CopyButton value={output} />
+            <div className="flex gap-2">
+              <DownloadTextButton text={output} filename="formatted.json" mime="application/json" />
+              <CopyButton value={output} />
+            </div>
           </div>
           <CodeBlock code={output} language="json" />
         </div>
