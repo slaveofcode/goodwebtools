@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { clipboardService } from '@/services/clipboard.service';
 import { Button } from './Button';
@@ -12,8 +12,12 @@ interface CopyImageButtonProps {
 /** Copies an image to the clipboard, with brief "Copied" / error feedback. */
 export function CopyImageButton({ blob, disabled }: CopyImageButtonProps) {
   const [state, setState] = useState<'idle' | 'copied' | 'error'>('idle');
+  // Only decide support after mount so SSR and the first client render match
+  // (clipboardService.supported is false on the server, true in the browser).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  if (!clipboardService.supported) return null;
+  if (!mounted || !clipboardService.supported) return null;
 
   const handleCopy = async () => {
     if (!blob) return;

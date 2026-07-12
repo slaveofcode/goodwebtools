@@ -3,6 +3,7 @@ import jsQR from 'jsqr';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
+import { usePasteImage } from '@/hooks/usePasteImage';
 
 async function decodeImage(file: File): Promise<string | null> {
   const bitmap = await createImageBitmap(file);
@@ -37,6 +38,8 @@ export default function QrRead() {
     }
   };
 
+  usePasteImage(file => handleFile([file]));
+
   const isUrl = /^https?:\/\//i.test(value);
 
   return (
@@ -44,7 +47,7 @@ export default function QrRead() {
       <Dropzone onDrop={handleFile} accept="image/*" multiple={false}>
         <div className="space-y-2">
           <p className="text-lg">Drop a QR image or click to browse</p>
-          <p className="text-sm text-muted-foreground">Decoded entirely in your browser</p>
+          <p className="text-sm text-muted-foreground">Decoded entirely in your browser · or paste (⌘V)</p>
         </div>
       </Dropzone>
 
