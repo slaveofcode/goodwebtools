@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -297,6 +297,28 @@ export const tools: ToolDef[] = [
     icon: Maximize2,
     summary: 'Resize an image to exact pixel dimensions',
     load: () => import('@/islands/image/ImageResize'),
+    status: 'stable'
+  },
+  {
+    id: 'image-crop',
+    name: 'Image Cropper',
+    category: 'Image',
+    route: '/tools/image-crop',
+    keywords: ['image', 'crop', 'trim', 'cut', 'selection', 'region'],
+    icon: Crop,
+    summary: 'Crop an image by dragging a selection',
+    load: () => import('@/islands/image/ImageCrop'),
+    status: 'stable'
+  },
+  {
+    id: 'image-watermark',
+    name: 'Image Watermark',
+    category: 'Image',
+    route: '/tools/image-watermark',
+    keywords: ['image', 'watermark', 'text', 'stamp', 'copyright', 'overlay'],
+    icon: Droplet,
+    summary: 'Add a text watermark to an image',
+    load: () => import('@/islands/image/ImageWatermark'),
     status: 'stable'
   },
   {

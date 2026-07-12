@@ -70,7 +70,7 @@ Open http://localhost:4321
 - Timestamp Converter
 - Hash File (SHA-256, worker-based)
 
-🚧 **Phase 2 — PDF suite (7 tools, in progress):**
+✅ **Phase 2 — PDF suite (11 tools):**
 - Merge PDFs (reorderable)
 - Split PDF (extract page range)
 - Rotate PDF (90/180/270°)
@@ -89,10 +89,12 @@ watermarks. All fully client-side. (mupdf is AGPL — fine while this stays open
 Space Grotesk (self-hosted, same-origin to preserve zero external requests).
 Fluid-width, mobile-first layout.
 
-🚧 **Phase 3 — Image basics (4 tools, in progress):**
+✅ **Phase 3 — Image basics (6 tools):**
 - Image Converter (PNG / JPEG / WebP)
 - Image Compressor (quality, size delta)
 - Image Resizer (aspect-lock)
+- Image Cropper (drag-to-select)
+- Image Watermark (diagonal / tiled / corner)
 - Metadata Scrubber (strip EXIF/GPS by re-encoding)
 
 All Canvas-based, fully client-side (`src/tools/image/canvas.lib.ts`).
