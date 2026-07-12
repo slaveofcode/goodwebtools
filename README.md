@@ -77,7 +77,10 @@ Open http://localhost:4321
 - Delete PDF pages
 - Watermark PDF (diagonal text)
 - Images → PDF (PNG/JPG)
-- PDF → Images (render pages to PNG via pdf.js)
+- PDF → Images (paginated, PNG/JPG, ZIP-all)
+- Compress PDF
+- Protect PDF (AES-256 password)
+- Unlock PDF (remove password)
 
 Engine: **mupdf-wasm** (in a worker) parses/edits real-world PDFs that pdf-lib
 can't; `pdfjs-dist` renders pages; `pdf-lib` builds images→PDF and draws
