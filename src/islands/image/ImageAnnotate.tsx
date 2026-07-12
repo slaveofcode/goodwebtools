@@ -9,6 +9,7 @@ import {
   Highlighter,
   Type,
   Droplets,
+  ImagePlus,
   Undo2,
   Redo2,
   Trash2,
@@ -23,7 +24,7 @@ import { usePasteImage } from '@/hooks/usePasteImage';
 type Tool = 'select' | 'rect' | 'ellipse' | 'line' | 'arrow' | 'pencil' | 'highlighter' | 'text' | 'blur';
 
 interface Shape {
-  type: Tool;
+  type: Tool | 'image';
   color: string;
   width: number;
   rounded?: boolean;
@@ -36,6 +37,8 @@ interface Shape {
   points?: [number, number][];
   text?: string;
   size?: number;
+  /** Source for an imported-image overlay (type === 'image'). */
+  img?: CanvasImageSource;
 }
 
 const TOOLS: { tool: Tool; label: string; Icon: typeof Square }[] = [
@@ -139,6 +142,9 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, blur: HTMLCanvasElem
     case 'blur':
       if (blur && w > 0 && h > 0) ctx.drawImage(blur, x, y, w, h, x, y, w, h);
       break;
+    case 'image':
+      if (s.img && w > 0 && h > 0) ctx.drawImage(s.img, x, y, w, h);
+      break;
   }
   ctx.restore();
 }
@@ -236,8 +242,8 @@ function shapeHandles(ctx: CanvasRenderingContext2D, s: Shape): Handle[] {
     { id: 'sw', x: b.x, y: bottom },
     { id: 'se', x: right, y: bottom },
   ];
-  // Text scales by font size and freehand scales its points — corners only.
-  if (s.type === 'text' || s.type === 'pencil' || s.type === 'highlighter') return corners;
+  // Text (font size), freehand (points), and images (aspect-locked) — corners only.
+  if (s.type === 'text' || s.type === 'pencil' || s.type === 'highlighter' || s.type === 'image') return corners;
   // rect / ellipse / blur also get edge handles for one-axis resizing.
   const cx = b.x + b.w / 2;
   const cy = b.y + b.h / 2;
@@ -266,6 +272,24 @@ function resizeShape(s: Shape, id: HandleId, px: number, py: number, ctx: Canvas
   }
 
   const b = shapeBounds(ctx, s);
+
+  if (s.type === 'image') {
+    // Corner resize, aspect-locked, anchored at the opposite corner.
+    const anchorX = id.includes('w') ? b.x + b.w : b.x;
+    const anchorY = id.includes('n') ? b.y + b.h : b.y;
+    let nw = Math.max(8, Math.abs(px - anchorX));
+    let nh = Math.max(8, Math.abs(py - anchorY));
+    const aspect = (b.w || 1) / (b.h || 1);
+    if (nw / aspect >= nh) nh = nw / aspect;
+    else nw = nh * aspect;
+    return {
+      ...s,
+      x: id.includes('w') ? anchorX - nw : anchorX,
+      y: id.includes('n') ? anchorY - nh : anchorY,
+      w: nw,
+      h: nh,
+    };
+  }
 
   if (s.type === 'text') {
     // Vertical drag drives the font size; keep the left edge and the anchor edge fixed.
@@ -309,6 +333,7 @@ export default function ImageAnnotate() {
   const draftRef = useRef<Shape | null>(null);
   const drawingRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   // Guards against the spurious blur that fires the instant the text input
   // mounts (the placing click steals focus back to the body). We only treat a
   // blur as a real "done editing" once the input has actually been focused.
@@ -594,12 +619,10 @@ export default function ImageAnnotate() {
     const newIndex = shapes.length;
     setShapes(prev => [...prev, d]);
     setUndone([]);
-    // Discrete shapes: jump to Select so they can be moved/resized immediately.
-    // Freehand tools stay active so you can keep sketching.
-    if (d.type !== 'pencil' && d.type !== 'highlighter') {
-      setTool('select');
-      setSelectedIndex(newIndex);
-    }
+    // Jump to Select so the shape (including freehand strokes) can be moved or
+    // resized immediately without switching tools by hand.
+    setTool('select');
+    setSelectedIndex(newIndex);
   };
 
   // Focus the text input a frame after it mounts, then arm blur-to-commit.
@@ -662,6 +685,26 @@ export default function ImageAnnotate() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedIndex, textEdit]);
+
+  // Import an image from disk as a movable/resizable overlay shape.
+  const onImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-importing the same file
+    const base = baseRef.current;
+    if (!file || !file.type.startsWith('image/') || !base) return;
+    const bmp = await createImageBitmap(file);
+    // Default: fit within ~half the canvas, centered.
+    const scale = Math.min(1, (base.width * 0.5) / bmp.width, (base.height * 0.5) / bmp.height);
+    const w = Math.max(1, Math.round(bmp.width * scale));
+    const h = Math.max(1, Math.round(bmp.height * scale));
+    const x = Math.round((base.width - w) / 2);
+    const y = Math.round((base.height - h) / 2);
+    const newIndex = shapes.length;
+    setShapes(prev => [...prev, { type: 'image', color: '#000000', width: 0, img: bmp, x, y, w, h }]);
+    setUndone([]);
+    setTool('select');
+    setSelectedIndex(newIndex);
+  };
 
   const undo = () => {
     setSelectedIndex(null);
@@ -730,6 +773,25 @@ export default function ImageAnnotate() {
                 <Icon className="h-4 w-4" />
               </button>
             ))}
+
+            <span className="mx-1 h-6 w-0.5 bg-border" />
+
+            {/* Import an image from disk as a movable/resizable overlay. */}
+            <button
+              onClick={() => importInputRef.current?.click()}
+              title="Import image"
+              className="flex items-center gap-1.5 border-2 border-border bg-muted p-2 text-sm font-bold shadow-brutal-sm press-brutal"
+            >
+              <ImagePlus className="h-4 w-4" />
+              Import
+            </button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="image/*"
+              onChange={onImportFile}
+              className="hidden"
+            />
 
             <span className="mx-1 h-6 w-0.5 bg-border" />
 
