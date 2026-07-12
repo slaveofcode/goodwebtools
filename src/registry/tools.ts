@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -187,6 +187,17 @@ export const tools: ToolDef[] = [
     icon: RotateCw,
     summary: 'Rotate every page of a PDF',
     load: () => import('@/islands/pdf/PdfRotate'),
+    status: 'stable'
+  },
+  {
+    id: 'pdf-to-image',
+    name: 'PDF to Images',
+    category: 'PDF',
+    route: '/tools/pdf-to-image',
+    keywords: ['pdf', 'image', 'png', 'render', 'convert', 'export', 'page'],
+    icon: Image,
+    summary: 'Render each PDF page to a PNG image',
+    load: () => import('@/islands/pdf/PdfToImage'),
     status: 'stable'
   },
   {
