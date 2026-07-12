@@ -1,19 +1,51 @@
 import { useState } from 'react';
+import { Wand2 } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { ResultActions } from '@/components/ui/ResultActions';
 import { Alert } from '@/components/ui/Alert';
 import { protectPdf } from '@/tools/pdf/pdf.lib';
+import { generatePassword } from '@/tools/dev/password.lib';
 
 // mupdf's save options are comma/equals separated, so a password containing
 // those characters would corrupt the option string.
 const INVALID = /[,=]/;
+
+/**
+ * Generate a strong password using the shared password generator, guaranteed
+ * to be safe for mupdf's option string (no comma/equals). Retries around the
+ * two problematic symbols, falling back to a symbol-free password.
+ */
+function generateSafePassword(length: number): string {
+  const base = {
+    length,
+    enabled: { lowercase: true, uppercase: true, numbers: true, symbols: true },
+    avoidAmbiguous: true,
+    minNumbers: 2,
+    minSpecial: 2,
+  };
+  for (let attempt = 0; attempt < 25; attempt++) {
+    const candidate = generatePassword(base);
+    if (!INVALID.test(candidate)) return candidate;
+  }
+  // Fallback: letters + numbers only (never contains comma/equals).
+  return generatePassword({ ...base, enabled: { ...base.enabled, symbols: false }, minSpecial: 0 });
+}
 
 export default function PdfProtect() {
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [show, setShow] = useState(false);
+  const [genLength, setGenLength] = useState(20);
+
+  const generate = () => {
+    const pw = generateSafePassword(genLength);
+    setPassword(pw);
+    setConfirm(pw);
+    setShow(true);
+    setError('');
+  };
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -80,6 +112,27 @@ export default function PdfProtect() {
         <label className="flex cursor-pointer items-center gap-2 border-2 border-border bg-muted px-3 py-2 text-sm">
           <input type="checkbox" checked={show} onChange={() => setShow(s => !s)} className="accent-accent" />
           Show
+        </label>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="secondary" onClick={generate}>
+          <Wand2 className="h-4 w-4" />
+          Generate password
+        </Button>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          Length
+          <select
+            value={genLength}
+            onChange={e => setGenLength(Number(e.target.value))}
+            className="border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm"
+          >
+            {[12, 16, 20, 32].map(n => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
 
