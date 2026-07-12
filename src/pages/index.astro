@@ -12,13 +12,24 @@ import { tools } from '@/registry/tools';
       <p class="max-w-2xl text-lg font-medium text-foreground">
         Privacy-first client-side utilities. {tools.length} tools — everything runs in your browser.
       </p>
-      <p class="mt-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+      <button
+        id="home-search"
+        type="button"
+        class="mt-3 inline-flex items-center gap-1.5 border-2 border-border bg-muted px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-muted-foreground shadow-brutal-sm press-brutal"
+      >
         Press
-        <kbd class="mx-0.5 border-2 border-border bg-muted px-1.5 py-0.5 font-mono text-xs shadow-brutal-sm">⌘K</kbd>
-        to search tools.
-      </p>
+        <kbd class="border-2 border-border bg-background px-1.5 py-0.5 font-mono text-xs">⌘K</kbd>
+        to search tools
+      </button>
     </header>
 
     <ToolGrid />
   </main>
+
+  <script>
+    // Let non-keyboard users open the command palette by clicking the hint.
+    document.getElementById('home-search')?.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('gwt:open-search'));
+    });
+  </script>
 </Base>

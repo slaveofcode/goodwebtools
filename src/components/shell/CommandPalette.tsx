@@ -16,8 +16,15 @@ export function CommandPalette() {
         setOpen(prev => !prev);
       }
     };
+    // Let any element open search by clicking (dispatch 'gwt:open-search'),
+    // so it works without a keyboard.
+    const openSearch = () => setOpen(true);
     document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
+    window.addEventListener('gwt:open-search', openSearch);
+    return () => {
+      document.removeEventListener('keydown', down);
+      window.removeEventListener('gwt:open-search', openSearch);
+    };
   }, []);
 
   useEffect(() => {
