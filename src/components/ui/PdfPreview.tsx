@@ -76,7 +76,7 @@ export function PdfPreview({ source, scale = 1, label = 'Preview' }: PdfPreviewP
       const rendered: Thumb[] = [];
       try {
         for (let n = start; n <= end; n++) {
-          const blob = await renderer.renderPage(n, scale);
+          const { blob } = await renderer.renderPage(n, scale);
           if (cancelled) break;
           rendered.push({ pageNumber: n, url: URL.createObjectURL(blob) });
         }
