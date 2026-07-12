@@ -74,27 +74,65 @@ export async function deletePages(file: File, removeList: number[]): Promise<Blo
   return toBlob(await out.save());
 }
 
-/** Draw a diagonal, semi-transparent text watermark across every page. */
-export async function addWatermark(file: File, text: string): Promise<Blob> {
+export type WatermarkLayout = 'diagonal' | 'tiled' | 'horizontal';
+
+export interface WatermarkOptions {
+  layout: WatermarkLayout;
+  /** 0–1 */
+  opacity: number;
+  /** each channel 0–1 */
+  color: { r: number; g: number; b: number };
+  /** font size as a fraction of the page's longest side */
+  fontScale: number;
+}
+
+/** Draw a text watermark across every page using the given options. */
+export async function addWatermark(
+  file: File,
+  text: string,
+  options: WatermarkOptions
+): Promise<Blob> {
   const doc = await PDFDocument.load(await readBytes(file));
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
+  const color = rgb(options.color.r, options.color.g, options.color.b);
 
   doc.getPages().forEach(page => {
     const { width, height } = page.getSize();
-    const fontSize = Math.max(width, height) / 14;
+    const fontSize = Math.max(width, height) * options.fontScale;
     const textWidth = font.widthOfTextAtSize(text, fontSize);
-    // Anchor so the 45°-rotated text runs through the page centre.
-    const angle = Math.PI / 4;
-    page.drawText(text, {
-      x: width / 2 - (textWidth / 2) * Math.cos(angle),
-      y: height / 2 - (textWidth / 2) * Math.sin(angle),
-      size: fontSize,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-      opacity: 0.25,
-      rotate: degrees(45),
-    });
+
+    const draw = (x: number, y: number, rotateDegrees: number) =>
+      page.drawText(text, {
+        x,
+        y,
+        size: fontSize,
+        font,
+        color,
+        opacity: options.opacity,
+        rotate: degrees(rotateDegrees),
+      });
+
+    if (options.layout === 'horizontal') {
+      draw(width / 2 - textWidth / 2, height / 2 - fontSize / 2, 0);
+    } else if (options.layout === 'diagonal') {
+      const angle = Math.PI / 4;
+      draw(
+        width / 2 - (textWidth / 2) * Math.cos(angle),
+        height / 2 - (textWidth / 2) * Math.sin(angle),
+        45
+      );
+    } else {
+      // Tiled: repeat the text on a diagonal grid covering the whole page.
+      const stepX = textWidth + fontSize * 2;
+      const stepY = fontSize * 4;
+      for (let y = -height; y < height * 2; y += stepY) {
+        for (let x = -width; x < width * 2; x += stepX) {
+          draw(x, y, 45);
+        }
+      }
+    }
   });
+
   return toBlob(await doc.save());
 }
 

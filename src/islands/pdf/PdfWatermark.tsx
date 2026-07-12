@@ -4,11 +4,36 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { ResultActions } from '@/components/ui/ResultActions';
 import { Alert } from '@/components/ui/Alert';
-import { addWatermark } from '@/tools/pdf/pdf.lib';
+import { addWatermark, type WatermarkLayout } from '@/tools/pdf/pdf.lib';
+
+const LAYOUTS: { value: WatermarkLayout; label: string }[] = [
+  { value: 'diagonal', label: 'Diagonal' },
+  { value: 'tiled', label: 'Tiled' },
+  { value: 'horizontal', label: 'Horizontal' },
+];
+
+const SIZES = [
+  { value: 1 / 20, label: 'Small' },
+  { value: 1 / 14, label: 'Medium' },
+  { value: 1 / 9, label: 'Large' },
+];
+
+function hexToRgb01(hex: string): { r: number; g: number; b: number } {
+  const clean = hex.replace('#', '');
+  return {
+    r: parseInt(clean.slice(0, 2), 16) / 255,
+    g: parseInt(clean.slice(2, 4), 16) / 255,
+    b: parseInt(clean.slice(4, 6), 16) / 255,
+  };
+}
 
 export default function PdfWatermark() {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState('CONFIDENTIAL');
+  const [layout, setLayout] = useState<WatermarkLayout>('diagonal');
+  const [fontScale, setFontScale] = useState(1 / 14);
+  const [opacity, setOpacity] = useState(25);
+  const [color, setColor] = useState('#808080');
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -25,7 +50,14 @@ export default function PdfWatermark() {
     setError('');
     setResult(null);
     try {
-      setResult(await addWatermark(file, text.trim()));
+      setResult(
+        await addWatermark(file, text.trim(), {
+          layout,
+          fontScale,
+          opacity: opacity / 100,
+          color: hexToRgb01(color),
+        })
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Watermark failed');
     } finally {
@@ -38,7 +70,7 @@ export default function PdfWatermark() {
       <Dropzone onDrop={onDrop} accept="application/pdf" multiple={false}>
         <div className="space-y-1">
           <p className="text-lg font-bold">Drop a PDF here or click to browse</p>
-          <p className="text-sm text-muted-foreground">Stamp a diagonal watermark on every page</p>
+          <p className="text-sm text-muted-foreground">Stamp a text watermark on every page</p>
         </div>
       </Dropzone>
 
@@ -51,6 +83,70 @@ export default function PdfWatermark() {
         placeholder="CONFIDENTIAL"
         rows={1}
       />
+
+      <div className="space-y-1.5">
+        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Layout
+        </span>
+        <div className="flex flex-wrap gap-2">
+          {LAYOUTS.map(({ value, label }) => (
+            <Button
+              key={value}
+              variant={layout === value ? 'primary' : 'secondary'}
+              aria-pressed={layout === value}
+              onClick={() => setLayout(value)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Size
+        </span>
+        <div className="flex flex-wrap gap-2">
+          {SIZES.map(({ value, label }) => (
+            <Button
+              key={label}
+              variant={fontScale === value ? 'primary' : 'secondary'}
+              aria-pressed={fontScale === value}
+              onClick={() => setFontScale(value)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-6">
+        <label className="flex-1 space-y-1.5">
+          <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            <span>Opacity</span>
+            <span>{opacity}%</span>
+          </span>
+          <input
+            type="range"
+            min={5}
+            max={60}
+            value={opacity}
+            onChange={e => setOpacity(Number(e.target.value))}
+            className="w-full accent-accent"
+          />
+        </label>
+        <label className="space-y-1.5">
+          <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            Color
+          </span>
+          <input
+            type="color"
+            value={color}
+            onChange={e => setColor(e.target.value)}
+            className="h-11 w-16 cursor-pointer border-2 border-border bg-muted"
+          />
+        </label>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || !text.trim() || busy}>
