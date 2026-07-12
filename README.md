@@ -113,6 +113,8 @@ result offers **Download** and **Copy to clipboard**.
 - File Encrypt / Decrypt — password-lock any file with **AES-256-GCM** and a
   PBKDF2 key (250k iterations, SHA-256). Self-describing `.gwtenc` container.
   WebCrypto only, no dependencies.
+- Zip / Unzip — bundle any files into a `.zip`, or extract one and download
+  individual entries. `fflate`, fully client-side.
 
 ## Testing
 
