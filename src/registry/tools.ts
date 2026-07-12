@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -352,6 +352,17 @@ export const tools: ToolDef[] = [
     icon: Eraser,
     summary: 'Remove EXIF, GPS, and all metadata from an image',
     load: () => import('@/islands/image/ImageScrub'),
+    status: 'stable'
+  },
+  {
+    id: 'file-crypt',
+    name: 'File Encrypt / Decrypt',
+    category: 'Files',
+    route: '/tools/file-crypt',
+    keywords: ['file', 'encrypt', 'decrypt', 'password', 'aes', 'aes-256', 'lock', 'secure', 'protect', 'crypto'],
+    icon: ShieldCheck,
+    summary: 'Password-encrypt any file with AES-256 (client-side)',
+    load: () => import('@/islands/files/FileCrypt'),
     status: 'stable'
   },
   {

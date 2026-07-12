@@ -106,12 +106,17 @@ All Canvas-based, fully client-side (`src/tools/image/canvas.lib.ts`).
 Every image tool accepts a **paste from clipboard** (⌘/Ctrl+V) in, and every
 result offers **Download** and **Copy to clipboard**.
 
+🚧 **Phase 4 — Files & crypto (in progress):**
+- File Encrypt / Decrypt — password-lock any file with **AES-256-GCM** and a
+  PBKDF2 key (250k iterations, SHA-256). Self-describing `.gwtenc` container.
+  WebCrypto only, no dependencies.
+
 ## Testing
 
-Unit tests cover the pure tool logic (parsers, generators, hash, image math):
-`npm run test` — **164 tests across 19 files**.
+Unit tests cover the pure tool logic (parsers, generators, hash, image math,
+file crypto): `npm run test` — **178 tests across 20 files**.
 
-**Next:** image watermark + crop (Phase 3 cont.); PDF compress/password (Phase 2 cont.)
+**Next (Phase 4 cont.):** zip create/extract, large-file hashing, split/join.
 
 ## Deployment
 
