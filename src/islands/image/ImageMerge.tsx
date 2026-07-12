@@ -204,8 +204,8 @@ export default function ImageMerge() {
                   <div
                     role="dialog"
                     aria-label="Choose grid columns"
-                    className="absolute left-0 top-full z-30 mt-2 origin-top border-2 border-border bg-background p-3 shadow-brutal"
-                    style={{ animation: 'gwtDropdown 150ms ease-out' }}
+                    className="absolute left-0 bottom-full z-30 mb-2 origin-bottom border-2 border-border bg-background p-3 shadow-brutal"
+                    style={{ animation: 'gwtDropup 150ms ease-out' }}
                   >
                     <ColumnPicker
                       count={items.length}
