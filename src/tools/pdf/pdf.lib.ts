@@ -1,5 +1,11 @@
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 
+// Loading/parsing existing PDFs is handled by the mupdf engine (in a worker) —
+// it parses the wide range of real-world PDFs that pdf-lib's parser rejects.
+// pdf-lib is kept for tasks that build/draw from scratch (images→PDF, watermark).
+export { getPageCount, mergePdfs, extractPageList, rotatePdf, deletePages } from './mupdf.client';
+import { normalizePdf } from './mupdf.client';
+
 const PDF_MIME = 'application/pdf';
 
 function toBlob(bytes: Uint8Array): Blob {
@@ -8,50 +14,6 @@ function toBlob(bytes: Uint8Array): Blob {
 
 async function readBytes(file: File): Promise<ArrayBuffer> {
   return file.arrayBuffer();
-}
-
-/**
- * Load a PDF as robustly as pdf-lib allows.
- *
- * Try a normal load first. If pdf-lib reports encryption, retry ignoring it —
- * this succeeds for permission-only / identity encryption but NOT for content
- * that's actually encrypted (pdf-lib doesn't decrypt streams), which then fails
- * during parsing. Either failure surfaces a clear, honest message.
- */
-async function loadPdf(file: File): Promise<PDFDocument> {
-  const bytes = await readBytes(file);
-  try {
-    return await PDFDocument.load(bytes);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : '';
-    if (/encrypt/i.test(message)) {
-      try {
-        return await PDFDocument.load(bytes.slice(0), { ignoreEncryption: true });
-      } catch {
-        throw new Error(
-          'This PDF is password-protected or encrypted, which this tool cannot edit yet.'
-        );
-      }
-    }
-    throw new Error(`This PDF could not be parsed (${message || 'unknown structure'}).`);
-  }
-}
-
-/** Number of pages in a PDF file. */
-export async function getPageCount(file: File): Promise<number> {
-  const doc = await loadPdf(file);
-  return doc.getPageCount();
-}
-
-/** Merge several PDFs into one, preserving order. */
-export async function mergePdfs(files: File[]): Promise<Blob> {
-  const out = await PDFDocument.create();
-  for (const file of files) {
-    const src = await loadPdf(file);
-    const pages = await out.copyPages(src, src.getPageIndices());
-    pages.forEach(page => out.addPage(page));
-  }
-  return toBlob(await out.save());
 }
 
 /**
@@ -82,50 +44,6 @@ export function parsePageSpec(spec: string): number[] {
     }
   }
   return result;
-}
-
-/**
- * Extract the given 1-indexed pages (in the given order) into a new PDF.
- * Out-of-range pages are ignored; throws if nothing valid remains.
- */
-export async function extractPageList(file: File, pageNumbers: number[]): Promise<Blob> {
-  const src = await loadPdf(file);
-  const total = src.getPageCount();
-  const indices = pageNumbers.filter(n => n >= 1 && n <= total).map(n => n - 1);
-  if (indices.length === 0) throw new Error(`No valid pages selected — this PDF has ${total} page(s).`);
-
-  const out = await PDFDocument.create();
-  const pages = await out.copyPages(src, indices);
-  pages.forEach(page => out.addPage(page));
-  return toBlob(await out.save());
-}
-
-/** Rotate every page by a multiple of 90 degrees (clockwise). */
-export async function rotatePdf(file: File, turnDegrees: number): Promise<Blob> {
-  const src = await loadPdf(file);
-  src.getPages().forEach(page => {
-    const current = page.getRotation().angle;
-    page.setRotation(degrees((current + turnDegrees) % 360));
-  });
-  return toBlob(await src.save());
-}
-
-/**
- * Remove the given 1-indexed pages, keeping the rest in order.
- * Throws if the removal would leave no pages.
- */
-export async function deletePages(file: File, removeList: number[]): Promise<Blob> {
-  const src = await loadPdf(file);
-  const total = src.getPageCount();
-  const remove = new Set(removeList.map(n => n - 1).filter(i => i >= 0 && i < total));
-  const keep: number[] = [];
-  for (let i = 0; i < total; i++) if (!remove.has(i)) keep.push(i);
-  if (keep.length === 0) throw new Error('Cannot remove every page.');
-
-  const out = await PDFDocument.create();
-  const pages = await out.copyPages(src, keep);
-  pages.forEach(page => out.addPage(page));
-  return toBlob(await out.save());
 }
 
 export type WatermarkLayout = 'diagonal' | 'tiled' | 'horizontal';
@@ -184,13 +102,21 @@ function drawWatermark(page: PdfPage, font: PdfFont, text: string, options: Wate
   }
 }
 
+// Normalize through mupdf first so pdf-lib can parse any real-world PDF, then
+// draw the watermark with pdf-lib. ignoreEncryption is safe here because the
+// bytes come straight from mupdf's own writer.
+async function loadViaMupdf(file: File): Promise<PDFDocument> {
+  const clean = await normalizePdf(file);
+  return PDFDocument.load(clean, { ignoreEncryption: true });
+}
+
 /** Draw a text watermark across every page using the given options. */
 export async function addWatermark(
   file: File,
   text: string,
   options: WatermarkOptions
 ): Promise<Blob> {
-  const doc = await loadPdf(file);
+  const doc = await loadViaMupdf(file);
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
   doc.getPages().forEach(page => drawWatermark(page, font, text, options));
   return toBlob(await doc.save());
@@ -205,7 +131,7 @@ export async function buildWatermarkPreview(
   text: string,
   options: WatermarkOptions
 ): Promise<Uint8Array> {
-  const src = await loadPdf(file);
+  const src = await loadViaMupdf(file);
   const out = await PDFDocument.create();
   const [firstPage] = await out.copyPages(src, [0]);
   out.addPage(firstPage);

@@ -13,6 +13,7 @@ export default function PdfSplit() {
   const [spec, setSpec] = useState('');
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
   const [error, setError] = useState('');
 
   const onDrop = async (files: File[]) => {
@@ -22,12 +23,15 @@ export default function PdfSplit() {
     setResult(null);
     setFile(pdf);
     setSpec('');
+    setReading(true);
     try {
       const count = await getPageCount(pdf);
       setPageCount(count);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not read this PDF.');
       setFile(null);
+    } finally {
+      setReading(false);
     }
   };
 
@@ -62,6 +66,12 @@ export default function PdfSplit() {
           </p>
         </div>
       </Dropzone>
+
+      {reading && (
+        <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Reading PDF… (first use loads the PDF engine)
+        </p>
+      )}
 
       {file && (
         <>

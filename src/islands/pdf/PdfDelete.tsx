@@ -13,6 +13,7 @@ export default function PdfDelete() {
   const [spec, setSpec] = useState('');
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
   const [error, setError] = useState('');
 
   const onDrop = async (files: File[]) => {
@@ -21,11 +22,14 @@ export default function PdfDelete() {
     setError('');
     setResult(null);
     setFile(pdf);
+    setReading(true);
     try {
       setPageCount(await getPageCount(pdf));
-    } catch {
-      setError('Could not read this PDF.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not read this PDF.');
       setFile(null);
+    } finally {
+      setReading(false);
     }
   };
 
@@ -56,6 +60,12 @@ export default function PdfDelete() {
           <p className="text-sm text-muted-foreground">Remove pages you don't need</p>
         </div>
       </Dropzone>
+
+      {reading && (
+        <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Reading PDF… (first use loads the PDF engine)
+        </p>
+      )}
 
       {file && (
         <>

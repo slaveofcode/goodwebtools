@@ -6,13 +6,19 @@ import AstroPWA from '@vite-pwa/astro';
 export default defineConfig({
   output: 'static',
   vite: {
+    // mupdf/pdf.js workers use dynamic import() (code-splitting), which requires
+    // ES-module workers rather than Vite's default IIFE format.
+    worker: {
+      format: 'es',
+    },
     optimizeDeps: {
       // Pre-bundle heavy deps used only by lazily-imported tool islands, so
       // Vite doesn't discover them mid-request and force a reload that makes
       // in-flight dynamic imports fail ("Failed to fetch dynamically imported
       // module"). pdfjs worker is excluded — it's loaded via ?url.
       include: ['pdf-lib', 'pdfjs-dist', 'marked', 'dompurify', 'qrcode', 'jsqr', 'comlink'],
-      exclude: ['pdfjs-dist/build/pdf.worker.min.mjs'],
+      // mupdf is a large wasm module used only inside a worker — don't pre-bundle it.
+      exclude: ['pdfjs-dist/build/pdf.worker.min.mjs', 'mupdf'],
     },
   },
   integrations: [
