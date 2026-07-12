@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, ArrowDown, X, MoveVertical, MoveHorizontal, LayoutGrid } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
@@ -62,6 +62,8 @@ export default function ImageMerge() {
   const [gap, setGap] = useState(0);
   const [match, setMatch] = useState(true);
   const [columns, setColumns] = useState(2);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const directionRef = useRef<HTMLDivElement>(null);
   const [transparent, setTransparent] = useState(false);
   const [background, setBackground] = useState('#ffffff');
   const [result, setResult] = useState<Blob | null>(null);
@@ -69,6 +71,16 @@ export default function ImageMerge() {
   const [error, setError] = useState('');
 
   useEffect(() => () => { items.forEach(i => URL.revokeObjectURL(i.url)); }, [items]);
+
+  // Close the column popover when clicking outside the Direction controls.
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (directionRef.current && !directionRef.current.contains(e.target as Node)) setPickerOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [pickerOpen]);
 
   const addFiles = (files: File[]) => {
     const images = files.filter(f => f.type.startsWith('image/'));
@@ -163,27 +175,49 @@ export default function ImageMerge() {
 
       {items.length > 0 && (
         <div className="flex flex-wrap items-end gap-4">
-          <div className="space-y-1.5">
+          <div ref={directionRef} className="relative space-y-1.5">
             <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Direction</span>
             <div className="flex gap-2">
-              <Button variant={direction === 'vertical' ? 'primary' : 'secondary'} aria-pressed={direction === 'vertical'} onClick={() => setDirection('vertical')}>
+              <Button variant={direction === 'vertical' ? 'primary' : 'secondary'} aria-pressed={direction === 'vertical'} onClick={() => { setDirection('vertical'); setPickerOpen(false); }}>
                 <MoveVertical className="h-4 w-4" />
                 Vertical
               </Button>
-              <Button variant={direction === 'horizontal' ? 'primary' : 'secondary'} aria-pressed={direction === 'horizontal'} onClick={() => setDirection('horizontal')}>
+              <Button variant={direction === 'horizontal' ? 'primary' : 'secondary'} aria-pressed={direction === 'horizontal'} onClick={() => { setDirection('horizontal'); setPickerOpen(false); }}>
                 <MoveHorizontal className="h-4 w-4" />
                 Horizontal
               </Button>
-              <Button variant={direction === 'grid' ? 'primary' : 'secondary'} aria-pressed={direction === 'grid'} onClick={() => setDirection('grid')}>
+              <Button
+                variant={direction === 'grid' ? 'primary' : 'secondary'}
+                aria-pressed={direction === 'grid'}
+                onClick={() => { if (direction === 'grid') { setPickerOpen(o => !o); } else { setDirection('grid'); setPickerOpen(true); } }}
+              >
                 <LayoutGrid className="h-4 w-4" />
                 Grid
               </Button>
             </div>
-          </div>
 
-          {direction === 'grid' && (
-            <ColumnPicker count={items.length} columns={columns} onChange={setColumns} />
-          )}
+            {/* Compact summary sits under the buttons so it never shifts the Gap field. */}
+            {direction === 'grid' && (
+              <p className="text-xs text-muted-foreground">
+                {Math.min(columns, items.length)} column{Math.min(columns, items.length) > 1 ? 's' : ''} ×{' '}
+                {Math.ceil(items.length / Math.min(columns, items.length || 1))} rows —{' '}
+                <button type="button" onClick={() => setPickerOpen(true)} className="font-bold text-accent underline">
+                  change
+                </button>
+              </p>
+            )}
+
+            {/* Column picker floats over the layout instead of pushing controls aside. */}
+            {direction === 'grid' && pickerOpen && (
+              <div className="absolute left-0 top-full z-20 mt-2 border-2 border-border bg-background p-3 shadow-brutal">
+                <ColumnPicker
+                  count={items.length}
+                  columns={columns}
+                  onChange={c => { setColumns(c); setPickerOpen(false); }}
+                />
+              </div>
+            )}
+          </div>
 
           <label className="space-y-1.5 text-sm">
             <span className="block font-bold uppercase tracking-wide text-muted-foreground">Gap (px)</span>
