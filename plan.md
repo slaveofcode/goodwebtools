@@ -317,7 +317,7 @@ Thin MV3 capability-shim: global-hotkey screenshot + desktop region-select overl
 ## 9. Open Decisions (confirm before/at each phase)
 - [x] ~~Framework~~ → **Astro + React islands, static output** (resolved). Vue only if dropping Excalidraw/tldraw.
 - [ ] Shell persistence: Astro View Transitions + `transition:persist` (recommended) vs single full-page SPA island.
-- [ ] PDF encryption library (pdf-lib vs mupdf-wasm) for password strength.
+- [x] ~~PDF engine~~ → **mupdf-wasm** (resolved). pdf-lib's parser rejects many valid real-world PDFs (compressed object/xref streams); mupdf-wasm parses them robustly and also handles decryption/repair. Runs in a Comlink **worker** (~10MB wasm, cached after first load, progress/"loading" indicator). pdf-lib retained only for build-from-scratch tasks (images→PDF) and for drawing (watermark) after mupdf normalizes the input. **Licensing:** mupdf is **AGPL** — compatible only while GoodWebTools stays open source; a closed-source commercial build would need an Artifex commercial license.
 - [ ] Crypto KDF: Argon2 (recommended) vs PBKDF2; finalize encrypted-file header format.
 - [ ] Excalidraw embed vs custom canvas for whiteboard (keep React → Excalidraw stays easy).
 - [ ] ML model weights + licenses: background removal, upscaler, **and detection models** (face: BlazeFace/SCRFD/RetinaFace; plate: YOLO-plate; text: DBNet/PaddleOCR-det) — verify commercial-use terms per model.

@@ -79,7 +79,9 @@ Open http://localhost:4321
 - Images → PDF (PNG/JPG)
 - PDF → Images (render pages to PNG via pdf.js)
 
-`pdf-lib` for editing, `pdfjs-dist` for rendering — all fully client-side.
+Engine: **mupdf-wasm** (in a worker) parses/edits real-world PDFs that pdf-lib
+can't; `pdfjs-dist` renders pages; `pdf-lib` builds images→PDF and draws
+watermarks. All fully client-side. (mupdf is AGPL — fine while this stays open source.)
 
 ## Design
 
