@@ -3,6 +3,7 @@ import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
+import { LoadFileButton, fileExt } from '@/components/ui/LoadFileButton';
 import { csvToJson, jsonToCsv } from '@/tools/dev/csv.lib';
 
 type Mode = 'toJson' | 'toCsv';
@@ -46,6 +47,21 @@ export default function CsvJson() {
     if (activeMode) run(activeMode, input, value);
   };
 
+  const loadFile = (text: string, name: string) => {
+    setInput(text);
+    setError('');
+    const ext = fileExt(name);
+    // Pick the natural direction from the file type; a .tsv also sets the delimiter.
+    if (ext === 'json') {
+      run('toCsv', text);
+    } else if (ext === 'tsv') {
+      setDelimiter('\t');
+      run('toJson', text, '\t');
+    } else {
+      run('toJson', text);
+    }
+  };
+
   const clear = () => {
     setInput('');
     setOutput('');
@@ -55,6 +71,13 @@ export default function CsvJson() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <LoadFileButton
+          onLoad={loadFile}
+          accept=".csv,.tsv,.json,.txt,text/csv,application/json,text/plain"
+          label="Load .csv / .json file"
+        />
+      </div>
       <TextArea
         label="Input"
         value={input}

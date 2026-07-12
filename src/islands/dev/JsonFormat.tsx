@@ -3,6 +3,7 @@ import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
+import { LoadFileButton } from '@/components/ui/LoadFileButton';
 
 type Mode = 'format2' | 'format4' | 'minify';
 
@@ -46,6 +47,12 @@ export default function JsonFormat() {
     if (activeMode) process(activeMode, value);
   };
 
+  const loadFile = (text: string) => {
+    setInput(text);
+    setError('');
+    process(activeMode ?? 'format2', text);
+  };
+
   const clear = () => {
     setInput('');
     setOutput('');
@@ -55,6 +62,9 @@ export default function JsonFormat() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <LoadFileButton onLoad={loadFile} accept=".json,application/json,.txt,text/plain" label="Load .json file" />
+      </div>
       <TextArea
         label="Input JSON"
         value={input}

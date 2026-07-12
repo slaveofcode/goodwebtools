@@ -3,6 +3,7 @@ import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
+import { LoadFileButton, fileExt } from '@/components/ui/LoadFileButton';
 
 export interface BiConverterProps {
   /** Left-hand format label, e.g. "JSON". */
@@ -14,12 +15,16 @@ export interface BiConverterProps {
   /** Convert right → left (may throw on invalid input). */
   toLeft: (input: string) => string;
   placeholder?: string;
+  /** `accept` for the "Load file" picker, e.g. '.json,.yaml,.yml'. */
+  fileAccept?: string;
+  /** Extensions (no dot) that map to the right-hand format, e.g. ['yaml','yml']. */
+  rightExts?: string[];
 }
 
 type Mode = 'toRight' | 'toLeft';
 
 /** A two-way text converter: paste input, pick a direction, copy the result. */
-export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholder }: BiConverterProps) {
+export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholder, fileAccept, rightExts = [] }: BiConverterProps) {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
@@ -45,6 +50,13 @@ export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholde
     if (mode) run(mode, value);
   };
 
+  const loadFile = (text: string, name: string) => {
+    setInput(text);
+    setError('');
+    // A right-format file (e.g. .yaml) converts to the left (JSON); otherwise left → right.
+    run(rightExts.includes(fileExt(name)) ? 'toLeft' : 'toRight', text);
+  };
+
   const clear = () => {
     setInput('');
     setOutput('');
@@ -54,6 +66,11 @@ export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholde
 
   return (
     <div className="space-y-4">
+      {fileAccept && (
+        <div className="flex justify-end">
+          <LoadFileButton onLoad={loadFile} accept={fileAccept} label={`Load ${leftLabel} / ${rightLabel} file`} />
+        </div>
+      )}
       <TextArea
         label="Input"
         value={input}

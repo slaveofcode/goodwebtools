@@ -9,6 +9,8 @@ export default function JsonToml() {
       toRight={jsonToToml}
       toLeft={tomlToJson}
       placeholder={'{\n  "title": "demo",\n  "count": 3,\n  "tags": ["a", "b"]\n}'}
+      fileAccept=".json,.toml,application/json,application/toml,text/plain"
+      rightExts={['toml']}
     />
   );
 }
