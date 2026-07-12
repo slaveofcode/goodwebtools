@@ -5,6 +5,16 @@ import AstroPWA from '@vite-pwa/astro';
 
 export default defineConfig({
   output: 'static',
+  vite: {
+    optimizeDeps: {
+      // Pre-bundle heavy deps used only by lazily-imported tool islands, so
+      // Vite doesn't discover them mid-request and force a reload that makes
+      // in-flight dynamic imports fail ("Failed to fetch dynamically imported
+      // module"). pdfjs worker is excluded — it's loaded via ?url.
+      include: ['pdf-lib', 'pdfjs-dist', 'marked', 'dompurify', 'qrcode', 'jsqr', 'comlink'],
+      exclude: ['pdfjs-dist/build/pdf.worker.min.mjs'],
+    },
+  },
   integrations: [
     react(),
     tailwind(),
