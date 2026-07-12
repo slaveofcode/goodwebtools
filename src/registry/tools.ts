@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -231,6 +231,50 @@ export const tools: ToolDef[] = [
     icon: Stamp,
     summary: 'Add a diagonal text watermark to a PDF',
     load: () => import('@/islands/pdf/PdfWatermark'),
+    status: 'stable'
+  },
+  {
+    id: 'image-convert',
+    name: 'Image Converter',
+    category: 'Image',
+    route: '/tools/image-convert',
+    keywords: ['image', 'convert', 'png', 'jpg', 'jpeg', 'webp', 'format'],
+    icon: Replace,
+    summary: 'Convert images between PNG, JPEG, and WebP',
+    load: () => import('@/islands/image/ImageConvert'),
+    status: 'stable'
+  },
+  {
+    id: 'image-compress',
+    name: 'Image Compressor',
+    category: 'Image',
+    route: '/tools/image-compress',
+    keywords: ['image', 'compress', 'shrink', 'optimize', 'reduce', 'size', 'webp', 'jpeg'],
+    icon: Minimize2,
+    summary: 'Shrink image file size by re-encoding',
+    load: () => import('@/islands/image/ImageCompress'),
+    status: 'stable'
+  },
+  {
+    id: 'image-resize',
+    name: 'Image Resizer',
+    category: 'Image',
+    route: '/tools/image-resize',
+    keywords: ['image', 'resize', 'scale', 'dimensions', 'width', 'height', 'pixels'],
+    icon: Maximize2,
+    summary: 'Resize an image to exact pixel dimensions',
+    load: () => import('@/islands/image/ImageResize'),
+    status: 'stable'
+  },
+  {
+    id: 'image-scrub',
+    name: 'Image Metadata Scrubber',
+    category: 'Image',
+    route: '/tools/image-scrub',
+    keywords: ['image', 'exif', 'metadata', 'gps', 'location', 'strip', 'remove', 'privacy', 'scrub'],
+    icon: Eraser,
+    summary: 'Remove EXIF, GPS, and all metadata from an image',
+    load: () => import('@/islands/image/ImageScrub'),
     status: 'stable'
   },
   {

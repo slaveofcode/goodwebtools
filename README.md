@@ -89,7 +89,20 @@ watermarks. All fully client-side. (mupdf is AGPL — fine while this stays open
 Space Grotesk (self-hosted, same-origin to preserve zero external requests).
 Fluid-width, mobile-first layout.
 
-**Next:** compress, password (Phase 2 cont.); then Phase 3 — Image basics
+🚧 **Phase 3 — Image basics (4 tools, in progress):**
+- Image Converter (PNG / JPEG / WebP)
+- Image Compressor (quality, size delta)
+- Image Resizer (aspect-lock)
+- Metadata Scrubber (strip EXIF/GPS by re-encoding)
+
+All Canvas-based, fully client-side (`src/tools/image/canvas.lib.ts`).
+
+## Testing
+
+Unit tests cover the pure tool logic (parsers, generators, hash, image math):
+`npm run test` — **111 tests across 15 files**.
+
+**Next:** image watermark + crop (Phase 3 cont.); PDF compress/password (Phase 2 cont.)
 
 ## Deployment
 
