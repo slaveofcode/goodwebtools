@@ -88,16 +88,27 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, blur: HTMLCanvasElem
     case 'arrow': {
       const x2 = s.x2 ?? x;
       const y2 = s.y2 ?? y;
+      const angle = Math.atan2(y2 - y, x2 - x);
+      const len = Math.hypot(x2 - x, y2 - y);
+      // Proportional head; never longer than the arrow itself.
+      const headLen = Math.min(len, Math.max(14, s.width * 4.5));
+      const headHalf = Math.max(7, s.width * 2.2);
+      // Base of the arrowhead, pulled back from the tip along the shaft.
+      const bx = x2 - headLen * Math.cos(angle);
+      const by = y2 - headLen * Math.sin(angle);
+      // Flat-capped shaft that stops at the head base (no round tail blob).
+      ctx.lineCap = 'butt';
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x2, y2);
+      ctx.lineTo(bx, by);
       ctx.stroke();
-      const angle = Math.atan2(y2 - y, x2 - x);
-      const head = Math.max(12, s.width * 3.5);
+      // Filled triangular head.
+      const px = Math.cos(angle + Math.PI / 2);
+      const py = Math.sin(angle + Math.PI / 2);
       ctx.beginPath();
       ctx.moveTo(x2, y2);
-      ctx.lineTo(x2 - head * Math.cos(angle - Math.PI / 6), y2 - head * Math.sin(angle - Math.PI / 6));
-      ctx.lineTo(x2 - head * Math.cos(angle + Math.PI / 6), y2 - head * Math.sin(angle + Math.PI / 6));
+      ctx.lineTo(bx + headHalf * px, by + headHalf * py);
+      ctx.lineTo(bx - headHalf * px, by - headHalf * py);
       ctx.closePath();
       ctx.fill();
       break;
@@ -136,6 +147,11 @@ export default function ImageAnnotate() {
   const bitmapRef = useRef<ImageBitmap | null>(null);
   const draftRef = useRef<Shape | null>(null);
   const drawingRef = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Guards against the spurious blur that fires the instant the text input
+  // mounts (the placing click steals focus back to the body). We only treat a
+  // blur as a real "done editing" once the input has actually been focused.
+  const textReadyRef = useRef(false);
 
   const [file, setFile] = useState<File | null>(null);
   const [ready, setReady] = useState(false);
@@ -288,6 +304,22 @@ export default function ImageAnnotate() {
     setUndone([]);
   };
 
+  // Focus the text input a frame after it mounts, then arm blur-to-commit.
+  // The placing click fires a blur before this rAF runs, so that early blur is
+  // ignored (textReadyRef is still false) and the input survives.
+  useEffect(() => {
+    if (!textEdit) {
+      textReadyRef.current = false;
+      return;
+    }
+    textReadyRef.current = false;
+    const id = requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      textReadyRef.current = true;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [textEdit]);
+
   const commitText = () => {
     if (textEdit && textValue.trim()) {
       const size = Math.max(14, strokeWidth * scaleX() * 5);
@@ -416,10 +448,10 @@ export default function ImageAnnotate() {
             />
             {textEdit && (
               <input
-                autoFocus
+                ref={inputRef}
                 value={textValue}
                 onChange={e => setTextValue(e.target.value)}
-                onBlur={commitText}
+                onBlur={() => { if (textReadyRef.current) commitText(); }}
                 onKeyDown={e => {
                   if (e.key === 'Enter') commitText();
                   if (e.key === 'Escape') { setTextEdit(null); setTextValue(''); }
