@@ -421,6 +421,17 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
+    id: 'file-split',
+    name: 'File Split / Join',
+    category: 'Files',
+    route: '/tools/file-split',
+    keywords: ['split', 'join', 'chunk', 'part', 'divide', 'merge', 'concatenate', 'large', 'file'],
+    icon: Scissors,
+    summary: 'Split a large file into parts, or rejoin them (client-side)',
+    load: () => import('@/islands/files/FileSplit'),
+    status: 'stable'
+  },
+  {
     id: 'hash',
     name: 'Hash File',
     category: 'Dev',
