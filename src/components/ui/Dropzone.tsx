@@ -33,16 +33,15 @@ export function Dropzone({ onDrop, accept, multiple = true, children }: Dropzone
   }, [onDrop]);
 
   return (
-    <div
+    // The whole area is a <label>, so clicking anywhere opens the file picker.
+    <label
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`cursor-pointer border-[3px] border-dashed p-8 text-center transition-all ${isDragging ? 'border-accent bg-accent/10 shadow-brutal' : 'border-border hover:shadow-brutal'}`}
+      className={`block cursor-pointer border-[3px] border-dashed p-8 text-center transition-all ${isDragging ? 'border-accent bg-accent/10 shadow-brutal' : 'border-border hover:shadow-brutal'}`}
     >
       <input type="file" id="file-input" accept={accept} multiple={multiple} onChange={handleFileInput} className="hidden" />
-      <label htmlFor="file-input" className="cursor-pointer">
-        {children || <p>Drop files here or click to browse</p>}
-      </label>
-    </div>
+      {children || <p>Drop files here or click to browse</p>}
+    </label>
   );
 }
