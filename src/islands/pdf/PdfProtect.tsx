@@ -127,7 +127,7 @@ export default function PdfProtect() {
             onChange={e => setGenLength(Number(e.target.value))}
             className="border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm"
           >
-            {[12, 16, 20, 32].map(n => (
+            {[8, 10, 12, 16, 20, 32].map(n => (
               <option key={n} value={n}>
                 {n}
               </option>
