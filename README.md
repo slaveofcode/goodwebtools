@@ -115,6 +115,9 @@ result offers **Download** and **Copy to clipboard**.
   WebCrypto only, no dependencies.
 - Zip / Unzip — bundle any files into a `.zip`, or extract one and download
   individual entries. `fflate`, fully client-side.
+- Archive Extractor — extract **RAR, 7z, TAR, GZ, ZIP** and more via
+  `libarchive.js` (WASM, self-hosted worker). Extract-only — creating .rar/.7z
+  isn't possible client-side (proprietary formats).
 
 ## Testing
 

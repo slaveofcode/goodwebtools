@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "copy:wasm": "node -e \"require('fs').copyFileSync('node_modules/mupdf/dist/mupdf-wasm.wasm','public/mupdf-wasm.wasm')\"",
+    "copy:wasm": "node scripts/copy-wasm.mjs",
     "predev": "npm run copy:wasm",
     "dev": "astro dev",
     "prebuild": "npm run copy:wasm",
@@ -43,6 +43,7 @@
     "gifenc": "^1.0.3",
     "highlight.js": "^11.11.1",
     "jsqr": "^1.4.0",
+    "libarchive.js": "^2.0.2",
     "lucide-react": "^0.294.0",
     "marked": "^18.0.6",
     "mupdf": "^1.28.0",

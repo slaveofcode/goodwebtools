@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -407,6 +407,17 @@ export const tools: ToolDef[] = [
     icon: FileArchive,
     summary: 'Create a .zip from files, or extract one (client-side)',
     load: () => import('@/islands/files/ZipTool'),
+    status: 'stable'
+  },
+  {
+    id: 'archive-extract',
+    name: 'Archive Extractor',
+    category: 'Files',
+    route: '/tools/archive-extract',
+    keywords: ['rar', '7z', 'tar', 'gz', 'gzip', 'bzip2', 'xz', 'zstd', 'extract', 'unarchive', 'decompress', 'archive'],
+    icon: FolderArchive,
+    summary: 'Extract RAR, 7z, TAR, GZ, ZIP and more (client-side)',
+    load: () => import('@/islands/files/ArchiveExtract'),
     status: 'stable'
   },
   {

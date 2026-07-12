@@ -6,3 +6,4 @@ dist/
 
 # mupdf wasm (copied from node_modules by copy:wasm)
 public/mupdf-wasm.wasm
+public/libarchive/
