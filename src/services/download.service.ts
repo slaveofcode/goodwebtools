@@ -35,9 +35,20 @@ export class DownloadService {
   }
 
   async downloadZip(files: BlobFile[], zipName: string): Promise<void> {
-    // For Phase 0, not implemented yet
-    // Will be added when zip functionality is needed
-    throw new Error('Zip download not yet implemented');
+    const { zip } = await import('fflate');
+
+    const entries: Record<string, Uint8Array> = {};
+    for (const { blob, filename } of files) {
+      entries[filename] = new Uint8Array(await blob.arrayBuffer());
+    }
+
+    // level 0 (store) — the inputs (PNGs) are already compressed, so deflating
+    // them again wastes CPU for no size win.
+    const zipped = await new Promise<Uint8Array>((resolve, reject) =>
+      zip(entries, { level: 0 }, (err, data) => (err ? reject(err) : resolve(data)))
+    );
+
+    await this.download(new Blob([zipped], { type: 'application/zip' }), zipName);
   }
 }
 

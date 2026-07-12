@@ -38,6 +38,7 @@
     "cmdk": "^0.2.1",
     "comlink": "^4.4.2",
     "dompurify": "^3.4.12",
+    "fflate": "^0.8.3",
     "jsqr": "^1.4.0",
     "lucide-react": "^0.294.0",
     "marked": "^18.0.6",

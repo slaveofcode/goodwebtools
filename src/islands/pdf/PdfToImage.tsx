@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, FileArchive } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
@@ -59,6 +59,22 @@ export default function PdfToImage() {
 
   const baseName = file ? file.name.replace(/\.pdf$/i, '') : 'page';
 
+  const [zipping, setZipping] = useState(false);
+  const downloadAllZip = async () => {
+    if (pages.length === 0) return;
+    setZipping(true);
+    try {
+      await downloadService.downloadZip(
+        pages.map(page => ({ blob: page.blob, filename: `${baseName}-${page.pageNumber}.png` })),
+        `${baseName}-images.zip`
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not create ZIP');
+    } finally {
+      setZipping(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="application/pdf" multiple={false}>
@@ -94,6 +110,18 @@ export default function PdfToImage() {
 
       {busy && <ProgressBar percent={progress} label="Rendering pages" />}
       {error && <Alert variant="error">{error}</Alert>}
+
+      {pages.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            {pages.length} page{pages.length === 1 ? '' : 's'} rendered
+          </span>
+          <Button onClick={downloadAllZip} disabled={zipping}>
+            <FileArchive className="h-4 w-4" />
+            {zipping ? 'Zipping…' : 'Download all (ZIP)'}
+          </Button>
+        </div>
+      )}
 
       {pages.length > 0 && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
