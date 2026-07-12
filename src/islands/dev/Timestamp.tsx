@@ -9,6 +9,7 @@ import {
   formatInTimeZone,
   listTimeZones,
   getLocalTimeZone,
+  parseDateTimeLocal,
 } from '@/tools/dev/timestamp.lib';
 
 const TIME_ZONES = listTimeZones();
@@ -18,6 +19,18 @@ export default function Timestamp() {
   const [date, setDate] = useState<Date | null>(null);
   const [timeZone, setTimeZone] = useState(() => getLocalTimeZone());
   const [error, setError] = useState('');
+  const [pickerValue, setPickerValue] = useState('');
+  const [pickerZone, setPickerZone] = useState<'local' | 'utc'>('local');
+
+  // Apply the date/time picker (interpreted as local or UTC) to the result.
+  const applyPicker = (value: string, zone: 'local' | 'utc') => {
+    setPickerValue(value);
+    setPickerZone(zone);
+    setError('');
+    if (!value) return;
+    const parsed = parseDateTimeLocal(value, zone);
+    if (parsed) setDate(parsed);
+  };
 
   const convert = () => {
     setError('');
@@ -60,12 +73,47 @@ export default function Timestamp() {
         rows={2}
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-end gap-3">
         <Button onClick={convert}>Convert</Button>
         <Button variant="secondary" onClick={now}>
           Now
         </Button>
-        <Button variant="ghost" onClick={() => { setInput(''); setDate(null); setError(''); }}>
+
+        {/* Pick a specific date & time, interpreted as local or UTC. */}
+        <div className="space-y-1">
+          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            Or pick date &amp; time
+          </span>
+          <div className="flex flex-wrap items-stretch gap-2">
+            <input
+              type="datetime-local"
+              step={1}
+              value={pickerValue}
+              onChange={e => applyPicker(e.target.value, pickerZone)}
+              className="border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm dark:[color-scheme:dark]"
+            />
+            <div className="flex border-2 border-border">
+              <button
+                type="button"
+                onClick={() => applyPicker(pickerValue, 'local')}
+                aria-pressed={pickerZone === 'local'}
+                className={`px-3 text-sm font-bold ${pickerZone === 'local' ? 'bg-accent text-accent-foreground' : 'bg-muted'}`}
+              >
+                Local
+              </button>
+              <button
+                type="button"
+                onClick={() => applyPicker(pickerValue, 'utc')}
+                aria-pressed={pickerZone === 'utc'}
+                className={`border-l-2 border-border px-3 text-sm font-bold ${pickerZone === 'utc' ? 'bg-accent text-accent-foreground' : 'bg-muted'}`}
+              >
+                UTC
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <Button variant="ghost" onClick={() => { setInput(''); setDate(null); setError(''); setPickerValue(''); }}>
           Clear
         </Button>
       </div>

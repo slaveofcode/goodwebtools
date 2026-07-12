@@ -5,6 +5,7 @@ import {
   formatInTimeZone,
   listTimeZones,
   getLocalTimeZone,
+  parseDateTimeLocal,
 } from './timestamp.lib';
 
 describe('parseTimestamp', () => {
@@ -82,5 +83,32 @@ describe('time zone helpers', () => {
   it('returns a non-empty local time zone', () => {
     expect(typeof getLocalTimeZone()).toBe('string');
     expect(getLocalTimeZone().length).toBeGreaterThan(0);
+  });
+});
+
+describe('parseDateTimeLocal', () => {
+  it('interprets a value as UTC', () => {
+    // 2026-07-12T10:30:00Z is 1752316200 seconds.
+    const d = parseDateTimeLocal('2026-07-12T10:30', 'utc')!;
+    expect(d.toISOString()).toBe('2026-07-12T10:30:00.000Z');
+  });
+
+  it('includes seconds when present', () => {
+    const d = parseDateTimeLocal('2026-07-12T10:30:15', 'utc')!;
+    expect(d.toISOString()).toBe('2026-07-12T10:30:15.000Z');
+  });
+
+  it('interprets a value as local wall-clock time', () => {
+    const d = parseDateTimeLocal('2026-07-12T10:30', 'local')!;
+    expect(d.getFullYear()).toBe(2026);
+    expect(d.getMonth()).toBe(6); // July (0-based)
+    expect(d.getDate()).toBe(12);
+    expect(d.getHours()).toBe(10);
+    expect(d.getMinutes()).toBe(30);
+  });
+
+  it('returns null for a malformed value', () => {
+    expect(parseDateTimeLocal('', 'local')).toBeNull();
+    expect(parseDateTimeLocal('not-a-date', 'utc')).toBeNull();
   });
 });

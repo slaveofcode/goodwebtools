@@ -85,3 +85,16 @@ export function parseTimestamp(input: string): Date | null {
   }
   return date;
 }
+
+/**
+ * Parse an `<input type="datetime-local">` value (e.g. "2026-07-12T10:30" or
+ * "…:30:15") as either local time or UTC. Returns null on a malformed value.
+ */
+export function parseDateTimeLocal(value: string, zone: 'local' | 'utc'): Date | null {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!match) return null;
+  const [, y, mo, d, h, mi, s] = match;
+  const parts = [Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(s ?? '0')] as const;
+  const date = zone === 'utc' ? new Date(Date.UTC(...parts)) : new Date(...parts);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
