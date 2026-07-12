@@ -1,10 +1,23 @@
 node_modules/
 dist/
 .astro/
-.env
 .DS_Store
 
-# mupdf wasm (copied from node_modules by copy:wasm)
+# Secrets & local env (this repo is public — never commit these)
+.env
+.env.*
+.dev.vars
+.dev.vars.*
+*.local
+.cloudflare/
+
+# Cloudflare / Wrangler local state
+.wrangler/
+
+# WASM/worker assets copied from node_modules by copy:wasm
 public/mupdf-wasm.wasm
 public/libarchive/
-.wrangler/
+
+# ML model assets — staged locally, uploaded to R2, never committed
+public/models/
+models-r2/

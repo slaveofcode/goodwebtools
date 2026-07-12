@@ -1,134 +1,92 @@
 # Deployment Guide
 
-## Cloudflare Pages Deployment
+GoodWebTools is a **static Astro site** deployed to **Cloudflare Workers** (with
+Static Assets), plus a small Worker that streams the AI-tool model files from an
+**R2 bucket**. Everything runs client-side; the Worker only serves files.
 
-### Prerequisites
+## Architecture
 
-1. **Cloudflare Account** - Sign up at https://dash.cloudflare.com
-2. **Domain** - Configure GoodWebTools.com in Cloudflare DNS
-3. **GitHub Repository** - Code hosted on GitHub
+- `npm run build` → static site in `dist/` (HTML, JS, CSS, WASM).
+- `worker/index.js` → serves `/models/*` from the R2 bucket `MODELS`, and
+  delegates everything else to the static build (`ASSETS` binding).
+- `wrangler.jsonc` → wires it together (`main`, `assets`, `r2_buckets`).
 
-### Automatic Deployment (Recommended)
-
-The project uses GitHub Actions for automatic deployment on every push to `main`.
-
-#### Setup Steps:
-
-1. **Create Cloudflare API Token:**
-   - Go to https://dash.cloudflare.com/profile/api-tokens
-   - Create token with "Cloudflare Pages — Edit" permissions
-   - Copy the token
-
-2. **Add GitHub Secrets:**
-   - Go to repository Settings → Secrets and variables → Actions
-   - Add secrets:
-     - `CLOUDFLARE_API_TOKEN` - Your API token
-     - `CLOUDFLARE_ACCOUNT_ID` - Found in Cloudflare dashboard URL
-
-3. **Push to main branch:**
-   ```bash
-   git checkout main
-   git merge develop
-   git push origin main
-   ```
-
-4. **Monitor deployment:**
-   - Check Actions tab in GitHub
-   - Check Cloudflare Pages dashboard
-
-### Manual Deployment
-
-Using Wrangler CLI:
-
-```bash
-# Install Wrangler
-npm install -g wrangler
-
-# Login to Cloudflare
-wrangler login
-
-# Build project
-npm run build
-
-# Deploy
-wrangler pages deploy dist --project-name=goodwebtools
+```
+Request ─▶ Cloudflare
+             ├─ /models/*  ─▶ Worker ─▶ R2 (MODELS)      ← large ML models
+             └─ everything ─▶ Static Assets (dist/)      ← the site
 ```
 
-### Environment Configuration
+## One-time setup
 
-#### Build Settings:
+You need a Cloudflare account and the Wrangler CLI (pinned as a devDependency).
+
+```bash
+npx wrangler login                                  # authenticate
+npx wrangler r2 bucket create goodwebtools-models   # create the model bucket
+```
+
+### Upload the ML model assets to R2
+
+The Background Remover model + onnxruntime WASM (~211 MB across ≤4 MB chunks)
+are **not** committed — they live in R2 under the `imgly/` prefix. Stage them
+from the pinned data package and upload:
+
+```bash
+npm run stage:models        # copies assets → public/models/imgly/ (gitignored)
+
+# upload every staged file to R2 under imgly/
+for f in public/models/imgly/*; do
+  npx wrangler r2 object put "goodwebtools-models/imgly/$(basename "$f")" --file "$f"
+done
+```
+
+(You can also drag the files into the bucket via the Cloudflare dashboard, or
+use `rclone`.) After a model version bump, re-stage and re-upload.
+
+> **Local dev:** `npm run stage:models` also lets `npm run dev` serve the models
+> from `public/models/imgly/`. Remove that folder before a *local* `wrangler
+> deploy` so the 211 MB isn't uploaded as static assets — production loads them
+> from R2. (CI never has it: it's gitignored.)
+
+## Deploying
+
+### Option A — Cloudflare Workers Builds (recommended, git-based)
+
+Connect the GitHub repo in the Cloudflare dashboard → Workers & Pages → Create →
+Import a repository, then set:
+
 - **Build command:** `npm run build`
-- **Build output directory:** `dist`
-- **Node version:** 20
+- **Deploy command:** `npx wrangler deploy`
+- **Production branch:** the branch you want live (currently the app lives on
+  `develop` — set this to `develop`, or merge `develop → main` first).
 
-#### Environment Variables:
-None required - all processing is client-side
+Cloudflare rebuilds and deploys on every push to that branch.
 
-### Custom Domain Setup
-
-1. **In Cloudflare Pages Dashboard:**
-   - Go to your project → Custom domains
-   - Click "Set up a custom domain"
-   - Enter: `goodwebtools.com` and `www.goodwebtools.com`
-
-2. **DNS Configuration (if not using Cloudflare DNS):**
-   - Add CNAME record: `goodwebtools.com` → `<project>.pages.dev`
-   - Add CNAME record: `www` → `<project>.pages.dev`
-
-### Security Headers
-
-The deployment automatically includes security headers for:
-- Cross-Origin-Embedder-Policy (COEP)
-- Cross-Origin-Opener-Policy (COOP)
-- Content-Security-Policy (CSP)
-
-These headers enable SharedArrayBuffer and isolation features needed for WebAssembly tools.
-
-### Performance
-
-- **Global CDN** - Automatic edge caching
-- **HTTP/3** - Enabled by default
-- **Brotli compression** - Automatic
-- **Asset optimization** - Automatic minification
-
-### Monitoring
-
-Check deployment health:
-- Cloudflare Analytics dashboard
-- GitHub Actions logs
-- Browser DevTools Network tab (verify no external requests)
-
-### Rollback
-
-To rollback to a previous version:
+### Option B — Manual
 
 ```bash
-# Via Wrangler
-wrangler pages deployment list --project-name=goodwebtools
-wrangler pages deployment tail <deployment-id>
-
-# Or use Cloudflare dashboard
-# Pages → goodwebtools → Deployments → Rollback
+npm run deploy          # = npm run build && wrangler deploy
 ```
 
-### Troubleshooting
+## Notes & troubleshooting
 
-**Build fails with dependency errors:**
-```bash
-npm ci --legacy-peer-deps
-```
+- **`wrangler deploy` needs the R2 bucket to exist** — create it first (above),
+  or the deploy fails on the `MODELS` binding.
+- **Per-file asset limit is 25 MB.** The site's own WASM (mupdf ~10 MB,
+  libarchive ~1 MB) is fine; large ML models go to R2 precisely to avoid this.
+- **Model versions must match.** `@imgly/background-removal` and
+  `@imgly/background-removal-data` are pinned to the same version; a mismatch
+  causes "Resource … not found" at runtime.
+- **404s / routing:** Astro emits `dist/tools/<id>/index.html`; Cloudflare
+  serves trailing-slash variants automatically and uses `dist/404.html`
+  (`not_found_handling: "404-page"`).
+- **Secrets:** none are committed. Wrangler auth is via `wrangler login` or the
+  `CLOUDFLARE_API_TOKEN` env var; `.dev.vars`, `.env*`, and `.wrangler/` are
+  gitignored.
 
-**Service worker not updating:**
-- Clear cache in browser DevTools
-- Check sw.js file exists in dist/
-- Verify manifest.webmanifest is present
+## Cost
 
-**404 on routes:**
-- Astro static output generates /tools/hash-demo/index.html
-- Cloudflare Pages auto-handles trailing slashes
-- Check astro.config.mjs `output: 'static'`
-
-### Cost
-
-- **Free tier:** 500 builds/month, unlimited bandwidth
-- Perfect for this privacy-first, static project
+Cloudflare's free tier covers this comfortably: static assets have unlimited
+bandwidth, and R2 has a generous free tier for storage + egress (models are
+immutable and hard-cached, so they download once per visitor).

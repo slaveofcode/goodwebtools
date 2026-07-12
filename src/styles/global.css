@@ -167,3 +167,15 @@ body {
 .dark .hljs-built_in,
 .dark .hljs-type { color: #fb7185; }
 .dark .hljs-section { color: #22d3ee; }
+
+/* Checkerboard behind transparent images (e.g. background remover result). */
+.gwt-checkerboard {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #d4d4d4 25%, transparent 25%),
+    linear-gradient(-45deg, #d4d4d4 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d4d4d4 75%),
+    linear-gradient(-45deg, transparent 75%, #d4d4d4 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}

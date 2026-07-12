@@ -122,10 +122,19 @@ result offers **Download** and **Copy to clipboard**.
   and rejoin them. Lazy `Blob.slice`, no full-file buffering.
 - (Hash File gained MD5 / SHA-1 / SHA-256 / SHA-512 with chunked streaming.)
 
+🚧 **Phase 5 — ML image tools (in progress):**
+- Background Remover — removes an image background with an **on-device AI model**
+  (ISNet via `@imgly/background-removal` + onnxruntime-web WASM). The image never
+  leaves the browser; the model (~40 MB) is served same-origin from **R2** and
+  cached. Outputs a transparent PNG.
+
+Model assets are hosted in a Cloudflare **R2** bucket (see `DEPLOYMENT.md`) to
+stay same-origin without hitting the 25 MB static-asset limit.
+
 ## Testing
 
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
-file crypto, format converters): `npm run test` — **197 tests across 21 files**.
+file crypto, format converters): `npm run test` — **221 tests across 23 files**.
 
 **Next (Phase 4 cont.):** zip create/extract, large-file hashing, split/join.
 
