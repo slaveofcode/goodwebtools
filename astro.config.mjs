@@ -16,7 +16,7 @@ export default defineConfig({
       // Vite doesn't discover them mid-request and force a reload that makes
       // in-flight dynamic imports fail ("Failed to fetch dynamically imported
       // module"). pdfjs worker is excluded — it's loaded via ?url.
-      include: ['pdf-lib', 'pdfjs-dist', 'marked', 'dompurify', 'qrcode', 'jsqr', 'comlink', 'fflate', 'gifenc'],
+      include: ['pdf-lib', 'pdfjs-dist', 'marked', 'dompurify', 'qrcode', 'jsqr', 'comlink', 'fflate', 'gifenc', 'yaml', 'fast-xml-parser', 'smol-toml'],
       // mupdf is a large wasm module used only inside a worker — don't pre-bundle it.
       exclude: ['pdfjs-dist/build/pdf.worker.min.mjs', 'mupdf'],
     },

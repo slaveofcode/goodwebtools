@@ -53,7 +53,7 @@ Open http://localhost:4321
 - Shared services (File, Worker, Asset, Download, Progress, Persistence)
 - Registry-driven dynamic tool routing (`ToolHost`)
 
-✅ **Phase 1 — Dev utilities (14 tools):**
+✅ **Phase 1 — Dev utilities (17 tools):**
 - JSON Formatter/Validator
 - Base64 Encode/Decode
 - URL Encode/Decode
@@ -61,7 +61,10 @@ Open http://localhost:4321
 - UUID v4 Generator
 - Password Generator (Bitwarden-style: unbiased RNG, guaranteed types, min numbers/special)
 - Text Diff (line-level)
-- CSV ↔ JSON converter
+- CSV ↔ JSON converter (configurable delimiter: comma, semicolon, tab, pipe)
+- JSON ↔ YAML converter
+- JSON ↔ XML converter
+- JSON ↔ TOML converter
 - Number Base Converter (bin/oct/dec/hex)
 - Color Converter (HEX/RGB/HSL)
 - Markdown Preview (sanitized)
@@ -114,7 +117,7 @@ result offers **Download** and **Copy to clipboard**.
 ## Testing
 
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
-file crypto): `npm run test` — **178 tests across 20 files**.
+file crypto, format converters): `npm run test` — **197 tests across 21 files**.
 
 **Next (Phase 4 cont.):** zip create/extract, large-file hashing, split/join.
 

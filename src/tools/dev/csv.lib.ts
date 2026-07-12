@@ -1,4 +1,5 @@
-export function parseCsv(text: string): string[][] {
+/** Parse delimited text (RFC 4180 quoting) into rows of fields. */
+export function parseCsv(text: string, delimiter = ','): string[][] {
   const rows: string[][] = [];
   let field = '';
   let row: string[] = [];
@@ -19,7 +20,7 @@ export function parseCsv(text: string): string[][] {
       }
     } else if (char === '"') {
       inQuotes = true;
-    } else if (char === ',') {
+    } else if (char === delimiter) {
       row.push(field);
       field = '';
     } else if (char === '\n' || char === '\r') {
@@ -39,8 +40,8 @@ export function parseCsv(text: string): string[][] {
   return rows.filter(r => r.length > 1 || r[0] !== '');
 }
 
-export function csvToJson(text: string): string {
-  const rows = parseCsv(text);
+export function csvToJson(text: string, delimiter = ','): string {
+  const rows = parseCsv(text, delimiter);
   if (rows.length === 0) return '[]';
   const [header, ...body] = rows;
   const records = body.map(cells => {
@@ -53,12 +54,15 @@ export function csvToJson(text: string): string {
   return JSON.stringify(records, null, 2);
 }
 
-function escapeCsvField(value: unknown): string {
+/** A field needs quoting if it contains a quote, newline, or the delimiter. */
+function escapeCsvField(value: unknown, delimiter: string): string {
   const str = value == null ? '' : String(value);
-  return /[",\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  const needsQuote =
+    str.includes('"') || str.includes('\n') || str.includes('\r') || str.includes(delimiter);
+  return needsQuote ? `"${str.replace(/"/g, '""')}"` : str;
 }
 
-export function jsonToCsv(text: string): string {
+export function jsonToCsv(text: string, delimiter = ','): string {
   const data = JSON.parse(text);
   if (!Array.isArray(data)) throw new Error('JSON must be an array of objects');
   if (data.length === 0) return '';
@@ -70,9 +74,9 @@ export function jsonToCsv(text: string): string {
     }, new Set<string>())
   );
 
-  const lines = [headers.map(escapeCsvField).join(',')];
+  const lines = [headers.map(h => escapeCsvField(h, delimiter)).join(delimiter)];
   for (const item of data) {
-    lines.push(headers.map(key => escapeCsvField(item?.[key])).join(','));
+    lines.push(headers.map(key => escapeCsvField(item?.[key], delimiter)).join(delimiter));
   }
   return lines.join('\n');
 }

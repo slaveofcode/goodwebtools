@@ -71,3 +71,33 @@ describe('jsonToCsv', () => {
     expect(jsonToCsv(csvToJson(csv))).toBe(csv);
   });
 });
+
+describe('custom delimiters', () => {
+  it('parses semicolon-delimited CSV', () => {
+    expect(JSON.parse(csvToJson('name;age\nAlice;30', ';'))).toEqual([{ name: 'Alice', age: '30' }]);
+  });
+
+  it('parses pipe-delimited CSV', () => {
+    expect(JSON.parse(csvToJson('a|b\n1|2', '|'))).toEqual([{ a: '1', b: '2' }]);
+  });
+
+  it('parses tab-delimited CSV', () => {
+    expect(JSON.parse(csvToJson('a\tb\n1\t2', '\t'))).toEqual([{ a: '1', b: '2' }]);
+  });
+
+  it('writes JSON to a semicolon-delimited CSV', () => {
+    expect(jsonToCsv('[{"a":"1","b":"2"}]', ';')).toBe('a;b\n1;2');
+  });
+
+  it('quotes fields that contain the chosen delimiter', () => {
+    // The value "x;y" contains the semicolon delimiter, so it must be quoted.
+    expect(jsonToCsv('[{"v":"x;y"}]', ';')).toBe('v\n"x;y"');
+    // …but with a comma delimiter the same value needs no quoting.
+    expect(jsonToCsv('[{"v":"x;y"}]', ',')).toBe('v\nx;y');
+  });
+
+  it('round-trips through a non-comma delimiter', () => {
+    const csv = 'name;city\nAlice;Paris\nBob;Rome';
+    expect(jsonToCsv(csvToJson(csv, ';'), ';')).toBe(csv);
+  });
+});

@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -84,10 +84,43 @@ export const tools: ToolDef[] = [
     name: 'CSV ↔ JSON',
     category: 'Dev',
     route: '/tools/csv-json',
-    keywords: ['csv', 'json', 'convert', 'spreadsheet', 'table', 'transform'],
+    keywords: ['csv', 'json', 'convert', 'spreadsheet', 'table', 'transform', 'delimiter', 'semicolon', 'pipe', 'tab'],
     icon: Table,
-    summary: 'Convert between CSV and JSON',
+    summary: 'Convert between CSV and JSON (comma, semicolon, tab, pipe)',
     load: () => import('@/islands/dev/CsvJson'),
+    status: 'stable'
+  },
+  {
+    id: 'json-yaml',
+    name: 'JSON ↔ YAML',
+    category: 'Dev',
+    route: '/tools/json-yaml',
+    keywords: ['json', 'yaml', 'yml', 'convert', 'transform', 'config'],
+    icon: FileCode2,
+    summary: 'Convert between JSON and YAML',
+    load: () => import('@/islands/dev/JsonYaml'),
+    status: 'stable'
+  },
+  {
+    id: 'json-xml',
+    name: 'JSON ↔ XML',
+    category: 'Dev',
+    route: '/tools/json-xml',
+    keywords: ['json', 'xml', 'convert', 'transform', 'markup'],
+    icon: FileCode,
+    summary: 'Convert between JSON and XML',
+    load: () => import('@/islands/dev/JsonXml'),
+    status: 'stable'
+  },
+  {
+    id: 'json-toml',
+    name: 'JSON ↔ TOML',
+    category: 'Dev',
+    route: '/tools/json-toml',
+    keywords: ['json', 'toml', 'convert', 'transform', 'config'],
+    icon: FileCog,
+    summary: 'Convert between JSON and TOML',
+    load: () => import('@/islands/dev/JsonToml'),
     status: 'stable'
   },
   {

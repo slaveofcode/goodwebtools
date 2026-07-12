@@ -7,13 +7,21 @@ import { csvToJson, jsonToCsv } from '@/tools/dev/csv.lib';
 
 type Mode = 'toJson' | 'toCsv';
 
+const DELIMITERS: { label: string; value: string }[] = [
+  { label: 'Comma ,', value: ',' },
+  { label: 'Semicolon ;', value: ';' },
+  { label: 'Tab ⇥', value: '\t' },
+  { label: 'Pipe |', value: '|' },
+];
+
 export default function CsvJson() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
   const [activeMode, setActiveMode] = useState<Mode | null>(null);
+  const [delimiter, setDelimiter] = useState(',');
 
-  const run = (mode: Mode, source = input) => {
+  const run = (mode: Mode, source = input, delim = delimiter) => {
     setActiveMode(mode);
     setError('');
     if (!source.trim()) {
@@ -21,7 +29,7 @@ export default function CsvJson() {
       return;
     }
     try {
-      setOutput(mode === 'toJson' ? csvToJson(source) : jsonToCsv(source));
+      setOutput(mode === 'toJson' ? csvToJson(source, delim) : jsonToCsv(source, delim));
     } catch (e) {
       setOutput('');
       setError(e instanceof Error ? e.message : 'Conversion failed');
@@ -31,6 +39,11 @@ export default function CsvJson() {
   const handleInputChange = (value: string) => {
     setInput(value);
     if (activeMode) run(activeMode, value);
+  };
+
+  const changeDelimiter = (value: string) => {
+    setDelimiter(value);
+    if (activeMode) run(activeMode, input, value);
   };
 
   const clear = () => {
@@ -49,6 +62,24 @@ export default function CsvJson() {
         placeholder={'name,age\nAlice,30\nBob,25'}
         rows={10}
       />
+
+      <div className="space-y-1.5">
+        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Delimiter
+        </span>
+        <div className="flex flex-wrap gap-2">
+          {DELIMITERS.map(d => (
+            <Button
+              key={d.value}
+              variant={delimiter === d.value ? 'primary' : 'secondary'}
+              aria-pressed={delimiter === d.value}
+              onClick={() => changeDelimiter(d.value)}
+            >
+              {d.label}
+            </Button>
+          ))}
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         <Button
