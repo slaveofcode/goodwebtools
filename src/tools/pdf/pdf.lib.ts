@@ -116,15 +116,12 @@ export async function addWatermark(
   text: string,
   options: WatermarkOptions
 ): Promise<Blob> {
-  const doc = await loadViaMupdf(file);
-  const font = await doc.embedFont(StandardFonts.HelveticaBold);
-  doc.getPages().forEach(page => drawWatermark(page, font, text, options));
-  return toBlob(await doc.save());
+  return toBlob(await buildWatermarkPreview(file, text, options));
 }
 
 /**
- * Build a one-page PDF (page 1 only) with the watermark applied, for previews.
- * Returns raw PDF bytes ready to hand to a renderer.
+ * Build the full watermarked PDF (all pages) as raw bytes — used both for the
+ * live preview and (wrapped in a Blob) for the download.
  */
 export async function buildWatermarkPreview(
   file: File,
@@ -132,11 +129,14 @@ export async function buildWatermarkPreview(
   options: WatermarkOptions
 ): Promise<Uint8Array> {
   const src = await loadViaMupdf(file);
+  // Copy pages into a fresh document. Drawing on the loaded doc and re-saving
+  // keeps the source's encryption dictionary, which corrupts the output; a
+  // fresh PDFDocument.create() is clean and unencrypted.
   const out = await PDFDocument.create();
-  const [firstPage] = await out.copyPages(src, [0]);
-  out.addPage(firstPage);
+  const pages = await out.copyPages(src, src.getPageIndices());
+  pages.forEach(page => out.addPage(page));
   const font = await out.embedFont(StandardFonts.HelveticaBold);
-  drawWatermark(out.getPage(0), font, text, options);
+  out.getPages().forEach(page => drawWatermark(page, font, text, options));
   return out.save();
 }
 

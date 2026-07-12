@@ -43,7 +43,9 @@ export function PdfPreview({ source, scale = 1, label = 'Preview' }: PdfPreviewP
     setPageCount(0);
     (async () => {
       try {
-        const data = source instanceof Blob ? await source.arrayBuffer() : source;
+        // Copy the bytes: pdf.js detaches the ArrayBuffer it's handed, which
+        // would corrupt a Uint8Array the caller may reuse across renders.
+        const data = source instanceof Blob ? await source.arrayBuffer() : source.slice();
         const renderer = await openPdfRenderer(data);
         if (cancelled) {
           renderer.destroy();
