@@ -3,18 +3,7 @@ import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
-
-function base64UrlDecode(segment: string): string {
-  const base64 = segment.replace(/-/g, '+').replace(/_/g, '/');
-  const padding = base64.length % 4 ? '='.repeat(4 - (base64.length % 4)) : '';
-  const binary = atob(base64 + padding);
-  const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
-
-function prettyJson(raw: string): string {
-  return JSON.stringify(JSON.parse(raw), null, 2);
-}
+import { decodeJwt } from '@/tools/dev/jwt.lib';
 
 export default function JwtDecode() {
   const [input, setInput] = useState('');
@@ -35,8 +24,9 @@ export default function JwtDecode() {
       return;
     }
     try {
-      setHeader(prettyJson(base64UrlDecode(parts[0])));
-      setPayload(prettyJson(base64UrlDecode(parts[1])));
+      const { header, payload } = decodeJwt(token);
+      setHeader(header);
+      setPayload(payload);
     } catch {
       setError('Failed to decode token segments.');
     }

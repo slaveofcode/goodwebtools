@@ -3,24 +3,7 @@ import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
-
-interface Parsed {
-  unixSeconds: number;
-  unixMillis: number;
-  iso: string;
-  utc: string;
-  local: string;
-}
-
-function describe(date: Date): Parsed {
-  return {
-    unixSeconds: Math.floor(date.getTime() / 1000),
-    unixMillis: date.getTime(),
-    iso: date.toISOString(),
-    utc: date.toUTCString(),
-    local: date.toString(),
-  };
-}
+import { describeDate, parseTimestamp, type Parsed } from '@/tools/dev/timestamp.lib';
 
 export default function Timestamp() {
   const [input, setInput] = useState('');
@@ -33,23 +16,15 @@ export default function Timestamp() {
     const trimmed = input.trim();
     if (!trimmed) return;
 
-    let date: Date;
-    if (/^\d+$/.test(trimmed)) {
-      // Numeric: treat 10-digit as seconds, 13-digit as milliseconds.
-      const num = Number(trimmed);
-      date = new Date(trimmed.length <= 10 ? num * 1000 : num);
-    } else {
-      date = new Date(trimmed);
-    }
-
-    if (Number.isNaN(date.getTime())) {
+    const date = parseTimestamp(trimmed);
+    if (date === null) {
       setError('Could not parse that as a date or Unix timestamp.');
       return;
     }
-    setResult(describe(date));
+    setResult(describeDate(date));
   };
 
-  const now = () => setResult(describe(new Date()));
+  const now = () => setResult(describeDate(new Date()));
 
   const rows: [string, string][] = result
     ? [
