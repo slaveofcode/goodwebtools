@@ -728,6 +728,30 @@ export default function ImageAnnotate() {
     setSelectedIndex(null);
   };
 
+  // Ctrl/Cmd+Z = undo, Ctrl/Cmd+Shift+Z or Ctrl+Y = redo (unless editing text).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (textEdit) return;
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      const key = e.key.toLowerCase();
+      if (key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      } else if (key === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // undo/redo use functional state updaters, so a stable listener is fine.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [textEdit]);
+
   const toPngBlob = async (): Promise<Blob> => {
     const base = baseRef.current;
     if (!base) throw new Error('Nothing to export yet.');
@@ -823,10 +847,10 @@ export default function ImageAnnotate() {
 
             <span className="mx-1 h-6 w-0.5 bg-border" />
 
-            <button onClick={undo} disabled={!shapes.length} title="Undo" className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
+            <button onClick={undo} disabled={!shapes.length} title="Undo (⌘/Ctrl+Z)" aria-label="Undo" className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
               <Undo2 className="h-4 w-4" />
             </button>
-            <button onClick={redo} disabled={!undone.length} title="Redo" className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
+            <button onClick={redo} disabled={!undone.length} title="Redo (⌘/Ctrl+Shift+Z)" aria-label="Redo" className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
               <Redo2 className="h-4 w-4" />
             </button>
             <button onClick={clearAll} disabled={!shapes.length} title="Clear annotations" className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
