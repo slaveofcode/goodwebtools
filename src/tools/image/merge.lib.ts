@@ -1,18 +1,20 @@
-export type MergeDirection = 'vertical' | 'horizontal';
+export type MergeDirection = 'vertical' | 'horizontal' | 'grid';
 
 export interface MergeOptions {
-  /** Stack top-to-bottom ('vertical') or left-to-right ('horizontal'). */
+  /** Stack top-to-bottom, left-to-right, or in a fixed-column grid. */
   direction: MergeDirection;
   /** Gap between images, in px. */
   gap: number;
   /** Background fill: a hex color, or 'transparent'. */
   background: string;
   /**
-   * Normalize the cross-axis: for 'vertical', scale every image to the same
-   * width; for 'horizontal', the same height. Uses the smallest cross-axis
+   * Normalize the cross-axis: for 'vertical'/'grid', scale every image to the
+   * same width; for 'horizontal', the same height. Uses the smallest cross-axis
    * size so images are only ever downscaled (no quality loss from upscaling).
    */
   match: boolean;
+  /** Number of columns when direction === 'grid' (rows wrap automatically). */
+  columns: number;
 }
 
 export interface Size {
@@ -42,6 +44,47 @@ export function computeMergeLayout(sizes: Size[], options: MergeOptions): MergeL
   const clean = sizes.map(s => ({ width: Math.max(1, Math.round(s.width)), height: Math.max(1, Math.round(s.height)) }));
 
   if (clean.length === 0) return { width: 0, height: 0, placements: [] };
+
+  if (options.direction === 'grid') {
+    const n = clean.length;
+    const columns = Math.max(1, Math.min(Math.round(options.columns || 1), n));
+    const rows = Math.ceil(n / columns);
+    // Optionally normalize every image to a common width (downscale-only).
+    const commonWidth = Math.min(...clean.map(s => s.width));
+    const scaled = clean.map(s =>
+      options.match
+        ? { w: commonWidth, h: Math.max(1, Math.round((s.height * commonWidth) / s.width)) }
+        : { w: s.width, h: s.height }
+    );
+    // Each column is as wide as its widest image; each row as tall as its tallest.
+    const colW = new Array(columns).fill(0);
+    const rowH = new Array(rows).fill(0);
+    scaled.forEach((s, i) => {
+      const c = i % columns;
+      const r = Math.floor(i / columns);
+      colW[c] = Math.max(colW[c], s.w);
+      rowH[r] = Math.max(rowH[r], s.h);
+    });
+    const colX: number[] = [];
+    let ax = 0;
+    for (let c = 0; c < columns; c++) { colX[c] = ax; ax += colW[c] + gap; }
+    const rowY: number[] = [];
+    let ay = 0;
+    for (let r = 0; r < rows; r++) { rowY[r] = ay; ay += rowH[r] + gap; }
+    const width = colW.reduce((a, b) => a + b, 0) + gap * (columns - 1);
+    const height = rowH.reduce((a, b) => a + b, 0) + gap * (rows - 1);
+    const placements = scaled.map((s, i) => {
+      const c = i % columns;
+      const r = Math.floor(i / columns);
+      return {
+        x: colX[c] + Math.round((colW[c] - s.w) / 2),
+        y: rowY[r] + Math.round((rowH[r] - s.h) / 2),
+        w: s.w,
+        h: s.h,
+      };
+    });
+    return { width, height, placements };
+  }
 
   if (options.direction === 'vertical') {
     const commonWidth = options.match ? Math.min(...clean.map(s => s.width)) : Math.max(...clean.map(s => s.width));

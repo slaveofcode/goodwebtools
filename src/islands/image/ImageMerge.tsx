@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowUp, ArrowDown, X, MoveVertical, MoveHorizontal } from 'lucide-react';
+import { ArrowUp, ArrowDown, X, MoveVertical, MoveHorizontal, LayoutGrid } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
@@ -15,11 +15,53 @@ interface Item {
 
 let counter = 0;
 
+/** Google-Docs-style grid picker: hover/click a cell to choose the column count. */
+function ColumnPicker({ count, columns, onChange }: { count: number; columns: number; onChange: (cols: number) => void }) {
+  const [hover, setHover] = useState(0);
+  const maxCols = Math.min(8, Math.max(1, count));
+  const active = hover || columns;
+  const maxRows = Math.min(8, Math.max(1, Math.ceil(count / 1)));
+  const rowsForActive = Math.ceil(count / active);
+  const gridRows = Math.min(maxRows, Math.max(rowsForActive, Math.ceil(count / maxCols)));
+
+  return (
+    <div className="space-y-1.5">
+      <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Columns</span>
+      <div
+        className="inline-grid gap-1 border-2 border-border bg-muted p-2"
+        style={{ gridTemplateColumns: `repeat(${maxCols}, 1.25rem)` }}
+        onMouseLeave={() => setHover(0)}
+      >
+        {Array.from({ length: maxCols * gridRows }, (_, i) => {
+          const c = (i % maxCols) + 1;
+          const r = Math.floor(i / maxCols) + 1;
+          const on = c <= active && r <= rowsForActive;
+          return (
+            <button
+              key={i}
+              type="button"
+              onMouseEnter={() => setHover(c)}
+              onFocus={() => setHover(c)}
+              onClick={() => onChange(c)}
+              aria-label={`${c} column${c > 1 ? 's' : ''}`}
+              className={`h-5 w-5 border-2 ${on ? 'border-accent bg-accent/40' : 'border-border bg-background'}`}
+            />
+          );
+        })}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {active} column{active > 1 ? 's' : ''} × {Math.ceil(count / active)} row{Math.ceil(count / active) > 1 ? 's' : ''}
+      </p>
+    </div>
+  );
+}
+
 export default function ImageMerge() {
   const [items, setItems] = useState<Item[]>([]);
   const [direction, setDirection] = useState<MergeDirection>('vertical');
   const [gap, setGap] = useState(0);
   const [match, setMatch] = useState(true);
+  const [columns, setColumns] = useState(2);
   const [transparent, setTransparent] = useState(false);
   const [background, setBackground] = useState('#ffffff');
   const [result, setResult] = useState<Blob | null>(null);
@@ -62,6 +104,7 @@ export default function ImageMerge() {
         direction,
         gap,
         match,
+        columns,
         background: transparent ? 'transparent' : background,
       });
       setResult(blob);
@@ -131,8 +174,16 @@ export default function ImageMerge() {
                 <MoveHorizontal className="h-4 w-4" />
                 Horizontal
               </Button>
+              <Button variant={direction === 'grid' ? 'primary' : 'secondary'} aria-pressed={direction === 'grid'} onClick={() => setDirection('grid')}>
+                <LayoutGrid className="h-4 w-4" />
+                Grid
+              </Button>
             </div>
           </div>
+
+          {direction === 'grid' && (
+            <ColumnPicker count={items.length} columns={columns} onChange={setColumns} />
+          )}
 
           <label className="space-y-1.5 text-sm">
             <span className="block font-bold uppercase tracking-wide text-muted-foreground">Gap (px)</span>
@@ -147,7 +198,7 @@ export default function ImageMerge() {
 
           <label className="flex cursor-pointer items-center gap-2 border-2 border-border bg-muted px-3 py-2 text-sm">
             <input type="checkbox" checked={match} onChange={() => setMatch(m => !m)} className="accent-accent" />
-            Match {direction === 'vertical' ? 'widths' : 'heights'}
+            Match {direction === 'horizontal' ? 'heights' : 'widths'}
           </label>
 
           <label className="flex cursor-pointer items-center gap-2 border-2 border-border bg-muted px-3 py-2 text-sm">

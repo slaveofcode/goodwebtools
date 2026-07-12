@@ -97,7 +97,7 @@ Fluid-width, mobile-first layout.
 - Image Compressor (quality, size delta)
 - Image Resizer (aspect-lock)
 - Image Cropper (persistent, resizable crop box)
-- Merge Images (stack vertical / horizontal, reorderable, gap + background)
+- Merge Images (stack vertical / horizontal / grid with a column picker, reorderable, gap + background)
 - Image Watermark (diagonal / tiled / corner)
 - Image Annotator (arrows, shapes, text, highlighter, blur — Lark-style; Select to move / rename / delete)
 - Metadata Scrubber (strip EXIF/GPS by re-encoding)

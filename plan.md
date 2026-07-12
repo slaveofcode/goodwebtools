@@ -173,7 +173,7 @@ Grouped by family. Each family shares a worker + patterns.
 - Compressor — MozJPEG / OxiPNG / WebP / AVIF encoders (wasm). Essentially self-hosted Squoosh.
 - Format convert — same codec set + HEIC decode (`libheif-wasm`).
 - Resize / crop / batch — Canvas / `pica` for quality downscale.
-- **Merge / combine** — stack multiple images into one, **vertical** or **horizontal**, with an adjustable gap, background color (or transparent), and an optional "match widths/heights" that normalizes the cross-axis (downscale-only, so no quality loss). Reorderable list; exports PNG. Canvas — `computeMergeLayout` is pure/unit-tested.
+- **Merge / combine** — stack multiple images into one: **vertical**, **horizontal**, or a **grid** (pick the column count with a Google-Docs-style cell selector; rows wrap automatically). Adjustable gap, background color (or transparent), and an optional "match widths/heights" that normalizes the cross-axis (downscale-only, so no quality loss). Reorderable list; exports PNG. Canvas — `computeMergeLayout` is pure/unit-tested.
 - **Annotate / markup** — screenshot-style tool: rectangle, ellipse, line, arrow, freehand pencil, highlighter, text, and blur regions, with a **Select tool** to move, rename (double-click text), and delete existing shapes. Canvas.
 - Watermark (batch, position grid, opacity) — Canvas.
 - **EXIF / metadata scrubber** — strip GPS/device via re-encode or `piexifjs`. High privacy value; ship early.
