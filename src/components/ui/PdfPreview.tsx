@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
 import { openPdfRenderer, type PdfRenderer } from '@/tools/pdf/render.lib';
 
 const WINDOW = 5; // thumbnails shown per page of the preview
@@ -27,6 +27,7 @@ export function PdfPreview({ source, scale = 1, label = 'Preview' }: PdfPreviewP
   const [thumbs, setThumbs] = useState<Thumb[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [zoomed, setZoomed] = useState<Thumb | null>(null);
 
   // Open the document when the source changes.
   useEffect(() => {
@@ -100,6 +101,19 @@ export function PdfPreview({ source, scale = 1, label = 'Preview' }: PdfPreviewP
     return () => thumbs.forEach(t => URL.revokeObjectURL(t.url));
   }, [thumbs]);
 
+  // Close the zoom overlay when the page window changes (its URL may be gone).
+  useEffect(() => {
+    setZoomed(null);
+  }, [thumbs]);
+
+  // Escape closes the zoom overlay.
+  useEffect(() => {
+    if (!zoomed) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setZoomed(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [zoomed]);
+
   // Tear down the renderer on unmount.
   useEffect(() => {
     return () => rendererRef.current?.destroy();
@@ -156,11 +170,17 @@ export function PdfPreview({ source, scale = 1, label = 'Preview' }: PdfPreviewP
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {thumbs.map(thumb => (
               <div key={thumb.pageNumber} className="space-y-1">
-                <img
-                  src={thumb.url}
-                  alt={`Page ${thumb.pageNumber}`}
-                  className="w-full border-2 border-border bg-white"
-                />
+                <button
+                  type="button"
+                  onClick={() => setZoomed(thumb)}
+                  className="group relative block w-full border-2 border-border bg-white"
+                  aria-label={`Zoom page ${thumb.pageNumber}`}
+                >
+                  <img src={thumb.url} alt={`Page ${thumb.pageNumber}`} className="w-full" />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity group-hover:bg-black/30 group-hover:opacity-100">
+                    <ZoomIn className="h-6 w-6 text-white" />
+                  </span>
+                </button>
                 <p className="text-center text-xs font-bold text-muted-foreground">
                   Page {thumb.pageNumber}
                 </p>
@@ -169,6 +189,34 @@ export function PdfPreview({ source, scale = 1, label = 'Preview' }: PdfPreviewP
           </div>
         )}
       </div>
+
+      {zoomed && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setZoomed(null)}
+        >
+          <div className="relative max-h-full max-w-4xl overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-bold uppercase tracking-wide text-white">
+                Page {zoomed.pageNumber}
+              </span>
+              <button
+                type="button"
+                onClick={() => setZoomed(null)}
+                className="border-2 border-white bg-white p-1 text-black shadow-brutal-sm"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <img
+              src={zoomed.url}
+              alt={`Page ${zoomed.pageNumber}`}
+              className="w-full border-2 border-white bg-white"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
