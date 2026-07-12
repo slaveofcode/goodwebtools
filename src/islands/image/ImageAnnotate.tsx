@@ -211,6 +211,96 @@ function translateShape(s: Shape, dx: number, dy: number): Shape {
   return n;
 }
 
+type HandleId = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'p1' | 'p2';
+
+interface Handle {
+  id: HandleId;
+  x: number;
+  y: number;
+}
+
+/** The draggable resize handles for a selected shape, in natural px. */
+function shapeHandles(ctx: CanvasRenderingContext2D, s: Shape): Handle[] {
+  if (s.type === 'line' || s.type === 'arrow') {
+    return [
+      { id: 'p1', x: s.x ?? 0, y: s.y ?? 0 },
+      { id: 'p2', x: s.x2 ?? s.x ?? 0, y: s.y2 ?? s.y ?? 0 },
+    ];
+  }
+  const b = shapeBounds(ctx, s);
+  const right = b.x + b.w;
+  const bottom = b.y + b.h;
+  const corners: Handle[] = [
+    { id: 'nw', x: b.x, y: b.y },
+    { id: 'ne', x: right, y: b.y },
+    { id: 'sw', x: b.x, y: bottom },
+    { id: 'se', x: right, y: bottom },
+  ];
+  // Text scales by font size and freehand scales its points — corners only.
+  if (s.type === 'text' || s.type === 'pencil' || s.type === 'highlighter') return corners;
+  // rect / ellipse / blur also get edge handles for one-axis resizing.
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  return [
+    ...corners,
+    { id: 'n', x: cx, y: b.y },
+    { id: 's', x: cx, y: bottom },
+    { id: 'w', x: b.x, y: cy },
+    { id: 'e', x: right, y: cy },
+  ];
+}
+
+/** CSS cursor for a given handle. */
+function handleCursor(id: HandleId): string {
+  if (id === 'p1' || id === 'p2') return 'move';
+  if (id === 'nw' || id === 'se') return 'nwse-resize';
+  if (id === 'ne' || id === 'sw') return 'nesw-resize';
+  if (id === 'n' || id === 's') return 'ns-resize';
+  return 'ew-resize';
+}
+
+/** Resize a shape by dragging one of its handles to (px, py) natural px. */
+function resizeShape(s: Shape, id: HandleId, px: number, py: number, ctx: CanvasRenderingContext2D): Shape {
+  if (s.type === 'line' || s.type === 'arrow') {
+    return id === 'p1' ? { ...s, x: px, y: py } : { ...s, x2: px, y2: py };
+  }
+
+  const b = shapeBounds(ctx, s);
+
+  if (s.type === 'text') {
+    // Vertical drag drives the font size; keep the left edge and the anchor edge fixed.
+    const oldSize = s.size ?? 24;
+    if (id === 'nw' || id === 'ne') {
+      const bottom = b.y + oldSize;
+      const size = Math.max(8, bottom - py);
+      return { ...s, y: bottom - size, size };
+    }
+    return { ...s, y: b.y, size: Math.max(8, py - b.y) };
+  }
+
+  let left = b.x;
+  let top = b.y;
+  let right = b.x + b.w;
+  let bottom = b.y + b.h;
+  if (id.includes('w')) left = px;
+  if (id.includes('e')) right = px;
+  if (id.includes('n')) top = py;
+  if (id.includes('s')) bottom = py;
+  const nx = Math.min(left, right);
+  const ny = Math.min(top, bottom);
+  const nw = Math.max(4, Math.abs(right - left));
+  const nh = Math.max(4, Math.abs(bottom - top));
+
+  if (s.type === 'pencil' || s.type === 'highlighter') {
+    const sx = nw / (b.w || 1);
+    const sy = nh / (b.h || 1);
+    const points = (s.points ?? []).map(([qx, qy]) => [nx + (qx - b.x) * sx, ny + (qy - b.y) * sy] as [number, number]);
+    return { ...s, points };
+  }
+
+  return { ...s, x: nx, y: ny, w: nw, h: nh };
+}
+
 export default function ImageAnnotate() {
   const viewRef = useRef<HTMLCanvasElement>(null);
   const baseRef = useRef<HTMLCanvasElement | null>(null);
@@ -225,6 +315,8 @@ export default function ImageAnnotate() {
   const textReadyRef = useRef(false);
   // Active drag of an existing shape in Select mode (incremental delta).
   const dragRef = useRef<{ index: number; lastX: number; lastY: number } | null>(null);
+  // Active resize of the selected shape via one of its handles.
+  const resizeRef = useRef<{ index: number; handle: HandleId } | null>(null);
   // Manual double-click detection (setPointerCapture suppresses native dblclick).
   const lastClickRef = useRef<{ index: number; time: number } | null>(null);
 
@@ -252,6 +344,16 @@ export default function ImageAnnotate() {
     return null;
   };
 
+  const handleHit = (shape: Shape, px: number, py: number): HandleId | null => {
+    const ctx = baseRef.current?.getContext('2d');
+    if (!ctx) return null;
+    const hr = Math.max(8, 11 * scaleX());
+    for (const h of shapeHandles(ctx, shape)) {
+      if (Math.abs(px - h.x) <= hr && Math.abs(py - h.y) <= hr) return h.id;
+    }
+    return null;
+  };
+
   const scaleX = () => {
     const c = viewRef.current;
     return c ? c.width / c.getBoundingClientRect().width : 1;
@@ -269,13 +371,27 @@ export default function ImageAnnotate() {
 
   const drawSelection = (ctx: CanvasRenderingContext2D) => {
     if (selectedIndex == null || selectedIndex >= shapes.length) return;
-    const b = shapeBounds(ctx, shapes[selectedIndex]);
-    const pad = 6;
+    const shape = shapes[selectedIndex];
+    const sc = scaleX();
+    const b = shapeBounds(ctx, shape);
+    const pad = 6 * sc;
     ctx.save();
-    ctx.setLineDash([10, 6]);
-    ctx.lineWidth = 2;
     ctx.strokeStyle = '#2563eb';
+    // Dashed bounding box.
+    ctx.setLineDash([10 * sc, 6 * sc]);
+    ctx.lineWidth = Math.max(1, 1.5 * sc);
     ctx.strokeRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2);
+    // Solid resize handles.
+    ctx.setLineDash([]);
+    const hs = Math.max(6, 9 * sc);
+    for (const h of shapeHandles(ctx, shape)) {
+      ctx.fillStyle = '#ffffff';
+      ctx.lineWidth = Math.max(1, 1.5 * sc);
+      ctx.beginPath();
+      ctx.rect(h.x - hs / 2, h.y - hs / 2, hs, hs);
+      ctx.fill();
+      ctx.stroke();
+    }
     ctx.restore();
   };
 
@@ -343,6 +459,15 @@ export default function ImageAnnotate() {
     const p = pointer(e);
 
     if (tool === 'select') {
+      // A handle of the already-selected shape takes priority → start resizing.
+      if (selectedIndex != null && selectedIndex < shapes.length) {
+        const hid = handleHit(shapes[selectedIndex], p.x, p.y);
+        if (hid) {
+          resizeRef.current = { index: selectedIndex, handle: hid };
+          (e.currentTarget as Element).setPointerCapture(e.pointerId);
+          return;
+        }
+      }
       const idx = hitTopmost(p.x, p.y);
       setSelectedIndex(idx);
       if (idx == null) {
@@ -393,6 +518,15 @@ export default function ImageAnnotate() {
     onDown(e);
   };
   const handleMove = (e: React.PointerEvent) => {
+    // Resizing the selected shape via a handle (Select mode).
+    if (resizeRef.current) {
+      const p = pointer(e);
+      const ctx = baseRef.current?.getContext('2d');
+      if (!ctx) return;
+      const { index, handle } = resizeRef.current;
+      setShapes(prev => prev.map((s, i) => (i === index ? resizeShape(s, handle, p.x, p.y, ctx) : s)));
+      return;
+    }
     // Dragging an existing shape (Select mode).
     if (dragRef.current) {
       const p = pointer(e);
@@ -404,10 +538,16 @@ export default function ImageAnnotate() {
       setShapes(prev => prev.map((s, i) => (i === index ? translateShape(s, dx, dy) : s)));
       return;
     }
-    // Hover feedback in Select mode: pointer over a shape shows the move cursor.
+    // Hover feedback in Select mode: handle → resize cursor, shape → move.
     if (tool === 'select') {
       const p = pointer(e);
-      if (viewRef.current) viewRef.current.style.cursor = hitTopmost(p.x, p.y) != null ? 'move' : 'default';
+      let cursor = 'default';
+      if (selectedIndex != null && selectedIndex < shapes.length) {
+        const hid = handleHit(shapes[selectedIndex], p.x, p.y);
+        if (hid) cursor = handleCursor(hid);
+      }
+      if (cursor === 'default' && hitTopmost(p.x, p.y) != null) cursor = 'move';
+      if (viewRef.current) viewRef.current.style.cursor = cursor;
       return;
     }
     if (!drawingRef.current || !draftRef.current) return;
@@ -428,6 +568,10 @@ export default function ImageAnnotate() {
     redraw(d);
   };
   const handleUp = () => {
+    if (resizeRef.current) {
+      resizeRef.current = null;
+      return;
+    }
     if (dragRef.current) {
       dragRef.current = null;
       return;
@@ -447,8 +591,15 @@ export default function ImageAnnotate() {
       redraw();
       return;
     }
+    const newIndex = shapes.length;
     setShapes(prev => [...prev, d]);
     setUndone([]);
+    // Discrete shapes: jump to Select so they can be moved/resized immediately.
+    // Freehand tools stay active so you can keep sketching.
+    if (d.type !== 'pencil' && d.type !== 'highlighter') {
+      setTool('select');
+      setSelectedIndex(newIndex);
+    }
   };
 
   // Focus the text input a frame after it mounts, then arm blur-to-commit.
@@ -480,11 +631,15 @@ export default function ImageAnnotate() {
         setUndone([]);
       } else if (text) {
         const size = Math.max(14, strokeWidth * scaleX() * 5);
+        const newIndex = shapes.length;
         setShapes(prev => [
           ...prev,
           { type: 'text', color, width: 1, x: textEdit.nx, y: textEdit.ny, text: textValue, size },
         ]);
         setUndone([]);
+        // Jump to Select so the new label can be moved/resized right away.
+        setTool('select');
+        setSelectedIndex(newIndex);
       }
     }
     setTextEdit(null);
@@ -619,7 +774,7 @@ export default function ImageAnnotate() {
 
           {tool === 'select' && (
             <p className="text-xs text-muted-foreground">
-              Click a shape to select · drag to move · double-click text to rename · Delete to remove
+              Drag to move · drag a handle to resize · double-click text to rename · Delete to remove
             </p>
           )}
 
