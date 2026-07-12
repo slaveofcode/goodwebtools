@@ -5,7 +5,9 @@ import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
 import { LoadFileButton, fileExt } from '@/components/ui/LoadFileButton';
 import { CodeBlock } from '@/components/ui/CodeBlock';
-import { csvToJson, jsonToCsv } from '@/tools/dev/csv.lib';
+import { csvToJson, jsonToCsv, parseCsv } from '@/tools/dev/csv.lib';
+
+const PREVIEW_ROWS = 100;
 
 type Mode = 'toJson' | 'toCsv';
 
@@ -69,6 +71,11 @@ export default function CsvJson() {
     setError('');
     setActiveMode(null);
   };
+
+  // Parse the CSV output back into a grid for the table preview (JSON → CSV only).
+  const previewRows = activeMode === 'toCsv' && output ? parseCsv(output, delimiter) : [];
+  const previewHeader = previewRows[0] ?? [];
+  const previewBody = previewRows.slice(1);
 
   return (
     <div className="space-y-4">
@@ -134,6 +141,39 @@ export default function CsvJson() {
             <CopyButton value={output} />
           </div>
           <CodeBlock code={output} language={activeMode === 'toJson' ? 'json' : 'plaintext'} />
+        </div>
+      )}
+
+      {previewHeader.length > 0 && (
+        <div className="space-y-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            Table preview
+            {previewBody.length > PREVIEW_ROWS && ` (first ${PREVIEW_ROWS} of ${previewBody.length} rows)`}
+          </span>
+          <div className="max-h-[30rem] overflow-auto border-2 border-border">
+            <table className="w-full border-collapse text-sm">
+              <thead className="sticky top-0">
+                <tr>
+                  {previewHeader.map((cell, c) => (
+                    <th key={c} className="border-2 border-border bg-muted px-3 py-2 text-left font-bold">
+                      {cell}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {previewBody.slice(0, PREVIEW_ROWS).map((row, r) => (
+                  <tr key={r}>
+                    {previewHeader.map((_, c) => (
+                      <td key={c} className="border-2 border-border px-3 py-1.5">
+                        {row[c] ?? ''}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
