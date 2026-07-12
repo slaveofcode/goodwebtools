@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  MousePointer2,
   Square,
   Circle,
   Minus,
@@ -18,7 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { downloadService } from '@/services/download.service';
 import { usePasteImage } from '@/hooks/usePasteImage';
 
-type Tool = 'rect' | 'ellipse' | 'line' | 'arrow' | 'pencil' | 'highlighter' | 'text' | 'blur';
+type Tool = 'select' | 'rect' | 'ellipse' | 'line' | 'arrow' | 'pencil' | 'highlighter' | 'text' | 'blur';
 
 interface Shape {
   type: Tool;
@@ -37,6 +38,7 @@ interface Shape {
 }
 
 const TOOLS: { tool: Tool; label: string; Icon: typeof Square }[] = [
+  { tool: 'select', label: 'Select / move', Icon: MousePointer2 },
   { tool: 'rect', label: 'Rectangle', Icon: Square },
   { tool: 'ellipse', label: 'Ellipse', Icon: Circle },
   { tool: 'line', label: 'Line', Icon: Minus },
@@ -140,6 +142,74 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, blur: HTMLCanvasElem
   ctx.restore();
 }
 
+/** Axis-aligned bounding box of a shape, in natural image pixels. */
+function shapeBounds(ctx: CanvasRenderingContext2D, s: Shape): { x: number; y: number; w: number; h: number } {
+  if (s.type === 'line' || s.type === 'arrow') {
+    const x = s.x ?? 0, y = s.y ?? 0, x2 = s.x2 ?? x, y2 = s.y2 ?? y;
+    return { x: Math.min(x, x2), y: Math.min(y, y2), w: Math.abs(x2 - x), h: Math.abs(y2 - y) };
+  }
+  if (s.type === 'pencil' || s.type === 'highlighter') {
+    const pts = s.points ?? [];
+    if (!pts.length) return { x: 0, y: 0, w: 0, h: 0 };
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const [px, py] of pts) {
+      minX = Math.min(minX, px); minY = Math.min(minY, py);
+      maxX = Math.max(maxX, px); maxY = Math.max(maxY, py);
+    }
+    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+  }
+  if (s.type === 'text') {
+    const size = s.size ?? 24;
+    ctx.save();
+    ctx.font = `${size}px sans-serif`;
+    const w = ctx.measureText(s.text ?? '').width;
+    ctx.restore();
+    return { x: s.x ?? 0, y: s.y ?? 0, w, h: size };
+  }
+  // rect / ellipse / blur
+  const x = s.x ?? 0, y = s.y ?? 0, w = s.w ?? 0, h = s.h ?? 0;
+  return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w), h: Math.abs(h) };
+}
+
+/** Perpendicular distance from a point to a line segment. */
+function distToSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
+  const dx = bx - ax, dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) return Math.hypot(px - ax, py - ay);
+  let t = ((px - ax) * dx + (py - ay) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+/** Whether a point (natural px) is close enough to a shape to select it. */
+function shapeHit(ctx: CanvasRenderingContext2D, s: Shape, px: number, py: number): boolean {
+  const pad = 10 + (s.width ?? 0);
+  if (s.type === 'line' || s.type === 'arrow') {
+    return distToSegment(px, py, s.x ?? 0, s.y ?? 0, s.x2 ?? s.x ?? 0, s.y2 ?? s.y ?? 0) <= pad;
+  }
+  if (s.type === 'pencil' || s.type === 'highlighter') {
+    const pts = s.points ?? [];
+    if (pts.length === 1) return Math.hypot(px - pts[0][0], py - pts[0][1]) <= pad;
+    for (let i = 1; i < pts.length; i++) {
+      if (distToSegment(px, py, pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]) <= pad) return true;
+    }
+    return false;
+  }
+  const b = shapeBounds(ctx, s);
+  return px >= b.x - pad && px <= b.x + b.w + pad && py >= b.y - pad && py <= b.y + b.h + pad;
+}
+
+/** Return a copy of the shape translated by (dx, dy) natural px. */
+function translateShape(s: Shape, dx: number, dy: number): Shape {
+  const n: Shape = { ...s };
+  if (n.x != null) n.x += dx;
+  if (n.y != null) n.y += dy;
+  if (n.x2 != null) n.x2 += dx;
+  if (n.y2 != null) n.y2 += dy;
+  if (n.points) n.points = n.points.map(([px, py]) => [px + dx, py + dy]);
+  return n;
+}
+
 export default function ImageAnnotate() {
   const viewRef = useRef<HTMLCanvasElement>(null);
   const baseRef = useRef<HTMLCanvasElement | null>(null);
@@ -152,6 +222,10 @@ export default function ImageAnnotate() {
   // mounts (the placing click steals focus back to the body). We only treat a
   // blur as a real "done editing" once the input has actually been focused.
   const textReadyRef = useRef(false);
+  // Active drag of an existing shape in Select mode (incremental delta).
+  const dragRef = useRef<{ index: number; lastX: number; lastY: number } | null>(null);
+  // Manual double-click detection (setPointerCapture suppresses native dblclick).
+  const lastClickRef = useRef<{ index: number; time: number } | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [ready, setReady] = useState(false);
@@ -162,8 +236,20 @@ export default function ImageAnnotate() {
   const [rounded, setRounded] = useState(false);
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [undone, setUndone] = useState<Shape[]>([]);
-  const [textEdit, setTextEdit] = useState<{ nx: number; ny: number; left: number; top: number } | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  // editIndex is set when re-editing an existing text shape (rename).
+  const [textEdit, setTextEdit] = useState<{ nx: number; ny: number; left: number; top: number; editIndex?: number } | null>(null);
   const [textValue, setTextValue] = useState('');
+
+  const hitTopmost = (px: number, py: number, textOnly = false): number | null => {
+    const ctx = baseRef.current?.getContext('2d');
+    if (!ctx) return null;
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      if (textOnly && shapes[i].type !== 'text') continue;
+      if (shapeHit(ctx, shapes[i], px, py)) return i;
+    }
+    return null;
+  };
 
   const scaleX = () => {
     const c = viewRef.current;
@@ -180,6 +266,18 @@ export default function ImageAnnotate() {
     for (const s of shapes) drawShape(ctx, s, blurRef.current);
   };
 
+  const drawSelection = (ctx: CanvasRenderingContext2D) => {
+    if (selectedIndex == null || selectedIndex >= shapes.length) return;
+    const b = shapeBounds(ctx, shapes[selectedIndex]);
+    const pad = 6;
+    ctx.save();
+    ctx.setLineDash([10, 6]);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#2563eb';
+    ctx.strokeRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2);
+    ctx.restore();
+  };
+
   const redraw = (preview?: Shape | null) => {
     const view = viewRef.current;
     const base = baseRef.current;
@@ -188,15 +286,16 @@ export default function ImageAnnotate() {
     ctx.clearRect(0, 0, view.width, view.height);
     ctx.drawImage(base, 0, 0);
     if (preview) drawShape(ctx, preview, blurRef.current);
+    else drawSelection(ctx);
   };
 
-  // Rebuild whenever the committed shapes change.
+  // Rebuild whenever the committed shapes or selection change.
   useEffect(() => {
     if (!ready) return;
     rebuildBase();
     redraw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shapes, ready]);
+  }, [shapes, ready, selectedIndex]);
 
   const onDrop = async (files: File[]) => {
     const image = files.find(f => f.type.startsWith('image/'));
@@ -230,7 +329,7 @@ export default function ImageAnnotate() {
 
   usePasteImage(f => onDrop([f]));
 
-  const pointer = (e: React.PointerEvent) => {
+  const pointer = (e: { clientX: number; clientY: number }) => {
     const c = viewRef.current!;
     const rect = c.getBoundingClientRect();
     const sx = c.width / rect.width;
@@ -241,6 +340,32 @@ export default function ImageAnnotate() {
   const onDown = (e: React.PointerEvent) => {
     if (!ready) return;
     const p = pointer(e);
+
+    if (tool === 'select') {
+      const idx = hitTopmost(p.x, p.y);
+      setSelectedIndex(idx);
+      if (idx == null) {
+        lastClickRef.current = null;
+        return;
+      }
+      // Second click on the same shape within 400ms → edit (rename) if it's text.
+      const now = performance.now();
+      const last = lastClickRef.current;
+      if (last && last.index === idx && now - last.time < 400 && shapes[idx].type === 'text') {
+        lastClickRef.current = null;
+        const s = shapes[idx];
+        const sc = scaleX();
+        setTextValue(s.text ?? '');
+        setTextEdit({ nx: s.x ?? 0, ny: s.y ?? 0, left: (s.x ?? 0) / sc, top: (s.y ?? 0) / sc, editIndex: idx });
+        return;
+      }
+      lastClickRef.current = { index: idx, time: now };
+      dragRef.current = { index: idx, lastX: p.x, lastY: p.y };
+      (e.currentTarget as Element).setPointerCapture(e.pointerId);
+      return;
+    }
+
+    setSelectedIndex(null);
     const natWidth = strokeWidth * scaleX();
 
     if (tool === 'text') {
@@ -263,10 +388,27 @@ export default function ImageAnnotate() {
 
   const originRef = useRef<{ x: number; y: number } | null>(null);
   const handleDown = (e: React.PointerEvent) => {
-    if (ready && tool !== 'text') originRef.current = pointer(e);
+    if (ready && tool !== 'text' && tool !== 'select') originRef.current = pointer(e);
     onDown(e);
   };
   const handleMove = (e: React.PointerEvent) => {
+    // Dragging an existing shape (Select mode).
+    if (dragRef.current) {
+      const p = pointer(e);
+      const { index, lastX, lastY } = dragRef.current;
+      const dx = p.x - lastX;
+      const dy = p.y - lastY;
+      dragRef.current.lastX = p.x;
+      dragRef.current.lastY = p.y;
+      setShapes(prev => prev.map((s, i) => (i === index ? translateShape(s, dx, dy) : s)));
+      return;
+    }
+    // Hover feedback in Select mode: pointer over a shape shows the move cursor.
+    if (tool === 'select') {
+      const p = pointer(e);
+      if (viewRef.current) viewRef.current.style.cursor = hitTopmost(p.x, p.y) != null ? 'move' : 'default';
+      return;
+    }
     if (!drawingRef.current || !draftRef.current) return;
     const p = pointer(e);
     const d = draftRef.current;
@@ -285,6 +427,10 @@ export default function ImageAnnotate() {
     redraw(d);
   };
   const handleUp = () => {
+    if (dragRef.current) {
+      dragRef.current = null;
+      return;
+    }
     if (!drawingRef.current) return;
     drawingRef.current = false;
     const d = draftRef.current;
@@ -321,19 +467,48 @@ export default function ImageAnnotate() {
   }, [textEdit]);
 
   const commitText = () => {
-    if (textEdit && textValue.trim()) {
-      const size = Math.max(14, strokeWidth * scaleX() * 5);
-      setShapes(prev => [
-        ...prev,
-        { type: 'text', color, width: 1, x: textEdit.nx, y: textEdit.ny, text: textValue, size },
-      ]);
-      setUndone([]);
+    if (textEdit) {
+      const text = textValue.trim();
+      if (textEdit.editIndex != null) {
+        // Renaming an existing label: update its text, or drop it if cleared.
+        const idx = textEdit.editIndex;
+        setShapes(prev =>
+          text ? prev.map((s, i) => (i === idx ? { ...s, text: textValue } : s)) : prev.filter((_, i) => i !== idx)
+        );
+        if (!text) setSelectedIndex(null);
+        setUndone([]);
+      } else if (text) {
+        const size = Math.max(14, strokeWidth * scaleX() * 5);
+        setShapes(prev => [
+          ...prev,
+          { type: 'text', color, width: 1, x: textEdit.nx, y: textEdit.ny, text: textValue, size },
+        ]);
+        setUndone([]);
+      }
     }
     setTextEdit(null);
     setTextValue('');
   };
 
+  // Delete/Backspace removes the selected shape (when not editing text).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (textEdit || selectedIndex == null) return;
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        setShapes(prev => prev.filter((_, i) => i !== selectedIndex));
+        setUndone([]);
+        setSelectedIndex(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedIndex, textEdit]);
+
   const undo = () => {
+    setSelectedIndex(null);
     setShapes(prev => {
       if (!prev.length) return prev;
       setUndone(u => [...u, prev[prev.length - 1]]);
@@ -341,6 +516,7 @@ export default function ImageAnnotate() {
     });
   };
   const redo = () => {
+    setSelectedIndex(null);
     setUndone(prev => {
       if (!prev.length) return prev;
       setShapes(s => [...s, prev[prev.length - 1]]);
@@ -350,6 +526,7 @@ export default function ImageAnnotate() {
   const clearAll = () => {
     setShapes([]);
     setUndone([]);
+    setSelectedIndex(null);
   };
 
   const download = async () => {
@@ -369,7 +546,7 @@ export default function ImageAnnotate() {
           <div className="space-y-1">
             <p className="text-lg font-bold">Drop an image or click to browse</p>
             <p className="text-sm text-muted-foreground">
-              Annotate with shapes, arrows, text, highlighter, and blur
+              Annotate with shapes, arrows, text, highlighter, and blur · Select to move or rename
             </p>
           </div>
         </Dropzone>
@@ -382,7 +559,7 @@ export default function ImageAnnotate() {
             {TOOLS.map(({ tool: t, label, Icon }) => (
               <button
                 key={t}
-                onClick={() => setTool(t)}
+                onClick={() => { setTool(t); if (t !== 'select') setSelectedIndex(null); }}
                 aria-pressed={tool === t}
                 title={label}
                 className={`border-2 border-border p-2 shadow-brutal-sm press-brutal ${
@@ -434,6 +611,12 @@ export default function ImageAnnotate() {
             </button>
           </div>
 
+          {tool === 'select' && (
+            <p className="text-xs text-muted-foreground">
+              Click a shape to select · drag to move · double-click text to rename · Delete to remove
+            </p>
+          )}
+
           {/* Canvas */}
           <div className="relative inline-block max-w-full overflow-auto border-2 border-border bg-muted">
             <canvas
@@ -444,7 +627,7 @@ export default function ImageAnnotate() {
               onPointerMove={handleMove}
               onPointerUp={handleUp}
               className="block h-auto w-auto min-w-[70vw] max-w-full touch-none"
-              style={{ cursor: tool === 'text' ? 'text' : 'crosshair' }}
+              style={{ cursor: tool === 'text' ? 'text' : tool === 'select' ? 'default' : 'crosshair' }}
             />
             {textEdit && (
               <input
