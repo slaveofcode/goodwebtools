@@ -28,19 +28,46 @@ export async function mergePdfs(files: File[]): Promise<Blob> {
 }
 
 /**
- * Extract an inclusive 1-indexed page range into a new PDF.
- * Invalid/empty ranges throw.
+ * Parse a page spec into an ordered, de-duplicated list of 1-indexed pages.
+ * Supports single pages and ranges, e.g. "1, 3, 5-7, 10". Reversed ranges
+ * (e.g. "5-1") are expanded in descending order.
  */
-export async function extractPages(file: File, from: number, to: number): Promise<Blob> {
+export function parsePageSpec(spec: string): number[] {
+  const result: number[] = [];
+  const seen = new Set<number>();
+  const add = (n: number) => {
+    if (n >= 1 && !seen.has(n)) {
+      seen.add(n);
+      result.push(n);
+    }
+  };
+  for (const part of spec.split(',')) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const range = trimmed.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (range) {
+      const a = Number(range[1]);
+      const b = Number(range[2]);
+      const step = a <= b ? 1 : -1;
+      for (let i = a; step > 0 ? i <= b : i >= b; i += step) add(i);
+    } else if (/^\d+$/.test(trimmed)) {
+      add(Number(trimmed));
+    }
+  }
+  return result;
+}
+
+/**
+ * Extract the given 1-indexed pages (in the given order) into a new PDF.
+ * Out-of-range pages are ignored; throws if nothing valid remains.
+ */
+export async function extractPageList(file: File, pageNumbers: number[]): Promise<Blob> {
   const src = await PDFDocument.load(await readBytes(file));
   const total = src.getPageCount();
-  const start = Math.max(1, Math.min(from, to));
-  const end = Math.min(total, Math.max(from, to));
-  if (start > total || end < 1) throw new Error(`This PDF only has ${total} page(s).`);
+  const indices = pageNumbers.filter(n => n >= 1 && n <= total).map(n => n - 1);
+  if (indices.length === 0) throw new Error(`No valid pages selected — this PDF has ${total} page(s).`);
 
   const out = await PDFDocument.create();
-  const indices: number[] = [];
-  for (let i = start - 1; i <= end - 1; i++) indices.push(i);
   const pages = await out.copyPages(src, indices);
   pages.forEach(page => out.addPage(page));
   return toBlob(await out.save());

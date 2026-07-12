@@ -4,25 +4,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { ResultActions } from '@/components/ui/ResultActions';
 import { Alert } from '@/components/ui/Alert';
-import { deletePages, getPageCount } from '@/tools/pdf/pdf.lib';
-
-/** Parse a page list like "1, 3, 5-7" into 1-indexed page numbers. */
-function parsePageList(spec: string): number[] {
-  const pages = new Set<number>();
-  for (const part of spec.split(',')) {
-    const trimmed = part.trim();
-    if (!trimmed) continue;
-    const range = trimmed.match(/^(\d+)\s*-\s*(\d+)$/);
-    if (range) {
-      const start = Number(range[1]);
-      const end = Number(range[2]);
-      for (let i = Math.min(start, end); i <= Math.max(start, end); i++) pages.add(i);
-    } else if (/^\d+$/.test(trimmed)) {
-      pages.add(Number(trimmed));
-    }
-  }
-  return [...pages];
-}
+import { deletePages, getPageCount, parsePageSpec } from '@/tools/pdf/pdf.lib';
 
 export default function PdfDelete() {
   const [file, setFile] = useState<File | null>(null);
@@ -48,7 +30,7 @@ export default function PdfDelete() {
 
   const run = async () => {
     if (!file) return;
-    const list = parsePageList(spec);
+    const list = parsePageSpec(spec);
     if (list.length === 0) {
       setError('Enter pages to remove, e.g. 1, 3, 5-7');
       return;

@@ -1,15 +1,15 @@
 import { useState } from 'react';
+import { TextArea } from '@/components/ui/TextArea';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { ResultActions } from '@/components/ui/ResultActions';
 import { Alert } from '@/components/ui/Alert';
-import { extractPages, getPageCount } from '@/tools/pdf/pdf.lib';
+import { extractPageList, getPageCount, parsePageSpec } from '@/tools/pdf/pdf.lib';
 
 export default function PdfSplit() {
   const [file, setFile] = useState<File | null>(null);
   const [pageCount, setPageCount] = useState(0);
-  const [from, setFrom] = useState(1);
-  const [to, setTo] = useState(1);
+  const [spec, setSpec] = useState('');
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -20,24 +20,30 @@ export default function PdfSplit() {
     setError('');
     setResult(null);
     setFile(pdf);
+    setSpec('');
     try {
       const count = await getPageCount(pdf);
       setPageCount(count);
-      setFrom(1);
-      setTo(count);
     } catch {
       setError('Could not read this PDF.');
       setFile(null);
     }
   };
 
+  // Live preview of which pages will be extracted.
+  const selected = parsePageSpec(spec).filter(n => n <= pageCount);
+
   const extract = async () => {
     if (!file) return;
+    if (selected.length === 0) {
+      setError('Enter pages to extract, e.g. 1, 3, 7, 10 or 2-5');
+      return;
+    }
     setBusy(true);
     setError('');
     setResult(null);
     try {
-      setResult(await extractPages(file, from, to));
+      setResult(await extractPageList(file, selected));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Extract failed');
     } finally {
@@ -50,7 +56,9 @@ export default function PdfSplit() {
       <Dropzone onDrop={onDrop} accept="application/pdf" multiple={false}>
         <div className="space-y-1">
           <p className="text-lg font-bold">Drop a PDF here or click to browse</p>
-          <p className="text-sm text-muted-foreground">Extract a range of pages into a new PDF</p>
+          <p className="text-sm text-muted-foreground">
+            Pick any pages or ranges to extract into a new PDF
+          </p>
         </div>
       </Dropzone>
 
@@ -59,34 +67,19 @@ export default function PdfSplit() {
           <p className="text-sm text-muted-foreground">
             <span className="font-bold text-foreground">{file.name}</span> — {pageCount} pages
           </p>
-          <div className="flex flex-wrap items-end gap-4">
-            <label className="space-y-1 text-sm">
-              <span className="block font-bold uppercase tracking-wide text-muted-foreground">
-                From page
-              </span>
-              <input
-                type="number"
-                min={1}
-                max={pageCount}
-                value={from}
-                onChange={e => setFrom(Number(e.target.value))}
-                className="w-24 border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm"
-              />
-            </label>
-            <label className="space-y-1 text-sm">
-              <span className="block font-bold uppercase tracking-wide text-muted-foreground">
-                To page
-              </span>
-              <input
-                type="number"
-                min={1}
-                max={pageCount}
-                value={to}
-                onChange={e => setTo(Number(e.target.value))}
-                className="w-24 border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm"
-              />
-            </label>
-          </div>
+          <TextArea
+            label="Pages to extract"
+            value={spec}
+            onChange={e => setSpec(e.target.value)}
+            placeholder="e.g. 1, 3, 7, 10  or  2-5, 8"
+            rows={1}
+          />
+          {selected.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              Will extract <span className="font-bold text-foreground">{selected.length}</span>{' '}
+              page(s): {selected.join(', ')}
+            </p>
+          )}
         </>
       )}
 
@@ -94,13 +87,13 @@ export default function PdfSplit() {
         <Button onClick={extract} disabled={!file || busy}>
           {busy ? 'Extracting…' : 'Extract pages'}
         </Button>
-        <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); setPageCount(0); }}>
+        <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); setSpec(''); setPageCount(0); }}>
           Clear
         </Button>
       </div>
 
       {error && <Alert variant="error">{error}</Alert>}
-      {result && <ResultActions blob={result} filename={`pages-${from}-${to}.pdf`} disabled={busy} />}
+      {result && <ResultActions blob={result} filename="extracted.pdf" disabled={busy} />}
     </div>
   );
 }
