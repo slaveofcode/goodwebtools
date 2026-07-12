@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
 import { LoadFileButton } from '@/components/ui/LoadFileButton';
+import { CodeBlock } from '@/components/ui/CodeBlock';
 
 type Mode = 'format2' | 'format4' | 'minify';
 
@@ -97,9 +98,7 @@ export default function JsonFormat() {
             <span className="text-sm font-medium text-muted-foreground">Result</span>
             <CopyButton value={output} />
           </div>
-          <pre className="max-h-[30rem] overflow-auto rounded-lg border border-border bg-muted/40 p-3 text-sm">
-            <code>{output}</code>
-          </pre>
+          <CodeBlock code={output} language="json" />
         </div>
       )}
     </div>

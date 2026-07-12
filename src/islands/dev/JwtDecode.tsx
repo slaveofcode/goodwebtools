@@ -3,6 +3,7 @@ import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
+import { CodeBlock } from '@/components/ui/CodeBlock';
 import { decodeJwt } from '@/tools/dev/jwt.lib';
 
 export default function JwtDecode() {
@@ -61,9 +62,7 @@ export default function JwtDecode() {
             <span className="text-sm font-medium text-muted-foreground">Header</span>
             <CopyButton value={header} />
           </div>
-          <pre className="overflow-auto rounded-lg border border-border bg-muted/40 p-3 text-sm">
-            <code>{header}</code>
-          </pre>
+          <CodeBlock code={header} language="json" />
         </div>
       )}
 
@@ -73,9 +72,7 @@ export default function JwtDecode() {
             <span className="text-sm font-medium text-muted-foreground">Payload</span>
             <CopyButton value={payload} />
           </div>
-          <pre className="overflow-auto rounded-lg border border-border bg-muted/40 p-3 text-sm">
-            <code>{payload}</code>
-          </pre>
+          <CodeBlock code={payload} language="json" />
         </div>
       )}
     </div>

@@ -11,6 +11,7 @@ export default function JsonToml() {
       placeholder={'{\n  "title": "demo",\n  "count": 3,\n  "tags": ["a", "b"]\n}'}
       fileAccept=".json,.toml,application/json,application/toml,text/plain"
       rightExts={['toml']}
+      rightLang="ini"
     />
   );
 }

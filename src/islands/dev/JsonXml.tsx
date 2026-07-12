@@ -11,6 +11,7 @@ export default function JsonXml() {
       placeholder={'{\n  "person": {\n    "name": "Alice",\n    "age": 30\n  }\n}'}
       fileAccept=".json,.xml,application/json,text/xml,application/xml,text/plain"
       rightExts={['xml']}
+      rightLang="xml"
     />
   );
 }

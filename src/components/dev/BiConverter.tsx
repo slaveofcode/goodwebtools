@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
 import { LoadFileButton, fileExt } from '@/components/ui/LoadFileButton';
+import { CodeBlock, type CodeLanguage } from '@/components/ui/CodeBlock';
 
 export interface BiConverterProps {
   /** Left-hand format label, e.g. "JSON". */
@@ -19,12 +20,14 @@ export interface BiConverterProps {
   fileAccept?: string;
   /** Extensions (no dot) that map to the right-hand format, e.g. ['yaml','yml']. */
   rightExts?: string[];
+  /** highlight.js language for the right-hand format's output (left is JSON). */
+  rightLang?: CodeLanguage;
 }
 
 type Mode = 'toRight' | 'toLeft';
 
 /** A two-way text converter: paste input, pick a direction, copy the result. */
-export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholder, fileAccept, rightExts = [] }: BiConverterProps) {
+export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholder, fileAccept, rightExts = [], rightLang = 'plaintext' }: BiConverterProps) {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
@@ -99,9 +102,7 @@ export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholde
             <span className="text-sm font-medium text-muted-foreground">Result</span>
             <CopyButton value={output} />
           </div>
-          <pre className="max-h-[30rem] overflow-auto rounded-lg border border-border bg-muted/40 p-3 text-sm">
-            <code>{output}</code>
-          </pre>
+          <CodeBlock code={output} language={mode === 'toRight' ? rightLang : 'json'} />
         </div>
       )}
     </div>

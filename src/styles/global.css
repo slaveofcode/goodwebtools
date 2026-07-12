@@ -133,3 +133,37 @@ body {
 @media (prefers-reduced-motion: reduce) {
   [style*="gwtDropup"] { animation: none !important; }
 }
+
+/* Syntax highlighting (highlight.js) — neo-brutalist palette, theme-aware.
+   Only the token classes our languages (JSON/YAML/XML/TOML) emit are styled. */
+.hljs { color: rgb(var(--foreground)); background: transparent; }
+.hljs-attr,
+.hljs-attribute,
+.hljs-name,
+.hljs-tag,
+.hljs-selector-tag { color: #6d28d9; }                 /* keys / tags — violet */
+.hljs-string,
+.hljs-bullet { color: #15803d; }                        /* strings — green */
+.hljs-number { color: #b45309; }                        /* numbers — amber */
+.hljs-literal,
+.hljs-keyword,
+.hljs-built_in,
+.hljs-type { color: #be123c; }                          /* true/false/null — rose */
+.hljs-section { color: #0e7490; }                       /* [tables] — cyan */
+.hljs-comment { color: rgb(var(--muted-foreground)); font-style: italic; }
+.hljs-punctuation,
+.hljs-meta { color: rgb(var(--muted-foreground)); }
+
+.dark .hljs-attr,
+.dark .hljs-attribute,
+.dark .hljs-name,
+.dark .hljs-tag,
+.dark .hljs-selector-tag { color: #c4b5fd; }
+.dark .hljs-string,
+.dark .hljs-bullet { color: #4ade80; }
+.dark .hljs-number { color: #fbbf24; }
+.dark .hljs-literal,
+.dark .hljs-keyword,
+.dark .hljs-built_in,
+.dark .hljs-type { color: #fb7185; }
+.dark .hljs-section { color: #22d3ee; }
