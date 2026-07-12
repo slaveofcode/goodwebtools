@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -330,6 +330,17 @@ export const tools: ToolDef[] = [
     icon: Droplet,
     summary: 'Add a text watermark to an image',
     load: () => import('@/islands/image/ImageWatermark'),
+    status: 'stable'
+  },
+  {
+    id: 'image-merge',
+    name: 'Merge Images',
+    category: 'Image',
+    route: '/tools/image-merge',
+    keywords: ['image', 'merge', 'combine', 'join', 'stack', 'collage', 'concatenate', 'stitch', 'vertical', 'horizontal'],
+    icon: Combine,
+    summary: 'Combine multiple images into one, vertically or horizontally',
+    load: () => import('@/islands/image/ImageMerge'),
     status: 'stable'
   },
   {

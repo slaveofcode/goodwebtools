@@ -173,6 +173,8 @@ Grouped by family. Each family shares a worker + patterns.
 - Compressor — MozJPEG / OxiPNG / WebP / AVIF encoders (wasm). Essentially self-hosted Squoosh.
 - Format convert — same codec set + HEIC decode (`libheif-wasm`).
 - Resize / crop / batch — Canvas / `pica` for quality downscale.
+- **Merge / combine** — stack multiple images into one, **vertical** or **horizontal**, with an adjustable gap, background color (or transparent), and an optional "match widths/heights" that normalizes the cross-axis (downscale-only, so no quality loss). Reorderable list; exports PNG. Canvas — `computeMergeLayout` is pure/unit-tested.
+- **Annotate / markup** — screenshot-style tool: rectangle, ellipse, line, arrow, freehand pencil, highlighter, text, and blur regions, with a **Select tool** to move, rename (double-click text), and delete existing shapes. Canvas.
 - Watermark (batch, position grid, opacity) — Canvas.
 - **EXIF / metadata scrubber** — strip GPS/device via re-encode or `piexifjs`. High privacy value; ship early.
 - **Blur & auto-redact** — hide sensitive parts of a photo, single or **batch**, fully in-browser:
@@ -293,7 +295,7 @@ Highest value-to-effort, zero WASM risk, validates the shell UX: JSON tools, dif
 Merge, split, reorder, rotate, delete, images→PDF, PDF→image, watermark, password protect/remove, compress. (Redaction + OCR deferred to a PDF-advanced sub-phase.)
 
 **Phase 3 — Image basics**
-Compressor, format convert, resize/crop/batch, watermark, **EXIF scrubber**. All Canvas/squoosh — no ML yet.
+Compressor, format convert, resize, crop, **merge/combine**, **annotate/markup**, watermark, **EXIF scrubber**. Every result offers **Download** and **Copy to clipboard** (image/png). All Canvas/squoosh — no ML yet.
 
 **Phase 4 — Files & crypto**
 Zip-with-password, 7z/rar/tar extract, AES file encrypt/decrypt (finalize file format), hashing large files, split/join.

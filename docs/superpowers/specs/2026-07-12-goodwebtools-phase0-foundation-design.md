@@ -46,7 +46,8 @@ gwt/
 │   │       ├── Dropzone.tsx
 │   │       ├── ProgressBar.tsx
 │   │       ├── FileList.tsx
-│   │       └── ResultActions.tsx
+│   │       ├── CopyImageButton.tsx  # Copy an image result to the clipboard
+│   │       └── ResultActions.tsx    # Download (+ Copy image for image blobs)
 │   ├── islands/                 # Per-tool React islands (lazy loaded)
 │   │   └── demo/
 │   │       └── HashDemo.tsx     # Validation tool island
@@ -59,6 +60,7 @@ gwt/
 │   │   ├── worker.service.ts    # WorkerPool
 │   │   ├── asset.service.ts     # AssetCache
 │   │   ├── download.service.ts  # DownloadService
+│   │   ├── clipboard.service.ts # ClipboardService (copy images out to clipboard)
 │   │   ├── progress.service.ts  # Progress/Toast
 │   │   └── persistence.service.ts  # PersistenceService (auto-save, unsaved work guard)
 │   ├── registry/                # Tool registry
@@ -232,7 +234,7 @@ class FileService {
 **Supported sources:**
 - Drag & drop onto Dropzone
 - `<input type="file">` click
-- Clipboard paste (images, text)
+- Clipboard paste (images, text) in; **copy image results back out** (ClipboardService)
 - File System Access API (when available)
 
 ### 2. WorkerPool
@@ -308,6 +310,29 @@ class DownloadService {
 **Behavior:**
 - File System Access API for "Save As" dialog (when available)
 - Fallback to `<a download>` blob URL
+
+### 4b. ClipboardService
+
+Copy image results to the system clipboard (complements paste-in support), so
+users can Download **or** Copy from any image tool result.
+
+**API:**
+```typescript
+class ClipboardService {
+  get supported(): boolean  // async Clipboard API + ClipboardItem present
+  // Accepts a blob or a lazy producer; re-encodes non-PNG to PNG first.
+  async copyImage(source: Blob | (() => Blob | Promise<Blob>)): Promise<void>
+}
+```
+
+**Behavior:**
+- Writes `image/png` (the only format browsers reliably accept); non-PNG
+  outputs (WebP/JPEG/GIF/…) are re-encoded via a canvas first.
+- The PNG is passed to `ClipboardItem` as a **promise** and `write()` is called
+  **synchronously** in the click handler — Safari drops the user-activation if
+  the re-encode is `await`-ed before `write()`.
+- Surfaced through the reusable `CopyImageButton` (hidden where unsupported;
+  shows brief Copied / Copy failed feedback).
 
 ### 5. Progress/Toast
 
