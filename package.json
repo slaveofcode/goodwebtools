@@ -7,7 +7,10 @@
     "doc": "docs"
   },
   "scripts": {
+    "copy:wasm": "node -e \"require('fs').copyFileSync('node_modules/mupdf/dist/mupdf-wasm.wasm','public/mupdf-wasm.wasm')\"",
+    "predev": "npm run copy:wasm",
     "dev": "astro dev",
+    "prebuild": "npm run copy:wasm",
     "build": "astro build",
     "preview": "astro preview",
     "test": "vitest",

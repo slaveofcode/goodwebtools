@@ -1,3 +1,4 @@
+import './mupdf-setup'; // must run before mupdf loads its wasm
 import * as Comlink from 'comlink';
 import * as mupdf from 'mupdf';
 

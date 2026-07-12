@@ -3,3 +3,6 @@ dist/
 .astro/
 .env
 .DS_Store
+
+# mupdf wasm (copied from node_modules by copy:wasm)
+public/mupdf-wasm.wasm
