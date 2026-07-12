@@ -17,8 +17,13 @@ export async function renderPdfToImages(
   onProgress?: (done: number, total: number) => void
 ): Promise<RenderedPage[]> {
   const pdfjs = await import('pdfjs-dist');
-  const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
-  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  // Load the worker via Vite's ?worker so it's bundled up front. Using ?url
+  // makes Vite process the worker on-demand mid-render, which re-optimizes deps
+  // and invalidates the pdfjs-dist module hash ("Failed to fetch dynamically
+  // imported module"). A dedicated worker per call avoids shared-state races.
+  const PdfjsWorker = (await import('pdfjs-dist/build/pdf.worker.min.mjs?worker')).default;
+  const worker = new PdfjsWorker();
+  pdfjs.GlobalWorkerOptions.workerPort = worker;
 
   const data = await file.arrayBuffer();
   const loadingTask = pdfjs.getDocument({ data });
@@ -49,6 +54,7 @@ export async function renderPdfToImages(
   } finally {
     // destroy() lives on the loading task; the document proxy only has cleanup()
     await loadingTask.destroy();
+    worker.terminate();
   }
 
   return pages;
