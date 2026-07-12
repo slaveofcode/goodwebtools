@@ -5,6 +5,7 @@ import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
 import { LoadFileButton, fileExt } from '@/components/ui/LoadFileButton';
 import { CodeBlock } from '@/components/ui/CodeBlock';
+import { DownloadTextButton } from '@/components/ui/DownloadTextButton';
 import { csvToJson, jsonToCsv, parseCsv } from '@/tools/dev/csv.lib';
 
 const PREVIEW_ROWS = 100;
@@ -138,7 +139,14 @@ export default function CsvJson() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">Result</span>
-            <CopyButton value={output} />
+            <div className="flex gap-2">
+              <DownloadTextButton
+                text={output}
+                filename={activeMode === 'toJson' ? 'converted.json' : 'converted.csv'}
+                mime={activeMode === 'toJson' ? 'application/json' : 'text/csv;charset=utf-8'}
+              />
+              <CopyButton value={output} />
+            </div>
           </div>
           <CodeBlock code={output} language={activeMode === 'toJson' ? 'json' : 'plaintext'} />
         </div>
