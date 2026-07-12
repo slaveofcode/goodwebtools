@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react';
-import { renderFirstPage } from '@/tools/pdf/render.lib';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { openPdfRenderer, type PdfRenderer } from '@/tools/pdf/render.lib';
+
+const WINDOW = 5; // thumbnails shown per page of the preview
 
 interface PdfPreviewProps {
   /** PDF bytes/blob to preview, or null to render nothing. */
@@ -8,34 +11,81 @@ interface PdfPreviewProps {
   label?: string;
 }
 
+interface Thumb {
+  pageNumber: number;
+  url: string;
+}
+
 /**
- * Renders page 1 of a PDF as an image preview. Re-renders whenever `source`
- * changes; object URLs are revoked on change/unmount.
+ * Paginated PDF preview: renders up to 5 page thumbnails at a time with
+ * prev/next navigation. The pdf.js document stays open so paging is fast.
  */
-export function PdfPreview({ source, scale = 1.2, label = 'Preview' }: PdfPreviewProps) {
-  const [url, setUrl] = useState('');
+export function PdfPreview({ source, scale = 1, label = 'Preview' }: PdfPreviewProps) {
+  const rendererRef = useRef<PdfRenderer | null>(null);
   const [pageCount, setPageCount] = useState(0);
+  const [windowStart, setWindowStart] = useState(1);
+  const [thumbs, setThumbs] = useState<Thumb[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Open the document when the source changes.
   useEffect(() => {
     if (!source) {
-      setUrl('');
       setPageCount(0);
+      setThumbs([]);
       return;
     }
     let cancelled = false;
     setLoading(true);
     setError('');
+    setWindowStart(1);
+    setPageCount(0);
     (async () => {
       try {
         const data = source instanceof Blob ? await source.arrayBuffer() : source;
-        const rendered = await renderFirstPage(data, scale);
-        if (cancelled) return;
-        setPageCount(rendered.pageCount);
-        setUrl(URL.createObjectURL(rendered.blob));
+        const renderer = await openPdfRenderer(data);
+        if (cancelled) {
+          renderer.destroy();
+          return;
+        }
+        rendererRef.current?.destroy();
+        rendererRef.current = renderer;
+        setPageCount(renderer.pageCount);
       } catch {
-        if (!cancelled) setError('Could not render preview');
+        if (!cancelled) {
+          setError('Could not render preview');
+          setLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [source]);
+
+  // Render the current 5-page window whenever it changes.
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer || pageCount === 0) return;
+    let cancelled = false;
+    setLoading(true);
+    const start = windowStart;
+    const end = Math.min(start + WINDOW - 1, pageCount);
+    (async () => {
+      const rendered: Thumb[] = [];
+      try {
+        for (let n = start; n <= end; n++) {
+          const blob = await renderer.renderPage(n, scale);
+          if (cancelled) break;
+          rendered.push({ pageNumber: n, url: URL.createObjectURL(blob) });
+        }
+        if (cancelled) {
+          rendered.forEach(t => URL.revokeObjectURL(t.url));
+          return;
+        }
+        setThumbs(rendered);
+      } catch {
+        if (!cancelled) setError('Could not render pages');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -43,36 +93,80 @@ export function PdfPreview({ source, scale = 1.2, label = 'Preview' }: PdfPrevie
     return () => {
       cancelled = true;
     };
-  }, [source, scale]);
+  }, [windowStart, pageCount, scale]);
 
-  // Revoke the current object URL when it changes or the component unmounts.
+  // Revoke the current window's object URLs when they change or on unmount.
   useEffect(() => {
-    return () => {
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [url]);
+    return () => thumbs.forEach(t => URL.revokeObjectURL(t.url));
+  }, [thumbs]);
+
+  // Tear down the renderer on unmount.
+  useEffect(() => {
+    return () => rendererRef.current?.destroy();
+  }, []);
 
   if (!source) return null;
 
+  const windowEnd = Math.min(windowStart + WINDOW - 1, pageCount);
+  const canPrev = windowStart > 1;
+  const canNext = windowEnd < pageCount;
+
   return (
-    <div className="space-y-1.5">
-      <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-        {label}
-        {pageCount > 0 && <span className="ml-1 normal-case"> — page 1 of {pageCount}</span>}
-      </span>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          {label}
+          {pageCount > 0 && (
+            <span className="ml-1 normal-case">
+              {' '}
+              — {pageCount === 1 ? '1 page' : `pages ${windowStart}–${windowEnd} of ${pageCount}`}
+            </span>
+          )}
+        </span>
+        {pageCount > WINDOW && (
+          <div className="flex gap-1">
+            <button
+              onClick={() => setWindowStart(s => Math.max(1, s - WINDOW))}
+              disabled={!canPrev}
+              className="border-2 border-border bg-muted p-1 shadow-brutal-sm press-brutal disabled:opacity-30"
+              aria-label="Previous pages"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setWindowStart(s => Math.min(s + WINDOW, pageCount))}
+              disabled={!canNext}
+              className="border-2 border-border bg-muted p-1 shadow-brutal-sm press-brutal disabled:opacity-30"
+              aria-label="Next pages"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="border-2 border-border bg-muted p-2 shadow-brutal-sm">
-        {loading && (
+        {thumbs.length === 0 && loading && (
           <p className="py-10 text-center text-sm text-muted-foreground">Rendering preview…</p>
         )}
         {error && !loading && (
           <p className="py-10 text-center text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
-        {url && !loading && !error && (
-          <img
-            src={url}
-            alt="PDF page 1 preview"
-            className="mx-auto max-h-[36rem] w-auto border-2 border-border bg-white"
-          />
+        {thumbs.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {thumbs.map(thumb => (
+              <div key={thumb.pageNumber} className="space-y-1">
+                <img
+                  src={thumb.url}
+                  alt={`Page ${thumb.pageNumber}`}
+                  className="w-full border-2 border-border bg-white"
+                />
+                <p className="text-center text-xs font-bold text-muted-foreground">
+                  Page {thumb.pageNumber}
+                </p>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

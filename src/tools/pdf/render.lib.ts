@@ -5,21 +5,20 @@ export interface RenderedPage {
   height: number;
 }
 
-export interface FirstPageRender {
-  blob: Blob;
-  width: number;
-  height: number;
+export interface PdfRenderer {
   pageCount: number;
+  /** Render a single 1-indexed page to a PNG blob. */
+  renderPage(pageNumber: number, scale: number): Promise<Blob>;
+  /** Tear down the pdf.js document and its worker. */
+  destroy(): void;
 }
 
 /**
- * Render just page 1 of a PDF (from raw bytes) to a PNG — used for previews.
- * Reports the total page count so callers can show "page 1 of N".
+ * Open a PDF (from raw bytes) once and render its pages on demand — for a
+ * paginated preview. The document and worker stay alive until destroy(), so
+ * flipping between pages is fast (no re-parse).
  */
-export async function renderFirstPage(
-  data: ArrayBuffer | Uint8Array,
-  scale: number
-): Promise<FirstPageRender> {
+export async function openPdfRenderer(data: ArrayBuffer | Uint8Array): Promise<PdfRenderer> {
   const pdfjs = await import('pdfjs-dist');
   const PdfjsWorker = (await import('pdfjs-dist/build/pdf.worker.min.mjs?worker')).default;
   const worker = new PdfjsWorker();
@@ -27,28 +26,30 @@ export async function renderFirstPage(
 
   const loadingTask = pdfjs.getDocument({ data });
   const pdf = await loadingTask.promise;
-  try {
-    const pageCount = pdf.numPages;
-    const page = await pdf.getPage(1);
-    const viewport = page.getViewport({ scale });
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('Canvas not supported');
 
-    await page.render({ canvasContext: context, viewport, canvas }).promise;
-    const blob = await new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob(
-        result => (result ? resolve(result) : reject(new Error('Failed to encode preview'))),
-        'image/png'
-      )
-    );
-    return { blob, width: canvas.width, height: canvas.height, pageCount };
-  } finally {
-    await loadingTask.destroy();
-    worker.terminate();
-  }
+  return {
+    pageCount: pdf.numPages,
+    async renderPage(pageNumber, scale) {
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Canvas not supported');
+      await page.render({ canvasContext: context, viewport, canvas }).promise;
+      return new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob(
+          result => (result ? resolve(result) : reject(new Error('Failed to encode preview'))),
+          'image/png'
+        )
+      );
+    },
+    destroy() {
+      loadingTask.destroy();
+      worker.terminate();
+    },
+  };
 }
 
 /**
