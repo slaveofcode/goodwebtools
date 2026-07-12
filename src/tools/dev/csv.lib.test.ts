@@ -58,8 +58,13 @@ describe('jsonToCsv', () => {
     );
   });
 
-  it('throws when JSON is not an array', () => {
-    expect(() => jsonToCsv('{"a":1}')).toThrow('JSON must be an array of objects');
+  it('converts a single JSON object to one CSV row', () => {
+    expect(jsonToCsv('{"name":"Alice","age":30}')).toBe('name,age\nAlice,30');
+  });
+
+  it('throws when JSON is a scalar or array of scalars', () => {
+    expect(() => jsonToCsv('42')).toThrow(/object or an array of objects/);
+    expect(() => jsonToCsv('"hi"')).toThrow(/object or an array of objects/);
   });
 
   it('returns an empty string for an empty array', () => {

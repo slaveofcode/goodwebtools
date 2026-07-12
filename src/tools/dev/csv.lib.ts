@@ -63,8 +63,15 @@ function escapeCsvField(value: unknown, delimiter: string): string {
 }
 
 export function jsonToCsv(text: string, delimiter = ','): string {
-  const data = JSON.parse(text);
-  if (!Array.isArray(data)) throw new Error('JSON must be an array of objects');
+  const parsed = JSON.parse(text);
+  const isPlainObject = (value: unknown) =>
+    value !== null && typeof value === 'object' && !Array.isArray(value);
+  // A single object becomes one data row; an array becomes one row per item.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let data: any[];
+  if (Array.isArray(parsed)) data = parsed;
+  else if (isPlainObject(parsed)) data = [parsed];
+  else throw new Error('JSON must be an object or an array of objects');
   if (data.length === 0) return '';
 
   const headers = Array.from(
