@@ -22,8 +22,8 @@ export default function ImageWatermark() {
   const [text, setText] = useState('© GoodWebTools');
   const [layout, setLayout] = useState<WatermarkLayout>('diagonal');
   const [fontScale, setFontScale] = useState(1 / 10);
-  const [opacity, setOpacity] = useState(40);
-  const [color, setColor] = useState('#ffffff');
+  const [opacity, setOpacity] = useState(60);
+  const [color, setColor] = useState('#808080');
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
