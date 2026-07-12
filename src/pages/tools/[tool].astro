@@ -3,7 +3,6 @@ import { ChevronRight } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
 import ToolHost from '@/islands/ToolHost';
 import { tools, getToolById } from '@/registry/tools';
-import { categoryColors } from '@/registry/categories';
 
 export function getStaticPaths() {
   return tools.map(tool => ({
@@ -33,12 +32,6 @@ const tool = getToolById(toolId)!;
     </nav>
 
     <div class="mb-6">
-      <div class="mb-2 flex items-center gap-2">
-        <span class={`inline-block h-4 w-4 border-2 border-border ${categoryColors[tool.category]}`}></span>
-        <span class="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          {tool.category}
-        </span>
-      </div>
       <h1 class="mb-1 text-3xl font-bold uppercase tracking-tight">{tool.name}</h1>
       <p class="text-muted-foreground">{tool.summary}</p>
     </div>

@@ -71,7 +71,7 @@ Open http://localhost:4321
 - QR Code Generator
 - QR Code Reader
 - Timestamp Converter
-- Hash File (SHA-256, worker-based)
+- Hash File (MD5 / SHA-1 / SHA-256 / SHA-512, streamed in a worker for large files)
 
 ✅ **Phase 2 — PDF suite (11 tools):**
 - Merge PDFs (reorderable)
@@ -118,6 +118,9 @@ result offers **Download** and **Copy to clipboard**.
 - Archive Extractor — extract **RAR, 7z, TAR, GZ, ZIP** and more via
   `libarchive.js` (WASM, self-hosted worker). Extract-only — creating .rar/.7z
   isn't possible client-side (proprietary formats).
+- File Split / Join — cut a large file into fixed-size parts (`.001`, `.002`…)
+  and rejoin them. Lazy `Blob.slice`, no full-file buffering.
+- (Hash File gained MD5 / SHA-1 / SHA-256 / SHA-512 with chunked streaming.)
 
 ## Testing
 
