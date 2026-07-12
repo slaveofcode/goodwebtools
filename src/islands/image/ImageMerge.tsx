@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUp, ArrowDown, X, MoveVertical, MoveHorizontal, LayoutGrid } from 'lucide-react';
+import { ArrowUp, ArrowDown, X, MoveVertical, MoveHorizontal, LayoutGrid, ChevronDown } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
@@ -175,7 +175,7 @@ export default function ImageMerge() {
 
       {items.length > 0 && (
         <div className="flex flex-wrap items-end gap-4">
-          <div ref={directionRef} className="relative space-y-1.5">
+          <div ref={directionRef} className="space-y-1.5">
             <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Direction</span>
             <div className="flex gap-2">
               <Button variant={direction === 'vertical' ? 'primary' : 'secondary'} aria-pressed={direction === 'vertical'} onClick={() => { setDirection('vertical'); setPickerOpen(false); }}>
@@ -186,17 +186,38 @@ export default function ImageMerge() {
                 <MoveHorizontal className="h-4 w-4" />
                 Horizontal
               </Button>
-              <Button
-                variant={direction === 'grid' ? 'primary' : 'secondary'}
-                aria-pressed={direction === 'grid'}
-                onClick={() => { if (direction === 'grid') { setPickerOpen(o => !o); } else { setDirection('grid'); setPickerOpen(true); } }}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Grid
-              </Button>
+              {/* The picker anchors to this button, dropping straight below it like a select menu. */}
+              <div className="relative">
+                <Button
+                  variant={direction === 'grid' ? 'primary' : 'secondary'}
+                  aria-pressed={direction === 'grid'}
+                  aria-haspopup="grid"
+                  aria-expanded={direction === 'grid' && pickerOpen}
+                  onClick={() => { if (direction === 'grid') { setPickerOpen(o => !o); } else { setDirection('grid'); setPickerOpen(true); } }}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  Grid
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${direction === 'grid' && pickerOpen ? 'rotate-180' : ''}`} />
+                </Button>
+
+                {direction === 'grid' && pickerOpen && (
+                  <div
+                    role="dialog"
+                    aria-label="Choose grid columns"
+                    className="absolute left-0 top-full z-30 mt-2 origin-top border-2 border-border bg-background p-3 shadow-brutal"
+                    style={{ animation: 'gwtDropdown 150ms ease-out' }}
+                  >
+                    <ColumnPicker
+                      count={items.length}
+                      columns={columns}
+                      onChange={c => { setColumns(c); setPickerOpen(false); }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Compact summary sits under the buttons so it never shifts the Gap field. */}
+            {/* Compact summary sits under the buttons; never shifts the Gap field. */}
             {direction === 'grid' && (
               <p className="text-xs text-muted-foreground">
                 {Math.min(columns, items.length)} column{Math.min(columns, items.length) > 1 ? 's' : ''} ×{' '}
@@ -205,17 +226,6 @@ export default function ImageMerge() {
                   change
                 </button>
               </p>
-            )}
-
-            {/* Column picker floats over the layout instead of pushing controls aside. */}
-            {direction === 'grid' && pickerOpen && (
-              <div className="absolute left-0 top-full z-20 mt-2 border-2 border-border bg-background p-3 shadow-brutal">
-                <ColumnPicker
-                  count={items.length}
-                  columns={columns}
-                  onChange={c => { setColumns(c); setPickerOpen(false); }}
-                />
-              </div>
             )}
           </div>
 

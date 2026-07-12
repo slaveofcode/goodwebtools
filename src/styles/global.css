@@ -124,3 +124,12 @@ body {
   padding: 0.4em 0.6em;
 }
 .markdown-preview hr { border: none; border-top: 2px solid rgb(var(--border)); margin: 1em 0; }
+
+/* Dropdown / popover entrance (e.g. Merge grid column picker). */
+@keyframes gwtDropdown {
+  from { opacity: 0; transform: translateY(-6px) scaleY(0.96); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="gwtDropdown"] { animation: none !important; }
+}
