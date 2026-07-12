@@ -18,7 +18,7 @@ export const tools: ToolDef[] = [
     name: 'Base64 Encode / Decode',
     category: 'Dev',
     route: '/tools/base64',
-    keywords: ['base64', 'encode', 'decode', 'btoa', 'atob', 'binary'],
+    keywords: ['base64', 'encode', 'encoder', 'decode', 'decoder', 'btoa', 'atob', 'binary'],
     icon: Binary,
     summary: 'Encode and decode Base64 text',
     load: () => import('@/islands/dev/Base64'),
@@ -147,12 +147,12 @@ export const tools: ToolDef[] = [
   },
   {
     id: 'color-convert',
-    name: 'Color Converter',
+    name: 'Color Converter / Picker',
     category: 'Dev',
     route: '/tools/color-convert',
     keywords: ['color', 'colour', 'hex', 'rgb', 'hsl', 'convert', 'picker', 'palette'],
     icon: Palette,
-    summary: 'Convert colors between HEX, RGB, and HSL',
+    summary: 'Pick or Convert colors between HEX, RGB, and HSL',
     load: () => import('@/islands/dev/ColorConvert'),
     status: 'stable'
   },

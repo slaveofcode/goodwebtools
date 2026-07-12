@@ -10,9 +10,18 @@ async function readBytes(file: File): Promise<ArrayBuffer> {
   return file.arrayBuffer();
 }
 
+/**
+ * Load a PDF, tolerating encrypted documents. Many real-world PDFs carry a
+ * permissions/encryption dictionary (owner-password only, no open password);
+ * pdf-lib rejects these by default, so we ignore encryption to read them.
+ */
+async function loadPdf(file: File): Promise<PDFDocument> {
+  return PDFDocument.load(await readBytes(file), { ignoreEncryption: true });
+}
+
 /** Number of pages in a PDF file. */
 export async function getPageCount(file: File): Promise<number> {
-  const doc = await PDFDocument.load(await readBytes(file));
+  const doc = await loadPdf(file);
   return doc.getPageCount();
 }
 
@@ -20,7 +29,7 @@ export async function getPageCount(file: File): Promise<number> {
 export async function mergePdfs(files: File[]): Promise<Blob> {
   const out = await PDFDocument.create();
   for (const file of files) {
-    const src = await PDFDocument.load(await readBytes(file));
+    const src = await loadPdf(file);
     const pages = await out.copyPages(src, src.getPageIndices());
     pages.forEach(page => out.addPage(page));
   }
@@ -62,7 +71,7 @@ export function parsePageSpec(spec: string): number[] {
  * Out-of-range pages are ignored; throws if nothing valid remains.
  */
 export async function extractPageList(file: File, pageNumbers: number[]): Promise<Blob> {
-  const src = await PDFDocument.load(await readBytes(file));
+  const src = await loadPdf(file);
   const total = src.getPageCount();
   const indices = pageNumbers.filter(n => n >= 1 && n <= total).map(n => n - 1);
   if (indices.length === 0) throw new Error(`No valid pages selected — this PDF has ${total} page(s).`);
@@ -75,7 +84,7 @@ export async function extractPageList(file: File, pageNumbers: number[]): Promis
 
 /** Rotate every page by a multiple of 90 degrees (clockwise). */
 export async function rotatePdf(file: File, turnDegrees: number): Promise<Blob> {
-  const src = await PDFDocument.load(await readBytes(file));
+  const src = await loadPdf(file);
   src.getPages().forEach(page => {
     const current = page.getRotation().angle;
     page.setRotation(degrees((current + turnDegrees) % 360));
@@ -88,7 +97,7 @@ export async function rotatePdf(file: File, turnDegrees: number): Promise<Blob> 
  * Throws if the removal would leave no pages.
  */
 export async function deletePages(file: File, removeList: number[]): Promise<Blob> {
-  const src = await PDFDocument.load(await readBytes(file));
+  const src = await loadPdf(file);
   const total = src.getPageCount();
   const remove = new Set(removeList.map(n => n - 1).filter(i => i >= 0 && i < total));
   const keep: number[] = [];
@@ -163,7 +172,7 @@ export async function addWatermark(
   text: string,
   options: WatermarkOptions
 ): Promise<Blob> {
-  const doc = await PDFDocument.load(await readBytes(file));
+  const doc = await loadPdf(file);
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
   doc.getPages().forEach(page => drawWatermark(page, font, text, options));
   return toBlob(await doc.save());
@@ -178,7 +187,7 @@ export async function buildWatermarkPreview(
   text: string,
   options: WatermarkOptions
 ): Promise<Uint8Array> {
-  const src = await PDFDocument.load(await readBytes(file));
+  const src = await loadPdf(file);
   const out = await PDFDocument.create();
   const [firstPage] = await out.copyPages(src, [0]);
   out.addPage(firstPage);
