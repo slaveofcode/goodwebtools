@@ -1,25 +1,70 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage } from '@/tools/image/canvas.lib';
+import { imageToIco, imageToGif, imageToSvg, canvasSupportsType } from '@/tools/image/encode.lib';
 
-const FORMATS = [
-  { mime: 'image/png', ext: 'png', label: 'PNG', lossy: false },
-  { mime: 'image/jpeg', ext: 'jpg', label: 'JPEG', lossy: true },
-  { mime: 'image/webp', ext: 'webp', label: 'WebP', lossy: true },
+type Kind = 'canvas' | 'ico' | 'gif' | 'svg';
+
+interface Format {
+  key: string;
+  ext: string;
+  label: string;
+  kind: Kind;
+  mime?: string;
+  lossy?: boolean;
+  detect?: string; // feature-detect this mime before offering
+  note?: string;
+}
+
+const FORMATS: Format[] = [
+  { key: 'png', ext: 'png', label: 'PNG', kind: 'canvas', mime: 'image/png' },
+  { key: 'jpeg', ext: 'jpg', label: 'JPEG', kind: 'canvas', mime: 'image/jpeg', lossy: true },
+  { key: 'webp', ext: 'webp', label: 'WebP', kind: 'canvas', mime: 'image/webp', lossy: true },
+  {
+    key: 'avif',
+    ext: 'avif',
+    label: 'AVIF',
+    kind: 'canvas',
+    mime: 'image/avif',
+    lossy: true,
+    detect: 'image/avif',
+    note: 'AVIF (AV1 image) — great compression, modern browsers.',
+  },
+  { key: 'gif', ext: 'gif', label: 'GIF', kind: 'gif', note: 'Single frame, 256 colors.' },
+  {
+    key: 'ico',
+    ext: 'ico',
+    label: 'ICO (favicon)',
+    kind: 'ico',
+    note: 'Multi-size favicon: 16, 32, and 48px in one .ico.',
+  },
+  {
+    key: 'svg',
+    ext: 'svg',
+    label: 'SVG',
+    kind: 'svg',
+    note: 'Wraps the image inside an SVG (embedded, not vectorized).',
+  },
 ];
 
 export default function ImageConvert() {
   const [file, setFile] = useState<File | null>(null);
-  const [mime, setMime] = useState('image/png');
+  const [key, setKey] = useState('png');
   const [quality, setQuality] = useState(90);
+  const [avifOk, setAvifOk] = useState(false);
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const fmt = FORMATS.find(f => f.mime === mime)!;
+  useEffect(() => {
+    canvasSupportsType('image/avif').then(setAvifOk);
+  }, []);
+
+  const available = FORMATS.filter(f => !f.detect || (f.detect === 'image/avif' && avifOk));
+  const fmt = available.find(f => f.key === key) ?? available[0];
   const outName = file ? file.name.replace(/\.[^.]+$/, '') + '.' + fmt.ext : `image.${fmt.ext}`;
 
   const onDrop = (files: File[]) => {
@@ -34,10 +79,17 @@ export default function ImageConvert() {
     setError('');
     setResult(null);
     try {
-      const { blob } = await processImage(file, {
-        mimeType: mime,
-        quality: fmt.lossy ? quality / 100 : undefined,
-      });
+      let blob: Blob;
+      if (fmt.kind === 'ico') blob = await imageToIco(file);
+      else if (fmt.kind === 'gif') blob = await imageToGif(file);
+      else if (fmt.kind === 'svg') blob = await imageToSvg(file);
+      else {
+        const out = await processImage(file, {
+          mimeType: fmt.mime!,
+          quality: fmt.lossy ? quality / 100 : undefined,
+        });
+        blob = out.blob;
+      }
       setResult(blob);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Conversion failed');
@@ -51,7 +103,9 @@ export default function ImageConvert() {
       <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
         <div className="space-y-1">
           <p className="text-lg font-bold">Drop an image or click to browse</p>
-          <p className="text-sm text-muted-foreground">Convert between PNG, JPEG, and WebP</p>
+          <p className="text-sm text-muted-foreground">
+            Convert to PNG, JPEG, WebP{avifOk ? ', AVIF' : ''}, GIF, ICO, or SVG
+          </p>
         </div>
       </Dropzone>
 
@@ -62,17 +116,18 @@ export default function ImageConvert() {
           Output format
         </span>
         <div className="flex flex-wrap gap-2">
-          {FORMATS.map(({ mime: value, label }) => (
+          {available.map(f => (
             <Button
-              key={value}
-              variant={mime === value ? 'primary' : 'secondary'}
-              aria-pressed={mime === value}
-              onClick={() => setMime(value)}
+              key={f.key}
+              variant={fmt.key === f.key ? 'primary' : 'secondary'}
+              aria-pressed={fmt.key === f.key}
+              onClick={() => setKey(f.key)}
             >
-              {label}
+              {f.label}
             </Button>
           ))}
         </div>
+        {fmt.note && <p className="text-xs text-muted-foreground">{fmt.note}</p>}
       </div>
 
       {fmt.lossy && (

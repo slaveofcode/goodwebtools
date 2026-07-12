@@ -93,7 +93,7 @@ Space Grotesk (self-hosted, same-origin to preserve zero external requests).
 Fluid-width, mobile-first layout.
 
 ✅ **Phase 3 — Image basics (6 tools):**
-- Image Converter (PNG / JPEG / WebP)
+- Image Converter (PNG / JPEG / WebP / AVIF / GIF / ICO favicon / SVG)
 - Image Compressor (quality, size delta)
 - Image Resizer (aspect-lock)
 - Image Cropper (drag-to-select)
