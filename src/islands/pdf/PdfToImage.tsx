@@ -104,13 +104,16 @@ export default function PdfToImage() {
                 alt={`Page ${page.pageNumber}`}
                 className="w-full border-2 border-border"
               />
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase text-muted-foreground">
-                  Page {page.pageNumber}
+              <div className="flex items-center justify-between gap-2">
+                <span className="min-w-0 text-xs font-bold uppercase text-muted-foreground">
+                  <span className="block">Page {page.pageNumber}</span>
+                  <span className="block font-mono normal-case text-muted-foreground">
+                    {page.width}×{page.height}
+                  </span>
                 </span>
                 <button
                   onClick={() => downloadService.download(page.blob, `${baseName}-${page.pageNumber}.png`)}
-                  className="flex items-center gap-1 border-2 border-border bg-accent px-2 py-1 text-xs font-bold uppercase text-accent-foreground shadow-brutal-sm press-brutal"
+                  className="flex shrink-0 items-center gap-1 border-2 border-border bg-accent px-2 py-1 text-xs font-bold uppercase text-accent-foreground shadow-brutal-sm press-brutal"
                 >
                   <Download className="h-3 w-3" /> PNG
                 </button>
