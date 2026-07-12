@@ -11,12 +11,30 @@ async function readBytes(file: File): Promise<ArrayBuffer> {
 }
 
 /**
- * Load a PDF, tolerating encrypted documents. Many real-world PDFs carry a
- * permissions/encryption dictionary (owner-password only, no open password);
- * pdf-lib rejects these by default, so we ignore encryption to read them.
+ * Load a PDF as robustly as pdf-lib allows.
+ *
+ * Try a normal load first. If pdf-lib reports encryption, retry ignoring it —
+ * this succeeds for permission-only / identity encryption but NOT for content
+ * that's actually encrypted (pdf-lib doesn't decrypt streams), which then fails
+ * during parsing. Either failure surfaces a clear, honest message.
  */
 async function loadPdf(file: File): Promise<PDFDocument> {
-  return PDFDocument.load(await readBytes(file), { ignoreEncryption: true });
+  const bytes = await readBytes(file);
+  try {
+    return await PDFDocument.load(bytes);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '';
+    if (/encrypt/i.test(message)) {
+      try {
+        return await PDFDocument.load(bytes.slice(0), { ignoreEncryption: true });
+      } catch {
+        throw new Error(
+          'This PDF is password-protected or encrypted, which this tool cannot edit yet.'
+        );
+      }
+    }
+    throw new Error(`This PDF could not be parsed (${message || 'unknown structure'}).`);
+  }
 }
 
 /** Number of pages in a PDF file. */

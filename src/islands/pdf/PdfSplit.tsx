@@ -26,7 +26,7 @@ export default function PdfSplit() {
       const count = await getPageCount(pdf);
       setPageCount(count);
     } catch (e) {
-      setError(`Could not read this PDF: ${e instanceof Error ? e.message : 'unknown error'}`);
+      setError(e instanceof Error ? e.message : 'Could not read this PDF.');
       setFile(null);
     }
   };
