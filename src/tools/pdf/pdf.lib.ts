@@ -113,6 +113,50 @@ export interface WatermarkOptions {
   fontScale: number;
 }
 
+// pdf-lib page/font types are structural; keep this loosely typed to avoid
+// importing internal types just for the helper signature.
+type PdfPage = ReturnType<PDFDocument['getPages']>[number];
+type PdfFont = Awaited<ReturnType<PDFDocument['embedFont']>>;
+
+/** Draw the watermark onto a single page. Shared by full-doc + preview paths. */
+function drawWatermark(page: PdfPage, font: PdfFont, text: string, options: WatermarkOptions) {
+  const { width, height } = page.getSize();
+  const fontSize = Math.max(width, height) * options.fontScale;
+  const textWidth = font.widthOfTextAtSize(text, fontSize);
+  const color = rgb(options.color.r, options.color.g, options.color.b);
+
+  const draw = (x: number, y: number, rotateDegrees: number) =>
+    page.drawText(text, {
+      x,
+      y,
+      size: fontSize,
+      font,
+      color,
+      opacity: options.opacity,
+      rotate: degrees(rotateDegrees),
+    });
+
+  if (options.layout === 'horizontal') {
+    draw(width / 2 - textWidth / 2, height / 2 - fontSize / 2, 0);
+  } else if (options.layout === 'diagonal') {
+    const angle = Math.PI / 4;
+    draw(
+      width / 2 - (textWidth / 2) * Math.cos(angle),
+      height / 2 - (textWidth / 2) * Math.sin(angle),
+      45
+    );
+  } else {
+    // Tiled: repeat the text on a diagonal grid covering the whole page.
+    const stepX = textWidth + fontSize * 2;
+    const stepY = fontSize * 4;
+    for (let y = -height; y < height * 2; y += stepY) {
+      for (let x = -width; x < width * 2; x += stepX) {
+        draw(x, y, 45);
+      }
+    }
+  }
+}
+
 /** Draw a text watermark across every page using the given options. */
 export async function addWatermark(
   file: File,
@@ -121,46 +165,26 @@ export async function addWatermark(
 ): Promise<Blob> {
   const doc = await PDFDocument.load(await readBytes(file));
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
-  const color = rgb(options.color.r, options.color.g, options.color.b);
-
-  doc.getPages().forEach(page => {
-    const { width, height } = page.getSize();
-    const fontSize = Math.max(width, height) * options.fontScale;
-    const textWidth = font.widthOfTextAtSize(text, fontSize);
-
-    const draw = (x: number, y: number, rotateDegrees: number) =>
-      page.drawText(text, {
-        x,
-        y,
-        size: fontSize,
-        font,
-        color,
-        opacity: options.opacity,
-        rotate: degrees(rotateDegrees),
-      });
-
-    if (options.layout === 'horizontal') {
-      draw(width / 2 - textWidth / 2, height / 2 - fontSize / 2, 0);
-    } else if (options.layout === 'diagonal') {
-      const angle = Math.PI / 4;
-      draw(
-        width / 2 - (textWidth / 2) * Math.cos(angle),
-        height / 2 - (textWidth / 2) * Math.sin(angle),
-        45
-      );
-    } else {
-      // Tiled: repeat the text on a diagonal grid covering the whole page.
-      const stepX = textWidth + fontSize * 2;
-      const stepY = fontSize * 4;
-      for (let y = -height; y < height * 2; y += stepY) {
-        for (let x = -width; x < width * 2; x += stepX) {
-          draw(x, y, 45);
-        }
-      }
-    }
-  });
-
+  doc.getPages().forEach(page => drawWatermark(page, font, text, options));
   return toBlob(await doc.save());
+}
+
+/**
+ * Build a one-page PDF (page 1 only) with the watermark applied, for previews.
+ * Returns raw PDF bytes ready to hand to a renderer.
+ */
+export async function buildWatermarkPreview(
+  file: File,
+  text: string,
+  options: WatermarkOptions
+): Promise<Uint8Array> {
+  const src = await PDFDocument.load(await readBytes(file));
+  const out = await PDFDocument.create();
+  const [firstPage] = await out.copyPages(src, [0]);
+  out.addPage(firstPage);
+  const font = await out.embedFont(StandardFonts.HelveticaBold);
+  drawWatermark(out.getPage(0), font, text, options);
+  return out.save();
 }
 
 /** Build a PDF from images (one image per page, page sized to the image). */

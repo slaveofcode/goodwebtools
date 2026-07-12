@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TextArea } from '@/components/ui/TextArea';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { ResultActions } from '@/components/ui/ResultActions';
+import { PdfPreview } from '@/components/ui/PdfPreview';
 import { Alert } from '@/components/ui/Alert';
-import { addWatermark, type WatermarkLayout } from '@/tools/pdf/pdf.lib';
+import { addWatermark, buildWatermarkPreview, type WatermarkLayout } from '@/tools/pdf/pdf.lib';
 
 const LAYOUTS: { value: WatermarkLayout; label: string }[] = [
   { value: 'diagonal', label: 'Diagonal' },
@@ -35,6 +36,7 @@ export default function PdfWatermark() {
   const [opacity, setOpacity] = useState(25);
   const [color, setColor] = useState('#808080');
   const [result, setResult] = useState<Blob | null>(null);
+  const [preview, setPreview] = useState<Uint8Array | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,6 +45,32 @@ export default function PdfWatermark() {
     setResult(null);
     setError('');
   };
+
+  // Live page-1 preview, rebuilt (debounced) whenever the file or options change.
+  useEffect(() => {
+    if (!file || !text.trim()) {
+      setPreview(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const bytes = await buildWatermarkPreview(file, text.trim(), {
+          layout,
+          fontScale,
+          opacity: opacity / 100,
+          color: hexToRgb01(color),
+        });
+        if (!cancelled) setPreview(bytes);
+      } catch {
+        if (!cancelled) setPreview(null);
+      }
+    }, 350);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [file, text, layout, fontScale, opacity, color]);
 
   const run = async () => {
     if (!file || !text.trim()) return;
@@ -148,11 +176,13 @@ export default function PdfWatermark() {
         </label>
       </div>
 
+      {preview && <PdfPreview source={preview} label="Live preview" />}
+
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || !text.trim() || busy}>
           {busy ? 'Stamping…' : 'Add watermark'}
         </Button>
-        <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
+        <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setPreview(null); setError(''); }}>
           Clear
         </Button>
       </div>

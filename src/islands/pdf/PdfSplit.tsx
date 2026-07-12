@@ -3,6 +3,7 @@ import { TextArea } from '@/components/ui/TextArea';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { ResultActions } from '@/components/ui/ResultActions';
+import { PdfPreview } from '@/components/ui/PdfPreview';
 import { Alert } from '@/components/ui/Alert';
 import { extractPageList, getPageCount, parsePageSpec } from '@/tools/pdf/pdf.lib';
 
@@ -93,7 +94,12 @@ export default function PdfSplit() {
       </div>
 
       {error && <Alert variant="error">{error}</Alert>}
-      {result && <ResultActions blob={result} filename="extracted.pdf" disabled={busy} />}
+      {result && (
+        <>
+          <PdfPreview source={result} />
+          <ResultActions blob={result} filename="extracted.pdf" disabled={busy} />
+        </>
+      )}
     </div>
   );
 }
