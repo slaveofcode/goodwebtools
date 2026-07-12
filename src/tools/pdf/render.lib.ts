@@ -21,7 +21,8 @@ export async function renderPdfToImages(
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
   const data = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data }).promise;
+  const loadingTask = pdfjs.getDocument({ data });
+  const pdf = await loadingTask.promise;
   const pages: RenderedPage[] = [];
 
   try {
@@ -46,7 +47,8 @@ export async function renderPdfToImages(
       onProgress?.(pageNumber, pdf.numPages);
     }
   } finally {
-    await pdf.destroy();
+    // destroy() lives on the loading task; the document proxy only has cleanup()
+    await loadingTask.destroy();
   }
 
   return pages;
