@@ -216,17 +216,6 @@ export default function ImageMerge() {
                 )}
               </div>
             </div>
-
-            {/* Compact summary sits under the buttons; never shifts the Gap field. */}
-            {direction === 'grid' && (
-              <p className="text-xs text-muted-foreground">
-                {Math.min(columns, items.length)} column{Math.min(columns, items.length) > 1 ? 's' : ''} ×{' '}
-                {Math.ceil(items.length / Math.min(columns, items.length || 1))} rows —{' '}
-                <button type="button" onClick={() => setPickerOpen(true)} className="font-bold text-accent underline">
-                  change
-                </button>
-              </p>
-            )}
           </div>
 
           <label className="space-y-1.5 text-sm">
@@ -262,6 +251,17 @@ export default function ImageMerge() {
             </label>
           )}
         </div>
+      )}
+
+      {/* Summary lives on its own line so entering grid mode never shifts the options row. */}
+      {items.length > 0 && direction === 'grid' && (
+        <p className="text-xs text-muted-foreground">
+          {Math.min(columns, items.length)} column{Math.min(columns, items.length) > 1 ? 's' : ''} ×{' '}
+          {Math.ceil(items.length / Math.min(columns, items.length || 1))} rows —{' '}
+          <button type="button" onClick={() => setPickerOpen(true)} className="font-bold text-accent underline">
+            change
+          </button>
+        </p>
       )}
 
       <div className="flex flex-wrap gap-2">
