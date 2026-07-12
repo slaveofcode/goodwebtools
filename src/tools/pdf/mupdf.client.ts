@@ -55,3 +55,19 @@ export async function rotatePdf(file: File, turnDegrees: number): Promise<Blob> 
 export async function deletePages(file: File, pageNumbers: number[]): Promise<Blob> {
   return toBlob(await engine().deletePages(await bytesOf(file), pageNumbers));
 }
+
+export async function compressPdf(file: File): Promise<Blob> {
+  return toBlob(await engine().compress(await bytesOf(file)));
+}
+
+export async function pdfNeedsPassword(file: File): Promise<boolean> {
+  return engine().needsPassword(await bytesOf(file));
+}
+
+export async function protectPdf(file: File, password: string): Promise<Blob> {
+  return toBlob(await engine().protect(await bytesOf(file), password));
+}
+
+export async function unlockPdf(file: File, password: string): Promise<Blob> {
+  return toBlob(await engine().unlock(await bytesOf(file), password));
+}

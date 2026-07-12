@@ -3,7 +3,17 @@ import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 // Loading/parsing existing PDFs is handled by the mupdf engine (in a worker) —
 // it parses the wide range of real-world PDFs that pdf-lib's parser rejects.
 // pdf-lib is kept for tasks that build/draw from scratch (images→PDF, watermark).
-export { getPageCount, mergePdfs, extractPageList, rotatePdf, deletePages } from './mupdf.client';
+export {
+  getPageCount,
+  mergePdfs,
+  extractPageList,
+  rotatePdf,
+  deletePages,
+  compressPdf,
+  pdfNeedsPassword,
+  protectPdf,
+  unlockPdf,
+} from './mupdf.client';
 import { normalizePdf } from './mupdf.client';
 
 const PDF_MIME = 'application/pdf';

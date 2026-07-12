@@ -34,8 +34,8 @@ function open(mupdf: Mupdf, bytes: Uint8Array): any {
   return (mupdf as any).PDFDocument.openDocument(bytes, 'application/pdf');
 }
 
-function save(doc: any): Uint8Array {
-  const buffer = doc.saveToBuffer('');
+function save(doc: any, options = ''): Uint8Array {
+  const buffer = doc.saveToBuffer(options);
   // asUint8Array() is a view into wasm memory — copy it out before freeing.
   const copy = buffer.asUint8Array().slice();
   buffer.destroy?.();
@@ -60,6 +60,57 @@ const api = {
     const doc = open(mupdf, bytes);
     try {
       return doc.countPages();
+    } finally {
+      doc.destroy?.();
+    }
+  },
+
+  /** Re-save with stream/image/font compression and garbage collection. */
+  async compress(bytes: Uint8Array): Promise<Uint8Array> {
+    const mupdf = await loadMupdf();
+    const doc = open(mupdf, bytes);
+    try {
+      return transfer(
+        save(doc, 'compress=yes,compress-images=yes,compress-fonts=yes,garbage=compact')
+      );
+    } finally {
+      doc.destroy?.();
+    }
+  },
+
+  /** True if the PDF requires a password to open. */
+  async needsPassword(bytes: Uint8Array): Promise<boolean> {
+    const mupdf = await loadMupdf();
+    const doc = open(mupdf, bytes);
+    try {
+      return doc.needsPassword();
+    } finally {
+      doc.destroy?.();
+    }
+  },
+
+  /** Encrypt with AES-256 using the given password (user + owner). */
+  async protect(bytes: Uint8Array, password: string): Promise<Uint8Array> {
+    const mupdf = await loadMupdf();
+    const doc = open(mupdf, bytes);
+    try {
+      const opts = `encrypt=aes-256,user-password=${password},owner-password=${password}`;
+      return transfer(save(doc, opts));
+    } finally {
+      doc.destroy?.();
+    }
+  },
+
+  /** Authenticate with the password and re-save with encryption removed. */
+  async unlock(bytes: Uint8Array, password: string): Promise<Uint8Array> {
+    const mupdf = await loadMupdf();
+    const doc = open(mupdf, bytes);
+    try {
+      if (doc.needsPassword()) {
+        const ok = doc.authenticatePassword(password);
+        if (!ok) throw new Error('Incorrect password.');
+      }
+      return transfer(save(doc, 'encrypt=none'));
     } finally {
       doc.destroy?.();
     }

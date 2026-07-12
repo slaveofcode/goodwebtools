@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -231,6 +231,39 @@ export const tools: ToolDef[] = [
     icon: Stamp,
     summary: 'Add a diagonal text watermark to a PDF',
     load: () => import('@/islands/pdf/PdfWatermark'),
+    status: 'stable'
+  },
+  {
+    id: 'pdf-compress',
+    name: 'Compress PDF',
+    category: 'PDF',
+    route: '/tools/pdf-compress',
+    keywords: ['pdf', 'compress', 'shrink', 'optimize', 'reduce', 'size'],
+    icon: Archive,
+    summary: 'Reduce PDF file size',
+    load: () => import('@/islands/pdf/PdfCompress'),
+    status: 'stable'
+  },
+  {
+    id: 'pdf-protect',
+    name: 'Protect PDF',
+    category: 'PDF',
+    route: '/tools/pdf-protect',
+    keywords: ['pdf', 'protect', 'password', 'encrypt', 'lock', 'secure'],
+    icon: Lock,
+    summary: 'Add a password to a PDF (AES-256)',
+    load: () => import('@/islands/pdf/PdfProtect'),
+    status: 'stable'
+  },
+  {
+    id: 'pdf-unlock',
+    name: 'Unlock PDF',
+    category: 'PDF',
+    route: '/tools/pdf-unlock',
+    keywords: ['pdf', 'unlock', 'password', 'decrypt', 'remove', 'unprotect'],
+    icon: Unlock,
+    summary: 'Remove a password from a PDF',
+    load: () => import('@/islands/pdf/PdfUnlock'),
     status: 'stable'
   },
   {
