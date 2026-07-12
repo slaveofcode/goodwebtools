@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage, scaleToWidth, scaleToHeight } from '@/tools/image/canvas.lib';
+import { usePasteImage } from '@/hooks/usePasteImage';
 
 const MAX_DISPLAY = 520; // px the "fit" preview occupies
 
@@ -51,6 +52,8 @@ export default function ImageResize() {
       setFile(null);
     }
   };
+
+  usePasteImage(f => onDrop([f]));
 
   const clampDim = (value: number) => Math.max(1, Math.min(value, (orig?.w ?? 1) * 4, 20000));
 
@@ -122,7 +125,7 @@ export default function ImageResize() {
         <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
           <div className="space-y-1">
             <p className="text-lg font-bold">Drop an image or click to browse</p>
-            <p className="text-sm text-muted-foreground">Drag the corner handle or type exact sizes</p>
+            <p className="text-sm text-muted-foreground">Drag the corner handle or type exact sizes · or paste (⌘V)</p>
           </div>
         </Dropzone>
       )}

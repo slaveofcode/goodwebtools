@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { cropImage, keepFormat } from '@/tools/image/canvas.lib';
+import { usePasteImage } from '@/hooks/usePasteImage';
 
 interface Rect {
   x: number;
@@ -38,6 +39,8 @@ export default function ImageCrop() {
       return URL.createObjectURL(image);
     });
   };
+
+  usePasteImage(f => onDrop([f]));
 
   // Seed a centered default selection once the image lays out.
   const onImgLoad = () => {
@@ -136,7 +139,7 @@ export default function ImageCrop() {
         <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
           <div className="space-y-1">
             <p className="text-lg font-bold">Drop an image or click to browse</p>
-            <p className="text-sm text-muted-foreground">Drag the crop box; resize it from the corners</p>
+            <p className="text-sm text-muted-foreground">Drag the crop box; resize it from the corners · or paste (⌘V)</p>
           </div>
         </Dropzone>
       )}

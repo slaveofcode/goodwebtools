@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage, formatBytes } from '@/tools/image/canvas.lib';
+import { usePasteImage } from '@/hooks/usePasteImage';
 
 const FORMATS = [
   { mime: 'image/webp', ext: 'webp', label: 'WebP (smaller)' },
@@ -27,6 +28,8 @@ export default function ImageCompress() {
     setError('');
   };
 
+  usePasteImage(f => onDrop([f]));
+
   const run = async () => {
     if (!file) return;
     setBusy(true);
@@ -47,7 +50,7 @@ export default function ImageCompress() {
       <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
         <div className="space-y-1">
           <p className="text-lg font-bold">Drop an image or click to browse</p>
-          <p className="text-sm text-muted-foreground">Shrink an image by re-encoding it</p>
+          <p className="text-sm text-muted-foreground">Shrink an image by re-encoding it · or paste (⌘V)</p>
         </div>
       </Dropzone>
 

@@ -96,11 +96,13 @@ Fluid-width, mobile-first layout.
 - Image Converter (PNG / JPEG / WebP / AVIF / GIF / ICO favicon / SVG)
 - Image Compressor (quality, size delta)
 - Image Resizer (aspect-lock)
-- Image Cropper (drag-to-select)
+- Image Cropper (persistent, resizable crop box)
 - Image Watermark (diagonal / tiled / corner)
+- Image Annotator (arrows, shapes, text, highlighter, blur — Lark-style)
 - Metadata Scrubber (strip EXIF/GPS by re-encoding)
 
 All Canvas-based, fully client-side (`src/tools/image/canvas.lib.ts`).
+Every image tool also accepts a **paste from clipboard** (⌘/Ctrl+V).
 
 ## Testing
 

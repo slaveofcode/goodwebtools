@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { watermarkImage, keepFormat, type WatermarkLayout } from '@/tools/image/canvas.lib';
+import { usePasteImage } from '@/hooks/usePasteImage';
 
 const LAYOUTS: { value: WatermarkLayout; label: string }[] = [
   { value: 'diagonal', label: 'Diagonal' },
@@ -33,6 +34,8 @@ export default function ImageWatermark() {
     setResult(null);
     setError('');
   };
+
+  usePasteImage(f => onDrop([f]));
 
   const outName = file
     ? file.name.replace(/\.[^.]+$/, '') + '-watermarked.' + keepFormat(file.type).ext
@@ -64,7 +67,7 @@ export default function ImageWatermark() {
       <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
         <div className="space-y-1">
           <p className="text-lg font-bold">Drop an image or click to browse</p>
-          <p className="text-sm text-muted-foreground">Stamp a text watermark onto an image</p>
+          <p className="text-sm text-muted-foreground">Stamp a text watermark onto an image · or paste (⌘V)</p>
         </div>
       </Dropzone>
 

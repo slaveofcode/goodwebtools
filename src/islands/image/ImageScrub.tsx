@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage, formatBytes } from '@/tools/image/canvas.lib';
+import { usePasteImage } from '@/hooks/usePasteImage';
 
 function outputFormat(type: string): { mime: string; ext: string; quality?: number } {
   if (type === 'image/jpeg') return { mime: 'image/jpeg', ext: 'jpg', quality: 0.95 };
@@ -22,6 +23,8 @@ export default function ImageScrub() {
     setResult(null);
     setError('');
   };
+
+  usePasteImage(f => onDrop([f]));
 
   const fmt = outputFormat(file?.type ?? '');
   const outName = file ? file.name.replace(/\.[^.]+$/, '') + '-clean.' + fmt.ext : `clean.${fmt.ext}`;
@@ -47,7 +50,7 @@ export default function ImageScrub() {
         <div className="space-y-1">
           <p className="text-lg font-bold">Drop an image or click to browse</p>
           <p className="text-sm text-muted-foreground">
-            Strip EXIF, GPS location, and all other metadata
+            Strip EXIF, GPS location, and all other metadata · or paste (⌘V)
           </p>
         </div>
       </Dropzone>

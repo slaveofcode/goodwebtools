@@ -5,6 +5,7 @@ import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage } from '@/tools/image/canvas.lib';
 import { imageToIco, imageToGif, imageToSvg, canvasSupportsType } from '@/tools/image/encode.lib';
+import { usePasteImage } from '@/hooks/usePasteImage';
 
 type Kind = 'canvas' | 'ico' | 'gif' | 'svg';
 
@@ -73,6 +74,8 @@ export default function ImageConvert() {
     setError('');
   };
 
+  usePasteImage(f => onDrop([f]));
+
   const run = async () => {
     if (!file) return;
     setBusy(true);
@@ -104,7 +107,7 @@ export default function ImageConvert() {
         <div className="space-y-1">
           <p className="text-lg font-bold">Drop an image or click to browse</p>
           <p className="text-sm text-muted-foreground">
-            Convert to PNG, JPEG, WebP{avifOk ? ', AVIF' : ''}, GIF, ICO, or SVG
+            Convert to PNG, JPEG, WebP{avifOk ? ', AVIF' : ''}, GIF, ICO, or SVG · or paste (⌘V)
           </p>
         </div>
       </Dropzone>

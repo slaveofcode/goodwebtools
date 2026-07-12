@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -297,6 +297,17 @@ export const tools: ToolDef[] = [
     icon: Maximize2,
     summary: 'Resize an image to exact pixel dimensions',
     load: () => import('@/islands/image/ImageResize'),
+    status: 'stable'
+  },
+  {
+    id: 'image-annotate',
+    name: 'Image Annotator',
+    category: 'Image',
+    route: '/tools/image-annotate',
+    keywords: ['image', 'annotate', 'screenshot', 'markup', 'draw', 'arrow', 'blur', 'highlight', 'text', 'rectangle', 'edit'],
+    icon: PenTool,
+    summary: 'Annotate a screenshot: arrows, text, shapes, highlighter, blur',
+    load: () => import('@/islands/image/ImageAnnotate'),
     status: 'stable'
   },
   {
