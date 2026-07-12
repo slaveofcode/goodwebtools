@@ -9,7 +9,16 @@ const PDF_MIME = 'application/pdf';
 // across every PDF operation and tool.
 let remote: Remote<MupdfApi> | null = null;
 function engine(): Remote<MupdfApi> {
-  if (!remote) remote = Comlink.wrap<MupdfApi>(new MupdfWorker());
+  if (!remote) {
+    const worker = new MupdfWorker();
+    worker.addEventListener('error', event =>
+      console.error('[mupdf worker] error:', event.message, event.filename, event.lineno)
+    );
+    worker.addEventListener('messageerror', event =>
+      console.error('[mupdf worker] message error:', event)
+    );
+    remote = Comlink.wrap<MupdfApi>(worker);
+  }
   return remote;
 }
 
