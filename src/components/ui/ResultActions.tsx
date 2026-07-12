@@ -1,6 +1,7 @@
 import { Download } from 'lucide-react';
 import { downloadService } from '@/services/download.service';
 import { Button } from './Button';
+import { CopyImageButton } from './CopyImageButton';
 
 export interface ResultActionsProps {
   blob: Blob | null;
@@ -14,10 +15,15 @@ export function ResultActions({ blob, filename, disabled }: ResultActionsProps) 
     await downloadService.download(blob, filename);
   };
 
+  const isImage = !!blob && blob.type.startsWith('image/');
+
   return (
-    <Button onClick={handleDownload} disabled={disabled || !blob}>
-      <Download className="h-4 w-4" />
-      Download {filename}
-    </Button>
+    <div className="flex flex-wrap gap-2">
+      <Button onClick={handleDownload} disabled={disabled || !blob}>
+        <Download className="h-4 w-4" />
+        Download {filename}
+      </Button>
+      {isImage && <CopyImageButton blob={blob} disabled={disabled} />}
+    </div>
   );
 }

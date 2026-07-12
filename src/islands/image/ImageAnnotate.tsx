@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
+import { CopyImageButton } from '@/components/ui/CopyImageButton';
 import { downloadService } from '@/services/download.service';
 import { usePasteImage } from '@/hooks/usePasteImage';
 
@@ -529,12 +530,17 @@ export default function ImageAnnotate() {
     setSelectedIndex(null);
   };
 
-  const download = async () => {
+  const toPngBlob = async (): Promise<Blob> => {
     const base = baseRef.current;
-    if (!base) return;
-    const blob = await new Promise<Blob>((res, rej) =>
+    if (!base) throw new Error('Nothing to export yet.');
+    return await new Promise<Blob>((res, rej) =>
       base.toBlob(b => (b ? res(b) : rej(new Error('encode'))), 'image/png')
     );
+  };
+
+  const download = async () => {
+    if (!baseRef.current) return;
+    const blob = await toPngBlob();
     const name = file ? file.name.replace(/\.[^.]+$/, '') + '-annotated.png' : 'annotated.png';
     await downloadService.download(blob, name);
   };
@@ -651,6 +657,7 @@ export default function ImageAnnotate() {
               <Download className="h-4 w-4" />
               Download PNG
             </Button>
+            <CopyImageButton blob={toPngBlob} />
             <Button variant="ghost" onClick={() => { setFile(null); setReady(false); setShapes([]); setUndone([]); }}>
               Clear
             </Button>
