@@ -411,7 +411,7 @@ export default function ImageAnnotate() {
               onPointerDown={handleDown}
               onPointerMove={handleMove}
               onPointerUp={handleUp}
-              className="block max-h-[70vh] w-auto max-w-full touch-none"
+              className="block max-h-[85vh] w-auto max-w-full touch-none"
               style={{ cursor: tool === 'text' ? 'text' : 'crosshair' }}
             />
             {textEdit && (

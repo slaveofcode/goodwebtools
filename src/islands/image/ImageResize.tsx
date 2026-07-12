@@ -6,7 +6,7 @@ import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage, scaleToWidth, scaleToHeight } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
 
-const MAX_DISPLAY = 520; // px the "fit" preview occupies
+const MAX_DISPLAY = 760; // px the "fit" preview occupies
 
 function outputFormat(type: string): { mime: string; ext: string } {
   if (type === 'image/jpeg') return { mime: 'image/jpeg', ext: 'jpg' };

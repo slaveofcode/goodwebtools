@@ -43,7 +43,7 @@ export function ImageResult({ blob, filename, originalSize }: ImageResultProps) 
         <img
           src={url}
           alt="Result preview"
-          className="max-h-[28rem] w-auto border-2 border-border bg-white"
+          className="max-h-[70vh] w-auto border-2 border-border bg-white"
         />
       )}
       <ResultActions blob={blob} filename={filename} />
