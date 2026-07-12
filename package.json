@@ -17,7 +17,8 @@
     "lint": "eslint src --ext .ts,.tsx,.astro",
     "lint:fix": "eslint src --ext .ts,.tsx,.astro --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,astro,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,astro,css}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,astro,css}\"",
+    "deploy": "npm run build && wrangler deploy"
   },
   "repository": {
     "type": "git",
@@ -75,6 +76,7 @@
     "prettier-plugin-tailwindcss": "^0.5.14",
     "typescript": "^5.9.3",
     "vitest": "^1.6.1",
-    "workbox-window": "^7.4.1"
+    "workbox-window": "^7.4.1",
+    "wrangler": "^4.110.0"
   }
 }

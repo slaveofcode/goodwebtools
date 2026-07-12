@@ -1,0 +1,12 @@
+{
+  // Deploy the static Astro build (dist/) to Cloudflare as an assets-only
+  // Worker. No `main` = no server code; Cloudflare serves the static files.
+  // Build first (`npm run build`), then `npx wrangler deploy`.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "goodwebtools",
+  "compatibility_date": "2026-07-13",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}
