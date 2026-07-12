@@ -163,10 +163,15 @@ export default function ImageCrop() {
             />
             {sel && sel.w > 0 && sel.h > 0 && (
               <>
-                {/* dimmed outside via ring shadow around the selection */}
+                {/* Dim only the image area outside the selection (4 rects). */}
+                <div className="pointer-events-none absolute bg-black/45" style={{ left: 0, top: 0, right: 0, height: sel.y }} />
+                <div className="pointer-events-none absolute bg-black/45" style={{ left: 0, right: 0, top: sel.y + sel.h, bottom: 0 }} />
+                <div className="pointer-events-none absolute bg-black/45" style={{ left: 0, top: sel.y, width: sel.x, height: sel.h }} />
+                <div className="pointer-events-none absolute bg-black/45" style={{ left: sel.x + sel.w, right: 0, top: sel.y, height: sel.h }} />
+                {/* Movable selection body */}
                 <div
                   data-role="body"
-                  className="absolute cursor-move border-2 border-accent bg-accent/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"
+                  className="absolute cursor-move border-2 border-accent"
                   style={{ left: sel.x, top: sel.y, width: sel.w, height: sel.h }}
                 />
                 {CORNERS.map(role => {
