@@ -162,7 +162,7 @@ export default function ImageCrop() {
               alt="Source"
               draggable={false}
               onLoad={onImgLoad}
-              className="block max-h-[78vh] w-auto max-w-full"
+              className="block h-auto w-auto min-w-[70vw] max-w-full"
             />
             {sel && sel.w > 0 && sel.h > 0 && (
               <>
