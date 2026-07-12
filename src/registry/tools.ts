@@ -234,15 +234,15 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
-    id: 'hash-demo',
+    id: 'hash',
     name: 'Hash File',
     category: 'Dev',
-    route: '/tools/hash-demo',
-    keywords: ['hash', 'sha', 'sha256', 'sha-256', 'checksum', 'generate', 'file'],
+    route: '/tools/hash',
+    keywords: ['hash', 'sha', 'sha256', 'sha-256', 'checksum', 'generate', 'file', 'digest'],
     icon: Hash,
-    summary: 'Generate SHA-256 hash of a file',
-    load: () => import('@/islands/demo/HashDemo'),
-    status: 'beta'
+    summary: 'Generate a SHA-256 hash of a file',
+    load: () => import('@/islands/dev/HashFile'),
+    status: 'stable'
   }
 ];
 

@@ -4,10 +4,11 @@ import type { Remote } from 'comlink';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { ResultActions } from '@/components/ui/ResultActions';
-import type { HashWorkerAPI } from '@/tools/demo/hash.worker';
-import HashWorker from '@/tools/demo/hash.worker?worker';
+import { CopyButton } from '@/components/ui/CopyButton';
+import type { HashWorkerAPI } from '@/tools/dev/hash.worker';
+import HashWorker from '@/tools/dev/hash.worker?worker';
 
-export default function HashDemo() {
+export default function HashFile() {
   const [hash, setHash] = useState<string>('');
   const [progress, setProgress] = useState(0);
   const [fileName, setFileName] = useState('');
@@ -64,21 +65,24 @@ export default function HashDemo() {
     <div className="space-y-6">
       <Dropzone onDrop={handleFile} accept="*/*" multiple={false}>
         <div className="space-y-2">
-          <p className="text-lg">Drop file here or click to browse</p>
+          <p className="text-lg font-bold">Drop file here or click to browse</p>
           <p className="text-sm text-muted-foreground">
-            {ready ? 'Generate SHA-256 hash' : 'Loading worker...'}
+            {ready ? 'Generate a SHA-256 hash' : 'Loading engine…'}
           </p>
         </div>
       </Dropzone>
 
-      {processing && <ProgressBar percent={progress} label="Hashing..." />}
+      {processing && <ProgressBar percent={progress} label="Hashing…" />}
 
       {hash && (
-        <div className="space-y-4">
-          <div className="p-4 bg-muted rounded-lg">
-            <h3 className="font-medium mb-2">SHA-256 Hash</h3>
-            <code className="text-sm break-all">{hash}</code>
+        <div className="space-y-3 border-2 border-border bg-muted p-4 shadow-brutal-sm">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="min-w-0 truncate text-sm font-bold uppercase tracking-wide text-muted-foreground">
+              SHA-256 — {fileName}
+            </h3>
+            <CopyButton value={hash} />
           </div>
+          <code className="block break-all text-sm">{hash}</code>
           <ResultActions blob={resultBlob} filename={`${fileName}.sha256`} disabled={processing} />
         </div>
       )}
