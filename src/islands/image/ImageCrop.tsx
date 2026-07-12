@@ -148,7 +148,7 @@ export default function ImageCrop() {
             corners to resize · {natW}×{natH}
           </p>
           <div
-            className="relative inline-block max-w-full touch-none select-none border-2 border-border bg-muted"
+            className="relative inline-block max-w-full touch-none select-none overflow-hidden border-2 border-border bg-muted"
             onPointerDown={onDown}
             onPointerMove={onMove}
             onPointerUp={onUp}
