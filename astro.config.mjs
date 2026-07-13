@@ -6,6 +6,14 @@ import AstroPWA from '@vite-pwa/astro';
 export default defineConfig({
   output: 'static',
   vite: {
+    resolve: {
+      alias: {
+        // @tensorflow/tfjs-core pulls in node-fetch (+ its CJS whatwg-url) for its
+        // Node platform; the browser build never uses it, but Vite still resolves
+        // the import and fails ESM interop. Map it to a browser-fetch stub.
+        'node-fetch': new URL('./src/stubs/node-fetch.js', import.meta.url).pathname,
+      },
+    },
     // mupdf/pdf.js workers use dynamic import() (code-splitting), which requires
     // ES-module workers rather than Vite's default IIFE format.
     worker: {
