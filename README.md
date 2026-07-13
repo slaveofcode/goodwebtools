@@ -132,6 +132,8 @@ result offers **Download** and **Copy to clipboard**.
 - Image Upscaler — enlarges images 2–4× with an **ESRGAN** super-resolution
   model (UpscalerJS + TensorFlow.js, ~1 MB, tiled). On-device; caps input at
   ~1.2 MP so the browser stays responsive.
+- Portrait Blur — "portrait mode" bokeh: reuses the background-removal model to
+  keep the subject sharp and blur the background (adjustable strength).
 
 Model assets are hosted in a Cloudflare **R2** bucket (see `DEPLOYMENT.md`) to
 stay same-origin without hitting the 25 MB static-asset limit.
@@ -139,7 +141,7 @@ stay same-origin without hitting the 25 MB static-asset limit.
 ## Testing
 
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
-file crypto, format converters): `npm run test` — **227 tests across 24 files**.
+file crypto, format converters): `npm run test` — **228 tests across 24 files**.
 
 **Next (Phase 4 cont.):** zip create/extract, large-file hashing, split/join.
 

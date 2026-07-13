@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -385,6 +385,17 @@ export const tools: ToolDef[] = [
     icon: Scaling,
     summary: 'Enlarge images 2–4× with on-device AI (ESRGAN)',
     load: () => import('@/islands/image/ImageUpscale'),
+    status: 'stable'
+  },
+  {
+    id: 'image-portrait-blur',
+    name: 'Portrait Blur',
+    category: 'Image',
+    route: '/tools/image-portrait-blur',
+    keywords: ['portrait', 'bokeh', 'background', 'blur', 'depth', 'subject', 'ai', 'photo'],
+    icon: Aperture,
+    summary: 'Keep the subject sharp and blur the background (bokeh)',
+    load: () => import('@/islands/image/PortraitBlur'),
     status: 'stable'
   },
   {
