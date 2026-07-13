@@ -39,6 +39,7 @@ layout. `npm run stage:models` fetches/copies them all into `public/models/`:
 | `esrgan-slim/` | Image Upscaler (ESRGAN weights) | ~4 MB |
 | `ort/` | Object Remover (onnxruntime-web WASM) | ~76 MB |
 | `lama/` | Object Remover (LaMa ONNX, fixed 512×512) | ~200 MB |
+| `ffmpeg/` | Video → GIF and other Media tools (ffmpeg.wasm **ESM** core) | ~31 MB |
 
 Stage, then upload the whole tree (keys must keep their subfolders):
 

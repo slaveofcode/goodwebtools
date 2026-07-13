@@ -77,9 +77,26 @@ async function stageLama() {
   console.log(`Staged Object-Remover model → ${DEST}`);
 }
 
+function stageFfmpeg() {
+  // ESM core (has a default export) — required because ffmpeg's worker is a
+  // module worker and loads the core via dynamic import().
+  const SRC = 'node_modules/@ffmpeg/core/dist/esm';
+  const DEST = 'public/models/ffmpeg';
+  if (!existsSync(SRC)) {
+    console.warn('Skipping ffmpeg: run `npm i @ffmpeg/core`');
+    return;
+  }
+  mkdirSync(DEST, { recursive: true });
+  for (const f of ['ffmpeg-core.js', 'ffmpeg-core.wasm']) {
+    if (existsSync(`${SRC}/${f}`)) copyFileSync(`${SRC}/${f}`, `${DEST}/${f}`);
+  }
+  console.log(`Staged ffmpeg core → ${DEST}`);
+}
+
 stageImgly();
 stageUpscaler();
 stageOrt();
+stageFfmpeg();
 await stageMediapipe();
 await stageLama();
 console.log('Done. For production, upload public/models/* to the R2 bucket. See DEPLOYMENT.md.');

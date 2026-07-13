@@ -147,6 +147,11 @@ stay same-origin without hitting the 25 MB static-asset limit.
   requests). Export PNG / SVG / `.excalidraw`.
 - Signature Pad — draw a signature and export as PNG or SVG (`signature_pad`).
 
+🚧 **Phase 7 — Media (in progress):**
+- Video → GIF — turn a video clip into an animated GIF (fps/width/trim, palette
+  for quality) via **ffmpeg.wasm** (single-thread core, self-hosted from R2 — no
+  cross-origin-isolation headers needed). Fully client-side.
+
 ## Testing
 
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
