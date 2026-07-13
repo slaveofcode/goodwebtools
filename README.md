@@ -122,7 +122,7 @@ result offers **Download** and **Copy to clipboard**.
   and rejoin them. Lazy `Blob.slice`, no full-file buffering.
 - (Hash File gained MD5 / SHA-1 / SHA-256 / SHA-512 with chunked streaming.)
 
-🚧 **Phase 5 — ML image tools (in progress):**
+✅ **Phase 5 — ML image tools (5 tools, on-device AI):**
 - Background Remover — removes an image background with an **on-device AI model**
   (ISNet via `@imgly/background-removal` + onnxruntime-web WASM). The image never
   leaves the browser; the model (~40 MB) is served same-origin from **R2** and
