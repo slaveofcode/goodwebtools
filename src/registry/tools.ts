@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2 } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -572,6 +572,17 @@ export const tools: ToolDef[] = [
     icon: Code2,
     summary: 'VS Code-grade multi-file editor, on-device',
     load: () => import('@/islands/playground/CodeScratchpad'),
+    status: 'stable'
+  },
+  {
+    id: 'sqlite-playground',
+    name: 'SQLite Playground',
+    category: 'Playground',
+    route: '/tools/sqlite-playground',
+    keywords: ['sqlite', 'sql', 'database', 'db', 'query', 'table', 'index', 'ddl', 'dml', 'playground'],
+    icon: Database,
+    summary: 'Run SQL against an on-device SQLite database',
+    load: () => import('@/islands/playground/SqlitePlayground'),
     status: 'stable'
   },
   {
