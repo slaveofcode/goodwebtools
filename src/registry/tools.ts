@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2 } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -386,6 +386,17 @@ export const tools: ToolDef[] = [
     summary: 'Enlarge images 2–4× with on-device AI (ESRGAN)',
     load: () => import('@/islands/image/ImageUpscale'),
     status: 'stable'
+  },
+  {
+    id: 'image-object-remove',
+    name: 'Object Remover',
+    category: 'Image',
+    route: '/tools/image-object-remove',
+    keywords: ['object', 'remove', 'remover', 'inpaint', 'inpainting', 'lama', 'erase', 'cleanup', 'ai', 'magic'],
+    icon: Wand2,
+    summary: 'Paint over an object and erase it with AI inpainting (LaMa)',
+    load: () => import('@/islands/image/ObjectRemove'),
+    status: 'experimental'
   },
   {
     id: 'image-portrait-blur',

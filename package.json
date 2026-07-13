@@ -55,6 +55,7 @@
     "marked": "^18.0.6",
     "mupdf": "^1.28.0",
     "nanostores": "^0.9.5",
+    "onnxruntime-web": "^1.27.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.1.200",
     "qrcode": "^1.5.4",

@@ -134,6 +134,9 @@ result offers **Download** and **Copy to clipboard**.
   ~1.2 MP so the browser stays responsive.
 - Portrait Blur — "portrait mode" bokeh: reuses the background-removal model to
   keep the subject sharp and blur the background (adjustable strength).
+- Object Remover **(experimental)** — paint over an object and erase it with
+  **LaMa** inpainting (onnxruntime-web). Big model (~200 MB) + a consent gate
+  warning about the download and hardware needs; on-device only.
 
 Model assets are hosted in a Cloudflare **R2** bucket (see `DEPLOYMENT.md`) to
 stay same-origin without hitting the 25 MB static-asset limit.
@@ -141,7 +144,7 @@ stay same-origin without hitting the 25 MB static-asset limit.
 ## Testing
 
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
-file crypto, format converters): `npm run test` — **228 tests across 24 files**.
+file crypto, format converters): `npm run test` — **235 tests across 25 files**.
 
 ## Deployment
 

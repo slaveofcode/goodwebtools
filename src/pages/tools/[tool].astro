@@ -32,7 +32,14 @@ const tool = getToolById(toolId)!;
     </nav>
 
     <div class="mb-6">
-      <h1 class="mb-1 text-3xl font-bold uppercase tracking-tight">{tool.name}</h1>
+      <div class="mb-1 flex flex-wrap items-center gap-2">
+        <h1 class="text-3xl font-bold uppercase tracking-tight">{tool.name}</h1>
+        {tool.status !== 'stable' && (
+          <span class="border-2 border-border bg-accent px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent-foreground">
+            {tool.status}
+          </span>
+        )}
+      </div>
       <p class="text-muted-foreground">{tool.summary}</p>
     </div>
     <ToolHost client:load toolId={toolId} />
