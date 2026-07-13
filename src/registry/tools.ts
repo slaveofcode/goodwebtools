@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -506,6 +506,61 @@ export const tools: ToolDef[] = [
     icon: Film,
     summary: 'Turn a video clip into an animated GIF (client-side)',
     load: () => import('@/islands/media/VideoToGif'),
+    status: 'stable'
+  },
+  {
+    id: 'video-convert',
+    name: 'Video Converter',
+    category: 'Media',
+    route: '/tools/video-convert',
+    keywords: ['video', 'convert', 'compress', 'trim', 'cut', 'resize', 'mp4', 'webm', 'mov', 'transcode', 'ffmpeg'],
+    icon: FileVideo,
+    summary: 'Convert, compress, trim or resize video (client-side)',
+    load: () => import('@/islands/media/VideoConvert'),
+    status: 'stable'
+  },
+  {
+    id: 'video-to-audio',
+    name: 'Video → Audio',
+    category: 'Media',
+    route: '/tools/video-to-audio',
+    keywords: ['video', 'audio', 'extract', 'rip', 'mp3', 'm4a', 'wav', 'opus', 'sound', 'ffmpeg'],
+    icon: Music,
+    summary: 'Extract the audio track from a video (client-side)',
+    load: () => import('@/islands/media/VideoToAudio'),
+    status: 'stable'
+  },
+  {
+    id: 'audio-convert',
+    name: 'Audio Converter',
+    category: 'Media',
+    route: '/tools/audio-convert',
+    keywords: ['audio', 'convert', 'trim', 'mp3', 'm4a', 'wav', 'opus', 'flac', 'bitrate', 'ffmpeg'],
+    icon: AudioLines,
+    summary: 'Convert, re-encode or trim audio files (client-side)',
+    load: () => import('@/islands/media/AudioConvert'),
+    status: 'stable'
+  },
+  {
+    id: 'screen-recorder',
+    name: 'Screen Recorder',
+    category: 'Media',
+    route: '/tools/screen-recorder',
+    keywords: ['screen', 'record', 'recorder', 'capture', 'video', 'webm', 'display', 'mic'],
+    icon: MonitorPlay,
+    summary: 'Record your screen, window or tab (client-side)',
+    load: () => import('@/islands/media/ScreenRecorder'),
+    status: 'stable'
+  },
+  {
+    id: 'screenshot',
+    name: 'Screenshot',
+    category: 'Media',
+    route: '/tools/screenshot',
+    keywords: ['screenshot', 'screen', 'capture', 'crop', 'grab', 'png', 'jpg', 'display'],
+    icon: Camera,
+    summary: 'Capture your screen with a countdown, then crop (client-side)',
+    load: () => import('@/islands/media/Screenshot'),
     status: 'stable'
   },
   {

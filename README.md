@@ -147,10 +147,22 @@ stay same-origin without hitting the 25 MB static-asset limit.
   requests). Export PNG / SVG / `.excalidraw`.
 - Signature Pad — draw a signature and export as PNG or SVG (`signature_pad`).
 
-🚧 **Phase 7 — Media (in progress):**
-- Video → GIF — turn a video clip into an animated GIF (fps/width/trim, palette
-  for quality) via **ffmpeg.wasm** (single-thread core, self-hosted from R2 — no
-  cross-origin-isolation headers needed). Fully client-side.
+✅ **Phase 7 — Media (6 tools):**
+- Video → GIF — turn a video clip into an animated GIF (fps/width/trim, two-pass
+  palette for quality).
+- Video Converter — convert / compress / trim / resize video between MP4 (H.264),
+  WebM (VP9) and MOV, with a CRF quality slider and optional audio drop.
+- Video → Audio — rip the audio track out of a video to MP3 / M4A / WAV / Opus.
+- Audio Converter — convert, re-encode (bitrate) or trim audio: MP3 / M4A / Opus /
+  WAV / FLAC.
+- Screen Recorder — record a tab, window or the whole screen (optionally + mic)
+  with the native `MediaRecorder` — no WASM, nothing uploaded.
+- Screenshot — capture the screen with a countdown, then drag a crop rectangle and
+  export PNG / JPG (native `getDisplayMedia` + canvas).
+
+The four ffmpeg tools share one **ffmpeg.wasm** engine (single-thread core, so no
+cross-origin-isolation headers are needed), self-hosted from R2. The video/audio
+never leaves your device.
 
 ## Testing
 
