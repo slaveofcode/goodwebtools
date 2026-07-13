@@ -38,6 +38,8 @@
     "@imgly/background-removal": "^1.4.5",
     "@mediapipe/tasks-vision": "^0.10.35",
     "@nanostores/react": "^0.7.3",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@upscalerjs/esrgan-slim": "^1.0.0",
     "astro": "^4.16.19",
     "cmdk": "^0.2.1",
     "comlink": "^4.4.2",
@@ -60,6 +62,7 @@
     "react-dom": "^18.3.1",
     "smol-toml": "^1.7.0",
     "tailwindcss": "^3.4.19",
+    "upscaler": "^1.0.0",
     "yaml": "^2.9.0"
   },
   "devDependencies": {

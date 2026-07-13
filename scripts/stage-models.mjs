@@ -38,6 +38,19 @@ async function stageMediapipe() {
   console.log(`Staged Face-Blur assets → ${DEST}`);
 }
 
+function stageUpscaler() {
+  const SRC = 'node_modules/@upscalerjs/esrgan-slim/models';
+  const DEST = 'public/models/esrgan-slim';
+  if (!existsSync(SRC)) {
+    console.warn('Skipping upscaler: run `npm i @upscalerjs/esrgan-slim`');
+    return;
+  }
+  mkdirSync(DEST, { recursive: true });
+  cpSync(SRC, DEST, { recursive: true });
+  console.log(`Staged Upscaler models → ${DEST}`);
+}
+
 stageImgly();
+stageUpscaler();
 await stageMediapipe();
 console.log('Done. For production, upload public/models/* to the R2 bucket. See DEPLOYMENT.md.');

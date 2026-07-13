@@ -129,6 +129,9 @@ result offers **Download** and **Copy to clipboard**.
   cached. Outputs a transparent PNG.
 - Face Blur — auto-detects faces (MediaPipe BlazeFace, ~230 KB) and hides them
   with blur / pixelate / solid — all on-device. Great for anonymizing photos.
+- Image Upscaler — enlarges images 2–4× with an **ESRGAN** super-resolution
+  model (UpscalerJS + TensorFlow.js, ~1 MB, tiled). On-device; caps input at
+  ~1.2 MP so the browser stays responsive.
 
 Model assets are hosted in a Cloudflare **R2** bucket (see `DEPLOYMENT.md`) to
 stay same-origin without hitting the 25 MB static-asset limit.
@@ -136,7 +139,7 @@ stay same-origin without hitting the 25 MB static-asset limit.
 ## Testing
 
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
-file crypto, format converters): `npm run test` — **226 tests across 24 files**.
+file crypto, format converters): `npm run test` — **227 tests across 24 files**.
 
 **Next (Phase 4 cont.):** zip create/extract, large-file hashing, split/join.
 
