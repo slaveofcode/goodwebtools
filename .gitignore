@@ -21,3 +21,6 @@ public/libarchive/
 # ML model assets — staged locally, uploaded to R2, never committed
 public/models/
 models-r2/
+
+# Excalidraw fonts (copied by copy:wasm)
+public/excalidraw/

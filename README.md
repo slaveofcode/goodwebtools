@@ -141,10 +141,16 @@ result offers **Download** and **Copy to clipboard**.
 Model assets are hosted in a Cloudflare **R2** bucket (see `DEPLOYMENT.md`) to
 stay same-origin without hitting the 25 MB static-asset limit.
 
+✅ **Phase 6 — Drawing (2 tools):**
+- Whiteboard — infinite-canvas sketching, diagrams, flowcharts, and mind maps
+  (embeds **Excalidraw**; fonts self-hosted so there are still zero external
+  requests). Export PNG / SVG / `.excalidraw`.
+- Signature Pad — draw a signature and export as PNG or SVG (`signature_pad`).
+
 ## Testing
 
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
-file crypto, format converters): `npm run test` — **235 tests across 25 files**.
+file crypto, format converters): `npm run test` — **237 tests across 25 files**.
 
 ## Deployment
 

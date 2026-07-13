@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -495,6 +495,17 @@ export const tools: ToolDef[] = [
     icon: Hash,
     summary: 'Generate a SHA-256 hash of a file',
     load: () => import('@/islands/dev/HashFile'),
+    status: 'stable'
+  },
+  {
+    id: 'whiteboard',
+    name: 'Whiteboard',
+    category: 'Draw',
+    route: '/tools/whiteboard',
+    keywords: ['whiteboard', 'draw', 'sketch', 'diagram', 'flowchart', 'mindmap', 'excalidraw', 'canvas'],
+    icon: Shapes,
+    summary: 'Sketch, diagram, and mind-map on an infinite canvas',
+    load: () => import('@/islands/draw/Whiteboard'),
     status: 'stable'
   },
   {
