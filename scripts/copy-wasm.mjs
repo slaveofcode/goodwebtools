@@ -14,4 +14,13 @@ if (existsSync(excaliFonts)) {
   cpSync(excaliFonts, 'public/excalidraw/fonts', { recursive: true });
 }
 
+// SQLite WASM (served same-origin at /sqlite/; loaded by the sqlite.worker).
+const sqliteSrc = 'node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm';
+if (existsSync(sqliteSrc)) {
+  mkdirSync('public/sqlite', { recursive: true });
+  for (const f of ['sqlite3.wasm', 'sqlite3.mjs']) {
+    if (existsSync(`${sqliteSrc}/${f}`)) copyFileSync(`${sqliteSrc}/${f}`, `public/sqlite/${f}`);
+  }
+}
+
 console.log('Copied WASM/worker/font assets into public/.');
