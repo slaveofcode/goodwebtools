@@ -14,3 +14,10 @@ export const SITE_TAGLINE = 'Privacy-first client-side utilities that run entire
  * accepts cookies in the consent banner (GDPR).
  */
 export const GA_ID = import.meta.env.PUBLIC_GA_ID ?? '';
+
+/**
+ * When PUBLIC_NOINDEX is "1"/"true", every page emits robots noindex. Set it on
+ * the staging build so search engines don't index the staging site.
+ */
+export const NOINDEX =
+  import.meta.env.PUBLIC_NOINDEX === '1' || import.meta.env.PUBLIC_NOINDEX === 'true';

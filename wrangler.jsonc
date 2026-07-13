@@ -14,5 +14,23 @@
   },
   "r2_buckets": [
     { "binding": "MODELS", "bucket_name": "goodwebtools-models" }
-  ]
+  ],
+
+  // Staging environment (deployed from the `develop` branch). Bindings and
+  // `assets` are NOT inherited by named environments, so they're repeated here.
+  // Deploy with: npx wrangler deploy --env staging
+  // See DEPLOYMENT-GIT.md.
+  "env": {
+    "staging": {
+      "name": "goodwebtools-staging",
+      "assets": {
+        "directory": "./dist",
+        "binding": "ASSETS",
+        "not_found_handling": "404-page"
+      },
+      "r2_buckets": [
+        { "binding": "MODELS", "bucket_name": "goodwebtools-models" }
+      ]
+    }
+  }
 }

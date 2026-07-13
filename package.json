@@ -19,7 +19,9 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,astro,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,astro,css}\"",
     "deploy": "npm run build && wrangler deploy",
-    "stage:models": "node scripts/stage-models.mjs"
+    "stage:models": "node scripts/stage-models.mjs",
+    "deploy:staging": "npm run build && wrangler deploy --env staging",
+    "postbuild": "node scripts/prune-dist.mjs"
   },
   "repository": {
     "type": "git",

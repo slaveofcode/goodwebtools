@@ -4,6 +4,11 @@ GoodWebTools is a **static Astro site** deployed to **Cloudflare Workers** (with
 Static Assets), plus a small Worker that streams the AI-tool model files from an
 **R2 bucket**. Everything runs client-side; the Worker only serves files.
 
+> **Prefer push-to-deploy?** For a two-branch, git-based auto-deploy
+> (`main` → production, `develop` → staging) with **no GitHub Actions**, see
+> [DEPLOYMENT-GIT.md](./DEPLOYMENT-GIT.md). This guide covers the architecture,
+> the one-time R2 model upload (shared by both), and manual/CLI deploys.
+
 ## Architecture
 
 - `npm run build` → static site in `dist/` (HTML, JS, CSS, WASM).
@@ -90,6 +95,9 @@ npm run deploy          # = npm run build && wrangler deploy
   or the deploy fails on the `MODELS` binding.
 - **Per-file asset limit is 25 MB.** The site's own WASM (mupdf ~10 MB,
   libarchive ~1 MB) is fine; large ML models go to R2 precisely to avoid this.
+  onnxruntime-web's wasm gets emitted into `dist/_astro` at ~26 MB but is unused
+  (ORT loads from `/models/ort/`); the `postbuild` step (`scripts/prune-dist.mjs`)
+  removes it automatically so deploys stay under the limit.
 - **Model versions must match.** `@imgly/background-removal` and
   `@imgly/background-removal-data` are pinned to the same version; a mismatch
   causes "Resource … not found" at runtime.
