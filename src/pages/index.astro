@@ -2,9 +2,39 @@
 import Base from '@/layouts/Base.astro';
 import { ToolGrid } from '@/components/ToolGrid';
 import { tools } from '@/registry/tools';
+import { SITE_URL, SITE_NAME } from '@/config';
+
+const homeTitle = `${SITE_NAME} — Free Privacy-First Browser Tools`;
+const homeDescription = `${tools.length} free online tools that run entirely in your browser — PDF, image, file, developer, and media utilities. No uploads, no sign-up, works offline. Your files never leave your device.`;
+const homeKeywords = [
+  'online tools', 'free tools', 'browser tools', 'privacy tools', 'no upload',
+  'pdf tools', 'image tools', 'developer tools', 'json formatter', 'convert', 'client-side',
+];
+
+// ItemList of every tool helps search engines discover the full catalog.
+const toolList = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'GoodWebTools catalog',
+  numberOfItems: tools.length,
+  itemListElement: tools.map((tool, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: tool.name,
+    description: tool.summary,
+    url: new URL(tool.route, SITE_URL).href,
+  })),
+};
 ---
 
-<Base title="Home">
+<Base
+  title="Home"
+  fullTitle={homeTitle}
+  description={homeDescription}
+  keywords={homeKeywords}
+  canonical={SITE_URL + '/'}
+  jsonLd={toolList}
+>
   <main class="page-container py-10">
     <header class="mb-10">
       {/* Brand lives in the top navbar; keep an accessible heading without duplicating it. */}

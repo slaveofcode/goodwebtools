@@ -34,6 +34,7 @@
   "homepage": "https://github.com/slaveofcode/goodwebtools#readme",
   "dependencies": {
     "@astrojs/react": "^3.6.3",
+    "@astrojs/sitemap": "^3.2.1",
     "@astrojs/tailwind": "^5.1.5",
     "@excalidraw/excalidraw": "^0.18.1",
     "@ffmpeg/core": "^0.12.10",

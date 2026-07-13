@@ -6,6 +6,7 @@ dist/
 # Secrets & local env (this repo is public — never commit these)
 .env
 .env.*
+!.env.example
 .dev.vars
 .dev.vars.*
 *.local

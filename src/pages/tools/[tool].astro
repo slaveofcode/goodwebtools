@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
 import ToolHost from '@/islands/ToolHost';
 import { tools, getToolById } from '@/registry/tools';
+import { SITE_URL, SITE_NAME } from '@/config';
 
 export function getStaticPaths() {
   return tools.map(tool => ({
@@ -13,9 +14,39 @@ export function getStaticPaths() {
 
 const { toolId } = Astro.props;
 const tool = getToolById(toolId)!;
+const toolUrl = new URL(tool.route, SITE_URL).href;
+// Sharper, keyword-aware description for search results.
+const metaDescription = `${tool.summary}. Free, on-device, and private — runs entirely in your browser with no uploads. Part of ${SITE_NAME}.`;
+
+const softwareJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: tool.name,
+  description: tool.summary,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any (web browser)',
+  url: toolUrl,
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  browserRequirements: 'Requires a modern web browser with JavaScript.',
+  publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+};
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
+    { '@type': 'ListItem', position: 2, name: tool.name, item: toolUrl },
+  ],
+};
 ---
 
-<Base title={tool.name} description={tool.summary}>
+<Base
+  title={tool.name}
+  description={metaDescription}
+  keywords={tool.keywords}
+  jsonLd={[softwareJsonLd, breadcrumbJsonLd]}
+>
   <main class="page-container py-8">
     <nav aria-label="Breadcrumb" class="mb-4">
       <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">

@@ -1,14 +1,50 @@
 ---
 import { ViewTransitions } from 'astro:transitions';
 import { ShellIsland } from '@/components/shell/ShellIsland';
+import { ConsentRibbon } from '@/components/shell/ConsentRibbon';
+import { SITE_NAME, SITE_TAGLINE, SITE_URL, GA_ID } from '@/config';
 import '../styles/global.css';
 
 export interface Props {
   title: string;
   description?: string;
+  keywords?: string[];
+  /** OG/Twitter image path (absolute or site-relative). */
+  image?: string;
+  /** Override the canonical URL (defaults to the current path on SITE_URL). */
+  canonical?: string;
+  /** Set for pages that should not be indexed (e.g. 404). */
+  noindex?: boolean;
+  /** Replace the "<title> | GoodWebTools" pattern entirely. */
+  fullTitle?: string;
+  /** JSON-LD structured data object(s) to embed. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { title, description = 'Privacy-first client-side utilities' } = Astro.props;
+const {
+  title,
+  description = SITE_TAGLINE,
+  keywords,
+  image = '/icon-512.png',
+  canonical,
+  noindex = false,
+  fullTitle,
+  jsonLd,
+} = Astro.props;
+
+const canonicalURL = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
+const pageTitle = fullTitle ?? `${title} | ${SITE_NAME}`;
+const ogImage = new URL(image, SITE_URL).href;
+
+// Site-wide structured data + any page-specific graph.
+const siteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_TAGLINE,
+};
+const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : [])];
 ---
 
 <!DOCTYPE html>
@@ -16,8 +52,26 @@ const { title, description = 'Privacy-first client-side utilities' } = Astro.pro
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
     <meta name="description" content={description} />
-    <title>{title} | GoodWebTools</title>
+    {keywords && keywords.length > 0 && <meta name="keywords" content={keywords.join(', ')} />}
+    <link rel="canonical" href={canonicalURL} />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
 
     <!-- Self-hosted display font (same-origin, preloaded to avoid FOUT) -->
     <link
@@ -40,17 +94,51 @@ const { title, description = 'Privacy-first client-side utilities' } = Astro.pro
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
+    <!-- Structured data -->
+    {jsonLdBlocks.map((block) => (
+      <script type="application/ld+json" set:html={JSON.stringify(block)} />
+    ))}
+
     <ViewTransitions />
     <script is:inline>
-      // Init theme before first paint to prevent flash
       const stored = localStorage.getItem('theme');
       if (stored === 'dark') {
         document.documentElement.classList.add('dark');
       }
     </script>
+
+    <!-- Google Analytics (GDPR): loads only when configured AND consent granted. -->
+    <script is:inline define:vars={{ gaId: GA_ID }}>
+      (function () {
+        if (!gaId) return;
+        function loadGA() {
+          if (window.__gaLoaded) return;
+          window.__gaLoaded = true;
+          const s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function () { window.dataLayer.push(arguments); };
+          window.gtag('js', new Date());
+          window.gtag('config', gaId, { anonymize_ip: true });
+        }
+        if (localStorage.getItem('gwt-consent') === 'granted') loadGA();
+        window.addEventListener('gwt:consent', function (e) {
+          if (e.detail === 'granted') loadGA();
+        });
+        document.addEventListener('astro:page-load', function () {
+          if (window.gtag) window.gtag('event', 'page_view', {
+            page_path: location.pathname + location.search,
+            page_location: location.href,
+          });
+        });
+      })();
+    </script>
   </head>
   <body class="bg-background text-foreground min-h-screen">
     <ShellIsland client:load transition:persist />
     <slot />
+    <ConsentRibbon client:idle transition:persist />
   </body>
 </html>

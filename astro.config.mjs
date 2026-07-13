@@ -2,9 +2,13 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
 import AstroPWA from '@vite-pwa/astro';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   output: 'static',
+  // Canonical origin — powers <link rel="canonical">, OG URLs, and the sitemap.
+  site: 'https://goodwebtools.com',
+  trailingSlash: 'ignore',
   vite: {
     resolve: {
       alias: {
@@ -32,6 +36,7 @@ export default defineConfig({
   integrations: [
     react(),
     tailwind(),
+    sitemap(),
     AstroPWA({
       mode: 'production',
       base: '/',
