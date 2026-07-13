@@ -9,12 +9,24 @@ import { downloadService } from '@/services/download.service';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
 
-type Scale = 2 | 3 | 4;
+type BaseScale = 2 | 3 | 4;
+type Scale = 2 | 3 | 4 | 8;
 
-// Guardrail: a 4× upscale of a large image is a lot of pixels/memory.
-const MAX_INPUT_PIXELS = 1_200_000; // ~1.2 MP (e.g. 1200×1000)
+// ESRGAN-slim's reliable native models are 2×/3×/4×; 8× runs two passes (4×→2×)
+// — the package's "8x" weights actually upscale ~4×, so we chain instead.
+const STEPS: Record<Scale, BaseScale[]> = {
+  2: [2],
+  3: [3],
+  4: [4],
+  8: [4, 2],
+};
 
-async function loadModel(scale: Scale) {
+// Cap the *output* size (memory + canvas limits), which sets how big an input a
+// given scale allows: bigger scales need smaller inputs.
+const MAX_OUTPUT_PIXELS = 20_000_000; // ~20 MP (matches the old 1.2 MP @ 4×)
+const maxInputFor = (scale: Scale) => Math.floor(MAX_OUTPUT_PIXELS / (scale * scale));
+
+async function loadModel(scale: BaseScale) {
   const [{ default: Upscaler }, mod] = await Promise.all([
     import('upscaler'),
     scale === 2
@@ -49,30 +61,39 @@ export default function ImageUpscale() {
     setResult(null);
     setOutDims(null);
     setError('');
-    // Measure input size and guard against very large images.
+    // Measure input size and guard against outputs too big for the browser.
     const bmp = await createImageBitmap(target);
     setSrcDims({ w: bmp.width, h: bmp.height });
-    if (bmp.width * bmp.height > MAX_INPUT_PIXELS) {
-      bmp.close?.();
-      setError(`Image is too large to upscale ${s}× in the browser (max ~1.2 MP). Resize it first.`);
+    bmp.close?.();
+    const limit = maxInputFor(s);
+    if (bmp.width * bmp.height > limit) {
+      const side = Math.round(Math.sqrt(limit));
+      setError(`Image is too large to upscale ${s}× in the browser (max ~${(limit / 1_000_000).toFixed(1)} MP, about ${side}×${side}). Resize it first.`);
       return;
     }
-    bmp.close?.();
 
     setBusy(true);
     setPercent(0);
-    setStage('Loading model…');
+    const steps = STEPS[s];
     try {
-      const upscaler = await loadModel(s);
-      setStage(`Upscaling ${s}×…`);
-      const src = URL.createObjectURL(target);
-      const dataUrl: string = await upscaler.upscale(src, {
-        output: 'base64',
-        patchSize: 64,
-        padding: 4,
-        progress: (rate: number) => setPercent(Math.round(rate * 100)),
-      });
-      URL.revokeObjectURL(src);
+      // Chain each pass, feeding one pass's output into the next.
+      let src = URL.createObjectURL(target);
+      let revokeSrc = true;
+      let dataUrl = '';
+      for (let i = 0; i < steps.length; i++) {
+        setStage(steps.length > 1 ? `Upscaling ${s}× (pass ${i + 1}/${steps.length})…` : `Upscaling ${s}×…`);
+        const upscaler = await loadModel(steps[i]);
+        dataUrl = await upscaler.upscale(src, {
+          output: 'base64',
+          patchSize: 64,
+          padding: 4,
+          progress: (rate: number) => setPercent(Math.round(((i + rate) / steps.length) * 100)),
+        });
+        upscaler.dispose?.();
+        if (revokeSrc) URL.revokeObjectURL(src);
+        src = dataUrl; // next pass reads the previous result (a data URL)
+        revokeSrc = false;
+      }
       const blob = await (await fetch(dataUrl)).blob();
       setResult(blob);
       setResultUrl(prev => {
@@ -123,7 +144,7 @@ export default function ImageUpscale() {
       <div className="space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Scale</span>
         <div className="flex flex-wrap gap-2">
-          {([2, 3, 4] as Scale[]).map(s => (
+          {([2, 3, 4, 8] as Scale[]).map(s => (
             <Button key={s} variant={scale === s ? 'primary' : 'secondary'} aria-pressed={scale === s} onClick={() => changeScale(s)} disabled={busy}>
               {s}×
             </Button>
@@ -133,8 +154,9 @@ export default function ImageUpscale() {
 
       <p className="text-xs text-muted-foreground">
         Runs entirely in your browser — the image never leaves your device. Best on smaller images
-        (icons, logos, old photos); large images are slower and capped at ~1.2 MP. The model
-        downloads once (~1 MB), then it's cached.
+        (icons, logos, old photos). 2–4× use native models; 8× runs two passes (4×→2×). Higher
+        factors need a smaller input so the result fits in memory — the max input shrinks as the scale
+        grows. The models download once (~1 MB each), then they're cached.
       </p>
 
       {busy && <ProgressBar percent={percent} label={stage || 'Working…'} />}
