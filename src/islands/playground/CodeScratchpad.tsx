@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Plus, X, FolderOpen, Save } from 'lucide-react';
+import { Plus, X, FolderOpen, Save, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import MonacoEditor from './MonacoEditor';
 import { extensionToLanguage } from '@/tools/playground/language.lib';
@@ -19,6 +19,7 @@ export default function CodeScratchpad() {
   // File System Access handles, kept out of IndexedDB (not structured-clonable across our store).
   const handles = useRef<Map<string, FileSystemFileHandle>>(new Map());
   const [ready, setReady] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Restore persisted tabs on mount.
   useEffect(() => {
@@ -96,6 +97,17 @@ export default function CodeScratchpad() {
     }
   };
 
+  const copyActive = async () => {
+    if (!active) return;
+    try {
+      await navigator.clipboard.writeText(active.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard unavailable (no gesture / permission) — no-op */
+    }
+  };
+
   const saveActive = async () => {
     if (!active) return;
     const handle = handles.current.get(active.id);
@@ -140,6 +152,10 @@ export default function CodeScratchpad() {
           <button onClick={addFile} aria-label="New file" className="border-2 border-border bg-muted p-1 press-brutal"><Plus className="h-4 w-4" /></button>
         </div>
         <div className="ml-auto flex gap-2">
+          <Button variant="secondary" onClick={copyActive}>
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied ? 'Copied' : 'Copy'}
+          </Button>
           <Button variant="secondary" onClick={openFromDisk}><FolderOpen className="h-4 w-4" />Open</Button>
           <Button variant="secondary" onClick={saveActive}><Save className="h-4 w-4" />Save</Button>
         </div>
