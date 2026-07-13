@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react';
-import { Maximize2, Minimize2, Check } from 'lucide-react';
+import { Maximize2, Minimize2, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { loadScene, saveScene, type WhiteboardScene } from '@/tools/draw/whiteboard.store';
 import '@excalidraw/excalidraw/index.css';
@@ -25,13 +25,21 @@ export default function Whiteboard() {
   // so the countdown only runs while there are unsaved changes.
   const [countdown, setCountdown] = useState(0);
 
-  // Remember whether the board was expanded, so it stays expanded on return.
+  // Optionally hide the navbar (only while expanded) for maximum canvas space.
+  const [navHidden, setNavHidden] = useState(false);
+
+  // Remember whether the board was expanded / navbar hidden, so they persist.
   const setExpandedPersist = (v: boolean) => {
     setExpanded(v);
     try { localStorage.setItem('gwt-whiteboard-expanded', v ? '1' : '0'); } catch { /* ignore */ }
   };
+  const setNavHiddenPersist = (v: boolean) => {
+    setNavHidden(v);
+    try { localStorage.setItem('gwt-whiteboard-navhidden', v ? '1' : '0'); } catch { /* ignore */ }
+  };
   useEffect(() => {
     if (localStorage.getItem('gwt-whiteboard-expanded') === '1') setExpanded(true);
+    if (localStorage.getItem('gwt-whiteboard-navhidden') === '1') setNavHidden(true);
   }, []);
 
   // Restore the last scene (client-only). Excalidraw accepts a Promise for
@@ -131,17 +139,18 @@ export default function Whiteboard() {
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
 
-  // Measure the sticky header's bottom edge so the overlay butts right up to it.
+  // While expanded, hide the sticky navbar if the user chose to (for max space),
+  // otherwise measure its bottom edge so the overlay butts right up to it.
   useEffect(() => {
-    if (!expanded) return;
-    const measure = () => {
-      const rect = document.querySelector('header')?.getBoundingClientRect();
-      setNavBottom(rect ? Math.round(rect.bottom) : 0);
-    };
+    const header = document.querySelector('header') as HTMLElement | null;
+    if (!header) return;
+    header.style.display = expanded && navHidden ? 'none' : '';
+    if (!expanded || navHidden) return () => { header.style.display = ''; };
+    const measure = () => setNavBottom(Math.round(header.getBoundingClientRect().bottom || 0));
     measure();
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [expanded]);
+    return () => { window.removeEventListener('resize', measure); header.style.display = ''; };
+  }, [expanded, navHidden]);
 
   const statusIndicator = countdown > 0 ? (
     <button
@@ -169,6 +178,9 @@ export default function Whiteboard() {
       Loading whiteboard…
     </div>
   );
+
+  // Where the expanded overlay starts: below the navbar, or 0 when it's hidden.
+  const topOffset = navHidden ? 0 : navBottom;
 
   return (
     <div className="space-y-3">
@@ -206,13 +218,27 @@ export default function Whiteboard() {
             ? 'fixed inset-x-0 bottom-0 z-30 !mt-0 overflow-hidden border-t-2 border-border bg-background'
             : 'h-[75vh] w-full overflow-hidden border-2 border-border'
         }
-        style={expanded ? { top: navBottom } : undefined}
+        style={expanded ? { top: topOffset } : undefined}
       >
         {canvas}
       </div>
 
+      {/* Pull-tab centered at the navbar edge: hide the navbar for more canvas,
+          or bring it back. Only relevant while expanded. */}
       {expanded && (
-        <div className="fixed right-4 z-40 flex items-center gap-3" style={{ top: navBottom + 8 }}>
+        <button
+          onClick={() => setNavHiddenPersist(!navHidden)}
+          title={navHidden ? 'Show navbar' : 'Hide navbar for more space'}
+          aria-label={navHidden ? 'Show navbar' : 'Hide navbar'}
+          className={`fixed left-1/2 z-50 !mt-0 -translate-x-1/2 rounded-b-md border-2 border-t-0 border-border bg-background px-5 py-0.5 shadow-brutal-sm hover:bg-muted ${navHidden ? '' : '-translate-y-full'}`}
+          style={{ top: topOffset }}
+        >
+          {navHidden ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+        </button>
+      )}
+
+      {expanded && (
+        <div className="fixed right-4 z-40 !mt-0 flex items-center gap-3" style={{ top: topOffset + 8 }}>
           <div className="border-2 border-border bg-background px-2 py-1.5 shadow-brutal-sm">
             {statusIndicator}
           </div>
