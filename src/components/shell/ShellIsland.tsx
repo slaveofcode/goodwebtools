@@ -27,7 +27,7 @@ export function ShellIsland() {
 
   return (
     <>
-      <header className="border-b-[3px] border-border bg-background">
+      <header className="sticky top-0 z-40 border-b-[3px] border-border bg-background">
         <div className="page-container">
           <div className="flex h-16 items-center justify-between">
             <a
