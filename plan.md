@@ -99,7 +99,7 @@ A single typed manifest drives nav, search, the command palette, and per-tool as
 interface ToolDef {
   id: string;                 // 'pdf-merge'
   name: string;               // 'Merge PDF'
-  category: Category;         // 'PDF' | 'Image' | 'Files' | 'Draw' | 'Dev' | 'Media'
+  category: Category;         // 'PDF' | 'Image' | 'Files' | 'Draw' | 'Dev' | 'Media' | 'Playground'
   route: string;              // '/tools/pdf-merge'  (Astro page)
   keywords: string[];         // for search/command palette
   icon: LucideIcon;
@@ -234,6 +234,13 @@ Video compress/convert/trim/cut, video→GIF, video→audio, audio convert/trim.
 
 - **Screenshot (delayed capture + crop)** — click → **native screen/window/tab picker** (`getDisplayMedia`, unavoidable by design) → **5–10s countdown** to arrange/focus the target → grab a frame from the still-live stream onto a canvas → user **drags a crop rectangle** on the captured image → export PNG/JPG, fully client-side. Constraints: DRM/protected content captures as black; the native picker can't be pre-selected or suppressed; Safari uses canvas-draw (no `ImageCapture.grabFrame`); cursor inclusion set via constraint (`always`/`motion`/`never`). **Extension-enhanced mode (optional):** a true **global hotkey** that fires while another window is focused, plus a **region-select overlay over the whole desktop** — capabilities the page sandbox cannot provide (see §6). Falls back to the countdown flow when the extension isn't installed.
 
+### Playground (`monaco-editor`, `@sqlite.org/sqlite-wasm` — on-device dev sandboxes)
+On-device sandboxes so a developer can *explore before going bigger*. Both tools ride on **one shared Monaco engine** (the real VS Code editor), loaded once, lazily, self-hosted (no CDN), and never in the shell payload. Full design: `docs/superpowers/specs/2026-07-13-playground-tools-design.md`.
+
+- **Code Scratchpad** — a VS Code-grade **multi-file** editing scratchpad on **Monaco**, so the exact muscle memory carries over: move/copy line (`⌥↑↓` / `⇧⌥↑↓`), add cursor above/below (`⌘⌥↑↓`), select-next / all-occurrences (`⌘D` / `⌘⇧L`), column/box selection (`⇧⌥`+drag), find & replace (`⌘F` / `⌘⌥F`), format (`⇧⌥F`). Tabs for several named files, language inferred from extension, **open/save real files** via the File System Access API (fallback `<input type=file>` + download), and **autosave** all buffers to **IndexedDB** across reloads. YAGNI: no folder tree, no build/run.
+- **SQLite Playground** — a durable in-browser **SQLite** database via **`@sqlite.org/sqlite-wasm`** in a Comlink worker, persisted with the **OPFS SAHPool VFS** (survives reload, **no COOP/COEP needed** — keeps our no-isolation setup; `sqlite3.wasm` ~1 MB served same-origin as a normal asset). Three panes: a **schema explorer** (tables → columns/PK/NOT NULL, indexes, views, triggers; click a table to browse its rows with no SQL), a **SQL editor** (shared Monaco, `⌘/Ctrl+Enter` runs all statements or the selection), and a **visual results grid** (sortable, virtualized, cell-copy, CSV/JSON export). DDL shows a message + refreshes the schema; DML shows "N rows affected" + can auto-`SELECT` the touched table. **Single active DB** + Import/Export `.sqlite` + Load-sample + Reset (multi-DB switching and query history are deferred). Falls back to an in-memory DB + "export to keep" banner when OPFS is absent.
+- **Shared build risk:** the global `worker.format: 'es'` (needed by mupdf/pdfjs) forces ES-module workers; validate Monaco's workers build/mount on the *production* build first (same class of issue as the ffmpeg core). See §4.1 [DECISION] on sharing the Monaco instance.
+
 ---
 
 ## 6. Optional Companion Extension (progressive enhancement)
@@ -311,6 +318,9 @@ ffmpeg.wasm family behind isolation + size gate. Screenshot (delayed capture + c
 
 **Phase 8 — Companion extension (optional, parallelizable)**
 Thin MV3 capability-shim: global-hotkey screenshot + desktop region-select overlay, returning results to the web app via the `externally_connectable` bridge. Web fallbacks must already exist before this ships. Can be built in parallel once the screenshot web flow (Phase 7) is stable. Store submissions + self-host build.
+
+**Phase 9 — Playground (on-device dev sandboxes)**
+New `Playground` category on one shared, lazily-loaded, self-hosted **Monaco** engine. Built in three independently-shippable steps: **(a)** Playground category + shared Monaco foundation (validate the `worker.format:'es'` build risk first) → **(b)** Code Scratchpad (multi-file, disk I/O, IndexedDB autosave) → **(c)** SQLite Playground (`@sqlite.org/sqlite-wasm` + OPFS SAHPool, schema explorer, SQL editor, visual results grid, import/export, sample DB). Full spec: `docs/superpowers/specs/2026-07-13-playground-tools-design.md`.
 
 **Suggested MVP launch** = Phases 0–3 (utilities + PDF + image basics). That already covers the most common "I don't want to upload this to a random site" office moments.
 
