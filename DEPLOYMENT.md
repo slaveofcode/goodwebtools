@@ -16,11 +16,62 @@ Static Assets), plus a small Worker that streams the AI-tool model files from an
   delegates everything else to the static build (`ASSETS` binding).
 - `wrangler.jsonc` → wires it together (`main`, `assets`, `r2_buckets`).
 
+> **Workers, not Pages.** This project deploys **one Cloudflare Worker with
+> Static Assets** — *not* Cloudflare Pages. A Worker is required because a plain
+> static/Pages site can't stream the large ML model files at `/models/*`; the
+> Worker sits in front and routes `/models/*` to **R2** while serving everything
+> else from the bundled **Static Assets**. (The static-asset half plays the role
+> Pages would, but it's all a single Worker.)
+
+### Deployment flow (build → deploy → runtime)
+
 ```
-Request ─▶ Cloudflare
-             ├─ /models/*  ─▶ Worker ─▶ R2 (MODELS)      ← large ML models
-             └─ everything ─▶ Static Assets (dist/)      ← the site
+ BUILD & DEPLOY — automatic on every push (Cloudflare Workers Builds; no GitHub Actions)
+
+ ┌─────────────┐  git push   ┌────────────────────────┐  npm run build   ┌────────────────┐
+ │ GitHub repo │ ──────────▶ │ Cloudflare Workers      │ ───────────────▶ │ dist/          │
+ │ main /      │  (branch    │ Builds  (CI runner)     │  + postbuild      │ static site:   │
+ │ develop     │   watched)  │                         │  prune            │ HTML·JS·CSS·   │
+ └─────────────┘             │  then: wrangler deploy  │                   │ fonts·small    │
+                             └───────────┬─────────────┘                   │ wasm (mupdf,   │
+                                         │ deploys                         │ libarchive,    │
+                                         │ the Worker                      │ sqlite)        │
+                                         ▼                                 └───────┬────────┘
+        ┌──────────────────────────────────────────────────────────┐              │ uploaded as
+        │              Cloudflare Worker  (worker/index.js)          │◀─────────────┘ Static Assets
+        │   binding ASSETS ─▶ dist/   ·   binding MODELS ─▶ R2       │
+        └──────────────────────────────────────────────────────────┘
+                                         ▲
+                                         │ read at runtime (NOT part of the git build)
+        ┌──────────────────────────────────────────────────────────┐
+        │   R2 bucket "goodwebtools-models"  — uploaded ONCE, by hand │
+        │   /imgly /mediapipe /esrgan-slim /ort /lama /ffmpeg  (~540 MB of ML models + wasm)
+        └──────────────────────────────────────────────────────────┘
+
+
+ RUNTIME — every visitor request
+
+   Browser ──▶ Cloudflare Worker (worker/index.js)
+                    │
+                    ├─ path starts with /models/  ─▶ env.MODELS.get(key) ─▶ R2 bucket   (big models)
+                    │                                   hit → stream + immutable cache; miss → 404
+                    │
+                    └─ anything else               ─▶ env.ASSETS.fetch()  ─▶ dist/ static assets
+                                                        (HTML, JS, CSS, fonts, small wasm)
 ```
+
+**What goes where**
+
+| Content | Lives in | Served by | Deployed by |
+|---------|----------|-----------|-------------|
+| HTML · JS · CSS · fonts · small wasm (mupdf, libarchive, sqlite) | Worker **Static Assets** (from `dist/`) | `ASSETS` binding | `git push` → Workers Builds |
+| The routing logic (`/models/*` → R2, else → assets) | The **Worker** (`worker/index.js`) | the Worker itself | `git push` → Workers Builds |
+| Large ML models + ORT/ffmpeg wasm (~540 MB) | **R2** bucket `goodwebtools-models` | `MODELS` binding (Worker streams) | **one-time manual** upload (`wrangler r2 object put`) |
+
+The models are the only piece that is **not** part of the git build — they're
+uploaded to R2 once (see below) and are immutable, so a normal push never
+re-uploads ~540 MB. For the two-branch git wiring (main → production,
+develop → staging), see [DEPLOYMENT-GIT.md](./DEPLOYMENT-GIT.md).
 
 ## One-time setup
 
