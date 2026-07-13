@@ -172,6 +172,18 @@ never leaves your device.
   site stays fully usable without it (progressive enhancement). Least-privilege
   permissions, nothing uploaded. See [extension/README.md](./extension/README.md).
 
+✅ **Phase 9 — Playground (2 tools, on-device dev sandboxes):**
+- Code Scratchpad — a VS Code-grade **multi-file** editor on self-hosted
+  **Monaco**: native multi-cursor, move/copy line, column select, find & replace.
+  Open/save real files (File System Access API), autosaved to IndexedDB.
+- SQLite Playground — a durable in-browser **SQLite** database
+  (`@sqlite.org/sqlite-wasm` + OPFS SAHPool, no COOP/COEP) with a schema explorer,
+  a SQL editor (⌘/Ctrl+Enter to run), and a **visual results grid**. DDL/DML show
+  a summary and refresh the schema; import/export `.sqlite`; a sample DB to explore.
+
+Both ride one lazily-loaded, self-hosted Monaco engine — never in the shell
+payload. Nothing is uploaded.
+
 ## Testing
 
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
