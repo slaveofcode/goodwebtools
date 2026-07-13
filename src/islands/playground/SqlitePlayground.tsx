@@ -10,6 +10,7 @@ import type * as Monaco from 'monaco-editor';
 import type { QueryResult, SchemaObject, SqliteApi } from '@/tools/playground/sqlite.worker';
 
 const STARTER = 'SELECT name FROM sqlite_master;\n';
+const SQL_KEY = 'gwt-sqlite-playground-sql';
 
 export default function SqlitePlayground() {
   const [sql, setSql] = useState(STARTER);
@@ -38,6 +39,20 @@ export default function SqlitePlayground() {
     db().then((d) => d.init()).then((r) => { setPersisted(r.persisted); return refreshSchema(); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Restore the last-edited query so users can continue where they left off.
+  useEffect(() => {
+    const saved = localStorage.getItem(SQL_KEY);
+    if (saved !== null) setSql(saved);
+  }, []);
+
+  // Persist the editor content (debounced) on every change.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try { localStorage.setItem(SQL_KEY, sql); } catch { /* storage full / unavailable */ }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [sql]);
 
   const run = async (only?: string) => {
     const selection = editorRef.current?.getSelection();

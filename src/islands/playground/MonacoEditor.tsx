@@ -19,6 +19,12 @@ export default function MonacoEditor({
   const monacoRef = useRef<typeof Monaco | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  // Latest value/language, so the async editor creation uses whatever the props
+  // are by the time Monaco finishes loading (props can change during the await).
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const languageRef = useRef(language);
+  languageRef.current = language;
 
   // Create the editor once. Monaco is imported dynamically so this island stays
   // SSR-safe (it renders via client:load, which also runs on the server build).
@@ -32,8 +38,8 @@ export default function MonacoEditor({
       monacoRef.current = monaco;
       setupMonaco();
       const editor = monaco.editor.create(hostRef.current, {
-        value,
-        language,
+        value: valueRef.current,
+        language: languageRef.current,
         readOnly,
         theme: isDark() ? 'gwt-dark' : 'gwt-light',
         automaticLayout: true,
