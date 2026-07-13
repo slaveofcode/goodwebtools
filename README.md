@@ -109,7 +109,7 @@ All Canvas-based, fully client-side (`src/tools/image/canvas.lib.ts`).
 Every image tool accepts a **paste from clipboard** (⌘/Ctrl+V) in, and every
 result offers **Download** and **Copy to clipboard**.
 
-🚧 **Phase 4 — Files & crypto (in progress):**
+✅ **Phase 4 — Files & crypto (5 tools):**
 - File Encrypt / Decrypt — password-lock any file with **AES-256-GCM** and a
   PBKDF2 key (250k iterations, SHA-256). Self-describing `.gwtenc` container.
   WebCrypto only, no dependencies.
@@ -143,16 +143,14 @@ stay same-origin without hitting the 25 MB static-asset limit.
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
 file crypto, format converters): `npm run test` — **228 tests across 24 files**.
 
-**Next (Phase 4 cont.):** zip create/extract, large-file hashing, split/join.
-
 ## Deployment
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+Deployed to **Cloudflare Workers** (static assets) with model files streamed
+from an **R2** bucket. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full guide.
 
-**Quick deploy to Cloudflare Pages:**
+**Quick deploy:**
 ```bash
-npm run build
-npx wrangler pages deploy dist --project-name=goodwebtools
+npm run deploy          # = npm run build && wrangler deploy
 ```
 
 ## License
