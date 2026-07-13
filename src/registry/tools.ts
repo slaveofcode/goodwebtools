@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -374,6 +374,17 @@ export const tools: ToolDef[] = [
     icon: Combine,
     summary: 'Combine multiple images into one, vertically or horizontally',
     load: () => import('@/islands/image/ImageMerge'),
+    status: 'stable'
+  },
+  {
+    id: 'image-face-blur',
+    name: 'Face Blur',
+    category: 'Image',
+    route: '/tools/image-face-blur',
+    keywords: ['face', 'blur', 'anonymize', 'privacy', 'redact', 'hide', 'pixelate', 'ai', 'detect'],
+    icon: ScanFace,
+    summary: 'Auto-detect and hide faces with on-device AI',
+    load: () => import('@/islands/image/FaceBlur'),
     status: 'stable'
   },
   {
