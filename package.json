@@ -57,6 +57,7 @@
     "libarchive.js": "^2.0.2",
     "lucide-react": "^0.294.0",
     "marked": "^18.0.6",
+    "monaco-editor": "^0.52.2",
     "mupdf": "^1.28.0",
     "nanostores": "^0.9.5",
     "onnxruntime-web": "^1.27.0",

@@ -62,6 +62,17 @@ export default defineConfig({
       workbox: {
         navigateFallback: '/404',
         globPatterns: ['**/*.{css,js,html,svg,png,ico,txt,woff2}'],
+        // Monaco's language workers (ts.worker is ~12 MB) and its main chunk are
+        // route-level and far exceed the precache size limit — load them on demand
+        // instead of precaching them into the service worker.
+        globIgnores: [
+          '**/ts.worker-*.js',
+          '**/editor.worker-*.js',
+          '**/json.worker-*.js',
+          '**/css.worker-*.js',
+          '**/html.worker-*.js',
+          '**/monaco-setup*.js',
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

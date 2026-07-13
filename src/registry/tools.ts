@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2 } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -561,6 +561,17 @@ export const tools: ToolDef[] = [
     icon: Camera,
     summary: 'Capture your screen with a countdown, then crop (client-side)',
     load: () => import('@/islands/media/Screenshot'),
+    status: 'stable'
+  },
+  {
+    id: 'code-scratchpad',
+    name: 'Code Scratchpad',
+    category: 'Playground',
+    route: '/tools/code-scratchpad',
+    keywords: ['code', 'editor', 'monaco', 'vscode', 'scratchpad', 'text', 'multi-cursor'],
+    icon: Code2,
+    summary: 'VS Code-grade multi-file editor, on-device',
+    load: () => import('@/islands/playground/CodeScratchpad'),
     status: 'stable'
   },
   {
