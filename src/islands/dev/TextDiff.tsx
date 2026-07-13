@@ -11,7 +11,7 @@ const rowStyles: Record<RowType, string> = {
   add: 'bg-green-500/10 text-green-600 dark:text-green-400',
   remove: 'bg-red-500/10 text-red-600 dark:text-red-400',
 };
-const rowPrefix: Record<RowType, string> = { equal: ' ', add: '+', remove: '-' };
+const rowPrefix: Record<RowType, string> = { equal: '·', add: '+', remove: '−' };
 
 // Broad set of text-like file types for the "Load file" pickers.
 const TEXT_ACCEPT =
@@ -31,8 +31,9 @@ export default function TextDiff() {
   const added = rows?.filter(r => r.type === 'add').length ?? 0;
   const removed = rows?.filter(r => r.type === 'remove').length ?? 0;
 
-  // Unified-diff-style text of the result, for download / clipboard.
-  const diffText = rows ? rows.map(r => `${rowPrefix[r.type]}${r.text}`).join('\n') : '';
+  // Unified-diff-style text of the result (ASCII prefixes for tool compatibility).
+  const asciiPrefix: Record<RowType, string> = { equal: ' ', add: '+', remove: '-' };
+  const diffText = rows ? rows.map(r => `${asciiPrefix[r.type]}${r.text}`).join('\n') : '';
 
   return (
     <div className="space-y-4">
@@ -61,9 +62,17 @@ export default function TextDiff() {
       {rows && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex gap-4 text-sm">
-              <span className="text-green-600 dark:text-green-400">+{added} added</span>
-              <span className="text-red-600 dark:text-red-400">−{removed} removed</span>
+            {/* Spell out which side each color/prefix belongs to. */}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <span className="rounded-sm bg-red-500/10 px-1.5 text-red-600 dark:text-red-400">
+                <span className="font-mono font-bold">−</span> Original only ({removed})
+              </span>
+              <span className="rounded-sm bg-green-500/10 px-1.5 text-green-600 dark:text-green-400">
+                <span className="font-mono font-bold">+</span> Changed only ({added})
+              </span>
+              <span className="text-muted-foreground">
+                <span className="font-mono">·</span> unchanged (both)
+              </span>
             </div>
             <div className="flex gap-2">
               <DownloadTextButton text={diffText} filename="diff.txt" mime="text/plain;charset=utf-8" />

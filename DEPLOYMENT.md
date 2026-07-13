@@ -28,26 +28,40 @@ npx wrangler r2 bucket create goodwebtools-models   # create the model bucket
 
 ### Upload the ML model assets to R2
 
-The Background Remover model + onnxruntime WASM (~211 MB across ≤4 MB chunks)
-are **not** committed — they live in R2 under the `imgly/` prefix. Stage them
-from the pinned data package and upload:
+The Phase-5 AI tools each need model + runtime files (**~540 MB total**) that are
+**not** committed — they live in R2 under `/models/`, mirroring the on-disk
+layout. `npm run stage:models` fetches/copies them all into `public/models/`:
+
+| Prefix | Tool(s) | Approx size |
+|--------|---------|-------------|
+| `imgly/` | Background Remover, Portrait Blur (ISNet + ort) | ~211 MB |
+| `mediapipe/` | Face Blur (BlazeFace + tasks-vision WASM) | ~35 MB |
+| `esrgan-slim/` | Image Upscaler (ESRGAN weights) | ~4 MB |
+| `ort/` | Object Remover (onnxruntime-web WASM) | ~76 MB |
+| `lama/` | Object Remover (LaMa ONNX, fixed 512×512) | ~200 MB |
+
+Stage, then upload the whole tree (keys must keep their subfolders):
 
 ```bash
-npm run stage:models        # copies assets → public/models/imgly/ (gitignored)
+npm run stage:models   # → public/models/** (gitignored; downloads LaMa + face model)
 
-# upload every staged file to R2 under imgly/
-for f in public/models/imgly/*; do
-  npx wrangler r2 object put "goodwebtools-models/imgly/$(basename "$f")" --file "$f"
+# upload every staged file to R2, preserving the relative path as the key
+cd public/models
+find . -type f | while read -r f; do
+  key="${f#./}"
+  npx wrangler r2 object put "goodwebtools-models/$key" --file "$f"
 done
+cd ../..
 ```
 
-(You can also drag the files into the bucket via the Cloudflare dashboard, or
-use `rclone`.) After a model version bump, re-stage and re-upload.
+(You can also drag the folders into the bucket via the Cloudflare dashboard, or
+use `rclone` for the bulk upload.) After bumping a model version, re-stage and
+re-upload that prefix. **Until the models are in R2, the AI tools 404 in prod.**
 
 > **Local dev:** `npm run stage:models` also lets `npm run dev` serve the models
-> from `public/models/imgly/`. Remove that folder before a *local* `wrangler
-> deploy` so the 211 MB isn't uploaded as static assets — production loads them
-> from R2. (CI never has it: it's gitignored.)
+> from `public/models/**`. Remove that folder before a *local* `wrangler deploy`
+> so ~540 MB isn't uploaded as static assets — production loads them from R2.
+> (CI never has it: `public/models/` is gitignored.)
 
 ## Deploying
 
