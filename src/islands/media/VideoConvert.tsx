@@ -109,34 +109,43 @@ export default function VideoConvert() {
         </p>
       )}
 
-      <div className="flex flex-wrap items-end gap-4">
-        <label className="space-y-1 text-sm">
-          <span className="block font-bold uppercase tracking-wide text-muted-foreground">Format</span>
-          <select value={fmt} onChange={e => setFmt(e.target.value as Fmt)} className="border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm">
+      {/* Uniform label-line + control heights so every field's control aligns on
+          the same baseline, whether or not it has helper text below it. */}
+      <div className="flex flex-wrap items-start gap-4 text-sm">
+        <label className="flex flex-col gap-1">
+          <span className="flex h-4 items-center font-bold uppercase tracking-wide text-muted-foreground">Format</span>
+          <select value={fmt} onChange={e => setFmt(e.target.value as Fmt)} className="h-9 border-2 border-border bg-muted px-2 outline-none focus:shadow-brutal-sm">
             {FORMATS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
+          <span className="h-4" />
         </label>
-        <label className="space-y-1 text-sm">
-          <span className="block font-bold uppercase tracking-wide text-muted-foreground">Quality (CRF {crf})</span>
-          <input type="range" min={18} max={40} value={crf} onChange={e => setCrf(Number(e.target.value))} className="w-40 accent-violet-600" />
-          <span className="block text-[11px] text-muted-foreground">lower = better/larger</span>
+        <label className="flex flex-col gap-1">
+          <span className="flex h-4 items-center font-bold uppercase tracking-wide text-muted-foreground">Quality (CRF {crf})</span>
+          <span className="flex h-9 items-center"><input type="range" min={18} max={40} value={crf} onChange={e => setCrf(Number(e.target.value))} className="w-40 accent-violet-600" /></span>
+          <span className="flex h-4 items-center text-[11px] text-muted-foreground">lower = better/larger</span>
         </label>
-        <label className="space-y-1 text-sm">
-          <span className="block font-bold uppercase tracking-wide text-muted-foreground">Width (px)</span>
-          <input type="number" min={0} max={3840} step={2} value={scale} onChange={e => setScale(Math.max(0, Number(e.target.value)))} placeholder="keep" className="w-24 border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm" />
-          <span className="block text-[11px] text-muted-foreground">0 = original</span>
+        <label className="flex flex-col gap-1">
+          <span className="flex h-4 items-center font-bold uppercase tracking-wide text-muted-foreground">Width (px)</span>
+          <input type="number" min={0} max={3840} step={2} value={scale} onChange={e => setScale(Math.max(0, Number(e.target.value)))} placeholder="keep" className="h-9 w-24 border-2 border-border bg-muted px-2 outline-none focus:shadow-brutal-sm" />
+          <span className="flex h-4 items-center text-[11px] text-muted-foreground">0 = original</span>
         </label>
-        <label className="space-y-1 text-sm">
-          <span className="block font-bold uppercase tracking-wide text-muted-foreground">Start (s)</span>
-          <input type="number" min={0} step={0.5} value={start} onChange={e => setStart(e.target.value)} placeholder="0" className="w-20 border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm" />
+        <label className="flex flex-col gap-1">
+          <span className="flex h-4 items-center font-bold uppercase tracking-wide text-muted-foreground">Start (s)</span>
+          <input type="number" min={0} step={0.5} value={start} onChange={e => setStart(e.target.value)} placeholder="0" className="h-9 w-20 border-2 border-border bg-muted px-2 outline-none focus:shadow-brutal-sm" />
+          <span className="h-4" />
         </label>
-        <label className="space-y-1 text-sm">
-          <span className="block font-bold uppercase tracking-wide text-muted-foreground">Length (s)</span>
-          <input type="number" min={0} step={0.5} value={duration} onChange={e => setDuration(e.target.value)} placeholder="all" className="w-20 border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm" />
+        <label className="flex flex-col gap-1">
+          <span className="flex h-4 items-center font-bold uppercase tracking-wide text-muted-foreground">Length (s)</span>
+          <input type="number" min={0} step={0.5} value={duration} onChange={e => setDuration(e.target.value)} placeholder="all" className="h-9 w-20 border-2 border-border bg-muted px-2 outline-none focus:shadow-brutal-sm" />
+          <span className="h-4" />
         </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={muted} onChange={e => setMuted(e.target.checked)} className="h-4 w-4 accent-violet-600" />
-          <span className="font-bold uppercase tracking-wide text-muted-foreground">Drop audio</span>
+        <label className="flex flex-col gap-1">
+          <span className="flex h-4 items-center font-bold uppercase tracking-wide text-muted-foreground">Audio</span>
+          <span className="flex h-9 items-center gap-2">
+            <input type="checkbox" checked={muted} onChange={e => setMuted(e.target.checked)} className="h-4 w-4 accent-violet-600" />
+            <span className="font-bold uppercase tracking-wide text-muted-foreground">Drop audio</span>
+          </span>
+          <span className="h-4" />
         </label>
       </div>
 
