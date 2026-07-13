@@ -6,7 +6,8 @@ export const categories: Category[] = [
   'Image',
   'Files',
   'Draw',
-  'Media'
+  'Media',
+  'Playground'
 ];
 
 export const categoryColors: Record<Category, string> = {
@@ -15,5 +16,6 @@ export const categoryColors: Record<Category, string> = {
   Image: 'bg-green-500',
   Files: 'bg-yellow-500',
   Draw: 'bg-purple-500',
-  Media: 'bg-pink-500'
+  Media: 'bg-pink-500',
+  Playground: 'bg-orange-500'
 };
