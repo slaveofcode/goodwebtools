@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, Camera } from 'lucide-react';
+import { Download, Camera, Puzzle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download.service';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
+import { detectCompanion, companionCapture } from '@/services/companion';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
@@ -18,6 +19,7 @@ export default function Screenshot() {
   const [resultUrl, setResultUrl] = useState('');
   const [fmt, setFmt] = useState<'png' | 'jpg'>('png');
   const [error, setError] = useState('');
+  const [ext, setExt] = useState(false);
 
   // crop selection (in displayed-image pixels)
   const [sel, setSel] = useState<Rect | null>(null);
@@ -26,7 +28,34 @@ export default function Screenshot() {
 
   useEffect(() => {
     setSupported(typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia);
+    detectCompanion().then(setExt);
   }, []);
+
+  const loadDataUrl = (dataUrl: string, w: number, h: number) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const img = new Image();
+    img.onload = () => {
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+      setShot(canvas);
+      setPreviewUrl(prev => { if (prev) URL.revokeObjectURL(prev); return dataUrl; });
+    };
+    img.src = dataUrl;
+  };
+
+  const captureViaExtension = async () => {
+    setError('');
+    setResult(null);
+    setSel(null);
+    try {
+      const cap = await companionCapture();
+      loadDataUrl(cap.dataUrl, cap.width, cap.height);
+    } catch (e) {
+      const m = e instanceof Error ? e.message : 'capture-failed';
+      setError(m === 'cancelled' ? 'Capture was cancelled.' : `Extension capture failed (${m}).`);
+    }
+  };
   useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     if (resultUrl) URL.revokeObjectURL(resultUrl);
@@ -152,7 +181,25 @@ export default function Screenshot() {
               <Camera className="h-4 w-4" />
               {capturing ? (countdown > 0 ? `Capturing in ${countdown}…` : 'Capturing…') : 'Capture screen'}
             </Button>
+            {ext && (
+              <Button variant="secondary" onClick={captureViaExtension} disabled={capturing}>
+                <Puzzle className="h-4 w-4" />
+                Enhanced capture
+              </Button>
+            )}
           </div>
+          {ext ? (
+            <p className="text-xs text-muted-foreground">
+              <span className="font-bold text-foreground">Companion extension detected.</span> Enhanced capture
+              skips the countdown and can be triggered by a global hotkey even while another window is focused.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Want a global hotkey and cross-window capture? Install the optional{' '}
+              <span className="font-bold text-foreground">GoodWebTools Companion</span> extension — the tool
+              works fully without it.
+            </p>
+          )}
           {capturing && countdown > 0 && (
             <div className="flex items-center justify-center border-2 border-border bg-background py-10">
               <span className="font-mono text-6xl font-black">{countdown}</span>

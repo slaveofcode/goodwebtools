@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GoodWebTools — Crop capture</title>
+    <link rel="stylesheet" href="select.css" />
+  </head>
+  <body>
+    <header>
+      <strong>GoodWebTools</strong>
+      <span id="hint">Drag on the image to select a region, or export the whole capture.</span>
+    </header>
+
+    <div id="empty" class="empty" hidden>
+      No capture found. Trigger the hotkey again to capture your screen.
+    </div>
+
+    <div id="stage" class="stage" hidden>
+      <div id="frame" class="frame">
+        <img id="shot" alt="Screen capture" draggable="false" />
+        <div id="sel" class="sel" hidden></div>
+      </div>
+    </div>
+
+    <footer id="controls" hidden>
+      <label>
+        Format
+        <select id="fmt">
+          <option value="png">PNG</option>
+          <option value="jpg">JPG</option>
+        </select>
+      </label>
+      <button id="crop" disabled>Download crop</button>
+      <button id="full">Download full</button>
+      <button id="copy">Copy to clipboard</button>
+      <span id="status" class="status"></span>
+    </footer>
+
+    <script src="select.js"></script>
+  </body>
+</html>

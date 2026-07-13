@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        width: 300px;
+        margin: 0;
+        padding: 16px;
+        font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+        background: #faf7f0;
+        color: #0a0a0a;
+      }
+      h1 { font-size: 16px; margin: 0 0 4px; }
+      p { font-size: 13px; color: #555; margin: 0 0 12px; line-height: 1.5; }
+      button {
+        width: 100%;
+        border: 2px solid #0a0a0a;
+        background: #7c3aed;
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        padding: 10px;
+        cursor: pointer;
+        box-shadow: 3px 3px 0 #0a0a0a;
+      }
+      button:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #0a0a0a; }
+      .kbd {
+        display: inline-block;
+        border: 1px solid #0a0a0a;
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #fff;
+      }
+      .row { margin-top: 12px; font-size: 12px; color: #555; }
+      a { color: #7c3aed; }
+    </style>
+  </head>
+  <body>
+    <h1>GoodWebTools Companion</h1>
+    <p>Capture your screen from anywhere, then crop and save — entirely on your device. Nothing is uploaded.</p>
+    <button id="capture">Capture screen now</button>
+    <div class="row">
+      Global hotkey: <span id="hotkey" class="kbd">—</span><br />
+      Change it at <a href="#" id="shortcuts">chrome://extensions/shortcuts</a>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

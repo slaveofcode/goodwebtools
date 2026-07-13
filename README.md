@@ -164,6 +164,14 @@ The four ffmpeg tools share one **ffmpeg.wasm** engine (single-thread core, so n
 cross-origin-isolation headers are needed), self-hosted from R2. The video/audio
 never leaves your device.
 
+✅ **Phase 8 — Companion extension (optional):**
+- [`extension/`](./extension) — a thin **MV3 capability-shim** that adds the few
+  things a web page can't do: a **global hotkey** screenshot (fires while another
+  app is focused), **cross-window desktop capture**, and a region-select overlay.
+  It bridges results back to the Screenshot tool via `window.postMessage`, so the
+  site stays fully usable without it (progressive enhancement). Least-privilege
+  permissions, nothing uploaded. See [extension/README.md](./extension/README.md).
+
 ## Testing
 
 Unit tests cover the pure tool logic (parsers, generators, hash, image math,
