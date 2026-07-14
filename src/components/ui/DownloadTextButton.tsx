@@ -1,5 +1,5 @@
 import { Download } from 'lucide-react';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { Button } from './Button';
 
 interface DownloadTextButtonProps {

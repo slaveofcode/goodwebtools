@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Download, Circle, Square } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { captureService } from '@/services/capture';
 import type { RecordingHandle } from '@/services/capture';

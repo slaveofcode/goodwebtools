@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import MonacoEditor from './MonacoEditor';
 import { extensionToLanguage } from '@/tools/playground/language.lib';
 import { loadFiles, saveFiles, type ScratchFile } from '@/tools/playground/scratchpad.store';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 
 let counter = 0;
 const newId = () => `f${Date.now()}-${counter++}`;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Download, Camera, Puzzle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
 import { detectCompanion, companionCapture } from '@/services/companion';
 import { captureService } from '@/services/capture';

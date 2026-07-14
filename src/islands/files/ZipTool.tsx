@@ -3,7 +3,7 @@ import { Download, X, FileArchive } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { createZip, extractZip, type ZipEntry } from '@/tools/files/zip.lib';
 

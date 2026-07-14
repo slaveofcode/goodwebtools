@@ -18,7 +18,7 @@ import {
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { usePasteImage } from '@/hooks/usePasteImage';
 
 type Tool = 'select' | 'rect' | 'ellipse' | 'line' | 'arrow' | 'pencil' | 'highlighter' | 'text' | 'blur';

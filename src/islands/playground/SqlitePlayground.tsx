@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import MonacoEditor from './MonacoEditor';
 import { toCsv, toJson } from '@/tools/playground/result.lib';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import type { Remote } from 'comlink';
 import type * as Monaco from 'monaco-editor';
 import type { QueryResult, SchemaObject, SqliteApi } from '@/tools/playground/sqlite.worker';

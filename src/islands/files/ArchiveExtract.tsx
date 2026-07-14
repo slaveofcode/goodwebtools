@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Download } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Alert } from '@/components/ui/Alert';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 
 interface Entry {

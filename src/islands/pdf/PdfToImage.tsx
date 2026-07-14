@@ -4,7 +4,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Alert } from '@/components/ui/Alert';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { openPdfRenderer, type PdfRenderer } from '@/tools/pdf/render.lib';
 
 const WINDOW = 5;
