@@ -11,16 +11,10 @@ import type {
 
 export class TauriCaptureService implements CaptureService {
   async captureScreen(options?: CaptureOptions): Promise<Blob> {
-    try {
-      const imageBytes: number[] = await invoke('capture_screen', { options });
-      return new Blob([new Uint8Array(imageBytes)], {
-        type: `image/${options?.format || 'png'}`,
-      });
-    } catch (error) {
-      // Fallback to browser API if native fails or not implemented yet
-      console.warn('Native capture failed, falling back to browser API', error);
-      return this.browserFallback(options);
-    }
+    const imageBytes: number[] = await invoke('capture_screen', { options });
+    return new Blob([new Uint8Array(imageBytes)], {
+      type: `image/${options?.format || 'png'}`,
+    });
   }
 
   async captureWindow(windowId?: string): Promise<Blob> {
@@ -86,45 +80,4 @@ export class TauriCaptureService implements CaptureService {
     };
   }
 
-  private async browserFallback(options?: CaptureOptions): Promise<Blob> {
-    // Fallback to browser MediaDevices API
-    const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: { mediaSource: 'screen' as any },
-      audio: options?.includeAudio || false,
-    });
-
-    const video = document.createElement('video');
-    video.srcObject = stream;
-    video.muted = true;
-
-    await new Promise<void>((resolve) => {
-      video.onloadedmetadata = () => {
-        video.play().then(() => resolve());
-      };
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) {
-      stream.getTracks().forEach((t) => t.stop());
-      throw new Error('Could not get canvas context');
-    }
-
-    ctx.drawImage(video, 0, 0);
-    stream.getTracks().forEach((t) => t.stop());
-
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Could not create blob'));
-        },
-        `image/${options?.format || 'png'}`,
-        options?.quality
-      );
-    });
-  }
 }
