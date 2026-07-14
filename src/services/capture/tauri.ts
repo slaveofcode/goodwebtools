@@ -1,5 +1,5 @@
 // src/services/capture/tauri.ts
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import type {
   CaptureService,
   CaptureOptions,

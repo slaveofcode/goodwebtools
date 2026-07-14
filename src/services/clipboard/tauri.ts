@@ -1,6 +1,6 @@
 // src/services/clipboard/tauri.ts
 import { writeText, readText } from '@tauri-apps/api/clipboard';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import type { ClipboardService, ClipboardServiceCapabilities } from './types';
 
 export class TauriClipboardService implements ClipboardService {
