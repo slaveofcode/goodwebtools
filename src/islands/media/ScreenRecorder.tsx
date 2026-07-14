@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download.service';
 import { formatBytes } from '@/tools/image/canvas.lib';
+import { captureService } from '@/services/capture';
+import type { RecordingHandle } from '@/services/capture';
 
 function pickMime(): { mime: string; ext: string } {
   const candidates = [
@@ -27,76 +29,67 @@ export default function ScreenRecorder() {
   const [resultUrl, setResultUrl] = useState('');
   const [error, setError] = useState('');
 
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const streamsRef = useRef<MediaStream[]>([]);
+  const handleRef = useRef<RecordingHandle | null>(null);
   const extRef = useRef('webm');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    setSupported(typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia && typeof MediaRecorder !== 'undefined');
+    // Check if recording is supported via service layer
+    const caps = captureService.getCapabilities();
+    setSupported(caps.systemCapture || (typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia && typeof MediaRecorder !== 'undefined'));
   }, []);
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
-
-  const stopTracks = () => {
-    streamsRef.current.forEach(s => s.getTracks().forEach(t => t.stop()));
-    streamsRef.current = [];
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-  };
 
   const start = async () => {
     setError('');
     setResult(null);
     try {
-      const display = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: 30 },
-        audio: true, // system/tab audio when the browser/OS allows it
-      });
-      const tracks = [...display.getVideoTracks(), ...display.getAudioTracks()];
-      streamsRef.current = [display];
-
-      if (withMic) {
-        try {
-          const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-          streamsRef.current.push(mic);
-          tracks.push(...mic.getAudioTracks());
-        } catch {
-          // mic denied — carry on with screen audio only
-        }
-      }
-
-      const combined = new MediaStream(tracks);
-      const { mime, ext } = pickMime();
+      // Use captureService to start recording
+      const { ext } = pickMime();
       extRef.current = ext;
-      const recorder = new MediaRecorder(combined, mime ? { mimeType: mime } : undefined);
-      chunksRef.current = [];
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      recorder.onstop = () => {
-        stopTracks();
-        const blob = new Blob(chunksRef.current, { type: mime || 'video/webm' });
-        setResult(blob);
-        setResultUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(blob); });
-        setRecording(false);
-      };
-      // If the user stops sharing via the browser's own bar, end the recording.
-      display.getVideoTracks()[0].addEventListener('ended', () => {
-        if (recorder.state !== 'inactive') recorder.stop();
+
+      const handle = await captureService.startRecording({
+        format: ext === 'mp4' ? 'mp4' : 'webm',
+        includeAudio: withMic,
+        fps: 30,
       });
 
-      recorder.start();
-      recorderRef.current = recorder;
+      handleRef.current = handle;
       setRecording(true);
       setElapsed(0);
       timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
     } catch (e) {
-      stopTracks();
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       if (e instanceof DOMException && e.name === 'NotAllowedError') setError('Screen sharing was cancelled.');
       else setError(e instanceof Error ? e.message : 'Could not start screen recording.');
     }
   };
 
-  const stop = () => {
-    if (recorderRef.current && recorderRef.current.state !== 'inactive') recorderRef.current.stop();
+  const stop = async () => {
+    if (!handleRef.current) return;
+
+    try {
+      const blob = await captureService.stopRecording(handleRef.current);
+
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      setResult(blob);
+      setResultUrl(prev => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(blob);
+      });
+      setRecording(false);
+      handleRef.current = null;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to stop recording.');
+      setRecording(false);
+    }
   };
 
   const download = () => {
