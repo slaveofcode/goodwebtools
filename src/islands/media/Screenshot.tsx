@@ -5,6 +5,7 @@ import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download.service';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
 import { detectCompanion, companionCapture } from '@/services/companion';
+import { captureService } from '@/services/capture';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
@@ -27,7 +28,9 @@ export default function Screenshot() {
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
-    setSupported(typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia);
+    // Check if capture is supported via service layer
+    const caps = captureService.getCapabilities();
+    setSupported(caps.systemCapture || (typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia));
     detectCompanion().then(setExt);
   }, []);
 
@@ -65,15 +68,7 @@ export default function Screenshot() {
     setError('');
     setResult(null);
     setSel(null);
-    let stream: MediaStream | null = null;
     try {
-      stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: false });
-      const track = stream.getVideoTracks()[0];
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.muted = true;
-      await video.play();
-
       setCapturing(true);
       // countdown so the user can arrange the target window/tab
       for (let i = delay; i > 0; i--) {
@@ -82,21 +77,30 @@ export default function Screenshot() {
       }
       setCountdown(0);
 
-      const settings = track.getSettings();
-      const w = settings.width || video.videoWidth;
-      const h = settings.height || video.videoHeight;
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(video, 0, 0, w, h);
+      // Use captureService instead of direct getDisplayMedia
+      const blob = await captureService.captureScreen({ format: 'png' });
 
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
+      // Convert blob to image to get dimensions and draw to canvas
+      const img = new Image();
+      const dataUrl = URL.createObjectURL(blob);
+
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Failed to load captured image'));
+        img.src = dataUrl;
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+
+      URL.revokeObjectURL(dataUrl);
+
       setShot(canvas);
       setPreviewUrl(prev => { if (prev) URL.revokeObjectURL(prev); return canvas.toDataURL('image/png'); });
     } catch (e) {
-      stream?.getTracks().forEach(t => t.stop());
       if (e instanceof DOMException && e.name === 'NotAllowedError') setError('Screen capture was cancelled.');
       else setError(e instanceof Error ? e.message : 'Could not capture the screen.');
     } finally {
