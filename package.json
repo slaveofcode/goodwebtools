@@ -21,7 +21,11 @@
     "deploy": "npm run build && wrangler deploy",
     "stage:models": "node scripts/stage-models.mjs",
     "deploy:staging": "npm run build && wrangler deploy --env staging",
-    "postbuild": "node scripts/prune-dist.mjs"
+    "postbuild": "node scripts/prune-dist.mjs",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:bundle": "npm run build && tauri build"
   },
   "repository": {
     "type": "git",
@@ -79,6 +83,7 @@
   },
   "devDependencies": {
     "@imgly/background-removal-data": "^1.4.5",
+    "@tauri-apps/cli": "^2.11.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
     "@types/qrcode": "^1.5.6",
