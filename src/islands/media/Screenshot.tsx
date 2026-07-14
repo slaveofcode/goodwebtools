@@ -6,13 +6,16 @@ import { downloadService } from '@/services/download';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
 import { detectCompanion, companionCapture } from '@/services/companion';
 import { captureService } from '@/services/capture';
+import { isTauri } from '@/services/platform';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
 export default function Screenshot() {
   // Start as supported - will be checked in useEffect
+  // In Tauri, always supported (uses native APIs)
+  // In browser, check for getDisplayMedia
   const [supported, setSupported] = useState(
-    typeof window !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia
+    typeof window !== 'undefined' && (isTauri() || !!navigator.mediaDevices?.getDisplayMedia)
   );
   const [delay, setDelay] = useState(3);
   const [countdown, setCountdown] = useState(0);
@@ -34,14 +37,19 @@ export default function Screenshot() {
     // Check if capture is supported (browser or Tauri)
     if (typeof window === 'undefined') return;
 
+    const inTauriApp = isTauri();
     const hasGetDisplayMedia = !!navigator.mediaDevices?.getDisplayMedia;
-    console.log('[Screenshot] Browser support check:', {
+
+    console.log('[Screenshot] Capability check:', {
+      isTauri: inTauriApp,
       hasNavigator: typeof navigator !== 'undefined',
       hasMediaDevices: !!navigator.mediaDevices,
       hasGetDisplayMedia,
     });
 
-    setSupported(hasGetDisplayMedia);
+    // In Tauri, we use native APIs (not browser APIs)
+    // In browser, we need getDisplayMedia support
+    setSupported(inTauriApp || hasGetDisplayMedia);
     detectCompanion().then(setExt);
   }, []);
 

@@ -6,6 +6,7 @@ import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { captureService } from '@/services/capture';
 import type { RecordingHandle } from '@/services/capture';
+import { isTauri } from '@/services/platform';
 
 function pickMime(): { mime: string; ext: string } {
   const candidates = [
@@ -35,8 +36,11 @@ export default function ScreenRecorder() {
 
   useEffect(() => {
     // Check if recording is supported (browser or Tauri)
+    const inTauriApp = isTauri();
     const browserSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia && typeof MediaRecorder !== 'undefined';
-    setSupported(browserSupported);
+
+    // In Tauri, we use native APIs (not browser APIs)
+    setSupported(inTauriApp || browserSupported);
   }, []);
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
