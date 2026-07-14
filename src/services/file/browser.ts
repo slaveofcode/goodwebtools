@@ -9,7 +9,7 @@ import type {
 export class BrowserFileService implements FileService {
   async openFile(options?: FilePickerOptions): Promise<File[]> {
     // Check if File System Access API is available
-    if ('showOpenFilePicker' in window) {
+    if (typeof (window as any).showOpenFilePicker === 'function') {
       return this.openFileModern(options);
     } else {
       return this.openFileLegacy(options);
@@ -75,7 +75,7 @@ export class BrowserFileService implements FileService {
     const blob = typeof data === 'string' ? new Blob([data], { type: 'text/plain' }) : data;
 
     // Check if File System Access API is available
-    if ('showSaveFilePicker' in window) {
+    if (typeof (window as any).showSaveFilePicker === 'function') {
       return this.saveFileModern(blob, options);
     } else {
       return this.saveFileLegacy(blob, options);
@@ -155,11 +155,11 @@ export class BrowserFileService implements FileService {
   }
 
   getCapabilities(): FileServiceCapabilities {
-    const hasModernAPI = 'showOpenFilePicker' in window;
+    const hasModernAPI = typeof (window as any).showOpenFilePicker === 'function';
 
     return {
       nativeFilePicker: hasModernAPI,
-      directoryPicker: hasModernAPI && 'showDirectoryPicker' in window,
+      directoryPicker: hasModernAPI && typeof (window as any).showDirectoryPicker === 'function',
       multiplePicker: true,
       pathAccess: false, // Browser can't access full file paths
     };
