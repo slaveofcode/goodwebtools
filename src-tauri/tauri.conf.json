@@ -17,9 +17,12 @@
         "minWidth": 800,
         "minHeight": 600,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "url": "http://localhost:4321",
+        "label": "main"
       }
     ],
+    "withGlobalTauri": true,
     "security": {
       "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'"
     }
