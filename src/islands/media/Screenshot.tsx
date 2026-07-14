@@ -10,7 +10,10 @@ import { captureService } from '@/services/capture';
 type Rect = { x: number; y: number; w: number; h: number };
 
 export default function Screenshot() {
-  const [supported, setSupported] = useState(true);
+  // Start as supported - will be checked in useEffect
+  const [supported, setSupported] = useState(
+    typeof window !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia
+  );
   const [delay, setDelay] = useState(3);
   const [countdown, setCountdown] = useState(0);
   const [capturing, setCapturing] = useState(false);
@@ -29,8 +32,16 @@ export default function Screenshot() {
 
   useEffect(() => {
     // Check if capture is supported (browser or Tauri)
-    const browserSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia;
-    setSupported(browserSupported);
+    if (typeof window === 'undefined') return;
+
+    const hasGetDisplayMedia = !!navigator.mediaDevices?.getDisplayMedia;
+    console.log('[Screenshot] Browser support check:', {
+      hasNavigator: typeof navigator !== 'undefined',
+      hasMediaDevices: !!navigator.mediaDevices,
+      hasGetDisplayMedia,
+    });
+
+    setSupported(hasGetDisplayMedia);
     detectCompanion().then(setExt);
   }, []);
 
