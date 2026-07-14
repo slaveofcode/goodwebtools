@@ -28,9 +28,9 @@ export default function Screenshot() {
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
-    // Check if capture is supported via service layer
-    const caps = captureService.getCapabilities();
-    setSupported(caps.systemCapture || (typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia));
+    // Check if capture is supported (browser or Tauri)
+    const browserSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia;
+    setSupported(browserSupported);
     detectCompanion().then(setExt);
   }, []);
 

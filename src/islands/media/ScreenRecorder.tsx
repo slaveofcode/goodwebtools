@@ -34,9 +34,9 @@ export default function ScreenRecorder() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    // Check if recording is supported via service layer
-    const caps = captureService.getCapabilities();
-    setSupported(caps.systemCapture || (typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia && typeof MediaRecorder !== 'undefined'));
+    // Check if recording is supported (browser or Tauri)
+    const browserSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia && typeof MediaRecorder !== 'undefined';
+    setSupported(browserSupported);
   }, []);
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
