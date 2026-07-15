@@ -106,8 +106,8 @@ pub fn show_countdown(app: &AppHandle, display_id: Option<i32>) -> Result<(), St
 
         // Get display bounds and center countdown on that display
         let bounds = display.bounds();
-        let x = bounds.origin.x + (bounds.size.width / 2.0) - 400.0; // Center 800px wide window
-        let y = bounds.origin.y + (bounds.size.height / 2.0) - 300.0; // Center 600px tall window
+        let x = bounds.origin.x + (bounds.size.width / 2.0) - 200.0; // Center 400px wide window
+        let y = bounds.origin.y + (bounds.size.height / 2.0) - 200.0; // Center 400px tall window
 
         println!("[Countdown] Display ID: {:?}, Position: ({}, {})", target_display_id, x, y);
 
@@ -120,7 +120,7 @@ pub fn show_countdown(app: &AppHandle, display_id: Option<i32>) -> Result<(), St
         )
         .title("Recording Countdown")
         .position(x, y)
-        .inner_size(800.0, 600.0)
+        .inner_size(400.0, 400.0)
         .decorations(false)
         .always_on_top(true)
         .skip_taskbar(true)
@@ -141,7 +141,7 @@ pub fn show_countdown(app: &AppHandle, display_id: Option<i32>) -> Result<(), St
             WebviewUrl::App("/countdown".into())
         )
         .title("Recording Countdown")
-        .inner_size(800.0, 600.0)
+        .inner_size(400.0, 400.0)
         .center()
         .decorations(false)
         .always_on_top(true)
