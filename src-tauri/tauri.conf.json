@@ -47,6 +47,16 @@
             "core:event:allow-emit",
             "core:event:allow-listen"
           ]
+        },
+        {
+          "identifier": "countdown-capability",
+          "description": "Capability for the countdown window",
+          "windows": ["countdown"],
+          "permissions": [
+            "core:default",
+            "core:event:allow-emit",
+            "core:event:allow-listen"
+          ]
         }
       ]
     }
