@@ -109,8 +109,22 @@ export default function ScreenRecorder() {
       setRecording(false);
       handleRef.current = null;
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to stop recording.');
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      const message = e instanceof Error ? e.message : 'Failed to stop recording.';
+
+      // Phase 1: Show captured frames count as info, not error
+      if (message.includes('Captured') && message.includes('frames')) {
+        setError(`✅ ${message}`);
+      } else {
+        setError(message);
+      }
+
       setRecording(false);
+      handleRef.current = null;
     }
   };
 
