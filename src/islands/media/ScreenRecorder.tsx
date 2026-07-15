@@ -173,7 +173,25 @@ export default function ScreenRecorder() {
     if (!inTauriApp) return;
     try {
       const { invoke } = await import('@tauri-apps/api/core');
+      const { emit } = await import('@tauri-apps/api/event');
+
+      // Capture screenshot of the display first
+      const screenshot = await invoke('capture_screen', {
+        options: {
+          format: 'png',
+          displayId: selectedDisplay
+        }
+      }) as number[];
+
+      // Convert to base64 data URL
+      const base64 = btoa(String.fromCharCode(...screenshot));
+      const dataUrl = `data:image/png;base64,${base64}`;
+
+      // Show overlay
       await invoke('show_region_selector', { options: { displayId: selectedDisplay } });
+
+      // Send screenshot to overlay
+      await emit('overlay-screenshot', { dataUrl });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to show region selector');
     }

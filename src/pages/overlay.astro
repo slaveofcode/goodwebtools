@@ -30,7 +30,10 @@
         position: fixed;
         top: 0;
         left: 0;
-        background: rgba(0, 0, 0, 0.02);
+        background: #f0f0f0;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
       }
 
       #selection {
@@ -94,10 +97,23 @@
 
     <script>
       import { invoke } from '@tauri-apps/api/core';
+      import { listen } from '@tauri-apps/api/event';
 
       const overlay = document.getElementById('overlay')!;
       const selection = document.getElementById('selection')!;
       const dimensions = document.getElementById('dimensions')!;
+
+      // Listen for screenshot data from the main window
+      listen('overlay-screenshot', (event: any) => {
+        console.log('[Overlay] Received screenshot');
+        const { dataUrl } = event.payload;
+
+        // Set the screenshot as the overlay background
+        overlay.style.backgroundImage = `url("${dataUrl}")`;
+        overlay.style.backgroundSize = 'cover';
+        overlay.style.backgroundPosition = 'center';
+        overlay.style.backgroundRepeat = 'no-repeat';
+      });
 
       let isSelecting = false;
       let startX = 0;
