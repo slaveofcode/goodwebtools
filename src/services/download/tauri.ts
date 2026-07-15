@@ -1,6 +1,6 @@
 // src/services/download/tauri.ts
 import { save } from '@tauri-apps/plugin-dialog';
-import { writeBinaryFile } from '@tauri-apps/plugin-fs';
+import { writeFile } from '@tauri-apps/plugin-fs';
 import type { DownloadService, BlobFile, DownloadServiceCapabilities } from './types';
 
 export class TauriDownloadService implements DownloadService {
@@ -14,7 +14,7 @@ export class TauriDownloadService implements DownloadService {
     }
 
     const buffer = await blob.arrayBuffer();
-    await writeBinaryFile(path, new Uint8Array(buffer));
+    await writeFile(path, new Uint8Array(buffer));
   }
 
   async downloadZip(files: BlobFile[], zipName: string): Promise<void> {
