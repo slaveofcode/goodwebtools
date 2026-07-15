@@ -16,28 +16,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f0f0f0;
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
+      background: rgba(0, 0, 0, 0.03);
       overflow: hidden;
-    }
-
-    /* Ensure screenshot fills and centers */
-    body {
-      position: relative;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-size: cover;
-      background-position: center center;
-      z-index: -1;
     }
     #countdown {
       font-size: 240px;
@@ -56,29 +36,10 @@
 <body>
   <div id="countdown">5</div>
 
-  <script type="module">
+  <script>
     // Countdown from 5 to 1, then close
     let count = 5;
     const countdownEl = document.getElementById('countdown');
-
-    // Listen for screenshot background (async, don't block countdown)
-    (async () => {
-      try {
-        const { listen } = await import('@tauri-apps/api/event');
-        console.log('[Countdown] Setting up screenshot listener');
-
-        await listen('countdown-screenshot', (event) => {
-          console.log('[Countdown] Received screenshot event');
-          const { dataUrl } = event.payload;
-          document.body.style.backgroundImage = `url("${dataUrl}")`;
-          console.log('[Countdown] Background image set');
-        });
-
-        console.log('[Countdown] Listener registered');
-      } catch (err) {
-        console.error('[Countdown] Event listener failed:', err);
-      }
-    })();
 
     const interval = setInterval(() => {
       count--;

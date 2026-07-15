@@ -112,7 +112,6 @@ pub fn show_countdown(app: &AppHandle, display_id: Option<i32>) -> Result<(), St
         println!("[Countdown] Display ID: {:?}, Position: ({}, {})", target_display_id, x, y);
 
         // Create countdown window on specific display
-        // Note: Transparency styling via CSS only (Cocoa APIs require main thread)
         let window = WebviewWindowBuilder::new(
             app,
             "countdown",
