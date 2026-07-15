@@ -30,16 +30,16 @@
         position: fixed;
         top: 0;
         left: 0;
-        background: rgba(0, 0, 0, 0.3);
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
+        background: rgba(0, 0, 0, 0.2);
       }
 
       #selection {
         position: absolute;
-        border: 2px solid #3b82f6;
-        background: rgba(59, 130, 246, 0.1);
+        border: 3px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.15);
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.8),
+          0 0 20px rgba(59, 130, 246, 0.6);
         display: none;
         pointer-events: none;
       }
@@ -83,27 +83,10 @@
 
     <script>
       import { invoke } from '@tauri-apps/api/core';
-      import { listen } from '@tauri-apps/api/event';
 
       const overlay = document.getElementById('overlay')!;
       const selection = document.getElementById('selection')!;
       const dimensions = document.getElementById('dimensions')!;
-
-      // Listen for screenshot data from the main window
-      listen('overlay-screenshot', (event: any) => {
-        console.log('[Overlay] Received screenshot event:', event);
-        const { dataUrl } = event.payload;
-        console.log('[Overlay] Data URL length:', dataUrl?.length);
-
-        // Set the screenshot as the overlay background
-        overlay.style.background = `url("${dataUrl}")`;
-        overlay.style.backgroundSize = 'cover';
-        overlay.style.backgroundPosition = 'center';
-
-        console.log('[Overlay] Background set');
-      }).then(() => {
-        console.log('[Overlay] Listening for screenshot events');
-      });
 
       let isSelecting = false;
       let startX = 0;
