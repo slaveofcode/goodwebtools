@@ -91,11 +91,18 @@
 
       // Listen for screenshot data from the main window
       listen('overlay-screenshot', (event: any) => {
+        console.log('[Overlay] Received screenshot event:', event);
         const { dataUrl } = event.payload;
+        console.log('[Overlay] Data URL length:', dataUrl?.length);
+
         // Set the screenshot as the overlay background
-        overlay.style.background = `url(${dataUrl})`;
+        overlay.style.background = `url("${dataUrl}")`;
         overlay.style.backgroundSize = 'cover';
         overlay.style.backgroundPosition = 'center';
+
+        console.log('[Overlay] Background set');
+      }).then(() => {
+        console.log('[Overlay] Listening for screenshot events');
       });
 
       let isSelecting = false;

@@ -125,7 +125,9 @@ export default function Screenshot() {
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // STEP 3: Now emit the screenshot to the overlay window
+      console.log('[Screenshot] Emitting screenshot, data URL length:', screenshotDataUrl.length);
       await emit('overlay-screenshot', { dataUrl: screenshotDataUrl });
+      console.log('[Screenshot] Screenshot emitted');
 
       // Wait for region selection
       const region = await regionPromise;
