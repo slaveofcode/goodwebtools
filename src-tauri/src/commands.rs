@@ -47,7 +47,6 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
     #[cfg(target_os = "macos")]
     {
         use core_graphics::display::{CGDisplay, CGMainDisplayID};
-        use image::{ImageBuffer, Rgba, RgbaImage};
 
         let display = if let Some(id) = display_id {
             CGDisplay::new(id as u32)
@@ -63,7 +62,9 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
         let bytes_per_row = image.bytes_per_row();
         let data = image.data();
 
-        let mut rgba_buffer: RgbaImage = ImageBuffer::new(width, height);
+        // Convert to RGB (JPEG doesn't support alpha channel)
+        use image::{ImageBuffer, Rgb, RgbImage};
+        let mut rgb_buffer: RgbImage = ImageBuffer::new(width, height);
 
         for y in 0..height {
             for x in 0..width {
@@ -72,8 +73,8 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
                     let b = data[offset];
                     let g = data[offset + 1];
                     let r = data[offset + 2];
-                    let a = data[offset + 3];
-                    rgba_buffer.put_pixel(x, y, Rgba([r, g, b, a]));
+                    // Skip alpha channel for JPEG
+                    rgb_buffer.put_pixel(x, y, Rgb([r, g, b]));
                 }
             }
         }
@@ -82,10 +83,10 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
         let mut output = Vec::new();
         let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 85);
         encoder.encode(
-            &rgba_buffer,
+            &rgb_buffer,
             width,
             height,
-            image::ColorType::Rgba8.into(),
+            image::ColorType::Rgb8.into(),
         ).map_err(|e: image::ImageError| e.to_string())?;
 
         return Ok(output);
