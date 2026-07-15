@@ -91,6 +91,67 @@ export default function Screenshot() {
       setError(m === 'cancelled' ? 'Capture was cancelled.' : `Extension capture failed (${m}).`);
     }
   };
+
+  const captureRegion = async () => {
+    setError('');
+    setResult(null);
+    setSel(null);
+    try {
+      setCapturing(true);
+
+      // Show the region selector overlay
+      const region = await captureService.showRegionSelector();
+
+      if (!region) {
+        // User cancelled
+        setCapturing(false);
+        return;
+      }
+
+      // Capture the selected region
+      const blob = await captureService.captureScreen({
+        format: 'png',
+        displayId: selectedDisplay,
+      });
+
+      // Convert blob to image
+      const img = new Image();
+      const dataUrl = URL.createObjectURL(blob);
+
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Failed to load captured image'));
+        img.src = dataUrl;
+      });
+
+      // Create canvas and draw only the selected region
+      const canvas = document.createElement('canvas');
+      canvas.width = region.width;
+      canvas.height = region.height;
+      const ctx = canvas.getContext('2d')!;
+
+      // Draw the selected region from the full screenshot
+      ctx.drawImage(
+        img,
+        region.x, region.y, region.width, region.height, // source
+        0, 0, region.width, region.height // destination
+      );
+
+      URL.revokeObjectURL(dataUrl);
+
+      setShot(canvas);
+      setPreviewUrl(prev => {
+        if (prev) URL.revokeObjectURL(prev);
+        return canvas.toDataURL('image/png');
+      });
+    } catch (e) {
+      console.error('[Screenshot] Region capture failed:', e);
+      setError(e instanceof Error ? e.message : 'Could not capture the selected region.');
+    } finally {
+      setCapturing(false);
+      setCountdown(0);
+    }
+  };
   useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     if (resultUrl) URL.revokeObjectURL(resultUrl);
@@ -237,6 +298,12 @@ export default function Screenshot() {
               <Camera className="h-4 w-4" />
               {capturing ? (countdown > 0 ? `Capturing in ${countdown}…` : 'Capturing…') : 'Capture screen'}
             </Button>
+            {isTauri() && (
+              <Button variant="secondary" onClick={captureRegion} disabled={capturing}>
+                <Camera className="h-4 w-4" />
+                Select region
+              </Button>
+            )}
             {ext && (
               <Button variant="secondary" onClick={captureViaExtension} disabled={capturing}>
                 <Puzzle className="h-4 w-4" />
