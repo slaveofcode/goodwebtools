@@ -134,7 +134,7 @@ export class BrowserCaptureService implements CaptureService {
     });
   }
 
-  async showRegionSelector(): Promise<Rectangle | null> {
+  async showRegionSelector(_displayId?: number): Promise<Rectangle | null> {
     // Not possible in browser
     return null;
   }

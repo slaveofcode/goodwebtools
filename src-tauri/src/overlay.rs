@@ -10,22 +10,61 @@ pub struct Rectangle {
     pub height: u32,
 }
 
-/// Show transparent fullscreen overlay for region selection
-pub fn show_region_selector(app: &AppHandle) -> Result<(), String> {
-    // Create a fullscreen window for region selection
-    let window = WebviewWindowBuilder::new(
-        app,
-        "region-selector",
-        WebviewUrl::App("/overlay".into())
-    )
-    .title("Select Region")
-    .fullscreen(true)
-    .decorations(false)
-    .always_on_top(true)
-    .skip_taskbar(true)
-    .visible(false) // Start hidden, show after load
-    .build()
-    .map_err(|e: tauri::Error| e.to_string())?;
+/// Show transparent fullscreen overlay for region selection on specified display
+pub fn show_region_selector(app: &AppHandle, display_id: Option<u32>) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        use core_graphics::display::{CGDisplay, CGMainDisplayID};
+
+        // Get the target display
+        let target_display_id = display_id.unwrap_or_else(|| unsafe { CGMainDisplayID() });
+        let display = CGDisplay::new(target_display_id);
+
+        // Get display bounds
+        let bounds = display.bounds();
+        let x = bounds.origin.x as i32;
+        let y = bounds.origin.y as i32;
+        let width = bounds.size.width as f64;
+        let height = bounds.size.height as f64;
+
+        // Create window positioned on the specific display
+        let window = WebviewWindowBuilder::new(
+            app,
+            "region-selector",
+            WebviewUrl::App("/overlay".into())
+        )
+        .title("Select Region")
+        .position(x as f64, y as f64)
+        .inner_size(width, height)
+        .decorations(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .visible(false)
+        .build()
+        .map_err(|e: tauri::Error| e.to_string())?;
+
+        // Show window after it's ready
+        window.show().map_err(|e: tauri::Error| e.to_string())?;
+
+        return Ok(());
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        // Fallback for non-macOS: just use fullscreen
+        let window = WebviewWindowBuilder::new(
+            app,
+            "region-selector",
+            WebviewUrl::App("/overlay".into())
+        )
+        .title("Select Region")
+        .fullscreen(true)
+        .decorations(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .visible(false)
+        .build()
+        .map_err(|e: tauri::Error| e.to_string())?;
 
     // Show window after it's ready
     window.show().map_err(|e: tauri::Error| e.to_string())?;

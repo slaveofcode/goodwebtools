@@ -55,12 +55,12 @@ export class TauriCaptureService implements CaptureService {
     throw new Error('Screen recording not yet implemented in desktop app');
   }
 
-  async showRegionSelector(): Promise<Rectangle | null> {
+  async showRegionSelector(displayId?: number): Promise<Rectangle | null> {
     try {
       const { listen } = await import('@tauri-apps/api/event');
 
-      // Show the overlay
-      await invoke('show_region_selector');
+      // Show the overlay on the specified display
+      await invoke('show_region_selector', { displayId });
 
       // Wait for the region selection event
       return new Promise((resolve) => {

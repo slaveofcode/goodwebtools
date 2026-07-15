@@ -184,8 +184,8 @@ pub async fn capture_region(bounds: Rectangle) -> Result<Vec<u8>, String> {
 }
 
 #[tauri::command]
-pub async fn show_region_selector(app: tauri::AppHandle) -> Result<(), String> {
-    crate::overlay::show_region_selector(&app)
+pub async fn show_region_selector(app: tauri::AppHandle, display_id: Option<u32>) -> Result<(), String> {
+    crate::overlay::show_region_selector(&app, display_id)
 }
 
 #[tauri::command]

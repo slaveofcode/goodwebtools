@@ -50,6 +50,6 @@ export interface CaptureService {
   captureRegion(bounds: Rectangle): Promise<Blob>;
   startRecording(options?: RecordOptions): Promise<RecordingHandle>;
   stopRecording(handle: RecordingHandle): Promise<Blob>;
-  showRegionSelector(): Promise<Rectangle | null>;
+  showRegionSelector(displayId?: number): Promise<Rectangle | null>;
   getCapabilities(): CaptureServiceCapabilities;
 }
