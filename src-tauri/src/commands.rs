@@ -183,8 +183,15 @@ pub async fn capture_region(bounds: Rectangle) -> Result<Vec<u8>, String> {
     Err("Region capture not yet implemented".to_string())
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RegionSelectorOptions {
+    pub display_id: Option<i32>,
+}
+
 #[tauri::command]
-pub async fn show_region_selector(app: tauri::AppHandle, display_id: Option<i32>) -> Result<(), String> {
+pub async fn show_region_selector(app: tauri::AppHandle, options: Option<RegionSelectorOptions>) -> Result<(), String> {
+    let display_id = options.and_then(|o| o.display_id);
     println!("[Command] show_region_selector called with display_id: {:?}", display_id);
     crate::overlay::show_region_selector(&app, display_id)
 }

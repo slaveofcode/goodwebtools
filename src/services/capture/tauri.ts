@@ -60,10 +60,13 @@ export class TauriCaptureService implements CaptureService {
       const { listen } = await import('@tauri-apps/api/event');
 
       console.log('[TauriCaptureService] showRegionSelector called with displayId:', displayId);
-      console.log('[TauriCaptureService] Invoking with params:', { display_id: displayId });
+      console.log('[TauriCaptureService] Invoking with params:', { options: { displayId } });
 
       // Show the overlay on the specified display
-      await invoke('show_region_selector', { display_id: displayId });
+      // Wrap in options object to match Rust struct
+      await invoke('show_region_selector', {
+        options: displayId !== undefined ? { displayId } : undefined
+      });
 
       // Wait for the region selection event
       return new Promise((resolve) => {
