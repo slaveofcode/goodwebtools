@@ -30,32 +30,38 @@
         position: fixed;
         top: 0;
         left: 0;
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.02);
       }
 
       #selection {
         position: absolute;
-        border: 3px solid #3b82f6;
-        background: rgba(59, 130, 246, 0.15);
+        border: 4px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.2);
         box-shadow:
-          0 0 0 2px rgba(255, 255, 255, 0.8),
-          0 0 20px rgba(59, 130, 246, 0.6);
+          0 0 0 3px rgba(255, 255, 255, 0.95),
+          0 0 0 7px rgba(59, 130, 246, 0.6),
+          0 0 30px rgba(59, 130, 246, 0.8),
+          inset 0 0 80px rgba(59, 130, 246, 0.1);
         display: none;
         pointer-events: none;
       }
 
       #dimensions {
         position: absolute;
-        top: -30px;
+        top: -32px;
         left: 0;
         background: #3b82f6;
         color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 6px 12px;
+        border-radius: 6px;
         font-family: monospace;
-        font-size: 12px;
+        font-size: 14px;
+        font-weight: 600;
         white-space: nowrap;
         pointer-events: none;
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.9),
+          0 4px 12px rgba(0, 0, 0, 0.3);
       }
 
       #instructions {
@@ -63,13 +69,18 @@
         top: 20px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, 0.9);
         color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
+        padding: 16px 32px;
+        border-radius: 12px;
         font-family: system-ui, -apple-system, sans-serif;
-        font-size: 14px;
+        font-size: 16px;
+        font-weight: 500;
         z-index: 1000;
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.2),
+          0 8px 24px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(10px);
       }
     </style>
   </head>
