@@ -1,51 +1,68 @@
----
-// Countdown overlay for screen recording
-import Base from '@/layouts/Base.astro';
----
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      overflow: hidden;
+    }
+    #countdown {
+      font-size: 240px;
+      font-weight: 900;
+      color: white;
+      text-shadow:
+        0 0 40px rgba(0, 0, 0, 0.8),
+        0 0 80px rgba(0, 0, 0, 0.6),
+        0 4px 20px rgba(0, 0, 0, 0.9);
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="countdown">5</div>
 
-<Base title="Recording Countdown">
-  <div class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div class="text-center">
-      <div id="countdown" class="text-[200px] font-bold text-white drop-shadow-2xl">
-        5
-      </div>
-      <div class="text-2xl text-white/80 font-medium">
-        Recording starts in...
-      </div>
-    </div>
-  </div>
-</Base>
+  <script>
+    // Countdown from 5 to 1, then close
+    let count = 5;
+    const countdownEl = document.getElementById('countdown');
 
-<script>
-  // Countdown from 5 to 1, then close and start recording
-  let count = 5;
-  const countdownEl = document.getElementById('countdown');
-
-  const interval = setInterval(() => {
-    count--;
-    if (countdownEl) {
+    const interval = setInterval(() => {
+      count--;
       if (count > 0) {
         countdownEl.textContent = count.toString();
-        // Animate scale
-        countdownEl.style.transform = 'scale(1.2)';
+        // Pulse animation
+        countdownEl.style.transform = 'scale(1.15)';
+        countdownEl.style.opacity = '0.7';
         setTimeout(() => {
           countdownEl.style.transform = 'scale(1)';
-        }, 100);
+          countdownEl.style.opacity = '1';
+        }, 150);
       } else {
         clearInterval(interval);
-        // Close window and emit start event
-        if (typeof window !== 'undefined' && '__TAURI__' in window) {
-          import('@tauri-apps/api/core').then(({ invoke }) => {
-            invoke('close_countdown');
-          });
-        }
+        // Fade out and close
+        countdownEl.style.opacity = '0';
+        setTimeout(() => {
+          if (window.__TAURI__) {
+            window.__TAURI__.core.invoke('close_countdown');
+          }
+        }, 200);
       }
-    }
-  }, 1000);
-
-  // Add CSS transition
-  if (countdownEl) {
-    countdownEl.style.transition = 'transform 0.1s ease-out';
-  }
-</script>
-</Base>
+    }, 1000);
+  </script>
+</body>
+</html>

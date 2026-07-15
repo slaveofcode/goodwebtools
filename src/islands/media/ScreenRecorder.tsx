@@ -66,10 +66,10 @@ export default function ScreenRecorder() {
     setError('');
     setResult(null);
     try {
-      // Show countdown overlay in desktop app
+      // Show countdown overlay on selected display
       if (inTauriApp) {
         const { invoke } = await import('@tauri-apps/api/core');
-        await invoke('show_countdown');
+        await invoke('show_countdown', { displayId: selectedDisplay });
 
         // Wait for countdown (5 seconds) + a bit extra
         await new Promise(resolve => setTimeout(resolve, 5500));

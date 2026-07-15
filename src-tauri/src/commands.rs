@@ -358,8 +358,8 @@ pub async fn check_screen_recording_permission() -> Result<bool, String> {
 }
 
 #[tauri::command]
-pub async fn show_countdown(app: tauri::AppHandle) -> Result<(), String> {
-    crate::overlay::show_countdown(&app)
+pub async fn show_countdown(app: tauri::AppHandle, display_id: Option<i32>) -> Result<(), String> {
+    crate::overlay::show_countdown(&app, display_id)
 }
 
 #[tauri::command]

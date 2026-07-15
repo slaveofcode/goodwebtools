@@ -89,29 +89,69 @@ pub fn close_region_selector(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-/// Show countdown overlay before recording starts
-pub fn show_countdown(app: &AppHandle) -> Result<(), String> {
+/// Show countdown overlay on specific display
+pub fn show_countdown(app: &AppHandle, display_id: Option<i32>) -> Result<(), String> {
     // Close any existing countdown
     let _ = close_countdown(app);
 
-    // Create countdown window
-    let window = WebviewWindowBuilder::new(
-        app,
-        "countdown",
-        WebviewUrl::App("/countdown".into())
-    )
-    .title("Recording Countdown")
-    .inner_size(800.0, 600.0)
-    .center()
-    .decorations(false)
-    .always_on_top(true)
-    .skip_taskbar(true)
-    .build()
-    .map_err(|e: tauri::Error| e.to_string())?;
+    #[cfg(target_os = "macos")]
+    {
+        use core_graphics::display::{CGDisplay, CGMainDisplayID};
 
-    window.show().map_err(|e: tauri::Error| e.to_string())?;
+        // Get the target display
+        let target_display_id = display_id
+            .map(|id| id as u32)
+            .unwrap_or_else(|| unsafe { CGMainDisplayID() });
+        let display = CGDisplay::new(target_display_id);
 
-    Ok(())
+        // Get display bounds and center countdown on that display
+        let bounds = display.bounds();
+        let x = bounds.origin.x + (bounds.size.width / 2.0) - 400.0; // Center 800px wide window
+        let y = bounds.origin.y + (bounds.size.height / 2.0) - 300.0; // Center 600px tall window
+
+        println!("[Countdown] Display ID: {:?}, Position: ({}, {})", target_display_id, x, y);
+
+        // Create countdown window on specific display
+        let window = WebviewWindowBuilder::new(
+            app,
+            "countdown",
+            WebviewUrl::App("/countdown".into())
+        )
+        .title("Recording Countdown")
+        .position(x, y)
+        .inner_size(800.0, 600.0)
+        .decorations(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .build()
+        .map_err(|e: tauri::Error| e.to_string())?;
+
+        window.show().map_err(|e: tauri::Error| e.to_string())?;
+
+        return Ok(());
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        // Fallback: centered on main display
+        let window = WebviewWindowBuilder::new(
+            app,
+            "countdown",
+            WebviewUrl::App("/countdown".into())
+        )
+        .title("Recording Countdown")
+        .inner_size(800.0, 600.0)
+        .center()
+        .decorations(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .build()
+        .map_err(|e: tauri::Error| e.to_string())?;
+
+        window.show().map_err(|e: tauri::Error| e.to_string())?;
+
+        return Ok(());
+    }
 }
 
 /// Close the countdown overlay
