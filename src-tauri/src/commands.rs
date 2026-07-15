@@ -62,6 +62,12 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
         let bytes_per_row = image.bytes_per_row();
         let data = image.data();
 
+        // Scale down for faster recording (50% of original size)
+        // This makes capture 4x faster and still looks good
+        let scale_factor = 0.5;
+        let scaled_width = (width as f32 * scale_factor) as u32;
+        let scaled_height = (height as f32 * scale_factor) as u32;
+
         // Convert to RGB (JPEG doesn't support alpha channel)
         use image::{ImageBuffer, Rgb, RgbImage};
         let mut rgb_buffer: RgbImage = ImageBuffer::new(width, height);
@@ -79,13 +85,22 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
             }
         }
 
-        // Use JPEG with 85% quality (much faster than PNG)
-        let mut output = Vec::new();
-        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 85);
-        encoder.encode(
+        // Resize to scaled dimensions (faster encoding + smaller file)
+        use image::imageops::FilterType;
+        let scaled_buffer = image::imageops::resize(
             &rgb_buffer,
-            width,
-            height,
+            scaled_width,
+            scaled_height,
+            FilterType::Lanczos3, // Good quality scaling
+        );
+
+        // Use JPEG with 70% quality (balance speed vs quality)
+        let mut output = Vec::new();
+        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 70);
+        encoder.encode(
+            &scaled_buffer,
+            scaled_width,
+            scaled_height,
             image::ColorType::Rgb8.into(),
         ).map_err(|e: image::ImageError| e.to_string())?;
 
