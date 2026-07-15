@@ -66,6 +66,15 @@ export default function ScreenRecorder() {
     setError('');
     setResult(null);
     try {
+      // Show countdown overlay in desktop app
+      if (inTauriApp) {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('show_countdown');
+
+        // Wait for countdown (5 seconds) + a bit extra
+        await new Promise(resolve => setTimeout(resolve, 5500));
+      }
+
       // Use selected format or browser-compatible format
       const selectedFormat = inTauriApp ? format : pickMime().ext;
       extRef.current = selectedFormat;

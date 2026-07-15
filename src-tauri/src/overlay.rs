@@ -88,3 +88,36 @@ pub fn close_region_selector(app: &AppHandle) -> Result<(), String> {
     }
     Ok(())
 }
+
+/// Show countdown overlay before recording starts
+pub fn show_countdown(app: &AppHandle) -> Result<(), String> {
+    // Close any existing countdown
+    let _ = close_countdown(app);
+
+    // Create countdown window
+    let window = WebviewWindowBuilder::new(
+        app,
+        "countdown",
+        WebviewUrl::App("/countdown".into())
+    )
+    .title("Recording Countdown")
+    .inner_size(800.0, 600.0)
+    .center()
+    .decorations(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .build()
+    .map_err(|e: tauri::Error| e.to_string())?;
+
+    window.show().map_err(|e: tauri::Error| e.to_string())?;
+
+    Ok(())
+}
+
+/// Close the countdown overlay
+pub fn close_countdown(app: &AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("countdown") {
+        window.close().map_err(|e: tauri::Error| e.to_string())?;
+    }
+    Ok(())
+}

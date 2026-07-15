@@ -253,9 +253,9 @@ fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool, fo
     println!("[Recording] Frames written, encoding with FFmpeg...");
 
     // Choose codec and extension based on format
-    let (codec, extension, preset) = match format {
-        "mp4" => ("libx264", "mp4", Some("fast")),
-        _ => ("libvpx-vp9", "webm", None), // Default to WebM
+    let (codec, extension, preset, use_crf) = match format {
+        "mp4" => ("libx264", "mp4", Some("medium"), true), // Use CRF for better quality
+        _ => ("libvpx-vp9", "webm", None, false), // Default to WebM
     };
 
     // Output video path
@@ -274,8 +274,14 @@ fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool, fo
         "-i", &input_pattern.to_string_lossy(),
         "-c:v", codec,
         "-pix_fmt", "yuv420p",
-        "-b:v", "2M", // 2Mbps bitrate
     ]);
+
+    // Use CRF for MP4 (better quality), bitrate for WebM
+    if use_crf {
+        cmd.args(&["-crf", "23"]); // 23 = good quality (lower = better, 18-28 range)
+    } else {
+        cmd.args(&["-b:v", "5M"]); // 5Mbps for WebM (increased from 2M)
+    }
 
     // Add preset for MP4
     if let Some(preset_val) = preset {

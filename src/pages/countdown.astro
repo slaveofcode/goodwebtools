@@ -1,0 +1,51 @@
+---
+// Countdown overlay for screen recording
+import Base from '@/layouts/Base.astro';
+---
+
+<Base title="Recording Countdown">
+  <div class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="text-center">
+      <div id="countdown" class="text-[200px] font-bold text-white drop-shadow-2xl">
+        5
+      </div>
+      <div class="text-2xl text-white/80 font-medium">
+        Recording starts in...
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script>
+  // Countdown from 5 to 1, then close and start recording
+  let count = 5;
+  const countdownEl = document.getElementById('countdown');
+
+  const interval = setInterval(() => {
+    count--;
+    if (countdownEl) {
+      if (count > 0) {
+        countdownEl.textContent = count.toString();
+        // Animate scale
+        countdownEl.style.transform = 'scale(1.2)';
+        setTimeout(() => {
+          countdownEl.style.transform = 'scale(1)';
+        }, 100);
+      } else {
+        clearInterval(interval);
+        // Close window and emit start event
+        if (typeof window !== 'undefined' && '__TAURI__' in window) {
+          import('@tauri-apps/api/core').then(({ invoke }) => {
+            invoke('close_countdown');
+          });
+        }
+      }
+    }
+  }, 1000);
+
+  // Add CSS transition
+  if (countdownEl) {
+    countdownEl.style.transition = 'transform 0.1s ease-out';
+  }
+</script>
+</Base>

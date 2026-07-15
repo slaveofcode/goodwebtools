@@ -89,9 +89,9 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
             }
         }
 
-        // Use JPEG with 70% quality (balance speed vs quality)
+        // Use JPEG with 85% quality (good quality, still fast)
         let mut output = Vec::new();
-        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 70);
+        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 85);
         encoder.encode(
             &scaled_buffer,
             scaled_width,
@@ -355,4 +355,14 @@ pub async fn check_screen_recording_permission() -> Result<bool, String> {
 
     #[cfg(not(target_os = "macos"))]
     Ok(true)
+}
+
+#[tauri::command]
+pub async fn show_countdown(app: tauri::AppHandle) -> Result<(), String> {
+    crate::overlay::show_countdown(&app)
+}
+
+#[tauri::command]
+pub async fn close_countdown(app: tauri::AppHandle) -> Result<(), String> {
+    crate::overlay::close_countdown(&app)
 }

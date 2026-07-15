@@ -23,6 +23,8 @@ fn main() {
             commands::start_recording,
             commands::stop_recording,
             commands::check_screen_recording_permission,
+            commands::show_countdown,
+            commands::close_countdown,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
