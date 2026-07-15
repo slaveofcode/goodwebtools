@@ -6,6 +6,7 @@ import type {
   RecordingHandle,
   Rectangle,
   CaptureServiceCapabilities,
+  DisplayInfo,
 } from './types';
 
 export class BrowserCaptureService implements CaptureService {
@@ -54,6 +55,11 @@ export class BrowserCaptureService implements CaptureService {
         options?.quality
       );
     });
+  }
+
+  async listDisplays(): Promise<DisplayInfo[]> {
+    // Browser API doesn't provide display enumeration
+    return [];
   }
 
   async captureWindow(_windowId?: string): Promise<Blob> {

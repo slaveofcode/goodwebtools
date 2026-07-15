@@ -8,6 +8,17 @@ pub struct CaptureOptions {
     pub quality: Option<f32>,
     pub include_audio: Option<bool>,
     pub system_audio: Option<bool>,
+    pub display_id: Option<u32>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DisplayInfo {
+    pub id: u32,
+    pub name: String,
+    pub width: u32,
+    pub height: u32,
+    pub is_main: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -42,8 +53,12 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
         use core_graphics::display::{CGDisplay, CGMainDisplayID};
         use image::{ImageBuffer, Rgba, RgbaImage, ImageEncoder};
 
-        // Get the main display
-        let display = unsafe { CGDisplay::new(CGMainDisplayID()) };
+        // Get the display (use specified display_id or default to main display)
+        let display = if let Some(display_id) = options.display_id {
+            CGDisplay::new(display_id)
+        } else {
+            unsafe { CGDisplay::new(CGMainDisplayID()) }
+        };
 
         // Capture the screen
         let image = display.image()
@@ -114,7 +129,51 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
 }
 
 #[tauri::command]
-pub async fn capture_window(window_id: Option<String>) -> Result<Vec<u8>, String> {
+pub async fn list_displays() -> Result<Vec<DisplayInfo>, String> {
+    #[cfg(target_os = "macos")]
+    {
+        use core_graphics::display::{CGDisplay, CGMainDisplayID, CGGetActiveDisplayList};
+
+        // Get all active displays
+        let max_displays = 32;
+        let mut displays = vec![0u32; max_displays];
+        let mut display_count = 0u32;
+
+        unsafe {
+            CGGetActiveDisplayList(max_displays as u32, displays.as_mut_ptr(), &mut display_count);
+        }
+
+        let main_display_id = unsafe { CGMainDisplayID() };
+        let mut result = Vec::new();
+
+        for i in 0..display_count as usize {
+            let display_id = displays[i];
+            let display = CGDisplay::new(display_id);
+
+            result.push(DisplayInfo {
+                id: display_id,
+                name: format!("Display {}", i + 1),
+                width: display.pixels_wide() as u32,
+                height: display.pixels_high() as u32,
+                is_main: display_id == main_display_id,
+            });
+        }
+
+        return Ok(result);
+    }
+
+    #[cfg(target_os = "windows")]
+    return Err("Windows display enumeration not yet implemented".to_string());
+
+    #[cfg(target_os = "linux")]
+    return Err("Linux display enumeration not yet implemented".to_string());
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+    return Err("Unsupported platform".to_string());
+}
+
+#[tauri::command]
+pub async fn capture_window(_window_id: Option<String>) -> Result<Vec<u8>, String> {
     Err("Window capture not yet implemented".to_string())
 }
 

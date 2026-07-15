@@ -6,6 +6,7 @@ import { downloadService } from '@/services/download';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
 import { detectCompanion, companionCapture } from '@/services/companion';
 import { captureService } from '@/services/capture';
+import type { DisplayInfo } from '@/services/capture';
 import { isTauri } from '@/services/platform';
 
 type Rect = { x: number; y: number; w: number; h: number };
@@ -23,6 +24,8 @@ export default function Screenshot() {
   const [fmt, setFmt] = useState<'png' | 'jpg'>('png');
   const [error, setError] = useState('');
   const [ext, setExt] = useState(false);
+  const [displays, setDisplays] = useState<DisplayInfo[]>([]);
+  const [selectedDisplay, setSelectedDisplay] = useState<number | undefined>();
 
   // crop selection (in displayed-image pixels)
   const [sel, setSel] = useState<Rect | null>(null);
@@ -47,6 +50,20 @@ export default function Screenshot() {
     // In browser, we need getDisplayMedia support
     setSupported(inTauriApp || hasGetDisplayMedia);
     detectCompanion().then(setExt);
+
+    // Load available displays if in Tauri
+    if (inTauriApp) {
+      captureService.listDisplays().then((displayList) => {
+        setDisplays(displayList);
+        // Auto-select main display
+        const mainDisplay = displayList.find((d) => d.isMain);
+        if (mainDisplay) {
+          setSelectedDisplay(mainDisplay.id);
+        }
+      }).catch((err) => {
+        console.warn('[Screenshot] Failed to load displays:', err);
+      });
+    }
   }, []);
 
   const loadDataUrl = (dataUrl: string, w: number, h: number) => {
@@ -93,7 +110,10 @@ export default function Screenshot() {
       setCountdown(0);
 
       // Use captureService instead of direct getDisplayMedia
-      const blob = await captureService.captureScreen({ format: 'png' });
+      const blob = await captureService.captureScreen({
+        format: 'png',
+        displayId: selectedDisplay,
+      });
 
       // Convert blob to image to get dimensions and draw to canvas
       const img = new Image();
@@ -197,6 +217,22 @@ export default function Screenshot() {
               <span className="block font-bold uppercase tracking-wide text-muted-foreground">Countdown (s)</span>
               <input type="number" min={0} max={15} value={delay} onChange={e => setDelay(Math.max(0, Number(e.target.value)))} className="w-24 border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm" />
             </label>
+            {displays.length > 0 && (
+              <label className="space-y-1 text-sm">
+                <span className="block font-bold uppercase tracking-wide text-muted-foreground">Display</span>
+                <select
+                  value={selectedDisplay}
+                  onChange={(e) => setSelectedDisplay(Number(e.target.value))}
+                  className="border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm"
+                >
+                  {displays.map((display) => (
+                    <option key={display.id} value={display.id}>
+                      {display.name} ({display.width}×{display.height}){display.isMain ? ' - Main' : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <Button onClick={capture} disabled={capturing}>
               <Camera className="h-4 w-4" />
               {capturing ? (countdown > 0 ? `Capturing in ${countdown}…` : 'Capturing…') : 'Capture screen'}

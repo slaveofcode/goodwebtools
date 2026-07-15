@@ -7,6 +7,7 @@ import type {
   RecordingHandle,
   Rectangle,
   CaptureServiceCapabilities,
+  DisplayInfo,
 } from './types';
 
 export class TauriCaptureService implements CaptureService {
@@ -15,6 +16,10 @@ export class TauriCaptureService implements CaptureService {
     return new Blob([new Uint8Array(imageBytes)], {
       type: `image/${options?.format || 'png'}`,
     });
+  }
+
+  async listDisplays(): Promise<DisplayInfo[]> {
+    return await invoke('list_displays');
   }
 
   async captureWindow(windowId?: string): Promise<Blob> {

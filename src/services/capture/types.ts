@@ -6,11 +6,20 @@ export interface Rectangle {
   height: number;
 }
 
+export interface DisplayInfo {
+  id: number;
+  name: string;
+  width: number;
+  height: number;
+  isMain: boolean;
+}
+
 export interface CaptureOptions {
   format?: 'png' | 'jpeg';
   quality?: number;
   includeAudio?: boolean;
   systemAudio?: boolean;
+  displayId?: number;
 }
 
 export interface RecordOptions {
@@ -36,6 +45,7 @@ export interface CaptureServiceCapabilities {
 
 export interface CaptureService {
   captureScreen(options?: CaptureOptions): Promise<Blob>;
+  listDisplays(): Promise<DisplayInfo[]>;
   captureWindow(windowId?: string): Promise<Blob>;
   captureRegion(bounds: Rectangle): Promise<Blob>;
   startRecording(options?: RecordOptions): Promise<RecordingHandle>;

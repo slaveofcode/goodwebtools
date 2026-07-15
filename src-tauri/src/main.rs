@@ -6,6 +6,7 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             commands::capture_screen,
+            commands::list_displays,
             commands::capture_window,
             commands::capture_region,
             commands::show_region_selector,
