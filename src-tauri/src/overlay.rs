@@ -12,7 +12,7 @@ pub struct Rectangle {
 
 /// Show transparent fullscreen overlay for region selection
 pub fn show_region_selector(app: &AppHandle) -> Result<(), String> {
-    // Create a transparent fullscreen window
+    // Create a fullscreen window for region selection
     let window = WebviewWindowBuilder::new(
         app,
         "region-selector",
@@ -20,16 +20,15 @@ pub fn show_region_selector(app: &AppHandle) -> Result<(), String> {
     )
     .title("Select Region")
     .fullscreen(true)
-    .transparent(true)
     .decorations(false)
     .always_on_top(true)
     .skip_taskbar(true)
     .visible(false) // Start hidden, show after load
     .build()
-    .map_err(|e| e.to_string())?;
+    .map_err(|e: tauri::Error| e.to_string())?;
 
     // Show window after it's ready
-    window.show().map_err(|e| e.to_string())?;
+    window.show().map_err(|e: tauri::Error| e.to_string())?;
 
     Ok(())
 }
@@ -37,7 +36,7 @@ pub fn show_region_selector(app: &AppHandle) -> Result<(), String> {
 /// Close the region selector overlay
 pub fn close_region_selector(app: &AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("region-selector") {
-        window.close().map_err(|e| e.to_string())?;
+        window.close().map_err(|e: tauri::Error| e.to_string())?;
     }
     Ok(())
 }

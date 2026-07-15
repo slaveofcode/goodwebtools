@@ -1,5 +1,6 @@
 // src-tauri/src/commands.rs
 use serde::{Deserialize, Serialize};
+use tauri::Emitter;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -199,7 +200,7 @@ pub async fn submit_region_selection(
 ) -> Result<(), String> {
     // Emit event with selected region to main window
     app.emit("region-selected", bounds)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e: tauri::Error| e.to_string())?;
 
     // Close the overlay
     crate::overlay::close_region_selector(&app)
