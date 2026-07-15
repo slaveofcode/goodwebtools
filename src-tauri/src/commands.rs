@@ -89,9 +89,9 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
             }
         }
 
-        // Use JPEG with 95% quality (high quality)
+        // Use JPEG with 90% quality (balanced: high quality + faster encoding)
         let mut output = Vec::new();
-        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 95);
+        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 90);
         encoder.encode(
             &scaled_buffer,
             scaled_width,

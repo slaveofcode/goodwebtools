@@ -254,7 +254,7 @@ fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool, fo
 
     // Choose codec and extension based on format
     let (codec, extension, preset, use_crf) = match format {
-        "mp4" => ("libx264", "mp4", Some("slow"), true), // Use CRF, slow preset for best quality
+        "mp4" => ("libx264", "mp4", Some("medium"), true), // Use CRF, medium preset (balanced speed/quality)
         _ => ("libvpx-vp9", "webm", None, false), // Default to WebM
     };
 
