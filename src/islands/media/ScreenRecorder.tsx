@@ -96,12 +96,23 @@ export default function ScreenRecorder() {
       if (inTauriApp) {
         const { invoke } = await import('@tauri-apps/api/core');
 
-        // Capture screenshot for countdown background
-        const screenshot = await invoke('capture_screen', {
-          options: {
-            format: 'png',
-            displayId: selectedDisplay
-          }
+        // Get display info to calculate countdown position
+        const displayList = await invoke('list_displays') as DisplayInfo[];
+        const targetDisplay = displayList.find(d => d.id === selectedDisplay) || displayList.find(d => d.isMain)!;
+
+        // Countdown window is 400x400 centered on display
+        const countdownBounds = {
+          x: Math.floor((targetDisplay.width - 400) / 2),
+          y: Math.floor((targetDisplay.height - 400) / 2),
+          width: 400,
+          height: 400,
+        };
+
+        console.log('[ScreenRecorder] Capturing countdown region:', countdownBounds);
+
+        // Capture just the countdown window region
+        const screenshot = await invoke('capture_region', {
+          bounds: countdownBounds
         }) as number[];
 
         // Convert to base64 in chunks

@@ -45,8 +45,8 @@
     if (screenshotData) {
       console.log('[Countdown] Loading screenshot from localStorage');
       document.body.style.backgroundImage = `url("${screenshotData}")`;
-      document.body.style.backgroundSize = 'cover';
-      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundSize = '100% 100%'; // Exact size, no scaling
+      document.body.style.backgroundPosition = '0 0';
       console.log('[Countdown] Screenshot background applied');
     } else {
       console.log('[Countdown] No screenshot in localStorage');
