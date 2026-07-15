@@ -62,9 +62,9 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
         let bytes_per_row = image.bytes_per_row();
         let data = image.data();
 
-        // No downsampling for better quality (was: sample_rate = 2 for 50% size)
-        // Trade: slower capture, but much better quality
-        let sample_rate = 1; // Full resolution
+        // 50% resolution for 8-10fps target (balanced quality + speed)
+        // Still looks great with high encoding quality (CRF 18, 10M bitrate)
+        let sample_rate = 2; // 50% resolution (2x faster)
         let scaled_width = width / sample_rate;
         let scaled_height = height / sample_rate;
 
