@@ -53,6 +53,7 @@ export class TauriCaptureService implements CaptureService {
           format: options?.format,
           fps: options?.fps,
           displayId: options?.displayId,
+          bounds: options?.bounds,
         },
       });
 
