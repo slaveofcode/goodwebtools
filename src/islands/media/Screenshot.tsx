@@ -99,42 +99,63 @@ export default function Screenshot() {
     try {
       setCapturing(true);
 
-      // STEP 1: First capture the full screen
+      // STEP 1: Capture the full screen first
       const fullBlob = await captureService.captureScreen({
         format: 'png',
         displayId: selectedDisplay,
       });
 
-      // Convert to image
-      const fullImg = new Image();
-      const fullDataUrl = URL.createObjectURL(fullBlob);
+      // Convert to data URL for the overlay
+      const reader = new FileReader();
+      const dataUrlPromise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(fullBlob);
+      });
 
+      const screenshotDataUrl = await dataUrlPromise;
+
+      // STEP 2: Pass screenshot to overlay and show it
+      const { emit } = await import('@tauri-apps/api/event');
+
+      // Emit the screenshot to the overlay window before showing it
+      await emit('overlay-screenshot', { dataUrl: screenshotDataUrl });
+
+      // STEP 3: Show the region selector overlay (it will listen for the screenshot)
+      const region = await captureService.showRegionSelector();
+
+      if (!region) {
+        // User cancelled
+        setCapturing(false);
+        return;
+      }
+
+      // STEP 4: Load the full screenshot and crop to selected region
+      const fullImg = new Image();
       await new Promise<void>((resolve, reject) => {
         fullImg.onload = () => resolve();
         fullImg.onerror = () => reject(new Error('Failed to load screenshot'));
-        fullImg.src = fullDataUrl;
+        fullImg.src = screenshotDataUrl;
       });
 
-      // STEP 2: Show the full screenshot and let user select region
-      // For now, just use the full screenshot with manual crop
-      // TODO: Show overlay with the screenshot for visual region selection
-
+      // Create canvas with cropped region
       const canvas = document.createElement('canvas');
-      canvas.width = fullImg.width;
-      canvas.height = fullImg.height;
+      canvas.width = region.width;
+      canvas.height = region.height;
       const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(fullImg, 0, 0);
 
-      URL.revokeObjectURL(fullDataUrl);
+      // Draw the selected region from the full screenshot
+      ctx.drawImage(
+        fullImg,
+        region.x, region.y, region.width, region.height, // source
+        0, 0, region.width, region.height // destination
+      );
 
       setShot(canvas);
       setPreviewUrl(prev => {
         if (prev) URL.revokeObjectURL(prev);
         return canvas.toDataURL('image/png');
       });
-
-      // Show info that user can now crop manually
-      setError('Screenshot captured! Drag on the image below to select a crop region.');
     } catch (e) {
       console.error('[Screenshot] Region capture failed:', e);
       setError(e instanceof Error ? e.message : 'Could not capture the screen.');
