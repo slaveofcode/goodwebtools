@@ -25,6 +25,7 @@ pub struct RecordOptions {
 pub struct RecordingHandle {
     pub id: String,
     pub start_time: i64,
+    pub format: Option<String>,
 }
 
 struct RecordingState {
@@ -48,6 +49,7 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
     let handle = RecordingHandle {
         id: format!("rec_{}", chrono::Utc::now().timestamp_millis()),
         start_time: chrono::Utc::now().timestamp_millis(),
+        format: options.format.clone(),
     };
 
     let fps = options.fps.unwrap_or(30);
@@ -198,6 +200,7 @@ pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
 
     // Phase 2 & 3: Encode frames to video (with audio if requested)
     let include_audio = state.include_audio || state.system_audio;
+    let format = state.handle.format.clone().unwrap_or_else(|| "webm".to_string());
 
     // Calculate actual FPS achieved (not target FPS)
     let actual_fps = if let Ok(dur_opt) = state.duration.lock() {
@@ -219,11 +222,11 @@ pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
         state.fps as f64
     };
 
-    encode_frames_to_video(&frames_vec, actual_fps, include_audio)
+    encode_frames_to_video(&frames_vec, actual_fps, include_audio, &format)
 }
 
-fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool) -> Result<Vec<u8>, String> {
-    println!("[Recording] Phase 2+3: Encoding {} frames to video at {:.2}fps", frames.len(), fps);
+fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool, format: &str) -> Result<Vec<u8>, String> {
+    println!("[Recording] Phase 2+3: Encoding {} frames to {} at {:.2}fps", frames.len(), format, fps);
 
     // Phase 3: Audio capture is documented but not yet fully implemented
     // For MVP, we focus on video encoding. Audio will be added in future iterations.
@@ -249,23 +252,42 @@ fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool) ->
 
     println!("[Recording] Frames written, encoding with FFmpeg...");
 
+    // Choose codec and extension based on format
+    let (codec, extension, preset) = match format {
+        "mp4" => ("libx264", "mp4", Some("fast")),
+        _ => ("libvpx-vp9", "webm", None), // Default to WebM
+    };
+
     // Output video path
-    let output_path = temp_dir.join("output.webm");
+    let output_path = temp_dir.join(format!("output.{}", extension));
+
+    println!("[Recording] Encoding to {} with {} codec", extension, codec);
 
     // Try to encode with FFmpeg using actual FPS
     let fps_str = format!("{:.2}", fps);
-    let ffmpeg_result = Command::new("ffmpeg")
-        .args(&[
-            "-y", // Overwrite output
-            "-framerate", &fps_str,
-            "-i", &temp_dir.join("frame_%05d.jpg").to_string_lossy(),
-            "-c:v", "libvpx-vp9", // VP9 codec
-            "-pix_fmt", "yuv420p",
-            "-b:v", "2M", // 2Mbps bitrate
-            "-threads", "4",
-            output_path.to_str().unwrap(),
-        ])
-        .output();
+    let input_pattern = temp_dir.join("frame_%05d.jpg");
+
+    let mut cmd = Command::new("ffmpeg");
+    cmd.args(&[
+        "-y", // Overwrite output
+        "-framerate", &fps_str,
+        "-i", &input_pattern.to_string_lossy(),
+        "-c:v", codec,
+        "-pix_fmt", "yuv420p",
+        "-b:v", "2M", // 2Mbps bitrate
+    ]);
+
+    // Add preset for MP4
+    if let Some(preset_val) = preset {
+        cmd.args(&["-preset", preset_val]);
+    }
+
+    cmd.args(&[
+        "-threads", "4",
+        output_path.to_str().unwrap(),
+    ]);
+
+    let ffmpeg_result = cmd.output();
 
     match ffmpeg_result {
         Ok(output) => {
