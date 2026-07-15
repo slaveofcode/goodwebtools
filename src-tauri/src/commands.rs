@@ -68,8 +68,10 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32) -> Result<Vec<u8>,
             2 // 50% resolution - good for 5-10fps
         } else if fps <= 20 {
             1 // 100% resolution - for 15-20fps (fast machines)
-        } else {
+        } else if fps <= 30 {
             1 // 100% resolution - for 30fps (very fast machines)
+        } else {
+            3 // 33% resolution - for 60fps (need MUCH faster capture!)
         };
         let scaled_width = width / sample_rate;
         let scaled_height = height / sample_rate;
@@ -95,9 +97,17 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32) -> Result<Vec<u8>,
             }
         }
 
-        // Use JPEG with 90% quality (balanced: high quality + faster encoding)
+        // Adjust JPEG quality based on target FPS
+        let jpeg_quality = if fps >= 60 {
+            75 // Lower quality for speed (60fps needs FAST encoding)
+        } else if fps >= 30 {
+            85 // Good quality for 30fps
+        } else {
+            90 // High quality for lower FPS
+        };
+
         let mut output = Vec::new();
-        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 90);
+        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, jpeg_quality);
         encoder.encode(
             &scaled_buffer,
             scaled_width,
