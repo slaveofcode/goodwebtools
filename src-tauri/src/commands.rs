@@ -37,9 +37,71 @@ pub struct RecordingHandle {
 
 #[tauri::command]
 pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> {
-    // Platform-specific implementation will go here
     #[cfg(target_os = "macos")]
-    return Err("macOS capture not yet implemented".to_string());
+    {
+        use core_graphics::display::{CGDisplay, CGMainDisplayID};
+        use image::{ImageBuffer, Rgba, RgbaImage};
+
+        // Get the main display
+        let display = CGDisplay::new(CGMainDisplayID());
+
+        // Capture the screen
+        let image = display.image()
+            .ok_or_else(|| "Failed to capture screen".to_string())?;
+
+        let width = image.width() as u32;
+        let height = image.height() as u32;
+        let bytes_per_row = image.bytes_per_row();
+        let data = image.data();
+
+        // Convert CGImage data to RGBA
+        let mut rgba_buffer: RgbaImage = ImageBuffer::new(width, height);
+
+        for y in 0..height {
+            for x in 0..width {
+                let offset = (y as usize * bytes_per_row) + (x as usize * 4);
+                if offset + 3 < data.len() {
+                    // CGImage is BGRA, convert to RGBA
+                    let b = data[offset];
+                    let g = data[offset + 1];
+                    let r = data[offset + 2];
+                    let a = data[offset + 3];
+                    rgba_buffer.put_pixel(x, y, Rgba([r, g, b, a]));
+                }
+            }
+        }
+
+        // Encode to PNG or JPEG based on format option
+        let mut output = Vec::new();
+        let format = options.format.as_deref().unwrap_or("png");
+
+        match format {
+            "jpg" | "jpeg" => {
+                let encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(
+                    &mut output,
+                    (options.quality.unwrap_or(0.92) * 100.0) as u8,
+                );
+                encoder.encode(
+                    &rgba_buffer,
+                    width,
+                    height,
+                    image::ColorType::Rgba8,
+                ).map_err(|e| e.to_string())?;
+            }
+            _ => {
+                // Default to PNG
+                let encoder = image::codecs::png::PngEncoder::new(&mut output);
+                encoder.write_image(
+                    &rgba_buffer,
+                    width,
+                    height,
+                    image::ColorType::Rgba8,
+                ).map_err(|e| e.to_string())?;
+            }
+        }
+
+        return Ok(output);
+    }
 
     #[cfg(target_os = "windows")]
     return Err("Windows capture not yet implemented".to_string());
