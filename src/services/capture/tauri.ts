@@ -57,8 +57,25 @@ export class TauriCaptureService implements CaptureService {
 
   async showRegionSelector(): Promise<Rectangle | null> {
     try {
-      const bounds: Rectangle | null = await invoke('show_region_selector');
-      return bounds;
+      const { listen } = await import('@tauri-apps/api/event');
+
+      // Show the overlay
+      await invoke('show_region_selector');
+
+      // Wait for the region selection event
+      return new Promise((resolve) => {
+        const unlisten = listen<Rectangle>('region-selected', (event) => {
+          unlisten.then(fn => fn());
+          resolve(event.payload);
+        });
+
+        // Also listen for overlay close without selection (ESC pressed)
+        const unlistenClose = listen('region-selector-closed', () => {
+          unlistenClose.then(fn => fn());
+          unlisten.then(fn => fn());
+          resolve(null);
+        });
+      });
     } catch (error) {
       console.warn('Region selector failed', error);
       return null;

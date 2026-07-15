@@ -183,9 +183,26 @@ pub async fn capture_region(bounds: Rectangle) -> Result<Vec<u8>, String> {
 }
 
 #[tauri::command]
-pub async fn show_region_selector() -> Result<Option<Rectangle>, String> {
-    // Will show transparent overlay for region selection
-    Err("Region selector not yet implemented".to_string())
+pub async fn show_region_selector(app: tauri::AppHandle) -> Result<(), String> {
+    crate::overlay::show_region_selector(&app)
+}
+
+#[tauri::command]
+pub async fn close_region_selector(app: tauri::AppHandle) -> Result<(), String> {
+    crate::overlay::close_region_selector(&app)
+}
+
+#[tauri::command]
+pub async fn submit_region_selection(
+    app: tauri::AppHandle,
+    bounds: Rectangle,
+) -> Result<(), String> {
+    // Emit event with selected region to main window
+    app.emit("region-selected", bounds)
+        .map_err(|e| e.to_string())?;
+
+    // Close the overlay
+    crate::overlay::close_region_selector(&app)
 }
 
 #[tauri::command]

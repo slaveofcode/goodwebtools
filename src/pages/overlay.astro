@@ -1,0 +1,168 @@
+---
+// Region Selector Overlay - Transparent fullscreen marquee selection
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Select Region</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        cursor: crosshair;
+        background: transparent;
+      }
+
+      #overlay {
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: rgba(0, 0, 0, 0.3);
+      }
+
+      #selection {
+        position: absolute;
+        border: 2px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+        display: none;
+        pointer-events: none;
+      }
+
+      #dimensions {
+        position: absolute;
+        top: -30px;
+        left: 0;
+        background: #3b82f6;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+
+      #instructions {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 14px;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="instructions">Click and drag to select a region · ESC to cancel</div>
+    <div id="overlay">
+      <div id="selection">
+        <div id="dimensions"></div>
+      </div>
+    </div>
+
+    <script>
+      import { invoke } from '@tauri-apps/api/core';
+
+      const overlay = document.getElementById('overlay')!;
+      const selection = document.getElementById('selection')!;
+      const dimensions = document.getElementById('dimensions')!;
+
+      let isSelecting = false;
+      let startX = 0;
+      let startY = 0;
+
+      overlay.addEventListener('mousedown', (e) => {
+        isSelecting = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        selection.style.left = `${startX}px`;
+        selection.style.top = `${startY}px`;
+        selection.style.width = '0px';
+        selection.style.height = '0px';
+        selection.style.display = 'block';
+      });
+
+      overlay.addEventListener('mousemove', (e) => {
+        if (!isSelecting) return;
+
+        const currentX = e.clientX;
+        const currentY = e.clientY;
+
+        const width = Math.abs(currentX - startX);
+        const height = Math.abs(currentY - startY);
+        const left = Math.min(startX, currentX);
+        const top = Math.min(startY, currentY);
+
+        selection.style.left = `${left}px`;
+        selection.style.top = `${top}px`;
+        selection.style.width = `${width}px`;
+        selection.style.height = `${height}px`;
+
+        dimensions.textContent = `${width} × ${height}`;
+      });
+
+      overlay.addEventListener('mouseup', async (e) => {
+        if (!isSelecting) return;
+
+        isSelecting = false;
+
+        const currentX = e.clientX;
+        const currentY = e.clientY;
+
+        const width = Math.abs(currentX - startX);
+        const height = Math.abs(currentY - startY);
+        const left = Math.min(startX, currentX);
+        const top = Math.min(startY, currentY);
+
+        // Only submit if selection is large enough (minimum 10x10)
+        if (width > 10 && height > 10) {
+          const bounds = {
+            x: Math.round(left),
+            y: Math.round(top),
+            width: Math.round(width),
+            height: Math.round(height),
+          };
+
+          try {
+            await invoke('submit_region_selection', { bounds });
+          } catch (error) {
+            console.error('Failed to submit region:', error);
+            await invoke('close_region_selector');
+          }
+        } else {
+          // Selection too small, reset
+          selection.style.display = 'none';
+        }
+      });
+
+      // ESC to cancel
+      document.addEventListener('keydown', async (e) => {
+        if (e.key === 'Escape') {
+          await invoke('close_region_selector');
+        }
+      });
+
+      // Prevent context menu
+      document.addEventListener('contextmenu', (e) => e.preventDefault());
+    </script>
+  </body>
+</html>
