@@ -40,7 +40,7 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
     #[cfg(target_os = "macos")]
     {
         use core_graphics::display::{CGDisplay, CGMainDisplayID};
-        use image::{ImageBuffer, Rgba, RgbaImage};
+        use image::{ImageBuffer, Rgba, RgbaImage, ImageEncoder};
 
         // Get the main display
         let display = CGDisplay::new(CGMainDisplayID());
@@ -85,8 +85,8 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
                     &rgba_buffer,
                     width,
                     height,
-                    image::ColorType::Rgba8,
-                ).map_err(|e| e.to_string())?;
+                    image::ColorType::Rgba8.into(),
+                ).map_err(|e: image::ImageError| e.to_string())?;
             }
             _ => {
                 // Default to PNG
@@ -95,8 +95,8 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
                     &rgba_buffer,
                     width,
                     height,
-                    image::ColorType::Rgba8,
-                ).map_err(|e| e.to_string())?;
+                    image::ColorType::Rgba8.into(),
+                ).map_err(|e: image::ImageError| e.to_string())?;
             }
         }
 
