@@ -35,6 +35,8 @@ export default function ScreenRecorder() {
   const [selectedDisplay, setSelectedDisplay] = useState<number | undefined>();
   const [format, setFormat] = useState<'webm' | 'mp4'>('webm');
   const [fps, setFps] = useState<number>(10);
+  const [regionMode, setRegionMode] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState<{x: number; y: number; width: number; height: number} | null>(null);
 
   const inTauriApp = isTauri();
 
@@ -62,11 +64,33 @@ export default function ScreenRecorder() {
       });
     }
   }, [inTauriApp]);
+
+  useEffect(() => {
+    // Listen for region selection event in Tauri
+    if (inTauriApp) {
+      (async () => {
+        const { listen } = await import('@tauri-apps/api/event');
+        const unlisten = await listen<{x: number; y: number; width: number; height: number}>('region-selected', (event) => {
+          console.log('[ScreenRecorder] Region selected:', event.payload);
+          setSelectedRegion(event.payload);
+        });
+        return () => { unlisten(); };
+      })();
+    }
+  }, [inTauriApp]);
+
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
   const start = async () => {
     setError('');
     setResult(null);
+
+    // Validate region selection if region mode is enabled
+    if (regionMode && !selectedRegion) {
+      setError('Please select a region first by clicking "Select Region"');
+      return;
+    }
+
     try {
       // Show countdown overlay on selected display
       if (inTauriApp) {
@@ -86,6 +110,7 @@ export default function ScreenRecorder() {
         includeAudio: withMic,
         fps: fps,
         displayId: inTauriApp ? selectedDisplay : undefined,
+        bounds: regionMode && selectedRegion ? selectedRegion : undefined,
       });
 
       handleRef.current = handle;
@@ -141,6 +166,16 @@ export default function ScreenRecorder() {
       handleRef.current = null;
     } finally {
       setStopping(false);
+    }
+  };
+
+  const selectRegion = async () => {
+    if (!inTauriApp) return;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('show_region_selector', { options: { displayId: selectedDisplay } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to show region selector');
     }
   };
 
@@ -224,6 +259,37 @@ export default function ScreenRecorder() {
             <option value="35">Max Quality (30fps target - best quality)</option>
             <option value="60">Max Speed (60 fps - lower quality, smooth)</option>
           </select>
+        </div>
+      )}
+
+      {inTauriApp && (
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={regionMode}
+              disabled={recording || stopping}
+              onChange={e => {
+                setRegionMode(e.target.checked);
+                if (!e.target.checked) setSelectedRegion(null);
+              }}
+              className="h-4 w-4 accent-violet-600"
+            />
+            <span className="font-bold uppercase tracking-wide text-muted-foreground">Record specific region</span>
+          </label>
+
+          {regionMode && (
+            <div className="flex items-center gap-3">
+              <Button onClick={selectRegion} disabled={recording || stopping} variant="secondary" size="sm">
+                {selectedRegion ? 'Change Region' : 'Select Region'}
+              </Button>
+              {selectedRegion && (
+                <span className="text-sm text-muted-foreground font-mono">
+                  {selectedRegion.width} × {selectedRegion.height} at ({selectedRegion.x}, {selectedRegion.y})
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
 

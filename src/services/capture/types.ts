@@ -29,6 +29,8 @@ export interface RecordOptions {
   includeAudio?: boolean;
   systemAudio?: boolean;
   fps?: number;
+  displayId?: number;
+  bounds?: Rectangle;
 }
 
 export interface RecordingHandle {
