@@ -11,13 +11,15 @@ pub struct Rectangle {
 }
 
 /// Show transparent fullscreen overlay for region selection on specified display
-pub fn show_region_selector(app: &AppHandle, display_id: Option<u32>) -> Result<(), String> {
+pub fn show_region_selector(app: &AppHandle, display_id: Option<i32>) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
         use core_graphics::display::{CGDisplay, CGMainDisplayID};
 
-        // Get the target display
-        let target_display_id = display_id.unwrap_or_else(|| unsafe { CGMainDisplayID() });
+        // Get the target display (convert i32 back to u32 for Core Graphics)
+        let target_display_id = display_id
+            .map(|id| id as u32)
+            .unwrap_or_else(|| unsafe { CGMainDisplayID() });
         let display = CGDisplay::new(target_display_id);
 
         // Get display bounds

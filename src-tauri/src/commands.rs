@@ -9,13 +9,13 @@ pub struct CaptureOptions {
     pub quality: Option<f32>,
     pub include_audio: Option<bool>,
     pub system_audio: Option<bool>,
-    pub display_id: Option<u32>,
+    pub display_id: Option<i32>,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DisplayInfo {
-    pub id: u32,
+    pub id: i32,
     pub name: String,
     pub width: u32,
     pub height: u32,
@@ -56,7 +56,7 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
 
         // Get the display (use specified display_id or default to main display)
         let display = if let Some(display_id) = options.display_id {
-            CGDisplay::new(display_id)
+            CGDisplay::new(display_id as u32)
         } else {
             unsafe { CGDisplay::new(CGMainDisplayID()) }
         };
@@ -152,7 +152,7 @@ pub async fn list_displays() -> Result<Vec<DisplayInfo>, String> {
             let display = CGDisplay::new(display_id);
 
             result.push(DisplayInfo {
-                id: display_id,
+                id: display_id as i32,
                 name: format!("Display {}", i + 1),
                 width: display.pixels_wide() as u32,
                 height: display.pixels_high() as u32,
@@ -184,7 +184,7 @@ pub async fn capture_region(bounds: Rectangle) -> Result<Vec<u8>, String> {
 }
 
 #[tauri::command]
-pub async fn show_region_selector(app: tauri::AppHandle, display_id: Option<u32>) -> Result<(), String> {
+pub async fn show_region_selector(app: tauri::AppHandle, display_id: Option<i32>) -> Result<(), String> {
     crate::overlay::show_region_selector(&app, display_id)
 }
 
