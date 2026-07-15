@@ -115,14 +115,20 @@ export default function Screenshot() {
 
       const screenshotDataUrl = await dataUrlPromise;
 
-      // STEP 2: Pass screenshot to overlay and show it
+      // STEP 2: Show overlay window first
       const { emit } = await import('@tauri-apps/api/event');
 
-      // Emit the screenshot to the overlay window before showing it
+      // Start showing the overlay (async, doesn't wait)
+      const regionPromise = captureService.showRegionSelector();
+
+      // Wait a bit for the overlay window to be ready
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // STEP 3: Now emit the screenshot to the overlay window
       await emit('overlay-screenshot', { dataUrl: screenshotDataUrl });
 
-      // STEP 3: Show the region selector overlay (it will listen for the screenshot)
-      const region = await captureService.showRegionSelector();
+      // Wait for region selection
+      const region = await regionPromise;
 
       if (!region) {
         // User cancelled
