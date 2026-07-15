@@ -43,7 +43,7 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
         use image::{ImageBuffer, Rgba, RgbaImage, ImageEncoder};
 
         // Get the main display
-        let display = CGDisplay::new(CGMainDisplayID());
+        let display = unsafe { CGDisplay::new(CGMainDisplayID()) };
 
         // Capture the screen
         let image = display.image()
@@ -77,7 +77,7 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
 
         match format {
             "jpg" | "jpeg" => {
-                let encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(
+                let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(
                     &mut output,
                     (options.quality.unwrap_or(0.92) * 100.0) as u8,
                 );
