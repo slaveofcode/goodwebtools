@@ -690,8 +690,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
 dependencies = [
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-link 0.2.1",
 ]
 
@@ -1867,9 +1869,11 @@ name = "goodwebtools"
 version = "1.0.0"
 dependencies = [
  "ashpd",
+ "chrono",
  "cocoa",
  "core-graphics 0.23.2",
  "image",
+ "lazy_static",
  "objc",
  "serde",
  "serde_json",
@@ -2542,6 +2546,12 @@ dependencies = [
  "serde",
  "unicode-segmentation",
 ]
+
+[[package]]
+name = "lazy_static"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "lebe"

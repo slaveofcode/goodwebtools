@@ -39,12 +39,7 @@ pub struct RecordOptions {
     pub include_audio: Option<bool>,
     pub system_audio: Option<bool>,
     pub fps: Option<u32>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct RecordingHandle {
-    pub id: String,
-    pub start_time: i64,
+    pub display_id: Option<i32>,
 }
 
 // Internal helper for recording (not exposed as command)
@@ -267,7 +262,7 @@ pub async fn submit_region_selection(
 }
 
 #[tauri::command]
-pub async fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String> {
+pub async fn start_recording(options: RecordOptions) -> Result<crate::recording::RecordingHandle, String> {
     // Convert to recording module options
     let record_opts = crate::recording::RecordOptions {
         format: options.format,
