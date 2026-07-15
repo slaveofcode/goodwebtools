@@ -11,12 +11,8 @@ import { isTauri } from '@/services/platform';
 type Rect = { x: number; y: number; w: number; h: number };
 
 export default function Screenshot() {
-  // Start as supported - will be checked in useEffect
-  // In Tauri, always supported (uses native APIs)
-  // In browser, check for getDisplayMedia
-  const [supported, setSupported] = useState(
-    typeof window !== 'undefined' && (isTauri() || !!navigator.mediaDevices?.getDisplayMedia)
-  );
+  // Start as false for SSR, then check in useEffect
+  const [supported, setSupported] = useState(false);
   const [delay, setDelay] = useState(3);
   const [countdown, setCountdown] = useState(0);
   const [capturing, setCapturing] = useState(false);

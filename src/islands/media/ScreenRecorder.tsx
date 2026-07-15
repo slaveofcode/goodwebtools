@@ -22,7 +22,8 @@ function pickMime(): { mime: string; ext: string } {
 }
 
 export default function ScreenRecorder() {
-  const [supported, setSupported] = useState(true);
+  // Start as false for SSR, then check in useEffect
+  const [supported, setSupported] = useState(false);
   const [recording, setRecording] = useState(false);
   const [withMic, setWithMic] = useState(false);
   const [elapsed, setElapsed] = useState(0);
