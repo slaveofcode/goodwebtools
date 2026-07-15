@@ -66,10 +66,11 @@ pub fn show_region_selector(app: &AppHandle, display_id: Option<u32>) -> Result<
         .build()
         .map_err(|e: tauri::Error| e.to_string())?;
 
-    // Show window after it's ready
-    window.show().map_err(|e: tauri::Error| e.to_string())?;
+        // Show window after it's ready
+        window.show().map_err(|e: tauri::Error| e.to_string())?;
 
-    Ok(())
+        return Ok(());
+    }
 }
 
 /// Close the region selector overlay
