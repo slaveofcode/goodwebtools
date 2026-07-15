@@ -22,7 +22,7 @@ pub struct DisplayInfo {
     pub is_main: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Rectangle {
     pub x: i32,
     pub y: i32,
