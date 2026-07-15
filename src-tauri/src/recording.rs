@@ -101,13 +101,16 @@ fn record_frames(
 ) {
     use crate::commands::capture_screen_fast;
 
+    // Normalize fps=35 (Max Quality mode) to 30fps for timing
+    let normalized_fps = if target_fps == 35 { 30 } else { target_fps };
+
     // Target frame interval (but actual may be slower due to capture time)
-    let target_frame_duration = Duration::from_millis(1000 / target_fps as u64);
+    let target_frame_duration = Duration::from_millis(1000 / normalized_fps as u64);
     let mut frame_count = 0;
     let start_time = Instant::now();
 
     println!("[Recording] Recording thread started for {}", recording_id);
-    println!("[Recording] Target: {}fps ({}ms per frame)", target_fps, 1000 / target_fps);
+    println!("[Recording] Target: {}fps ({}ms per frame)", normalized_fps, 1000 / normalized_fps);
 
     loop {
         let frame_start = Instant::now();

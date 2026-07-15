@@ -221,7 +221,8 @@ export default function ScreenRecorder() {
             <option value="15">High (15 fps - smooth)</option>
             <option value="20">Very High (20 fps)</option>
             <option value="30">Ultra (30 fps)</option>
-            <option value="60">Max (60 fps - lower quality, very smooth)</option>
+            <option value="35">Max Quality (30fps target - best quality)</option>
+            <option value="60">Max Speed (60 fps - lower quality, smooth)</option>
           </select>
         </div>
       )}

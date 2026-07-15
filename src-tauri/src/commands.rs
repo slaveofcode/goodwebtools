@@ -64,7 +64,9 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32) -> Result<Vec<u8>,
         let data = image.data();
 
         // Auto-adjust resolution based on target FPS for optimal quality/speed balance
-        let sample_rate = if fps <= 10 {
+        let sample_rate = if fps == 35 {
+            1 // 100% resolution - Max Quality mode (fps=35 is special marker)
+        } else if fps <= 10 {
             2 // 50% resolution - good for 5-10fps
         } else if fps <= 20 {
             1 // 100% resolution - for 15-20fps (fast machines)
@@ -102,7 +104,9 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32) -> Result<Vec<u8>,
         }
 
         // Adjust JPEG quality based on target FPS
-        let jpeg_quality = if fps >= 60 {
+        let jpeg_quality = if fps == 35 {
+            95 // Maximum quality for Max Quality mode (fps=35 is special marker)
+        } else if fps >= 60 {
             75 // Lower quality for speed (60fps needs FAST encoding)
         } else if fps >= 30 {
             85 // Good quality for 30fps
