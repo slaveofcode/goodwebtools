@@ -32,6 +32,7 @@ export default function ScreenRecorder() {
   const [error, setError] = useState('');
   const [displays, setDisplays] = useState<DisplayInfo[]>([]);
   const [selectedDisplay, setSelectedDisplay] = useState<number | undefined>();
+  const [format, setFormat] = useState<'webm' | 'mp4'>('webm');
 
   const inTauriApp = isTauri();
 
@@ -65,12 +66,12 @@ export default function ScreenRecorder() {
     setError('');
     setResult(null);
     try {
-      // Use captureService to start recording
-      const { ext } = pickMime();
-      extRef.current = ext;
+      // Use selected format or browser-compatible format
+      const selectedFormat = inTauriApp ? format : pickMime().ext;
+      extRef.current = selectedFormat;
 
       const handle = await captureService.startRecording({
-        format: ext === 'mp4' ? 'mp4' : 'webm',
+        format: selectedFormat,
         includeAudio: withMic,
         fps: 30,
         displayId: inTauriApp ? selectedDisplay : undefined,
@@ -166,6 +167,24 @@ export default function ScreenRecorder() {
                 {display.name} ({display.width}×{display.height}){display.isMain ? ' - Main' : ''}
               </option>
             ))}
+          </select>
+        </div>
+      )}
+
+      {inTauriApp && (
+        <div className="flex items-center gap-3">
+          <label htmlFor="format-select" className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            Format
+          </label>
+          <select
+            id="format-select"
+            value={format}
+            disabled={recording}
+            onChange={(e) => setFormat(e.target.value as 'webm' | 'mp4')}
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50"
+          >
+            <option value="webm">WebM (VP9)</option>
+            <option value="mp4">MP4 (H.264)</option>
           </select>
         </div>
       )}
