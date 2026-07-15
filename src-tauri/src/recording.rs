@@ -18,6 +18,7 @@ pub struct RecordOptions {
     pub display_id: Option<i32>,
     pub include_audio: Option<bool>,
     pub system_audio: Option<bool>,
+    pub bounds: Option<crate::commands::Rectangle>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -32,6 +33,7 @@ struct RecordingState {
     handle: RecordingHandle,
     fps: u32,
     display_id: Option<i32>,
+    bounds: Option<crate::commands::Rectangle>,
     include_audio: bool,
     system_audio: bool,
     stop_flag: Arc<Mutex<bool>>,
@@ -54,11 +56,15 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
 
     let fps = options.fps.unwrap_or(30);
     let display_id = options.display_id;
+    let bounds = options.bounds.clone();
     let include_audio = options.include_audio.unwrap_or(false);
     let system_audio = options.system_audio.unwrap_or(false);
 
     println!("[Recording] Starting recording: {}", handle.id);
     println!("[Recording] FPS: {}, Display: {:?}", fps, display_id);
+    if let Some(ref rect) = bounds {
+        println!("[Recording] Region: {}x{} at ({}, {})", rect.width, rect.height, rect.x, rect.y);
+    }
     println!("[Recording] Audio: mic={}, system={}", include_audio, system_audio);
 
     let stop_flag = Arc::new(Mutex::new(false));
@@ -69,6 +75,7 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
         handle: handle.clone(),
         fps,
         display_id,
+        bounds: bounds.clone(),
         include_audio,
         system_audio,
         stop_flag: stop_flag.clone(),
@@ -85,7 +92,7 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
     // Start recording thread
     let handle_clone = handle.clone();
     thread::spawn(move || {
-        record_frames(handle_clone.id, fps, display_id, stop_flag, frames, duration);
+        record_frames(handle_clone.id, fps, display_id, bounds, stop_flag, frames, duration);
     });
 
     Ok(handle)
@@ -95,6 +102,7 @@ fn record_frames(
     recording_id: String,
     target_fps: u32,
     display_id: Option<i32>,
+    bounds: Option<crate::commands::Rectangle>,
     stop_flag: Arc<Mutex<bool>>,
     frames: Arc<Mutex<Vec<Vec<u8>>>>,
     duration_out: Arc<Mutex<Option<Duration>>>,
@@ -128,7 +136,7 @@ fn record_frames(
         }
 
         // Capture frame (using fast JPEG encoding, auto-adjusted for target FPS)
-        match capture_screen_fast(display_id, target_fps) {
+        match capture_screen_fast(display_id, target_fps, bounds.clone()) {
             Ok(frame_data) => {
                 if let Ok(mut frames_vec) = frames.lock() {
                     frames_vec.push(frame_data);

@@ -40,11 +40,13 @@ pub struct RecordOptions {
     pub system_audio: Option<bool>,
     pub fps: Option<u32>,
     pub display_id: Option<i32>,
+    pub bounds: Option<Rectangle>,
 }
 
 // Fast capture for recording (JPEG instead of PNG)
 // fps: target frame rate (adjusts quality/resolution automatically)
-pub fn capture_screen_fast(display_id: Option<i32>, fps: u32) -> Result<Vec<u8>, String> {
+// bounds: optional region to capture (if None, captures full screen)
+pub fn capture_screen_fast(display_id: Option<i32>, fps: u32, bounds: Option<Rectangle>) -> Result<Vec<u8>, String> {
     #[cfg(target_os = "macos")]
     {
         use core_graphics::display::{CGDisplay, CGMainDisplayID};
@@ -58,10 +60,22 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32) -> Result<Vec<u8>,
         let image = display.image()
             .ok_or_else(|| "Failed to capture screen".to_string())?;
 
-        let width = image.width() as u32;
-        let height = image.height() as u32;
+        let full_width = image.width() as u32;
+        let full_height = image.height() as u32;
         let bytes_per_row = image.bytes_per_row();
         let data = image.data();
+
+        // Determine capture region (full screen or bounded region)
+        let (region_x, region_y, width, height) = if let Some(rect) = bounds {
+            // Clamp bounds to screen dimensions
+            let x = rect.x.max(0) as u32;
+            let y = rect.y.max(0) as u32;
+            let w = rect.width.min(full_width - x);
+            let h = rect.height.min(full_height - y);
+            (x, y, w, h)
+        } else {
+            (0, 0, full_width, full_height)
+        };
 
         // Auto-adjust resolution based on target FPS for optimal quality/speed balance
         let sample_rate = if fps == 35 {
@@ -88,9 +102,9 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32) -> Result<Vec<u8>,
 
         for y in 0..scaled_height {
             for x in 0..scaled_width {
-                // Sample from original at 2x position
-                let src_x = x * sample_rate;
-                let src_y = y * sample_rate;
+                // Sample from region with offset
+                let src_x = region_x + (x * sample_rate);
+                let src_y = region_y + (y * sample_rate);
                 let offset = (src_y as usize * bytes_per_row as usize) + (src_x as usize * 4);
 
                 if offset + 3 < data.len() as usize {
@@ -315,7 +329,8 @@ pub async fn capture_window(_window_id: Option<String>) -> Result<Vec<u8>, Strin
 
 #[tauri::command]
 pub async fn capture_region(bounds: Rectangle) -> Result<Vec<u8>, String> {
-    Err("Region capture not yet implemented".to_string())
+    // Use high quality settings for single-frame region capture
+    capture_screen_fast(None, 10, Some(bounds))
 }
 
 #[derive(Debug, Deserialize)]
@@ -358,6 +373,7 @@ pub async fn start_recording(options: RecordOptions) -> Result<crate::recording:
         display_id: options.display_id,
         include_audio: options.include_audio,
         system_audio: options.system_audio,
+        bounds: options.bounds,
     };
 
     crate::recording::start_recording(record_opts)
