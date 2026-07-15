@@ -2,6 +2,7 @@
 
 mod commands;
 mod overlay;
+mod recording;
 
 fn main() {
     tauri::Builder::default()
