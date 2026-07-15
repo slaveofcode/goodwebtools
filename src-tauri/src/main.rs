@@ -11,8 +11,7 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        // global-shortcut will be added later when needed
-        .plugin(tauri_plugin_updater::Builder::new().build())
+        // Will add later: global-shortcut, updater
         .invoke_handler(tauri::generate_handler![
             commands::capture_screen,
             commands::list_displays,
