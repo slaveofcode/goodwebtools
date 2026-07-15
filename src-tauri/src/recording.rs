@@ -1,9 +1,13 @@
 // src-tauri/src/recording.rs
-// Basic video recording (Phase 1: video-only, Phase 2: add audio)
+// Basic video recording (Phase 1: video-only, Phase 2: video encoding, Phase 3: add audio)
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
+use std::process::Command;
+use std::fs::{self, File};
+use std::io::Write;
+use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -146,11 +150,92 @@ pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
 
     println!("[Recording] Captured {} frames total", frames_vec.len());
 
-    // TODO: Encode frames to video
-    // For now, return error asking to use browser version
-    Err(format!(
-        "Video encoding not yet implemented. Captured {} frames at {}fps. Use web version for now.",
-        frames_vec.len(),
-        state.fps
-    ))
+    if frames_vec.is_empty() {
+        return Err("No frames captured".to_string());
+    }
+
+    // Phase 2: Encode frames to video
+    encode_frames_to_video(&frames_vec, state.fps)
+}
+
+fn encode_frames_to_video(frames: &[Vec<u8>], fps: u32) -> Result<Vec<u8>, String> {
+    println!("[Recording] Phase 2: Encoding {} frames to video at {}fps", frames.len(), fps);
+
+    // Create temp directory for frames
+    let temp_dir = std::env::temp_dir().join(format!("gwt_recording_{}", chrono::Utc::now().timestamp_millis()));
+    fs::create_dir_all(&temp_dir).map_err(|e| format!("Failed to create temp dir: {}", e))?;
+
+    println!("[Recording] Writing frames to: {}", temp_dir.display());
+
+    // Write frames as PNG files
+    for (i, frame_data) in frames.iter().enumerate() {
+        let frame_path = temp_dir.join(format!("frame_{:05}.png", i));
+        let mut file = File::create(&frame_path)
+            .map_err(|e| format!("Failed to create frame file: {}", e))?;
+        file.write_all(frame_data)
+            .map_err(|e| format!("Failed to write frame: {}", e))?;
+    }
+
+    println!("[Recording] Frames written, encoding with FFmpeg...");
+
+    // Output video path
+    let output_path = temp_dir.join("output.webm");
+
+    // Try to encode with FFmpeg
+    let ffmpeg_result = Command::new("ffmpeg")
+        .args(&[
+            "-y", // Overwrite output
+            "-framerate", &fps.to_string(),
+            "-i", &temp_dir.join("frame_%05d.png").to_string_lossy(),
+            "-c:v", "libvpx-vp9", // VP9 codec
+            "-pix_fmt", "yuv420p",
+            "-b:v", "2M", // 2Mbps bitrate
+            "-threads", "4",
+            output_path.to_str().unwrap(),
+        ])
+        .output();
+
+    match ffmpeg_result {
+        Ok(output) => {
+            if output.status.success() {
+                println!("[Recording] FFmpeg encoding successful");
+
+                // Read the encoded video
+                let video_data = fs::read(&output_path)
+                    .map_err(|e| format!("Failed to read encoded video: {}", e))?;
+
+                // Clean up temp directory
+                let _ = fs::remove_dir_all(&temp_dir);
+
+                println!("[Recording] Video encoded: {} bytes", video_data.len());
+                Ok(video_data)
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                println!("[Recording] FFmpeg failed: {}", stderr);
+
+                // Clean up
+                let _ = fs::remove_dir_all(&temp_dir);
+
+                Err(format!(
+                    "FFmpeg encoding failed. Captured {} frames but couldn't encode. Install FFmpeg for video encoding support.",
+                    frames.len()
+                ))
+            }
+        }
+        Err(e) => {
+            println!("[Recording] FFmpeg not available: {}", e);
+
+            // Clean up
+            let _ = fs::remove_dir_all(&temp_dir);
+
+            Err(format!(
+                "FFmpeg not found. Captured {} frames at {}fps. Install FFmpeg to enable video encoding:\n\
+                macOS: brew install ffmpeg\n\
+                Ubuntu: sudo apt install ffmpeg\n\
+                Windows: Download from ffmpeg.org",
+                frames.len(),
+                fps
+            ))
+        }
+    }
 }
