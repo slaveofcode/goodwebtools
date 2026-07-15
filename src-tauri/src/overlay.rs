@@ -27,6 +27,9 @@ pub fn show_region_selector(app: &AppHandle, display_id: Option<u32>) -> Result<
         let width = bounds.size.width as f64;
         let height = bounds.size.height as f64;
 
+        println!("[Overlay] Display ID: {:?}, Bounds: ({}, {}) {}x{}",
+                 target_display_id, x, y, width, height);
+
         // Create window positioned on the specific display
         let window = WebviewWindowBuilder::new(
             app,

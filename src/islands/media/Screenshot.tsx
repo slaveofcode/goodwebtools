@@ -118,6 +118,8 @@ export default function Screenshot() {
       // STEP 2: Show overlay window on the selected display
       const { emit } = await import('@tauri-apps/api/event');
 
+      console.log('[Screenshot] Selected display ID:', selectedDisplay);
+
       // Start showing the overlay on the selected display (async, doesn't wait)
       const regionPromise = captureService.showRegionSelector(selectedDisplay);
 
