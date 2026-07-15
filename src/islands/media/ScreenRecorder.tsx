@@ -5,7 +5,7 @@ import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { captureService } from '@/services/capture';
-import type { RecordingHandle } from '@/services/capture';
+import type { RecordingHandle, DisplayInfo } from '@/services/capture';
 import { isTauri } from '@/services/platform';
 
 function pickMime(): { mime: string; ext: string } {
@@ -30,6 +30,10 @@ export default function ScreenRecorder() {
   const [result, setResult] = useState<Blob | null>(null);
   const [resultUrl, setResultUrl] = useState('');
   const [error, setError] = useState('');
+  const [displays, setDisplays] = useState<DisplayInfo[]>([]);
+  const [selectedDisplay, setSelectedDisplay] = useState<number | undefined>();
+
+  const inTauriApp = isTauri();
 
   const handleRef = useRef<RecordingHandle | null>(null);
   const extRef = useRef('webm');
@@ -37,12 +41,24 @@ export default function ScreenRecorder() {
 
   useEffect(() => {
     // Check if recording is supported (browser or Tauri)
-    const inTauriApp = isTauri();
     const browserSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia && typeof MediaRecorder !== 'undefined';
 
     // In Tauri, we use native APIs (not browser APIs)
     setSupported(inTauriApp || browserSupported);
-  }, []);
+
+    // Load displays in Tauri
+    if (inTauriApp) {
+      captureService.listDisplays().then((displayList) => {
+        setDisplays(displayList);
+        const mainDisplay = displayList.find((d) => d.isMain);
+        if (mainDisplay) {
+          setSelectedDisplay(mainDisplay.id);
+        }
+      }).catch((err) => {
+        console.error('Failed to load displays:', err);
+      });
+    }
+  }, [inTauriApp]);
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
   const start = async () => {
@@ -57,6 +73,7 @@ export default function ScreenRecorder() {
         format: ext === 'mp4' ? 'mp4' : 'webm',
         includeAudio: withMic,
         fps: 30,
+        displayId: inTauriApp ? selectedDisplay : undefined,
       });
 
       handleRef.current = handle;
@@ -117,6 +134,27 @@ export default function ScreenRecorder() {
           System/tab audio is included when the browser allows it.
         </p>
       </div>
+
+      {inTauriApp && displays.length > 0 && (
+        <div className="flex items-center gap-3">
+          <label htmlFor="display-select" className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            Screen
+          </label>
+          <select
+            id="display-select"
+            value={selectedDisplay}
+            disabled={recording}
+            onChange={(e) => setSelectedDisplay(Number(e.target.value))}
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50"
+          >
+            {displays.map((display) => (
+              <option key={display.id} value={display.id}>
+                {display.name} ({display.width}×{display.height}){display.isMain ? ' - Main' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={withMic} disabled={recording} onChange={e => setWithMic(e.target.checked)} className="h-4 w-4 accent-violet-600" />

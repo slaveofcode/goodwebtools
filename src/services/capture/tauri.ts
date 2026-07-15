@@ -43,16 +43,47 @@ export class TauriCaptureService implements CaptureService {
   }
 
   async startRecording(options?: RecordOptions): Promise<RecordingHandle> {
-    // Native recording not yet implemented
-    // WebView doesn't support getDisplayMedia like browsers do
-    throw new Error(
-      'Screen recording not yet available in desktop app. ' +
-      'Use the web version at goodwebtools.com for now, or wait for native recording implementation.'
-    );
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      console.log('[TauriCaptureService] startRecording called with options:', options);
+
+      const handle = await invoke<RecordingHandle>('start_recording', {
+        options: {
+          format: options?.format,
+          fps: options?.fps,
+          displayId: options?.displayId,
+        },
+      });
+
+      console.log('[TauriCaptureService] Recording started:', handle);
+      return handle;
+    } catch (error) {
+      console.error('[TauriCaptureService] Start recording failed:', error);
+      throw error;
+    }
   }
 
   async stopRecording(handle: RecordingHandle): Promise<Blob> {
-    throw new Error('Screen recording not yet implemented in desktop app');
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      console.log('[TauriCaptureService] stopRecording called with handle:', handle);
+
+      // This will return Vec<u8> from Rust
+      const videoData = await invoke<number[]>('stop_recording', {
+        handleId: handle.id,
+      });
+
+      console.log('[TauriCaptureService] Recording stopped, data length:', videoData.length);
+
+      // Convert to Blob
+      const blob = new Blob([new Uint8Array(videoData)], { type: 'video/webm' });
+      return blob;
+    } catch (error) {
+      console.error('[TauriCaptureService] Stop recording failed:', error);
+      throw error;
+    }
   }
 
   async showRegionSelector(displayId?: number): Promise<Rectangle | null> {
