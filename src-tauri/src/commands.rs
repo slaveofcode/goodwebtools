@@ -73,8 +73,12 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32) -> Result<Vec<u8>,
         } else {
             3 // 33% resolution - for 60fps (need MUCH faster capture!)
         };
-        let scaled_width = width / sample_rate;
-        let scaled_height = height / sample_rate;
+        let mut scaled_width = width / sample_rate;
+        let mut scaled_height = height / sample_rate;
+
+        // H.264 requires even dimensions - force even by rounding down
+        if scaled_width % 2 != 0 { scaled_width -= 1; }
+        if scaled_height % 2 != 0 { scaled_height -= 1; }
 
         // Convert to RGB and downsample in one pass
         use image::{ImageBuffer, Rgb, RgbImage};
