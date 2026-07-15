@@ -43,7 +43,8 @@ pub struct RecordOptions {
 }
 
 // Fast capture for recording (JPEG instead of PNG)
-pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
+// fps: target frame rate (adjusts quality/resolution automatically)
+pub fn capture_screen_fast(display_id: Option<i32>, fps: u32) -> Result<Vec<u8>, String> {
     #[cfg(target_os = "macos")]
     {
         use core_graphics::display::{CGDisplay, CGMainDisplayID};
@@ -62,9 +63,14 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
         let bytes_per_row = image.bytes_per_row();
         let data = image.data();
 
-        // 50% resolution for 8-10fps target (balanced quality + speed)
-        // Still looks great with high encoding quality (CRF 18, 10M bitrate)
-        let sample_rate = 2; // 50% resolution (2x faster)
+        // Auto-adjust resolution based on target FPS for optimal quality/speed balance
+        let sample_rate = if fps <= 10 {
+            2 // 50% resolution - good for 5-10fps
+        } else if fps <= 20 {
+            1 // 100% resolution - for 15-20fps (fast machines)
+        } else {
+            1 // 100% resolution - for 30fps (very fast machines)
+        };
         let scaled_width = width / sample_rate;
         let scaled_height = height / sample_rate;
 

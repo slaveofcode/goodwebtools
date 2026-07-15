@@ -93,7 +93,7 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
 
 fn record_frames(
     recording_id: String,
-    fps: u32,
+    target_fps: u32,
     display_id: Option<i32>,
     stop_flag: Arc<Mutex<bool>>,
     frames: Arc<Mutex<Vec<Vec<u8>>>>,
@@ -102,12 +102,12 @@ fn record_frames(
     use crate::commands::capture_screen_fast;
 
     // Target frame interval (but actual may be slower due to capture time)
-    let target_frame_duration = Duration::from_millis(1000 / fps as u64);
+    let target_frame_duration = Duration::from_millis(1000 / target_fps as u64);
     let mut frame_count = 0;
     let start_time = Instant::now();
 
     println!("[Recording] Recording thread started for {}", recording_id);
-    println!("[Recording] Target: {}fps ({}ms per frame)", fps, 1000 / fps);
+    println!("[Recording] Target: {}fps ({}ms per frame)", target_fps, 1000 / target_fps);
 
     loop {
         let frame_start = Instant::now();
@@ -124,8 +124,8 @@ fn record_frames(
             }
         }
 
-        // Capture frame (using fast JPEG encoding)
-        match capture_screen_fast(display_id) {
+        // Capture frame (using fast JPEG encoding, auto-adjusted for target FPS)
+        match capture_screen_fast(display_id, target_fps) {
             Ok(frame_data) => {
                 if let Ok(mut frames_vec) = frames.lock() {
                     frames_vec.push(frame_data);

@@ -33,6 +33,7 @@ export default function ScreenRecorder() {
   const [displays, setDisplays] = useState<DisplayInfo[]>([]);
   const [selectedDisplay, setSelectedDisplay] = useState<number | undefined>();
   const [format, setFormat] = useState<'webm' | 'mp4'>('webm');
+  const [fps, setFps] = useState<number>(10);
 
   const inTauriApp = isTauri();
 
@@ -82,7 +83,7 @@ export default function ScreenRecorder() {
       const handle = await captureService.startRecording({
         format: selectedFormat,
         includeAudio: withMic,
-        fps: 30,
+        fps: fps,
         displayId: inTauriApp ? selectedDisplay : undefined,
       });
 
@@ -194,6 +195,27 @@ export default function ScreenRecorder() {
           >
             <option value="webm">WebM (VP9)</option>
             <option value="mp4">MP4 (H.264)</option>
+          </select>
+        </div>
+      )}
+
+      {inTauriApp && (
+        <div className="flex items-center gap-3">
+          <label htmlFor="fps-select" className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            FPS
+          </label>
+          <select
+            id="fps-select"
+            value={fps}
+            disabled={recording}
+            onChange={(e) => setFps(Number(e.target.value))}
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50"
+          >
+            <option value="5">Low (5 fps - smaller files)</option>
+            <option value="10">Medium (10 fps - balanced)</option>
+            <option value="15">High (15 fps - smooth)</option>
+            <option value="20">Very High (20 fps)</option>
+            <option value="30">Ultra (30 fps - best quality)</option>
           </select>
         </div>
       )}
