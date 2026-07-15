@@ -59,8 +59,8 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
 
         for y in 0..height {
             for x in 0..width {
-                let offset = (y as usize * bytes_per_row) + (x as usize * 4);
-                if offset + 3 < data.len() {
+                let offset = (y as usize * bytes_per_row as usize) + (x as usize * 4);
+                if offset + 3 < data.len() as usize {
                     // CGImage is BGRA, convert to RGBA
                     let b = data[offset];
                     let g = data[offset + 1];
