@@ -44,9 +44,9 @@ export const captureService = {
     const service = await getInstance();
     return service.stopRecording(handle);
   },
-  async showRegionSelector() {
+  async showRegionSelector(displayId) {
     const service = await getInstance();
-    return service.showRegionSelector();
+    return service.showRegionSelector(displayId);
   },
   getCapabilities() {
     // This needs to be sync, so we'll handle it specially
