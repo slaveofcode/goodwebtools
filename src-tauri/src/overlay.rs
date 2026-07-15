@@ -111,7 +111,8 @@ pub fn show_countdown(app: &AppHandle, display_id: Option<i32>) -> Result<(), St
 
         println!("[Countdown] Display ID: {:?}, Position: ({}, {})", target_display_id, x, y);
 
-        // Create countdown window on specific display with transparent background
+        // Create countdown window on specific display
+        // Note: Transparency styling via CSS only (Cocoa APIs require main thread)
         let window = WebviewWindowBuilder::new(
             app,
             "countdown",
@@ -123,22 +124,8 @@ pub fn show_countdown(app: &AppHandle, display_id: Option<i32>) -> Result<(), St
         .decorations(false)
         .always_on_top(true)
         .skip_taskbar(true)
-        .visible(false)
         .build()
         .map_err(|e: tauri::Error| e.to_string())?;
-
-        // Set background to transparent
-        #[cfg(target_os = "macos")]
-        {
-            use cocoa::appkit::{NSWindow, NSColor};
-            use cocoa::base::{id, nil};
-
-            unsafe {
-                let ns_window = window.ns_window().unwrap() as id;
-                ns_window.setBackgroundColor_(NSColor::clearColor(nil));
-                ns_window.setOpaque_(false as cocoa::base::BOOL);
-            }
-        }
 
         window.show().map_err(|e: tauri::Error| e.to_string())?;
 
