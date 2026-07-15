@@ -16,7 +16,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.03);
+      background: #f0f0f0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       overflow: hidden;
     }
     #countdown {
@@ -37,6 +40,18 @@
   <div id="countdown">5</div>
 
   <script>
+    // Load screenshot from localStorage
+    const screenshotData = localStorage.getItem('countdown-screenshot');
+    if (screenshotData) {
+      console.log('[Countdown] Loading screenshot from localStorage');
+      document.body.style.backgroundImage = `url("${screenshotData}")`;
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      console.log('[Countdown] Screenshot background applied');
+    } else {
+      console.log('[Countdown] No screenshot in localStorage');
+    }
+
     // Countdown from 5 to 1, then close
     let count = 5;
     const countdownEl = document.getElementById('countdown');
