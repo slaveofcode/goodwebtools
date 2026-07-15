@@ -198,17 +198,24 @@ pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
     let include_audio = state.include_audio || state.system_audio;
 
     // Calculate actual FPS achieved (not target FPS)
-    let duration = state.duration.lock()
-        .map_err(|e| e.to_string())?
-        .ok_or_else(|| "Duration not available".to_string())?;
-
-    let actual_fps = if duration.as_secs_f64() > 0.0 {
-        frames_vec.len() as f64 / duration.as_secs_f64()
+    let actual_fps = if let Ok(dur_opt) = state.duration.lock() {
+        if let Some(duration) = *dur_opt {
+            if duration.as_secs_f64() > 0.0 {
+                let fps = frames_vec.len() as f64 / duration.as_secs_f64();
+                println!("[Recording] Encoding with actual FPS: {:.2} (target was: {})", fps, state.fps);
+                fps
+            } else {
+                println!("[Recording] Duration too short, using target FPS: {}", state.fps);
+                state.fps as f64
+            }
+        } else {
+            println!("[Recording] Duration not set, using target FPS: {}", state.fps);
+            state.fps as f64
+        }
     } else {
+        println!("[Recording] Could not read duration, using target FPS: {}", state.fps);
         state.fps as f64
     };
-
-    println!("[Recording] Encoding with actual FPS: {:.2} (target was: {})", actual_fps, state.fps);
 
     encode_frames_to_video(&frames_vec, actual_fps, include_audio)
 }
