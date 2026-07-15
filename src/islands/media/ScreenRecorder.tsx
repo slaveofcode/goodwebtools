@@ -116,12 +116,16 @@ export default function ScreenRecorder() {
         const base64 = btoa(binary);
         const dataUrl = `data:image/png;base64,${base64}`;
 
-        // Show countdown and send screenshot
+        // Show countdown
         await invoke('show_countdown', { displayId: selectedDisplay });
+
+        // Wait a bit for window to be ready, then send screenshot
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('[ScreenRecorder] Sending countdown screenshot');
         await emit('countdown-screenshot', { dataUrl });
 
         // Wait for countdown (5 seconds) + a bit extra
-        await new Promise(resolve => setTimeout(resolve, 5500));
+        await new Promise(resolve => setTimeout(resolve, 5400));
       }
 
       // Use selected format or browser-compatible format

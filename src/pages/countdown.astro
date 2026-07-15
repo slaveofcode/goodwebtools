@@ -56,15 +56,22 @@
 <body>
   <div id="countdown">5</div>
 
-  <script>
+  <script type="module">
+    import { listen } from '@tauri-apps/api/event';
+
     // Listen for screenshot background
-    if (window.__TAURI__) {
-      window.__TAURI__.event.listen('countdown-screenshot', (event) => {
-        console.log('[Countdown] Received screenshot');
-        const { dataUrl } = event.payload;
-        document.body.style.backgroundImage = `url("${dataUrl}")`;
-      });
-    }
+    console.log('[Countdown] Setting up screenshot listener');
+    listen('countdown-screenshot', (event) => {
+      console.log('[Countdown] Received screenshot event:', event);
+      const { dataUrl } = event.payload;
+      console.log('[Countdown] Data URL length:', dataUrl?.length);
+      document.body.style.backgroundImage = `url("${dataUrl}")`;
+      console.log('[Countdown] Background image set');
+    }).then(() => {
+      console.log('[Countdown] Listener registered successfully');
+    }).catch(err => {
+      console.error('[Countdown] Failed to register listener:', err);
+    });
 
     // Countdown from 5 to 1, then close
     let count = 5;
