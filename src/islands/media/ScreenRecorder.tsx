@@ -183,8 +183,14 @@ export default function ScreenRecorder() {
         }
       }) as number[];
 
-      // Convert to base64 data URL
-      const base64 = btoa(String.fromCharCode(...screenshot));
+      // Convert to base64 in chunks (avoid stack overflow on large images)
+      const chunkSize = 8192;
+      let binary = '';
+      for (let i = 0; i < screenshot.length; i += chunkSize) {
+        const chunk = screenshot.slice(i, i + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+      const base64 = btoa(binary);
       const dataUrl = `data:image/png;base64,${base64}`;
 
       // Show overlay
