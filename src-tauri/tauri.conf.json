@@ -33,7 +33,9 @@
           "permissions": [
             "core:default",
             "core:event:allow-emit",
-            "core:event:allow-listen"
+            "core:event:allow-listen",
+            "dialog:allow-save",
+            "fs:allow-write-file"
           ]
         },
         {

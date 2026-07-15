@@ -62,37 +62,32 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
         let bytes_per_row = image.bytes_per_row();
         let data = image.data();
 
-        // Scale down for faster recording (50% of original size)
-        // This makes capture 4x faster and still looks good
-        let scale_factor = 0.5;
-        let scaled_width = (width as f32 * scale_factor) as u32;
-        let scaled_height = (height as f32 * scale_factor) as u32;
+        // Sample every 2nd pixel for 2x speed (50% size)
+        // Much faster than copying all pixels then scaling!
+        let sample_rate = 2; // Skip every other pixel
+        let scaled_width = width / sample_rate;
+        let scaled_height = height / sample_rate;
 
-        // Convert to RGB (JPEG doesn't support alpha channel)
+        // Convert to RGB and downsample in one pass
         use image::{ImageBuffer, Rgb, RgbImage};
-        let mut rgb_buffer: RgbImage = ImageBuffer::new(width, height);
+        let mut scaled_buffer: RgbImage = ImageBuffer::new(scaled_width, scaled_height);
 
-        for y in 0..height {
-            for x in 0..width {
-                let offset = (y as usize * bytes_per_row as usize) + (x as usize * 4);
+        for y in 0..scaled_height {
+            for x in 0..scaled_width {
+                // Sample from original at 2x position
+                let src_x = x * sample_rate;
+                let src_y = y * sample_rate;
+                let offset = (src_y as usize * bytes_per_row as usize) + (src_x as usize * 4);
+
                 if offset + 3 < data.len() as usize {
                     let b = data[offset];
                     let g = data[offset + 1];
                     let r = data[offset + 2];
                     // Skip alpha channel for JPEG
-                    rgb_buffer.put_pixel(x, y, Rgb([r, g, b]));
+                    scaled_buffer.put_pixel(x, y, Rgb([r, g, b]));
                 }
             }
         }
-
-        // Resize to scaled dimensions (faster encoding + smaller file)
-        use image::imageops::FilterType;
-        let scaled_buffer = image::imageops::resize(
-            &rgb_buffer,
-            scaled_width,
-            scaled_height,
-            FilterType::Lanczos3, // Good quality scaling
-        );
 
         // Use JPEG with 70% quality (balance speed vs quality)
         let mut output = Vec::new();
