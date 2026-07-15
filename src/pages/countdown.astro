@@ -16,8 +16,28 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: transparent !important;
+      background: #f0f0f0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
       overflow: hidden;
+    }
+
+    /* Ensure screenshot fills and centers */
+    body {
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center center;
+      z-index: -1;
     }
     #countdown {
       font-size: 240px;
@@ -37,6 +57,15 @@
   <div id="countdown">5</div>
 
   <script>
+    // Listen for screenshot background
+    if (window.__TAURI__) {
+      window.__TAURI__.event.listen('countdown-screenshot', (event) => {
+        console.log('[Countdown] Received screenshot');
+        const { dataUrl } = event.payload;
+        document.body.style.backgroundImage = `url("${dataUrl}")`;
+      });
+    }
+
     // Countdown from 5 to 1, then close
     let count = 5;
     const countdownEl = document.getElementById('countdown');

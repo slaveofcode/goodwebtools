@@ -95,7 +95,30 @@ export default function ScreenRecorder() {
       // Show countdown overlay on selected display
       if (inTauriApp) {
         const { invoke } = await import('@tauri-apps/api/core');
+        const { emit } = await import('@tauri-apps/api/event');
+
+        // Capture screenshot for countdown background
+        // Note: Using full screen - will be cropped by CSS to fit 400x400 window
+        const screenshot = await invoke('capture_screen', {
+          options: {
+            format: 'png',
+            displayId: selectedDisplay
+          }
+        }) as number[];
+
+        // Convert to base64 in chunks
+        const chunkSize = 8192;
+        let binary = '';
+        for (let i = 0; i < screenshot.length; i += chunkSize) {
+          const chunk = screenshot.slice(i, i + chunkSize);
+          binary += String.fromCharCode(...chunk);
+        }
+        const base64 = btoa(binary);
+        const dataUrl = `data:image/png;base64,${base64}`;
+
+        // Show countdown and send screenshot
         await invoke('show_countdown', { displayId: selectedDisplay });
+        await emit('countdown-screenshot', { dataUrl });
 
         // Wait for countdown (5 seconds) + a bit extra
         await new Promise(resolve => setTimeout(resolve, 5500));
