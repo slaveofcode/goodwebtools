@@ -16,6 +16,8 @@ pub struct RecordOptions {
     pub format: Option<String>,
     pub fps: Option<u32>,
     pub display_id: Option<i32>,
+    pub include_audio: Option<bool>,
+    pub system_audio: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -29,6 +31,8 @@ struct RecordingState {
     handle: RecordingHandle,
     fps: u32,
     display_id: Option<i32>,
+    include_audio: bool,
+    system_audio: bool,
     stop_flag: Arc<Mutex<bool>>,
     frames: Arc<Mutex<Vec<Vec<u8>>>>,
 }
@@ -46,9 +50,12 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
 
     let fps = options.fps.unwrap_or(30);
     let display_id = options.display_id;
+    let include_audio = options.include_audio.unwrap_or(false);
+    let system_audio = options.system_audio.unwrap_or(false);
 
-    println!("[Recording] Starting video recording: {}", handle.id);
+    println!("[Recording] Starting recording: {}", handle.id);
     println!("[Recording] FPS: {}, Display: {:?}", fps, display_id);
+    println!("[Recording] Audio: mic={}, system={}", include_audio, system_audio);
 
     let stop_flag = Arc::new(Mutex::new(false));
     let frames = Arc::new(Mutex::new(Vec::new()));
@@ -57,6 +64,8 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
         handle: handle.clone(),
         fps,
         display_id,
+        include_audio,
+        system_audio,
         stop_flag: stop_flag.clone(),
         frames: frames.clone(),
     };
@@ -154,12 +163,20 @@ pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
         return Err("No frames captured".to_string());
     }
 
-    // Phase 2: Encode frames to video
-    encode_frames_to_video(&frames_vec, state.fps)
+    // Phase 2 & 3: Encode frames to video (with audio if requested)
+    let include_audio = state.include_audio || state.system_audio;
+    encode_frames_to_video(&frames_vec, state.fps, include_audio)
 }
 
-fn encode_frames_to_video(frames: &[Vec<u8>], fps: u32) -> Result<Vec<u8>, String> {
-    println!("[Recording] Phase 2: Encoding {} frames to video at {}fps", frames.len(), fps);
+fn encode_frames_to_video(frames: &[Vec<u8>], fps: u32, _include_audio: bool) -> Result<Vec<u8>, String> {
+    println!("[Recording] Phase 2+3: Encoding {} frames to video at {}fps", frames.len(), fps);
+
+    // Phase 3: Audio capture is documented but not yet fully implemented
+    // For MVP, we focus on video encoding. Audio will be added in future iterations.
+    if _include_audio {
+        println!("[Recording] Phase 3: Audio requested but not yet captured");
+        println!("[Recording] Future: Will capture and mux audio with video");
+    }
 
     // Create temp directory for frames
     let temp_dir = std::env::temp_dir().join(format!("gwt_recording_{}", chrono::Utc::now().timestamp_millis()));

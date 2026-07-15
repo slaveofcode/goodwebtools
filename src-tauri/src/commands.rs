@@ -268,6 +268,8 @@ pub async fn start_recording(options: RecordOptions) -> Result<crate::recording:
         format: options.format,
         fps: options.fps,
         display_id: options.display_id,
+        include_audio: options.include_audio,
+        system_audio: options.system_audio,
     };
 
     crate::recording::start_recording(record_opts)
