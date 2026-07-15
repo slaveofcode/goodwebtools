@@ -24,6 +24,10 @@ export const captureService = {
     const service = await getInstance();
     return service.captureScreen(options);
   },
+  async listDisplays() {
+    const service = await getInstance();
+    return service.listDisplays();
+  },
   async captureWindow(windowId) {
     const service = await getInstance();
     return service.captureWindow(windowId);
@@ -71,4 +75,5 @@ export type {
   RecordingHandle,
   Rectangle,
   CaptureServiceCapabilities,
+  DisplayInfo,
 } from './types';
