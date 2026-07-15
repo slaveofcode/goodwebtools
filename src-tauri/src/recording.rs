@@ -35,6 +35,8 @@ struct RecordingState {
     system_audio: bool,
     stop_flag: Arc<Mutex<bool>>,
     frames: Arc<Mutex<Vec<Vec<u8>>>>,
+    start_time: Instant,
+    duration: Arc<Mutex<Option<Duration>>>,
 }
 
 lazy_static::lazy_static! {
@@ -59,6 +61,7 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
 
     let stop_flag = Arc::new(Mutex::new(false));
     let frames = Arc::new(Mutex::new(Vec::new()));
+    let duration = Arc::new(Mutex::new(None));
 
     let state = RecordingState {
         handle: handle.clone(),
@@ -68,6 +71,8 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
         system_audio,
         stop_flag: stop_flag.clone(),
         frames: frames.clone(),
+        start_time: Instant::now(),
+        duration: duration.clone(),
     };
 
     // Store state
@@ -78,7 +83,7 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
     // Start recording thread
     let handle_clone = handle.clone();
     thread::spawn(move || {
-        record_frames(handle_clone.id, fps, display_id, stop_flag, frames);
+        record_frames(handle_clone.id, fps, display_id, stop_flag, frames, duration);
     });
 
     Ok(handle)
@@ -90,21 +95,29 @@ fn record_frames(
     display_id: Option<i32>,
     stop_flag: Arc<Mutex<bool>>,
     frames: Arc<Mutex<Vec<Vec<u8>>>>,
+    duration_out: Arc<Mutex<Option<Duration>>>,
 ) {
     use crate::commands::capture_screen_internal;
 
-    let frame_duration = Duration::from_millis(1000 / fps as u64);
+    // Target frame interval (but actual may be slower due to capture time)
+    let target_frame_duration = Duration::from_millis(1000 / fps as u64);
     let mut frame_count = 0;
+    let start_time = Instant::now();
 
     println!("[Recording] Recording thread started for {}", recording_id);
+    println!("[Recording] Target: {}fps ({}ms per frame)", fps, 1000 / fps);
 
     loop {
-        let start = Instant::now();
+        let frame_start = Instant::now();
 
         // Check stop flag
         if let Ok(flag) = stop_flag.lock() {
             if *flag {
+                let total_duration = start_time.elapsed();
+                let actual_fps = frame_count as f64 / total_duration.as_secs_f64();
                 println!("[Recording] Stop flag set, ending recording");
+                println!("[Recording] Duration: {:.2}s, Actual FPS: {:.2}",
+                    total_duration.as_secs_f64(), actual_fps);
                 break;
             }
         }
@@ -116,8 +129,12 @@ fn record_frames(
                     frames_vec.push(frame_data);
                     frame_count += 1;
 
-                    if frame_count % (fps * 5) == 0 {
-                        println!("[Recording] Captured {} frames", frame_count);
+                    // Log every 30 frames to show progress
+                    if frame_count % 30 == 0 {
+                        let elapsed = start_time.elapsed();
+                        let current_fps = frame_count as f64 / elapsed.as_secs_f64();
+                        println!("[Recording] {} frames in {:.1}s (actual: {:.1}fps)",
+                            frame_count, elapsed.as_secs_f64(), current_fps);
                     }
                 }
             }
@@ -127,13 +144,27 @@ fn record_frames(
         }
 
         // Sleep for remaining frame time
-        let elapsed = start.elapsed();
-        if elapsed < frame_duration {
-            thread::sleep(frame_duration - elapsed);
+        let frame_elapsed = frame_start.elapsed();
+        if frame_elapsed < target_frame_duration {
+            thread::sleep(target_frame_duration - frame_elapsed);
+        } else if frame_count == 1 {
+            // Log warning on first slow frame
+            println!("[Recording] Warning: Frame capture took {}ms (target: {}ms)",
+                frame_elapsed.as_millis(), target_frame_duration.as_millis());
         }
     }
 
-    println!("[Recording] Recording thread ended. Total frames: {}", frame_count);
+    let total_duration = start_time.elapsed();
+    let actual_fps = frame_count as f64 / total_duration.as_secs_f64();
+
+    // Store duration for encoding
+    if let Ok(mut dur) = duration_out.lock() {
+        *dur = Some(total_duration);
+    }
+
+    println!("[Recording] Recording thread ended");
+    println!("[Recording] Total: {} frames in {:.2}s (actual: {:.2}fps)",
+        frame_count, total_duration.as_secs_f64(), actual_fps);
 }
 
 pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
@@ -165,11 +196,25 @@ pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
 
     // Phase 2 & 3: Encode frames to video (with audio if requested)
     let include_audio = state.include_audio || state.system_audio;
-    encode_frames_to_video(&frames_vec, state.fps, include_audio)
+
+    // Calculate actual FPS achieved (not target FPS)
+    let duration = state.duration.lock()
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "Duration not available".to_string())?;
+
+    let actual_fps = if duration.as_secs_f64() > 0.0 {
+        frames_vec.len() as f64 / duration.as_secs_f64()
+    } else {
+        state.fps as f64
+    };
+
+    println!("[Recording] Encoding with actual FPS: {:.2} (target was: {})", actual_fps, state.fps);
+
+    encode_frames_to_video(&frames_vec, actual_fps, include_audio)
 }
 
-fn encode_frames_to_video(frames: &[Vec<u8>], fps: u32, _include_audio: bool) -> Result<Vec<u8>, String> {
-    println!("[Recording] Phase 2+3: Encoding {} frames to video at {}fps", frames.len(), fps);
+fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool) -> Result<Vec<u8>, String> {
+    println!("[Recording] Phase 2+3: Encoding {} frames to video at {:.2}fps", frames.len(), fps);
 
     // Phase 3: Audio capture is documented but not yet fully implemented
     // For MVP, we focus on video encoding. Audio will be added in future iterations.
@@ -198,11 +243,12 @@ fn encode_frames_to_video(frames: &[Vec<u8>], fps: u32, _include_audio: bool) ->
     // Output video path
     let output_path = temp_dir.join("output.webm");
 
-    // Try to encode with FFmpeg
+    // Try to encode with FFmpeg using actual FPS
+    let fps_str = format!("{:.2}", fps);
     let ffmpeg_result = Command::new("ffmpeg")
         .args(&[
             "-y", // Overwrite output
-            "-framerate", &fps.to_string(),
+            "-framerate", &fps_str,
             "-i", &temp_dir.join("frame_%05d.png").to_string_lossy(),
             "-c:v", "libvpx-vp9", // VP9 codec
             "-pix_fmt", "yuv420p",
