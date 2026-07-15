@@ -254,7 +254,7 @@ fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool, fo
 
     // Choose codec and extension based on format
     let (codec, extension, preset, use_crf) = match format {
-        "mp4" => ("libx264", "mp4", Some("medium"), true), // Use CRF for better quality
+        "mp4" => ("libx264", "mp4", Some("slow"), true), // Use CRF, slow preset for best quality
         _ => ("libvpx-vp9", "webm", None, false), // Default to WebM
     };
 
@@ -278,9 +278,9 @@ fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool, fo
 
     // Use CRF for MP4 (better quality), bitrate for WebM
     if use_crf {
-        cmd.args(&["-crf", "23"]); // 23 = good quality (lower = better, 18-28 range)
+        cmd.args(&["-crf", "18"]); // 18 = high quality (lower = better, range 0-51)
     } else {
-        cmd.args(&["-b:v", "5M"]); // 5Mbps for WebM (increased from 2M)
+        cmd.args(&["-b:v", "10M"]); // 10Mbps for WebM (high quality)
     }
 
     // Add preset for MP4

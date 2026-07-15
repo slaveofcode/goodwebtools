@@ -62,9 +62,9 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
         let bytes_per_row = image.bytes_per_row();
         let data = image.data();
 
-        // Sample every 2nd pixel for 2x speed (50% size)
-        // Much faster than copying all pixels then scaling!
-        let sample_rate = 2; // Skip every other pixel
+        // No downsampling for better quality (was: sample_rate = 2 for 50% size)
+        // Trade: slower capture, but much better quality
+        let sample_rate = 1; // Full resolution
         let scaled_width = width / sample_rate;
         let scaled_height = height / sample_rate;
 
@@ -89,9 +89,9 @@ pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
             }
         }
 
-        // Use JPEG with 85% quality (good quality, still fast)
+        // Use JPEG with 95% quality (high quality)
         let mut output = Vec::new();
-        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 85);
+        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 95);
         encoder.encode(
             &scaled_buffer,
             scaled_width,
