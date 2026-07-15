@@ -20,6 +20,17 @@
         "fullscreen": false,
         "url": "http://localhost:4321",
         "label": "main"
+      },
+      {
+        "title": "Select Region",
+        "width": 800,
+        "height": 600,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "label": "region-selector"
       }
     ],
     "withGlobalTauri": true,
