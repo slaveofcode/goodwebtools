@@ -64,6 +64,8 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
     println!("[Recording] FPS: {}, Display: {:?}", fps, display_id);
     if let Some(ref rect) = bounds {
         println!("[Recording] Region: {}x{} at ({}, {})", rect.width, rect.height, rect.x, rect.y);
+    } else {
+        println!("[Recording] Region: FULL SCREEN (no bounds)");
     }
     println!("[Recording] Audio: mic={}, system={}", include_audio, system_audio);
 

@@ -105,12 +105,15 @@ export default function ScreenRecorder() {
       const selectedFormat = inTauriApp ? format : pickMime().ext;
       extRef.current = selectedFormat;
 
+      const recordBounds = regionMode && selectedRegion ? selectedRegion : undefined;
+      console.log('[ScreenRecorder] Starting recording with bounds:', recordBounds);
+
       const handle = await captureService.startRecording({
         format: selectedFormat,
         includeAudio: withMic,
         fps: fps,
         displayId: inTauriApp ? selectedDisplay : undefined,
-        bounds: regionMode && selectedRegion ? selectedRegion : undefined,
+        bounds: recordBounds,
       });
 
       handleRef.current = handle;
