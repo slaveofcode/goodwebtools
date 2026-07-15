@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, Circle, Square } from 'lucide-react';
+import { Download, Circle, Square, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
@@ -25,6 +25,7 @@ export default function ScreenRecorder() {
   // Start as false for SSR, then check in useEffect
   const [supported, setSupported] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [withMic, setWithMic] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [result, setResult] = useState<Blob | null>(null);
@@ -104,6 +105,8 @@ export default function ScreenRecorder() {
   const stop = async () => {
     if (!handleRef.current) return;
 
+    setStopping(true);
+
     try {
       const blob = await captureService.stopRecording(handleRef.current);
 
@@ -136,6 +139,8 @@ export default function ScreenRecorder() {
 
       setRecording(false);
       handleRef.current = null;
+    } finally {
+      setStopping(false);
     }
   };
 
@@ -168,7 +173,7 @@ export default function ScreenRecorder() {
           <select
             id="display-select"
             value={selectedDisplay}
-            disabled={recording}
+            disabled={recording || stopping}
             onChange={(e) => setSelectedDisplay(Number(e.target.value))}
             className="rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50"
           >
@@ -189,7 +194,7 @@ export default function ScreenRecorder() {
           <select
             id="format-select"
             value={format}
-            disabled={recording}
+            disabled={recording || stopping}
             onChange={(e) => setFormat(e.target.value as 'webm' | 'mp4')}
             className="rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50"
           >
@@ -207,7 +212,7 @@ export default function ScreenRecorder() {
           <select
             id="fps-select"
             value={fps}
-            disabled={recording}
+            disabled={recording || stopping}
             onChange={(e) => setFps(Number(e.target.value))}
             className="rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50"
           >
@@ -222,7 +227,7 @@ export default function ScreenRecorder() {
       )}
 
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={withMic} disabled={recording} onChange={e => setWithMic(e.target.checked)} className="h-4 w-4 accent-violet-600" />
+        <input type="checkbox" checked={withMic} disabled={recording || stopping} onChange={e => setWithMic(e.target.checked)} className="h-4 w-4 accent-violet-600" />
         <span className="font-bold uppercase tracking-wide text-muted-foreground">Also record microphone</span>
       </label>
 
@@ -232,16 +237,27 @@ export default function ScreenRecorder() {
             <Circle className="h-4 w-4 fill-red-500 text-red-500" />
             Start recording
           </Button>
+        ) : stopping ? (
+          <Button disabled variant="secondary" className="border-yellow-600 bg-yellow-600 text-white">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Saving...
+          </Button>
         ) : (
           <Button onClick={stop} variant="secondary" className="border-red-600 bg-red-600 text-white hover:bg-red-700">
             <Square className="h-4 w-4 fill-current" />
             Stop
           </Button>
         )}
-        {recording && (
+        {(recording || stopping) && (
           <span className="flex items-center gap-2 font-mono text-sm font-bold">
-            <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
-            {mmss}
+            {stopping ? (
+              <span className="text-yellow-600">Processing...</span>
+            ) : (
+              <>
+                <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                {mmss}
+              </>
+            )}
           </span>
         )}
       </div>

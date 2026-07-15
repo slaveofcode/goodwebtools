@@ -18,6 +18,12 @@ export default defineConfig({
         'node-fetch': new URL('./src/stubs/node-fetch.js', import.meta.url).pathname,
       },
     },
+    build: {
+      rollupOptions: {
+        // Tauri API imports are only available in Tauri context, externalize for web build
+        external: [/^@tauri-apps\//],
+      },
+    },
     // mupdf/pdf.js workers use dynamic import() (code-splitting), which requires
     // ES-module workers rather than Vite's default IIFE format.
     worker: {
