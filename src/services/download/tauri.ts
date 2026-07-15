@@ -1,6 +1,6 @@
 // src/services/download/tauri.ts
-import { save } from '@tauri-apps/api/dialog';
-import { writeBinaryFile } from '@tauri-apps/api/fs';
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeBinaryFile } from '@tauri-apps/plugin-fs';
 import type { DownloadService, BlobFile, DownloadServiceCapabilities } from './types';
 
 export class TauriDownloadService implements DownloadService {
