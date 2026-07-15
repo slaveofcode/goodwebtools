@@ -97,7 +97,7 @@ fn record_frames(
     frames: Arc<Mutex<Vec<Vec<u8>>>>,
     duration_out: Arc<Mutex<Option<Duration>>>,
 ) {
-    use crate::commands::capture_screen_internal;
+    use crate::commands::capture_screen_fast;
 
     // Target frame interval (but actual may be slower due to capture time)
     let target_frame_duration = Duration::from_millis(1000 / fps as u64);
@@ -122,8 +122,8 @@ fn record_frames(
             }
         }
 
-        // Capture frame
-        match capture_screen_internal(display_id) {
+        // Capture frame (using fast JPEG encoding)
+        match capture_screen_fast(display_id) {
             Ok(frame_data) => {
                 if let Ok(mut frames_vec) = frames.lock() {
                     frames_vec.push(frame_data);
@@ -180,8 +180,10 @@ pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
         *flag = true;
     }
 
-    // Wait a bit for thread to finish
-    thread::sleep(Duration::from_millis(500));
+    // Wait for thread to finish and set duration
+    // Frame capture is slow, so wait longer
+    println!("[Recording] Waiting for recording thread to finish...");
+    thread::sleep(Duration::from_millis(2000)); // Increased from 500ms
 
     // Get frames
     let frames_vec = state.frames.lock()
@@ -236,9 +238,9 @@ fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool) ->
 
     println!("[Recording] Writing frames to: {}", temp_dir.display());
 
-    // Write frames as PNG files
+    // Write frames as JPEG files (faster encoding)
     for (i, frame_data) in frames.iter().enumerate() {
-        let frame_path = temp_dir.join(format!("frame_{:05}.png", i));
+        let frame_path = temp_dir.join(format!("frame_{:05}.jpg", i));
         let mut file = File::create(&frame_path)
             .map_err(|e| format!("Failed to create frame file: {}", e))?;
         file.write_all(frame_data)
@@ -256,7 +258,7 @@ fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool) ->
         .args(&[
             "-y", // Overwrite output
             "-framerate", &fps_str,
-            "-i", &temp_dir.join("frame_%05d.png").to_string_lossy(),
+            "-i", &temp_dir.join("frame_%05d.jpg").to_string_lossy(),
             "-c:v", "libvpx-vp9", // VP9 codec
             "-pix_fmt", "yuv420p",
             "-b:v", "2M", // 2Mbps bitrate

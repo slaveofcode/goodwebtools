@@ -42,6 +42,59 @@ pub struct RecordOptions {
     pub display_id: Option<i32>,
 }
 
+// Fast capture for recording (JPEG instead of PNG)
+pub fn capture_screen_fast(display_id: Option<i32>) -> Result<Vec<u8>, String> {
+    #[cfg(target_os = "macos")]
+    {
+        use core_graphics::display::{CGDisplay, CGMainDisplayID};
+        use image::{ImageBuffer, Rgba, RgbaImage};
+
+        let display = if let Some(id) = display_id {
+            CGDisplay::new(id as u32)
+        } else {
+            unsafe { CGDisplay::new(CGMainDisplayID()) }
+        };
+
+        let image = display.image()
+            .ok_or_else(|| "Failed to capture screen".to_string())?;
+
+        let width = image.width() as u32;
+        let height = image.height() as u32;
+        let bytes_per_row = image.bytes_per_row();
+        let data = image.data();
+
+        let mut rgba_buffer: RgbaImage = ImageBuffer::new(width, height);
+
+        for y in 0..height {
+            for x in 0..width {
+                let offset = (y as usize * bytes_per_row as usize) + (x as usize * 4);
+                if offset + 3 < data.len() as usize {
+                    let b = data[offset];
+                    let g = data[offset + 1];
+                    let r = data[offset + 2];
+                    let a = data[offset + 3];
+                    rgba_buffer.put_pixel(x, y, Rgba([r, g, b, a]));
+                }
+            }
+        }
+
+        // Use JPEG with 85% quality (much faster than PNG)
+        let mut output = Vec::new();
+        let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, 85);
+        encoder.encode(
+            &rgba_buffer,
+            width,
+            height,
+            image::ColorType::Rgba8.into(),
+        ).map_err(|e: image::ImageError| e.to_string())?;
+
+        return Ok(output);
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    return Err("Platform not supported".to_string());
+}
+
 // Internal helper for recording (not exposed as command)
 pub fn capture_screen_internal(display_id: Option<i32>) -> Result<Vec<u8>, String> {
     #[cfg(target_os = "macos")]
