@@ -120,6 +120,7 @@ export default function Screenshot() {
       setShot(canvas);
       setPreviewUrl(prev => { if (prev) URL.revokeObjectURL(prev); return canvas.toDataURL('image/png'); });
     } catch (e) {
+      console.error('[Screenshot] Capture failed:', e);
       if (e instanceof DOMException && e.name === 'NotAllowedError') setError('Screen capture was cancelled.');
       else setError(e instanceof Error ? e.message : 'Could not capture the screen.');
     } finally {
