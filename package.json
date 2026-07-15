@@ -51,6 +51,8 @@
     "@nanostores/react": "^0.7.3",
     "@sqlite.org/sqlite-wasm": "^3.50.1-build1",
     "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-fs": "^2.5.1",
     "@tensorflow/tfjs": "^4.22.0",
     "@upscalerjs/esrgan-slim": "^1.0.0",
     "astro": "^4.16.19",
