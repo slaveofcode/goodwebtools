@@ -60,7 +60,7 @@ export class TauriCaptureService implements CaptureService {
       const { listen } = await import('@tauri-apps/api/event');
 
       // Show the overlay on the specified display
-      await invoke('show_region_selector', { displayId });
+      await invoke('show_region_selector', { display_id: displayId });
 
       // Wait for the region selection event
       return new Promise((resolve) => {
