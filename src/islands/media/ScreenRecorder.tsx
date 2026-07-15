@@ -108,11 +108,12 @@ export default function ScreenRecorder() {
           height: 400,
         };
 
-        console.log('[ScreenRecorder] Capturing countdown region:', countdownBounds);
+        console.log('[ScreenRecorder] Capturing countdown region:', countdownBounds, 'from display:', selectedDisplay);
 
-        // Capture just the countdown window region
+        // Capture just the countdown window region from the selected display
         const screenshot = await invoke('capture_region', {
-          bounds: countdownBounds
+          bounds: countdownBounds,
+          displayId: selectedDisplay
         }) as number[];
 
         // Convert to base64 in chunks

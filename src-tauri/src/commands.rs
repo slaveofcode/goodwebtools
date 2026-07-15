@@ -328,9 +328,9 @@ pub async fn capture_window(_window_id: Option<String>) -> Result<Vec<u8>, Strin
 }
 
 #[tauri::command]
-pub async fn capture_region(bounds: Rectangle) -> Result<Vec<u8>, String> {
-    // Use high quality settings for single-frame region capture
-    capture_screen_fast(None, 10, Some(bounds))
+pub async fn capture_region(bounds: Rectangle, display_id: Option<i32>) -> Result<Vec<u8>, String> {
+    // Use high quality settings for single-frame region capture from specified display
+    capture_screen_fast(display_id, 10, Some(bounds))
 }
 
 #[derive(Debug, Deserialize)]
