@@ -7,6 +7,7 @@ import { formatBytes } from '@/tools/image/canvas.lib';
 import { captureService } from '@/services/capture';
 import type { RecordingHandle, DisplayInfo } from '@/services/capture';
 import { isTauri } from '@/services/platform';
+import { hotkeyService } from '@/services/hotkey';
 
 function pickMime(): { mime: string; ext: string } {
   const candidates = [
@@ -37,12 +38,14 @@ export default function ScreenRecorder() {
   const [fps, setFps] = useState<number>(10);
   const [regionMode, setRegionMode] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<{x: number; y: number; width: number; height: number} | null>(null);
+  const [hideWindow, setHideWindow] = useState(true); // Hide window during recording by default
 
   const inTauriApp = isTauri();
 
   const handleRef = useRef<RecordingHandle | null>(null);
   const extRef = useRef('webm');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const windowHiddenRef = useRef(false);
 
   useEffect(() => {
     // Check if recording is supported (browser or Tauri)
@@ -70,9 +73,19 @@ export default function ScreenRecorder() {
     if (inTauriApp) {
       (async () => {
         const { listen } = await import('@tauri-apps/api/event');
-        const unlisten = await listen<{x: number; y: number; width: number; height: number}>('region-selected', (event) => {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const unlisten = await listen<{x: number; y: number; width: number; height: number}>('region-selected', async (event) => {
           console.log('[ScreenRecorder] Region selected:', event.payload);
           setSelectedRegion(event.payload);
+          // Clean up overlay screenshot from localStorage
+          localStorage.removeItem('overlay-screenshot');
+          // Restore main window immediately
+          try {
+            await invoke('show_main_window');
+            console.log('[ScreenRecorder] Window restored after region selection');
+          } catch (err) {
+            console.error('[ScreenRecorder] Failed to restore window:', err);
+          }
         });
         return () => { unlisten(); };
       })();
@@ -80,6 +93,42 @@ export default function ScreenRecorder() {
   }, [inTauriApp]);
 
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
+
+  // Register global hotkey for screen recording (Tauri only)
+  useEffect(() => {
+    if (!inTauriApp) return;
+
+    let hotkeyId: string | null = null;
+
+    const registerHotkey = async () => {
+      try {
+        hotkeyId = await hotkeyService.register(
+          'CommandOrControl+Shift+5',
+          () => {
+            console.log('[ScreenRecorder] Global hotkey triggered');
+            // Toggle recording: start if not recording, stop if recording
+            if (recording) {
+              stop();
+            } else if (!stopping) {
+              start();
+            }
+          },
+          'Toggle screen recording'
+        );
+        console.log('[ScreenRecorder] Registered global hotkey:', hotkeyId);
+      } catch (err) {
+        console.warn('[ScreenRecorder] Failed to register hotkey:', err);
+      }
+    };
+
+    registerHotkey();
+
+    return () => {
+      if (hotkeyId) {
+        hotkeyService.unregister(hotkeyId).catch(console.warn);
+      }
+    };
+  }, [recording, stopping]);
 
   const start = async () => {
     setError('');
@@ -95,6 +144,18 @@ export default function ScreenRecorder() {
       // Show countdown overlay on selected display
       if (inTauriApp) {
         const { invoke } = await import('@tauri-apps/api/core');
+
+        // Hide window if user enabled the option
+        if (hideWindow) {
+          console.log('[ScreenRecorder] Hiding window for cleaner capture');
+          await invoke('hide_main_window');
+          windowHiddenRef.current = true;
+          // Wait for window + shadow to fully disappear
+          await new Promise(resolve => setTimeout(resolve, 200));
+        } else {
+          console.log('[ScreenRecorder] Keeping window visible (user preference)');
+          windowHiddenRef.current = false;
+        }
 
         // Get display info to calculate countdown position
         const displayList = await invoke('list_displays') as DisplayInfo[];
@@ -137,6 +198,9 @@ export default function ScreenRecorder() {
 
         // Clean up
         localStorage.removeItem('countdown-screenshot');
+
+        // Keep window hidden during recording for cleaner capture
+        console.log('[ScreenRecorder] Window stays hidden during recording');
       }
 
       // Use selected format or browser-compatible format
@@ -163,6 +227,16 @@ export default function ScreenRecorder() {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
+      // Restore window on error (only if we hid it)
+      if (inTauriApp && windowHiddenRef.current) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('show_main_window');
+          windowHiddenRef.current = false;
+        } catch (err) {
+          console.error('[ScreenRecorder] Failed to restore window:', err);
+        }
+      }
       if (e instanceof DOMException && e.name === 'NotAllowedError') setError('Screen sharing was cancelled.');
       else setError(e instanceof Error ? e.message : 'Could not start screen recording.');
     }
@@ -179,6 +253,18 @@ export default function ScreenRecorder() {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
+      }
+
+      // Restore window after recording stops (only if we hid it)
+      if (inTauriApp && windowHiddenRef.current) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('show_main_window');
+          windowHiddenRef.current = false;
+          console.log('[ScreenRecorder] Window restored after recording stopped');
+        } catch (err) {
+          console.error('[ScreenRecorder] Failed to restore window:', err);
+        }
       }
 
       setResult(blob);
@@ -206,6 +292,16 @@ export default function ScreenRecorder() {
       setRecording(false);
       handleRef.current = null;
     } finally {
+      // Always restore window when stopping completes (only if we hid it)
+      if (inTauriApp && windowHiddenRef.current) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('show_main_window');
+          windowHiddenRef.current = false;
+        } catch (err) {
+          console.error('[ScreenRecorder] Failed to restore window in finally:', err);
+        }
+      }
       setStopping(false);
     }
   };
@@ -214,12 +310,19 @@ export default function ScreenRecorder() {
     if (!inTauriApp) return;
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      const { emit } = await import('@tauri-apps/api/event');
 
-      // Capture screenshot of the display first
+      // Hide main window so it doesn't cover the screen
+      await invoke('hide_main_window');
+
+      // Wait for window hide animation
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Capture 50% resolution screenshot for overlay background (4× faster)
       const screenshot = await invoke('capture_screen', {
         options: {
-          format: 'png',
+          format: 'jpg',
+          quality: 0.75,
+          scale: 0.5,  // 50% resolution for faster encoding
           displayId: selectedDisplay
         }
       }) as number[];
@@ -234,13 +337,30 @@ export default function ScreenRecorder() {
       const base64 = btoa(binary);
       const dataUrl = `data:image/png;base64,${base64}`;
 
+      // Store in localStorage for overlay to read
+      localStorage.setItem('overlay-screenshot', dataUrl);
+      console.log('[ScreenRecorder] Overlay screenshot saved to localStorage');
+
       // Show overlay
       await invoke('show_region_selector', { options: { displayId: selectedDisplay } });
 
-      // Send screenshot to overlay
-      await emit('overlay-screenshot', { dataUrl });
+      // Failsafe: restore window after 30 seconds if still hidden
+      setTimeout(async () => {
+        try {
+          await invoke('show_main_window');
+          console.log('[ScreenRecorder] Failsafe: Window restored after timeout');
+        } catch (err) {
+          console.error('[ScreenRecorder] Failsafe failed:', err);
+        }
+      }, 30000);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to show region selector');
+      // Restore window on error
+      try {
+        await invoke('show_main_window');
+      } catch (err) {
+        console.error('[ScreenRecorder] Failed to restore window:', err);
+      }
     }
   };
 
@@ -362,6 +482,13 @@ export default function ScreenRecorder() {
         <input type="checkbox" checked={withMic} disabled={recording || stopping} onChange={e => setWithMic(e.target.checked)} className="h-4 w-4 accent-violet-600" />
         <span className="font-bold uppercase tracking-wide text-muted-foreground">Also record microphone</span>
       </label>
+
+      {inTauriApp && (
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={hideWindow} disabled={recording || stopping} onChange={e => setHideWindow(e.target.checked)} className="h-4 w-4 accent-violet-600" />
+          <span className="font-bold uppercase tracking-wide text-muted-foreground">Hide window during recording</span>
+        </label>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         {!recording ? (

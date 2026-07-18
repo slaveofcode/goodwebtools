@@ -11,7 +11,8 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        // Will add later: global-shortcut, updater
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        // Will add later: updater
         .invoke_handler(tauri::generate_handler![
             commands::capture_screen,
             commands::list_displays,
@@ -25,6 +26,8 @@ fn main() {
             commands::check_screen_recording_permission,
             commands::show_countdown,
             commands::close_countdown,
+            commands::hide_main_window,
+            commands::show_main_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,5 +1,5 @@
 // src/services/hotkey/tauri.ts
-import { register, unregister, unregisterAll } from '@tauri-apps/api/globalShortcut';
+import { register, unregister, unregisterAll } from '@tauri-apps/plugin-global-shortcut';
 import type { HotkeyService, Hotkey, HotkeyCallback, HotkeyServiceCapabilities } from './types';
 
 export class TauriHotkeyService implements HotkeyService {

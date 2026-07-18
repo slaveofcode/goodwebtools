@@ -8,6 +8,7 @@ import { detectCompanion, companionCapture } from '@/services/companion';
 import { captureService } from '@/services/capture';
 import type { DisplayInfo } from '@/services/capture';
 import { isTauri } from '@/services/platform';
+import { hotkeyService } from '@/services/hotkey';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
@@ -66,6 +67,40 @@ export default function Screenshot() {
     }
   }, []);
 
+  // Register global hotkey for screenshot (Tauri only)
+  useEffect(() => {
+    if (!isTauri()) return;
+
+    let hotkeyId: string | null = null;
+
+    const registerHotkey = async () => {
+      try {
+        hotkeyId = await hotkeyService.register(
+          'CommandOrControl+Shift+3',
+          () => {
+            console.log('[Screenshot] Global hotkey triggered');
+            // Trigger full screen capture
+            if (!capturing) {
+              capture();
+            }
+          },
+          'Take full screenshot'
+        );
+        console.log('[Screenshot] Registered global hotkey:', hotkeyId);
+      } catch (err) {
+        console.warn('[Screenshot] Failed to register hotkey:', err);
+      }
+    };
+
+    registerHotkey();
+
+    return () => {
+      if (hotkeyId) {
+        hotkeyService.unregister(hotkeyId).catch(console.warn);
+      }
+    };
+  }, [capturing]);
+
   const loadDataUrl = (dataUrl: string, w: number, h: number) => {
     const canvas = document.createElement('canvas');
     canvas.width = w;
@@ -99,40 +134,55 @@ export default function Screenshot() {
     try {
       setCapturing(true);
 
-      // STEP 1: Capture the full screen first
+      // Hide main window if in Tauri
+      if (isTauri()) {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('hide_main_window');
+        // Wait for window + shadow to fully disappear (macOS compositor needs time)
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      // STEP 1: Capture 50% resolution screenshot for overlay background (4× faster)
+      const overlayBlob = await captureService.captureScreen({
+        format: 'jpg',  // JPEG is faster than PNG
+        quality: 0.75,  // Good enough for background
+        scale: 0.5,     // 50% resolution = 4× fewer pixels
+        displayId: selectedDisplay,
+      });
+
+      // Convert to data URL
+      const reader = new FileReader();
+      const overlayDataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(overlayBlob);
+      });
+
+      // Store in localStorage for overlay
+      localStorage.setItem('overlay-screenshot', overlayDataUrl);
+      console.log('[Screenshot] Overlay screenshot saved (JPEG)');
+
+      // STEP 2: Show overlay window (user selects region)
+      const regionPromise = captureService.showRegionSelector(selectedDisplay);
+
+      // STEP 3: Capture full-res screenshot in parallel for cropping
       const fullBlob = await captureService.captureScreen({
         format: 'png',
         displayId: selectedDisplay,
       });
 
-      // Convert to data URL for the overlay
-      const reader = new FileReader();
-      const dataUrlPromise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(fullBlob);
+      const fullDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader2 = new FileReader();
+        reader2.onload = () => resolve(reader2.result as string);
+        reader2.onerror = reject;
+        reader2.readAsDataURL(fullBlob);
       });
 
-      const screenshotDataUrl = await dataUrlPromise;
-
-      // STEP 2: Show overlay window on the selected display
-      const { emit } = await import('@tauri-apps/api/event');
-
-      console.log('[Screenshot] Selected display ID:', selectedDisplay);
-
-      // Start showing the overlay on the selected display (async, doesn't wait)
-      const regionPromise = captureService.showRegionSelector(selectedDisplay);
-
-      // Wait a bit for the overlay window to be ready
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // STEP 3: Now emit the screenshot to the overlay window
-      console.log('[Screenshot] Emitting screenshot, data URL length:', screenshotDataUrl.length);
-      await emit('overlay-screenshot', { dataUrl: screenshotDataUrl });
-      console.log('[Screenshot] Screenshot emitted');
-
-      // Wait for region selection
+      // STEP 4: Wait for region selection
       const region = await regionPromise;
+
+      // Clean up overlay screenshot from localStorage
+      localStorage.removeItem('overlay-screenshot');
 
       if (!region) {
         // User cancelled
@@ -140,25 +190,44 @@ export default function Screenshot() {
         return;
       }
 
-      // STEP 4: Load the full screenshot and crop to selected region
+      // STEP 5: Load the full-res screenshot and crop to selected region
       const fullImg = new Image();
       await new Promise<void>((resolve, reject) => {
         fullImg.onload = () => resolve();
         fullImg.onerror = () => reject(new Error('Failed to load screenshot'));
-        fullImg.src = screenshotDataUrl;
+        fullImg.src = fullDataUrl; // Use full-res screenshot for cropping
       });
 
-      // Create canvas with cropped region
+      // Calculate HiDPI scale factor (physical pixels / logical pixels)
+      const targetDisplay = displays.find(d => d.id === selectedDisplay) || displays.find(d => d.isMain)!;
+      const scaleX = fullImg.width / targetDisplay.width;
+      const scaleY = fullImg.height / targetDisplay.height;
+
+      console.log('[Screenshot] Scale factor:', scaleX, 'x', scaleY,
+                  '(logical:', targetDisplay.width, 'x', targetDisplay.height,
+                  'physical:', fullImg.width, 'x', fullImg.height, ')');
+      console.log('[Screenshot] Logical region:', region);
+      console.log('[Screenshot] Physical region:',
+                  Math.round(region.x * scaleX), Math.round(region.y * scaleY),
+                  Math.round(region.width * scaleX), Math.round(region.height * scaleY));
+
+      // Scale region coordinates to physical pixels
+      const physicalX = Math.round(region.x * scaleX);
+      const physicalY = Math.round(region.y * scaleY);
+      const physicalWidth = Math.round(region.width * scaleX);
+      const physicalHeight = Math.round(region.height * scaleY);
+
+      // Create canvas with cropped region (in physical pixels)
       const canvas = document.createElement('canvas');
-      canvas.width = region.width;
-      canvas.height = region.height;
+      canvas.width = physicalWidth;
+      canvas.height = physicalHeight;
       const ctx = canvas.getContext('2d')!;
 
-      // Draw the selected region from the full screenshot
+      // Draw the selected region from the full screenshot (using physical pixel coordinates)
       ctx.drawImage(
         fullImg,
-        region.x, region.y, region.width, region.height, // source
-        0, 0, region.width, region.height // destination
+        physicalX, physicalY, physicalWidth, physicalHeight, // source (physical pixels)
+        0, 0, physicalWidth, physicalHeight // destination
       );
 
       setShot(canvas);
@@ -170,6 +239,11 @@ export default function Screenshot() {
       console.error('[Screenshot] Region capture failed:', e);
       setError(e instanceof Error ? e.message : 'Could not capture the screen.');
     } finally {
+      // Always restore main window
+      if (isTauri()) {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('show_main_window').catch(err => console.error('[Screenshot] Failed to restore window:', err));
+      }
       setCapturing(false);
       setCountdown(0);
     }
@@ -373,9 +447,22 @@ export default function Screenshot() {
             />
             {sel && sel.w > 0 && sel.h > 0 && (
               <div
-                className="pointer-events-none absolute border-2 border-violet-500 bg-violet-500/20"
-                style={{ left: sel.x, top: sel.y, width: sel.w, height: sel.h }}
-              />
+                className="pointer-events-none absolute border-4 border-blue-500 bg-blue-500/20"
+                style={{
+                  left: sel.x,
+                  top: sel.y,
+                  width: sel.w,
+                  height: sel.h,
+                  boxShadow: '0 0 0 3px rgba(255, 255, 255, 0.95), 0 0 0 7px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.8), inset 0 0 80px rgba(59, 130, 246, 0.1)'
+                }}
+              >
+                <div
+                  className="absolute -top-8 left-0 bg-blue-500 text-white px-3 py-1.5 rounded-md font-mono text-sm font-semibold whitespace-nowrap pointer-events-none"
+                  style={{ boxShadow: '0 0 0 2px rgba(255, 255, 255, 0.9), 0 4px 12px rgba(0, 0, 0, 0.3)' }}
+                >
+                  {Math.round(sel.w)} × {Math.round(sel.h)}
+                </div>
+              </div>
             )}
           </div>
 

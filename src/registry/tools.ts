@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -78,6 +78,28 @@ export const tools: ToolDef[] = [
     summary: 'Compare two texts line by line',
     load: () => import('@/islands/dev/TextDiff'),
     status: 'stable'
+  },
+  {
+    id: 'json-compare',
+    name: 'JSON Deep Compare',
+    category: 'Dev',
+    route: '/tools/json-compare',
+    keywords: ['json', 'compare', 'deep', 'equal', 'diff', 'object', 'structure'],
+    icon: Braces,
+    summary: 'Deep compare JSON objects ignoring property order',
+    load: () => import('@/islands/dev/JsonCompare'),
+    status: 'stable'
+  },
+  {
+    id: 'hotkey-test',
+    name: 'Hotkey Test',
+    category: 'Dev',
+    route: '/tools/hotkey-test',
+    keywords: ['hotkey', 'shortcut', 'global', 'keyboard', 'test', 'keybinding'],
+    icon: Keyboard,
+    summary: 'Test global hotkey registration (desktop only)',
+    load: () => import('@/islands/dev/HotkeyTest'),
+    status: 'beta'
   },
   {
     id: 'csv-json',
