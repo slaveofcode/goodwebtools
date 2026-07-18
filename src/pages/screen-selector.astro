@@ -50,29 +50,29 @@
 
       .screen-card {
         position: relative;
-        cursor: pointer;
-        border: 4px solid #333;
+        cursor: pointer !important;
+        border: 4px solid #333 !important;
         border-radius: 12px;
         overflow: hidden;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: #1a1a1a;
-        opacity: 0.7;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        background: #1a1a1a !important;
+        opacity: 0.7 !important;
       }
 
       .screen-card:hover {
-        border-color: #3b82f6;
-        transform: scale(1.08) translateY(-8px);
+        border-color: #3b82f6 !important;
+        transform: scale(1.08) translateY(-8px) !important;
         box-shadow:
           0 0 0 2px rgba(59, 130, 246, 0.3),
           0 0 40px rgba(59, 130, 246, 0.6),
-          0 20px 40px rgba(0, 0, 0, 0.5);
-        opacity: 1;
-        cursor: grab;
+          0 20px 40px rgba(0, 0, 0, 0.5) !important;
+        opacity: 1 !important;
+        cursor: grab !important;
       }
 
       .screen-card:active {
-        cursor: grabbing;
-        transform: scale(1.05) translateY(-4px);
+        cursor: grabbing !important;
+        transform: scale(1.05) translateY(-4px) !important;
       }
 
       .screen-card img {
@@ -154,6 +154,9 @@
 
         card.addEventListener('click', async () => {
           console.log('[ScreenSelector] Selected display:', thumb.display.id);
+
+          // Hide screen selector immediately
+          document.body.style.display = 'none';
 
           // Store selected display ID
           localStorage.setItem('gwt-selected-display', thumb.display.id.toString());
