@@ -136,7 +136,19 @@ async function handleGlobalScreenshot() {
       }
 
       // Store thumbnails for picker
-      localStorage.setItem('gwt-screen-thumbnails', JSON.stringify(validThumbnails));
+      const thumbnailsJson = JSON.stringify(validThumbnails);
+      console.log('[GlobalHotkeys] Storing thumbnails, size:', thumbnailsJson.length, 'bytes');
+
+      try {
+        localStorage.setItem('gwt-screen-thumbnails', thumbnailsJson);
+        console.log('[GlobalHotkeys] Thumbnails stored successfully');
+      } catch (err) {
+        console.error('[GlobalHotkeys] Failed to store thumbnails:', err);
+        // Fallback: use main display
+        displayId = displays.find(d => d.isMain)?.id || displays[0]?.id;
+        console.log('[GlobalHotkeys] Falling back to main display:', displayId);
+        // Continue with single-display flow below
+      }
 
       // Show screen picker
       if (typeof window !== 'undefined') {

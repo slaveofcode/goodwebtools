@@ -134,13 +134,32 @@
 
       // Load thumbnails from localStorage
       const thumbnailsData = localStorage.getItem('gwt-screen-thumbnails');
+      console.log('[ScreenSelector] Thumbnails data:', thumbnailsData ? 'found' : 'not found');
+
       if (!thumbnailsData) {
-        console.error('[ScreenSelector] No thumbnails found');
-        window.close();
+        console.error('[ScreenSelector] No thumbnails found in localStorage');
+        alert('Error: No screen thumbnails found. Please try again.');
+        await invoke('show_main_window');
+        return;
       }
 
-      const thumbnails = JSON.parse(thumbnailsData);
-      console.log('[ScreenSelector] Loaded thumbnails:', thumbnails.length);
+      let thumbnails;
+      try {
+        thumbnails = JSON.parse(thumbnailsData);
+        console.log('[ScreenSelector] Loaded thumbnails:', thumbnails.length, thumbnails);
+      } catch (err) {
+        console.error('[ScreenSelector] Failed to parse thumbnails:', err);
+        alert('Error parsing screen data. Please try again.');
+        await invoke('show_main_window');
+        return;
+      }
+
+      if (!thumbnails || thumbnails.length === 0) {
+        console.error('[ScreenSelector] Empty thumbnails array');
+        alert('No screens found. Please try again.');
+        await invoke('show_main_window');
+        return;
+      }
 
       // Render screen cards
       thumbnails.forEach((thumb: any, index: number) => {
