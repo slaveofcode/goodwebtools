@@ -79,6 +79,31 @@ async function handleGlobalScreenshot() {
   try {
     console.log('[GlobalHotkeys] Starting region selection...');
 
+    // First, capture a screenshot for the overlay background
+    console.log('[GlobalHotkeys] Capturing overlay screenshot...');
+    const overlayScreenshot = await captureService.captureScreen({
+      format: 'jpg',
+      quality: 0.75,
+      scale: 0.5, // Reduce resolution for faster overlay
+    });
+
+    // Convert to data URL for overlay background
+    let overlayDataUrl: string;
+    if (overlayScreenshot instanceof Blob) {
+      overlayDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(overlayScreenshot);
+      });
+    } else {
+      throw new Error('Unexpected screenshot format for overlay');
+    }
+
+    // Store in localStorage for overlay to use
+    localStorage.setItem('overlay-screenshot', overlayDataUrl);
+    console.log('[GlobalHotkeys] Overlay screenshot stored');
+
     // Show region selector to let user choose area
     console.log('[GlobalHotkeys] Showing region selector...');
     const region = await captureService.showRegionSelector();
