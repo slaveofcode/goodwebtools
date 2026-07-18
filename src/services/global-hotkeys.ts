@@ -82,28 +82,38 @@ async function handleGlobalScreenshot() {
       throw new Error('Screenshot capture returned null or undefined');
     }
 
-    if (!Array.isArray(screenshot)) {
-      throw new Error(`Screenshot capture returned wrong type: ${typeof screenshot}`);
+    let dataUrl: string;
+
+    // Handle Blob (from Tauri captureScreen)
+    if (screenshot instanceof Blob) {
+      console.log('[GlobalHotkeys] Converting Blob to data URL...');
+      dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(screenshot);
+      });
+      console.log('[GlobalHotkeys] Blob converted to data URL, length:', dataUrl.length);
     }
-
-    if (screenshot.length === 0) {
-      throw new Error('Screenshot capture returned empty array');
+    // Handle number[] array (alternative format)
+    else if (Array.isArray(screenshot)) {
+      if (screenshot.length === 0) {
+        throw new Error('Screenshot capture returned empty array');
+      }
+      console.log('[GlobalHotkeys] Converting byte array to base64...');
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < screenshot.length; i += chunkSize) {
+        const chunk = screenshot.slice(i, i + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+      const base64 = btoa(binary);
+      dataUrl = `data:image/png;base64,${base64}`;
+      console.log('[GlobalHotkeys] Array converted to base64, length:', dataUrl.length);
     }
-
-    console.log('[GlobalHotkeys] Screenshot captured, size:', screenshot.length, 'bytes');
-
-    // Convert to base64 data URL (chunk processing for large arrays)
-    console.log('[GlobalHotkeys] Converting to base64...');
-    let binary = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < screenshot.length; i += chunkSize) {
-      const chunk = screenshot.slice(i, i + chunkSize);
-      binary += String.fromCharCode(...chunk);
+    else {
+      throw new Error(`Screenshot capture returned unsupported type: ${typeof screenshot}`);
     }
-    const base64 = btoa(binary);
-    const dataUrl = `data:image/png;base64,${base64}`;
-
-    console.log('[GlobalHotkeys] Screenshot encoded to base64, length:', dataUrl.length);
 
     // Store in localStorage for the Screenshot tool to pick up
     localStorage.setItem('gwt-global-screenshot', dataUrl);
@@ -131,9 +141,7 @@ async function handleGlobalScreenshot() {
     console.error('[GlobalHotkeys] Screenshot capture failed:', err);
     console.error('[GlobalHotkeys] Error stack:', (err as Error).stack);
 
-    // Show error notification (could use a toast service here)
-    if (typeof window !== 'undefined') {
-      alert(`Screenshot failed: ${(err as Error).message}`);
-    }
+    // TODO: Show error notification using a toast service instead of alert
+    // (alert requires dialog permissions which aren't critical for this feature)
   }
 }
