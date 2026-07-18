@@ -150,10 +150,8 @@ async function handleGlobalScreenshot() {
         // Continue with single-display flow below
       }
 
-      // Show screen picker
-      if (typeof window !== 'undefined') {
-        window.location.href = '/screen-selector';
-      }
+      // Show screen picker in separate window
+      await invoke('show_screen_selector');
 
       screenshotInProgress = false;
       return;

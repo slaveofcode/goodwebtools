@@ -175,17 +175,14 @@
         card.addEventListener('click', async () => {
           console.log('[ScreenSelector] Selected display:', thumb.display.id);
 
-          // Hide screen selector immediately
-          document.body.style.display = 'none';
-
-          // Hide main window while region selector is shown
-          await invoke('hide_main_window');
-
           // Store selected display ID
           localStorage.setItem('gwt-selected-display', thumb.display.id.toString());
 
           // Clean up thumbnails
           localStorage.removeItem('gwt-screen-thumbnails');
+
+          // Close this screen selector window
+          await invoke('close_screen_selector');
 
           // Continue with region selector on selected display
           const { captureService } = await import('@/services/capture');

@@ -21,6 +21,8 @@ fn main() {
             commands::show_region_selector,
             commands::close_region_selector,
             commands::submit_region_selection,
+            commands::show_screen_selector,
+            commands::close_screen_selector,
             commands::start_recording,
             commands::stop_recording,
             commands::check_screen_recording_permission,

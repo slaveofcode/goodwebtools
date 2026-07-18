@@ -161,3 +161,38 @@ pub fn close_countdown(app: &AppHandle) -> Result<(), String> {
     }
     Ok(())
 }
+
+/// Show screen selector window for multi-display selection
+pub fn show_screen_selector(app: &AppHandle) -> Result<(), String> {
+    // Close any existing screen selector window first
+    let _ = close_screen_selector(app);
+
+    println!("[ScreenSelector] Opening screen selector window");
+
+    // Create centered window for screen selection
+    let window = WebviewWindowBuilder::new(
+        app,
+        "screen-selector",
+        WebviewUrl::App("/screen-selector".into())
+    )
+    .title("Select Screen to Capture")
+    .center()
+    .inner_size(1200.0, 700.0)
+    .resizable(false)
+    .always_on_top(true)
+    .visible(false)
+    .build()
+    .map_err(|e: tauri::Error| e.to_string())?;
+
+    window.show().map_err(|e: tauri::Error| e.to_string())?;
+
+    Ok(())
+}
+
+/// Close the screen selector window
+pub fn close_screen_selector(app: &AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("screen-selector") {
+        window.close().map_err(|e: tauri::Error| e.to_string())?;
+    }
+    Ok(())
+}

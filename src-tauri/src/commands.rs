@@ -423,6 +423,16 @@ pub async fn submit_region_selection(
 }
 
 #[tauri::command]
+pub async fn show_screen_selector(app: tauri::AppHandle) -> Result<(), String> {
+    crate::overlay::show_screen_selector(&app)
+}
+
+#[tauri::command]
+pub async fn close_screen_selector(app: tauri::AppHandle) -> Result<(), String> {
+    crate::overlay::close_screen_selector(&app)
+}
+
+#[tauri::command]
 pub async fn start_recording(options: RecordOptions) -> Result<crate::recording::RecordingHandle, String> {
     // Convert to recording module options
     let record_opts = crate::recording::RecordOptions {
