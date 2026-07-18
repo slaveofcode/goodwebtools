@@ -13,9 +13,21 @@ const registeredIds: string[] = [];
  * Should be called once at app startup.
  */
 export async function initializeGlobalHotkeys() {
-  if (!isTauri() || initialized) return;
+  console.log('[GlobalHotkeys] Initializing... isTauri:', isTauri(), 'initialized:', initialized);
+
+  if (!isTauri()) {
+    console.log('[GlobalHotkeys] Not in Tauri, skipping initialization');
+    return;
+  }
+
+  if (initialized) {
+    console.log('[GlobalHotkeys] Already initialized, skipping');
+    return;
+  }
 
   try {
+    console.log('[GlobalHotkeys] Registering screenshot hotkey...');
+
     // Screenshot hotkey: Cmd+Shift+A
     const screenshotId = await hotkeyService.register(
       'CommandOrControl+Shift+A',
@@ -56,14 +68,26 @@ export async function cleanupGlobalHotkeys() {
  */
 async function handleGlobalScreenshot() {
   try {
+    console.log('[GlobalHotkeys] Starting screenshot capture...');
+
     // Capture the full screen
     const screenshot = await captureService.captureScreen({
       format: 'png',
     });
 
-    // Convert to base64 data URL
-    const base64 = btoa(String.fromCharCode(...screenshot));
+    console.log('[GlobalHotkeys] Screenshot captured, size:', screenshot.length, 'bytes');
+
+    // Convert to base64 data URL (chunk processing for large arrays)
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < screenshot.length; i += chunkSize) {
+      const chunk = screenshot.slice(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    const base64 = btoa(binary);
     const dataUrl = `data:image/png;base64,${base64}`;
+
+    console.log('[GlobalHotkeys] Screenshot encoded to base64');
 
     // Store in localStorage for the Screenshot tool to pick up
     localStorage.setItem('gwt-global-screenshot', dataUrl);
