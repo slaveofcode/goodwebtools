@@ -8,7 +8,16 @@ import { initializeGlobalHotkeys, cleanupGlobalHotkeys } from '@/services/global
 export function GlobalHotkeyInit() {
   useEffect(() => {
     initializeGlobalHotkeys();
+
+    // Cleanup on unmount AND on page unload
+    const handleUnload = () => {
+      cleanupGlobalHotkeys();
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+
     return () => {
+      window.removeEventListener('beforeunload', handleUnload);
       cleanupGlobalHotkeys();
     };
   }, []);

@@ -69,15 +69,31 @@ export async function cleanupGlobalHotkeys() {
 async function handleGlobalScreenshot() {
   try {
     console.log('[GlobalHotkeys] Starting screenshot capture...');
+    console.log('[GlobalHotkeys] Calling captureService.captureScreen...');
 
-    // Capture the full screen
+    // Capture the full screen (returns number[] - array of bytes)
     const screenshot = await captureService.captureScreen({
       format: 'png',
     });
 
+    console.log('[GlobalHotkeys] captureScreen returned:', typeof screenshot, screenshot);
+
+    if (!screenshot) {
+      throw new Error('Screenshot capture returned null or undefined');
+    }
+
+    if (!Array.isArray(screenshot)) {
+      throw new Error(`Screenshot capture returned wrong type: ${typeof screenshot}`);
+    }
+
+    if (screenshot.length === 0) {
+      throw new Error('Screenshot capture returned empty array');
+    }
+
     console.log('[GlobalHotkeys] Screenshot captured, size:', screenshot.length, 'bytes');
 
     // Convert to base64 data URL (chunk processing for large arrays)
+    console.log('[GlobalHotkeys] Converting to base64...');
     let binary = '';
     const chunkSize = 8192;
     for (let i = 0; i < screenshot.length; i += chunkSize) {
@@ -87,26 +103,33 @@ async function handleGlobalScreenshot() {
     const base64 = btoa(binary);
     const dataUrl = `data:image/png;base64,${base64}`;
 
-    console.log('[GlobalHotkeys] Screenshot encoded to base64');
+    console.log('[GlobalHotkeys] Screenshot encoded to base64, length:', dataUrl.length);
 
     // Store in localStorage for the Screenshot tool to pick up
     localStorage.setItem('gwt-global-screenshot', dataUrl);
     localStorage.setItem('gwt-global-screenshot-timestamp', Date.now().toString());
 
+    console.log('[GlobalHotkeys] Screenshot stored in localStorage');
+
     // Navigate to screenshot tool or focus the window
     if (typeof window !== 'undefined') {
       const currentPath = window.location.pathname;
 
+      console.log('[GlobalHotkeys] Current path:', currentPath);
+
       if (currentPath === '/tools/screenshot') {
         // Already on the tool, trigger a custom event
+        console.log('[GlobalHotkeys] Already on screenshot tool, firing event');
         window.dispatchEvent(new CustomEvent('gwt:global-screenshot-ready'));
       } else {
         // Navigate to the tool
+        console.log('[GlobalHotkeys] Navigating to screenshot tool');
         window.location.href = '/tools/screenshot';
       }
     }
   } catch (err) {
     console.error('[GlobalHotkeys] Screenshot capture failed:', err);
+    console.error('[GlobalHotkeys] Error stack:', (err as Error).stack);
 
     // Show error notification (could use a toast service here)
     if (typeof window !== 'undefined') {
