@@ -8,7 +8,6 @@ import { detectCompanion, companionCapture } from '@/services/companion';
 import { captureService } from '@/services/capture';
 import type { DisplayInfo } from '@/services/capture';
 import { isTauri } from '@/services/platform';
-import { hotkeyService } from '@/services/hotkey';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
@@ -67,39 +66,51 @@ export default function Screenshot() {
     }
   }, []);
 
-  // Register global hotkey for screenshot (Tauri only)
+  // Listen for global screenshot captures (from Cmd+Shift+3 hotkey)
   useEffect(() => {
     if (!isTauri()) return;
 
-    let hotkeyId: string | null = null;
+    // Check for pending screenshot on mount
+    const checkPendingScreenshot = () => {
+      const dataUrl = localStorage.getItem('gwt-global-screenshot');
+      const timestamp = localStorage.getItem('gwt-global-screenshot-timestamp');
 
-    const registerHotkey = async () => {
-      try {
-        hotkeyId = await hotkeyService.register(
-          'CommandOrControl+Shift+3',
-          () => {
-            console.log('[Screenshot] Global hotkey triggered');
-            // Trigger full screen capture
-            if (!capturing) {
-              capture();
-            }
-          },
-          'Take full screenshot'
-        );
-        console.log('[Screenshot] Registered global hotkey:', hotkeyId);
-      } catch (err) {
-        console.warn('[Screenshot] Failed to register hotkey:', err);
+      if (dataUrl && timestamp) {
+        // Only load if it's recent (within 30 seconds)
+        const age = Date.now() - parseInt(timestamp, 10);
+        if (age < 30000) {
+          console.log('[Screenshot] Loading global screenshot from hotkey');
+          // Create an image to get dimensions
+          const img = new Image();
+          img.onload = () => {
+            loadDataUrl(dataUrl, img.width, img.height);
+            // Clear from localStorage
+            localStorage.removeItem('gwt-global-screenshot');
+            localStorage.removeItem('gwt-global-screenshot-timestamp');
+          };
+          img.src = dataUrl;
+        } else {
+          // Clear stale screenshot
+          localStorage.removeItem('gwt-global-screenshot');
+          localStorage.removeItem('gwt-global-screenshot-timestamp');
+        }
       }
     };
 
-    registerHotkey();
+    // Check on mount
+    checkPendingScreenshot();
+
+    // Listen for new captures
+    const handleGlobalScreenshot = () => {
+      checkPendingScreenshot();
+    };
+
+    window.addEventListener('gwt:global-screenshot-ready', handleGlobalScreenshot);
 
     return () => {
-      if (hotkeyId) {
-        hotkeyService.unregister(hotkeyId).catch(console.warn);
-      }
+      window.removeEventListener('gwt:global-screenshot-ready', handleGlobalScreenshot);
     };
-  }, [capturing]);
+  }, []);
 
   const loadDataUrl = (dataUrl: string, w: number, h: number) => {
     const canvas = document.createElement('canvas');

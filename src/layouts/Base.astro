@@ -1,6 +1,7 @@
 ---
 import { ViewTransitions } from 'astro:transitions';
 import { ShellIsland } from '@/components/shell/ShellIsland';
+import { GlobalHotkeyInit } from '@/components/shell/GlobalHotkeyInit';
 import { ConsentRibbon } from '@/components/shell/ConsentRibbon';
 import { SITE_NAME, SITE_TAGLINE, SITE_URL, GA_ID, NOINDEX } from '@/config';
 import '../styles/global.css';
@@ -137,6 +138,7 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
     </script>
   </head>
   <body class="bg-background text-foreground min-h-screen">
+    <GlobalHotkeyInit client:load transition:persist />
     <ShellIsland client:load transition:persist />
     <slot />
     <ConsentRibbon client:idle transition:persist />
