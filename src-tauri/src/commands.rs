@@ -479,3 +479,24 @@ pub async fn show_countdown(app: tauri::AppHandle, display_id: Option<i32>) -> R
 pub async fn close_countdown(app: tauri::AppHandle) -> Result<(), String> {
     crate::overlay::close_countdown(&app)
 }
+
+#[tauri::command]
+pub fn get_cursor_position() -> Result<(f64, f64), String> {
+    #[cfg(target_os = "macos")]
+    {
+        use core_graphics::event::{CGEvent, CGEventType};
+
+        // Get current mouse location
+        if let Some(event) = CGEvent::new(CGEventType::MouseMoved) {
+            let location = event.location();
+            return Ok((location.x, location.y));
+        }
+        Err("Failed to get mouse location".to_string())
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        // TODO: Implement for Windows and Linux
+        Err("get_cursor_position not implemented for this platform".to_string())
+    }
+}

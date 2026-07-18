@@ -28,6 +28,7 @@ fn main() {
             commands::close_countdown,
             commands::hide_main_window,
             commands::show_main_window,
+            commands::get_cursor_position,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
