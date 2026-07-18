@@ -229,7 +229,6 @@ async function handleGlobalScreenshot() {
     console.log('[GlobalHotkeys] Screenshot stored, navigating to tool...');
 
     // Restore and focus main window
-    const { invoke } = await import('@tauri-apps/api/core');
     await invoke('show_main_window');
 
     // Navigate to screenshot tool
