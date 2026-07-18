@@ -175,9 +175,11 @@
         card.addEventListener('click', async () => {
           console.log('[ScreenSelector] Selected display:', thumb.display.id);
 
+          // Hide window immediately for better UX
+          document.body.style.display = 'none';
+
           // Store selected display ID for main window to pick up
           localStorage.setItem('gwt-selected-display', thumb.display.id.toString());
-          localStorage.setItem('gwt-screen-selection-timestamp', Date.now().toString());
 
           // Clean up thumbnails
           localStorage.removeItem('gwt-screen-thumbnails');
@@ -190,6 +192,9 @@
           } catch (err) {
             console.error('[ScreenSelector] Failed to close window:', err);
           }
+
+          // Trigger storage event AFTER window is closed
+          localStorage.setItem('gwt-screen-selection-timestamp', Date.now().toString());
         });
 
         screensContainer.appendChild(card);
