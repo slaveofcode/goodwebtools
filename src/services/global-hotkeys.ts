@@ -68,6 +68,99 @@ export async function cleanupGlobalHotkeys() {
   initialized = false;
 }
 
+/**
+ * Continue screenshot workflow after display selection
+ */
+export async function continueScreenshotWorkflow(displayId: number) {
+  console.log('[GlobalHotkeys] Continuing workflow with display:', displayId);
+
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+
+    // Capture overlay screenshot for region selector background
+    console.log('[GlobalHotkeys] Capturing overlay screenshot on display:', displayId);
+    const overlayScreenshot = await captureService.captureScreen({
+      format: 'jpg',
+      quality: 0.75,
+      displayId,
+    });
+
+    let overlayDataUrl: string;
+    if (overlayScreenshot instanceof Blob) {
+      overlayDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(overlayScreenshot);
+      });
+    } else {
+      throw new Error('Unexpected screenshot format');
+    }
+
+    localStorage.setItem('overlay-screenshot', overlayDataUrl);
+    console.log('[GlobalHotkeys] Overlay screenshot stored');
+
+    // Store displayId for overlay
+    localStorage.setItem('overlay-display-id', displayId.toString());
+
+    // Show region selector
+    console.log('[GlobalHotkeys] Showing region selector...');
+    const region = await captureService.showRegionSelector(displayId);
+
+    if (!region) {
+      console.log('[GlobalHotkeys] Region selection cancelled');
+      await invoke('show_main_window');
+      return;
+    }
+
+    console.log('[GlobalHotkeys] Region selected:', region);
+
+    // Capture the selected region
+    const screenshot = await captureService.captureRegion(region);
+
+    if (!screenshot) {
+      throw new Error('Screenshot capture returned null');
+    }
+
+    let dataUrl: string;
+    if (screenshot instanceof Blob) {
+      dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(screenshot);
+      });
+    } else {
+      throw new Error('Unexpected screenshot format');
+    }
+
+    // Store screenshot
+    localStorage.setItem('gwt-global-screenshot', dataUrl);
+    localStorage.setItem('gwt-global-screenshot-timestamp', Date.now().toString());
+
+    console.log('[GlobalHotkeys] Screenshot stored, navigating to tool...');
+
+    // Restore and focus main window
+    await invoke('show_main_window');
+
+    // Navigate to screenshot tool
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/tools/screenshot') {
+        window.dispatchEvent(new CustomEvent('gwt:global-screenshot-ready'));
+      } else {
+        window.location.href = '/tools/screenshot';
+      }
+    }
+  } catch (err) {
+    console.error('[GlobalHotkeys] Screenshot capture failed:', err);
+    console.error('[GlobalHotkeys] Error stack:', (err as Error).stack);
+
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('show_main_window');
+  }
+}
+
 // Debounce to prevent double-firing
 let screenshotInProgress = false;
 

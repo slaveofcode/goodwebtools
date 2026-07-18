@@ -175,80 +175,15 @@
         card.addEventListener('click', async () => {
           console.log('[ScreenSelector] Selected display:', thumb.display.id);
 
-          const displayId = thumb.display.id;
-
-          // Store selected display ID
-          localStorage.setItem('gwt-selected-display', displayId.toString());
+          // Store selected display ID for main window to pick up
+          localStorage.setItem('gwt-selected-display', thumb.display.id.toString());
+          localStorage.setItem('gwt-screen-selection-timestamp', Date.now().toString());
 
           // Clean up thumbnails
           localStorage.removeItem('gwt-screen-thumbnails');
 
-          // Continue with region selector on selected display
-          const { captureService } = await import('@/services/capture');
-
-          try {
-            const displayId = thumb.display.id;
-
-            // Capture overlay screenshot for region selector
-            const overlayScreenshot = await captureService.captureScreen({
-              format: 'jpg',
-              quality: 0.75,
-              displayId,
-            });
-
-            let overlayDataUrl;
-            if (overlayScreenshot instanceof Blob) {
-              overlayDataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(overlayScreenshot);
-              });
-            }
-
-            localStorage.setItem('overlay-screenshot', overlayDataUrl);
-
-            // Store displayId for overlay to use
-            localStorage.setItem('overlay-display-id', displayId.toString());
-
-            // Show region selector
-            const region = await captureService.showRegionSelector(displayId);
-
-            if (!region) {
-              console.log('[ScreenSelector] Region selection cancelled');
-              await invoke('show_main_window');
-              return;
-            }
-
-            // Capture the selected region
-            const screenshot = await captureService.captureRegion(region);
-
-            if (screenshot instanceof Blob) {
-              const dataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(screenshot);
-              });
-
-              localStorage.setItem('gwt-global-screenshot', dataUrl);
-              localStorage.setItem('gwt-global-screenshot-timestamp', Date.now().toString());
-
-              // Close screen selector window
-              await invoke('close_screen_selector');
-
-              // Restore and focus main window
-              await invoke('show_main_window');
-
-              // Signal main window to navigate to screenshot tool
-              // The main window will detect this and navigate
-              localStorage.setItem('gwt-navigate-to-screenshot', Date.now().toString());
-            }
-          } catch (err) {
-            console.error('[ScreenSelector] Error:', err);
-            await invoke('close_screen_selector');
-            await invoke('show_main_window');
-          }
+          // Close this window - main window will continue the workflow
+          await invoke('close_screen_selector');
         });
 
         screensContainer.appendChild(card);
