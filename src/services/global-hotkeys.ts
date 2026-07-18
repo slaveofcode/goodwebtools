@@ -63,18 +63,37 @@ export async function cleanupGlobalHotkeys() {
   initialized = false;
 }
 
+// Debounce to prevent double-firing
+let screenshotInProgress = false;
+
 /**
  * Handle global screenshot capture
  */
 async function handleGlobalScreenshot() {
-  try {
-    console.log('[GlobalHotkeys] Starting screenshot capture...');
-    console.log('[GlobalHotkeys] Calling captureService.captureScreen...');
+  if (screenshotInProgress) {
+    console.log('[GlobalHotkeys] Screenshot already in progress, ignoring');
+    return;
+  }
 
-    // Capture the full screen (returns number[] - array of bytes)
-    const screenshot = await captureService.captureScreen({
-      format: 'png',
-    });
+  screenshotInProgress = true;
+  try {
+    console.log('[GlobalHotkeys] Starting region selection...');
+
+    // Show region selector to let user choose area
+    console.log('[GlobalHotkeys] Showing region selector...');
+    const region = await captureService.showRegionSelector();
+
+    if (!region) {
+      console.log('[GlobalHotkeys] Region selection cancelled');
+      screenshotInProgress = false;
+      return;
+    }
+
+    console.log('[GlobalHotkeys] Region selected:', region);
+    console.log('[GlobalHotkeys] Capturing region...');
+
+    // Capture the selected region
+    const screenshot = await captureService.captureRegion(region);
 
     console.log('[GlobalHotkeys] captureScreen returned:', typeof screenshot, screenshot);
 
@@ -137,9 +156,13 @@ async function handleGlobalScreenshot() {
         window.location.href = '/tools/screenshot';
       }
     }
+
+    screenshotInProgress = false;
   } catch (err) {
     console.error('[GlobalHotkeys] Screenshot capture failed:', err);
     console.error('[GlobalHotkeys] Error stack:', (err as Error).stack);
+
+    screenshotInProgress = false;
 
     // TODO: Show error notification using a toast service instead of alert
     // (alert requires dialog permissions which aren't critical for this feature)
