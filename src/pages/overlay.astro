@@ -102,6 +102,11 @@
       const selection = document.getElementById('selection')!;
       const dimensions = document.getElementById('dimensions')!;
 
+      // Get display ID from localStorage
+      const displayIdStr = localStorage.getItem('overlay-display-id');
+      const displayId = displayIdStr ? parseInt(displayIdStr) : undefined;
+      console.log('[Overlay] Display ID:', displayId);
+
       // Load screenshot from localStorage (more reliable than events)
       const screenshotData = localStorage.getItem('overlay-screenshot');
       if (screenshotData) {
@@ -201,12 +206,22 @@
         try {
           // Clean up screenshot from localStorage before closing
           localStorage.removeItem('overlay-screenshot');
-          await invoke('submit_region_selection', { bounds });
+          localStorage.removeItem('overlay-display-id');
+
+          // Submit bounds WITH displayId
+          const region = displayId !== undefined
+            ? { ...bounds, displayId }
+            : bounds;
+
+          console.log('[Overlay] Submitting region:', region);
+          await invoke('submit_region_selection', { bounds: region });
+
           // Restore main window
           await invoke('show_main_window');
         } catch (error) {
           console.error('Failed to submit region:', error);
           localStorage.removeItem('overlay-screenshot');
+          localStorage.removeItem('overlay-display-id');
           await invoke('show_main_window');
           await invoke('close_region_selector');
         }

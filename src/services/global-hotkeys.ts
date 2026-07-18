@@ -174,6 +174,11 @@ async function handleGlobalScreenshot() {
     localStorage.setItem('overlay-screenshot', overlayDataUrl);
     console.log('[GlobalHotkeys] Overlay screenshot stored');
 
+    // Store displayId for overlay
+    if (displayId !== undefined) {
+      localStorage.setItem('overlay-display-id', displayId.toString());
+    }
+
     // Show region selector
     console.log('[GlobalHotkeys] Showing region selector...');
     const region = await captureService.showRegionSelector(displayId);
