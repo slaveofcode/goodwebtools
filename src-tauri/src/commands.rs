@@ -436,12 +436,15 @@ pub async fn close_screen_selector(app: tauri::AppHandle) -> Result<(), String> 
 pub async fn select_display(app: tauri::AppHandle, display_id: i32) -> Result<(), String> {
     println!("[Command] Display selected: {}", display_id);
 
-    // Emit event to main window
+    // Close screen selector window FIRST
+    crate::overlay::close_screen_selector(&app)?;
+
+    // Small delay to ensure window is actually closed
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    // Then emit event to main window to continue workflow
     app.emit("screen-selected", display_id)
         .map_err(|e: tauri::Error| e.to_string())?;
-
-    // Close screen selector window
-    crate::overlay::close_screen_selector(&app)?;
 
     Ok(())
 }
