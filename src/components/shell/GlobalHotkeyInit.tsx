@@ -9,6 +9,16 @@ export function GlobalHotkeyInit() {
   useEffect(() => {
     initializeGlobalHotkeys();
 
+    // Listen for navigation signals from screen selector
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'gwt-navigate-to-screenshot' && e.newValue) {
+        localStorage.removeItem('gwt-navigate-to-screenshot');
+        window.location.href = '/tools/screenshot';
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
     // Cleanup on unmount AND on page unload
     const handleUnload = () => {
       cleanupGlobalHotkeys();
@@ -17,6 +27,7 @@ export function GlobalHotkeyInit() {
     window.addEventListener('beforeunload', handleUnload);
 
     return () => {
+      window.removeEventListener('storage', handleStorage);
       window.removeEventListener('beforeunload', handleUnload);
       cleanupGlobalHotkeys();
     };
