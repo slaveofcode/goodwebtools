@@ -485,7 +485,7 @@ pub fn get_cursor_position() -> Result<(f64, f64), String> {
     #[cfg(target_os = "macos")]
     {
         use cocoa::foundation::NSPoint;
-        use objc::{class, msg_send};
+        use objc::{class, msg_send, sel, sel_impl};
 
         unsafe {
             // Get current mouse location in screen coordinates
