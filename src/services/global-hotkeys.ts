@@ -84,6 +84,12 @@ async function handleGlobalScreenshot() {
   try {
     console.log('[GlobalHotkeys] Starting screenshot capture...');
 
+    // Focus the window first
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('show_main_window').catch(() => {
+      console.warn('[GlobalHotkeys] Could not focus window');
+    });
+
     // Get all displays
     const displays = await captureService.listDisplays();
     console.log('[GlobalHotkeys] Available displays:', displays);
