@@ -23,6 +23,7 @@ fn main() {
             commands::submit_region_selection,
             commands::show_screen_selector,
             commands::close_screen_selector,
+            commands::select_display,
             commands::start_recording,
             commands::stop_recording,
             commands::check_screen_recording_permission,

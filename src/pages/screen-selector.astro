@@ -180,24 +180,16 @@
           // Hide window immediately for better UX
           document.body.style.display = 'none';
 
-          // Store selected display ID
-          localStorage.setItem('gwt-selected-display', displayId.toString());
-
           // Clean up thumbnails
           localStorage.removeItem('gwt-screen-thumbnails');
 
-          // Emit Tauri event to main window to continue workflow
-          const { emit } = await import('@tauri-apps/api/event');
-          console.log('[ScreenSelector] Emitting screen-selected event:', displayId);
-          await emit('screen-selected', { displayId });
-
-          // Close this window
-          console.log('[ScreenSelector] Closing screen selector window...');
+          // Call Tauri command to emit event and close window (from Rust side, no permission issues)
+          console.log('[ScreenSelector] Calling select_display command:', displayId);
           try {
-            await invoke('close_screen_selector');
-            console.log('[ScreenSelector] Window closed successfully');
+            await invoke('select_display', { displayId });
+            console.log('[ScreenSelector] Display selected successfully');
           } catch (err) {
-            console.error('[ScreenSelector] Failed to close window:', err);
+            console.error('[ScreenSelector] Failed to select display:', err);
           }
         });
 

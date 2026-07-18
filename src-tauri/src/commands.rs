@@ -433,6 +433,20 @@ pub async fn close_screen_selector(app: tauri::AppHandle) -> Result<(), String> 
 }
 
 #[tauri::command]
+pub async fn select_display(app: tauri::AppHandle, display_id: i32) -> Result<(), String> {
+    println!("[Command] Display selected: {}", display_id);
+
+    // Emit event to main window
+    app.emit("screen-selected", display_id)
+        .map_err(|e: tauri::Error| e.to_string())?;
+
+    // Close screen selector window
+    crate::overlay::close_screen_selector(&app)?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn start_recording(options: RecordOptions) -> Result<crate::recording::RecordingHandle, String> {
     // Convert to recording module options
     let record_opts = crate::recording::RecordOptions {

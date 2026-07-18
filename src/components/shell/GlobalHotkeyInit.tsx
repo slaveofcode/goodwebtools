@@ -15,8 +15,8 @@ export function GlobalHotkeyInit() {
     (async () => {
       const { listen } = await import('@tauri-apps/api/event');
 
-      unlisten = await listen<{ displayId: number }>('screen-selected', (event) => {
-        const { displayId } = event.payload;
+      unlisten = await listen<number>('screen-selected', (event) => {
+        const displayId = event.payload;
         console.log('[GlobalHotkeyInit] Screen selected via Tauri event, continuing workflow with display:', displayId);
         continueScreenshotWorkflow(displayId);
       });
