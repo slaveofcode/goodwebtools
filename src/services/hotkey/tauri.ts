@@ -10,9 +10,12 @@ export class TauriHotkeyService implements HotkeyService {
 
     try {
       console.log('[TauriHotkeyService] Attempting to register:', keys);
-      await register(keys, () => {
-        console.log('[TauriHotkeyService] Hotkey triggered:', keys);
-        callback();
+      await register(keys, (event) => {
+        console.log('[TauriHotkeyService] Hotkey triggered:', keys, event);
+        // Run callback asynchronously to avoid blocking
+        Promise.resolve(callback()).catch(err => {
+          console.error('[TauriHotkeyService] Callback error:', err);
+        });
       });
       console.log('[TauriHotkeyService] Successfully registered:', keys);
 
