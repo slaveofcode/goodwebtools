@@ -9,28 +9,20 @@ export function GlobalHotkeyInit() {
   useEffect(() => {
     initializeGlobalHotkeys();
 
-    // Listen for screen selection from screen selector window
-    const handleStorage = (e: StorageEvent) => {
-      // Screen selection made
-      if (e.key === 'gwt-screen-selection-timestamp' && e.newValue) {
-        const displayIdStr = localStorage.getItem('gwt-selected-display');
-        if (displayIdStr) {
-          const displayId = parseInt(displayIdStr);
-          console.log('[GlobalHotkeyInit] Screen selected, continuing workflow with display:', displayId);
-          localStorage.removeItem('gwt-screen-selection-timestamp');
-          localStorage.removeItem('gwt-selected-display');
-          continueScreenshotWorkflow(displayId);
-        }
-      }
+    // Listen for screen selection from screen selector window via Tauri events
+    let unlisten: (() => void) | null = null;
 
-      // Legacy: navigation signal from old code path
-      if (e.key === 'gwt-navigate-to-screenshot' && e.newValue) {
-        localStorage.removeItem('gwt-navigate-to-screenshot');
-        window.location.href = '/tools/screenshot';
-      }
-    };
+    (async () => {
+      const { listen } = await import('@tauri-apps/api/event');
 
-    window.addEventListener('storage', handleStorage);
+      unlisten = await listen<{ displayId: number }>('screen-selected', (event) => {
+        const { displayId } = event.payload;
+        console.log('[GlobalHotkeyInit] Screen selected via Tauri event, continuing workflow with display:', displayId);
+        continueScreenshotWorkflow(displayId);
+      });
+
+      console.log('[GlobalHotkeyInit] Listening for screen-selected events');
+    })();
 
     // Cleanup on unmount AND on page unload
     const handleUnload = () => {
@@ -40,7 +32,7 @@ export function GlobalHotkeyInit() {
     window.addEventListener('beforeunload', handleUnload);
 
     return () => {
-      window.removeEventListener('storage', handleStorage);
+      if (unlisten) unlisten();
       window.removeEventListener('beforeunload', handleUnload);
       cleanupGlobalHotkeys();
     };

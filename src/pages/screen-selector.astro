@@ -175,16 +175,23 @@
         card.addEventListener('click', async () => {
           console.log('[ScreenSelector] Selected display:', thumb.display.id);
 
+          const displayId = thumb.display.id;
+
           // Hide window immediately for better UX
           document.body.style.display = 'none';
 
-          // Store selected display ID for main window to pick up
-          localStorage.setItem('gwt-selected-display', thumb.display.id.toString());
+          // Store selected display ID
+          localStorage.setItem('gwt-selected-display', displayId.toString());
 
           // Clean up thumbnails
           localStorage.removeItem('gwt-screen-thumbnails');
 
-          // Close this window - main window will continue the workflow
+          // Emit Tauri event to main window to continue workflow
+          const { emit } = await import('@tauri-apps/api/event');
+          console.log('[ScreenSelector] Emitting screen-selected event:', displayId);
+          await emit('screen-selected', { displayId });
+
+          // Close this window
           console.log('[ScreenSelector] Closing screen selector window...');
           try {
             await invoke('close_screen_selector');
@@ -192,9 +199,6 @@
           } catch (err) {
             console.error('[ScreenSelector] Failed to close window:', err);
           }
-
-          // Trigger storage event AFTER window is closed
-          localStorage.setItem('gwt-screen-selection-timestamp', Date.now().toString());
         });
 
         screensContainer.appendChild(card);
