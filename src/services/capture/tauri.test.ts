@@ -138,6 +138,68 @@ describe('TauriCaptureService', () => {
     });
   });
 
+  describe('captureRegion', () => {
+    it('calls invoke with bounds only when no displayId', async () => {
+      const mockBytes = [1, 2, 3, 4];
+      mockInvoke.mockResolvedValue(mockBytes);
+
+      const bounds = { x: 10, y: 20, width: 300, height: 200 };
+      const result = await service.captureRegion(bounds);
+
+      expect(mockInvoke).toHaveBeenCalledWith('capture_region', { bounds });
+      expect(result).toBeInstanceOf(Blob);
+    });
+
+    it('extracts displayId from bounds and passes separately', async () => {
+      const mockBytes = [1, 2, 3, 4];
+      mockInvoke.mockResolvedValue(mockBytes);
+
+      const bounds = { x: 0, y: 0, width: 2560, height: 1440, displayId: 2 };
+      await service.captureRegion(bounds);
+
+      expect(mockInvoke).toHaveBeenCalledWith('capture_region', {
+        bounds: { x: 0, y: 0, width: 2560, height: 1440 },
+        displayId: 2,
+      });
+    });
+
+    it('does not pass displayId key inside bounds object', async () => {
+      mockInvoke.mockResolvedValue([]);
+
+      await service.captureRegion({ x: 0, y: 0, width: 100, height: 100, displayId: 3 });
+
+      const call = mockInvoke.mock.calls[0];
+      expect(call[1].bounds).not.toHaveProperty('displayId');
+    });
+
+    it('handles negative displayId (macOS CoreGraphics IDs)', async () => {
+      mockInvoke.mockResolvedValue([1, 2]);
+
+      await service.captureRegion({ x: 0, y: 0, width: 100, height: 100, displayId: -2 });
+
+      expect(mockInvoke).toHaveBeenCalledWith('capture_region', {
+        bounds: { x: 0, y: 0, width: 100, height: 100 },
+        displayId: -2,
+      });
+    });
+
+    it('returns a PNG blob', async () => {
+      mockInvoke.mockResolvedValue([137, 80, 78, 71]);
+
+      const result = await service.captureRegion({ x: 0, y: 0, width: 50, height: 50 });
+
+      expect(result.type).toBe('image/png');
+    });
+
+    it('propagates invoke errors', async () => {
+      mockInvoke.mockRejectedValue(new Error('Screen recording permission denied'));
+
+      await expect(
+        service.captureRegion({ x: 0, y: 0, width: 100, height: 100 })
+      ).rejects.toThrow('Screen recording permission denied');
+    });
+  });
+
   describe('getCapabilities', () => {
     it('returns Tauri-specific capabilities', () => {
       const caps = service.getCapabilities();
