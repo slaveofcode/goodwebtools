@@ -1,0 +1,173 @@
+---
+// Screen Selector - Choose which display to capture
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Select Screen</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      #container {
+        max-width: 90vw;
+        max-height: 90vh;
+        padding: 40px;
+      }
+
+      h1 {
+        color: white;
+        text-align: center;
+        margin-bottom: 32px;
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      #screens {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 24px;
+        justify-content: center;
+      }
+
+      .screen-card {
+        position: relative;
+        cursor: pointer;
+        border: 4px solid transparent;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.2s;
+        background: #1a1a1a;
+      }
+
+      .screen-card:hover {
+        border-color: #3b82f6;
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+      }
+
+      .screen-card img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .screen-label {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+      }
+
+      .screen-info {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #aaa;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        backdrop-filter: blur(10px);
+      }
+
+      #instructions {
+        position: fixed;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #aaa;
+        font-size: 14px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <h1>Select Screen to Capture</h1>
+      <div id="screens"></div>
+    </div>
+
+    <div id="instructions">
+      Click a screen to select · ESC to cancel
+    </div>
+
+    <script>
+      import { invoke } from '@tauri-apps/api/core';
+
+      const screensContainer = document.getElementById('screens')!;
+
+      // Load thumbnails from localStorage
+      const thumbnailsData = localStorage.getItem('gwt-screen-thumbnails');
+      if (!thumbnailsData) {
+        console.error('[ScreenSelector] No thumbnails found');
+        window.close();
+      }
+
+      const thumbnails = JSON.parse(thumbnailsData);
+      console.log('[ScreenSelector] Loaded thumbnails:', thumbnails.length);
+
+      // Render screen cards
+      thumbnails.forEach((thumb: any, index: number) => {
+        const card = document.createElement('div');
+        card.className = 'screen-card';
+        card.innerHTML = `
+          <img src="${thumb.dataUrl}" alt="Screen ${index + 1}" />
+          <div class="screen-label">Screen ${index + 1}${thumb.display.isMain ? ' (Main)' : ''}</div>
+          <div class="screen-info">${thumb.display.width} × ${thumb.display.height}</div>
+        `;
+
+        card.addEventListener('click', async () => {
+          console.log('[ScreenSelector] Selected display:', thumb.display.id);
+
+          // Store selected display ID
+          localStorage.setItem('gwt-selected-display', thumb.display.id.toString());
+
+          // Clean up thumbnails
+          localStorage.removeItem('gwt-screen-thumbnails');
+
+          // Close selector and continue with region selection
+          window.close();
+
+          // Signal to continue the screenshot flow
+          window.dispatchEvent(new CustomEvent('gwt:display-selected'));
+        });
+
+        screensContainer.appendChild(card);
+      });
+
+      // ESC to cancel
+      document.addEventListener('keydown', async (e) => {
+        if (e.key === 'Escape') {
+          localStorage.removeItem('gwt-screen-thumbnails');
+          await invoke('show_main_window');
+          window.close();
+        }
+      });
+    </script>
+  </body>
+</html>

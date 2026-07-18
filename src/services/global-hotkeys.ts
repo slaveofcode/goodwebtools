@@ -90,175 +90,71 @@ async function handleGlobalScreenshot() {
 
     let displayId: number | undefined;
 
-    // If multiple displays, let user choose
-    if (displays.length > 1) {
-      console.log('[GlobalHotkeys] Multiple displays detected, capturing all...');
+    // Capture ALL displays
+    console.log(`[GlobalHotkeys] Capturing ${displays.length} display(s)...`);
 
-      // Capture all displays as thumbnails
-      const screenThumbnails = await Promise.all(
-        displays.map(async (display) => {
-          try {
-            const screenshot = await captureService.captureScreen({
-              format: 'jpg',
-              quality: 0.5, // Lower quality for thumbnails
-              displayId: display.id,
+    const screenshots = await Promise.all(
+      displays.map(async (display) => {
+        try {
+          const screenshot = await captureService.captureScreen({
+            format: 'png',
+            displayId: display.id,
+          });
+
+          // Convert to data URL
+          let dataUrl: string;
+          if (screenshot instanceof Blob) {
+            dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(screenshot);
             });
-
-            // Convert to data URL
-            let dataUrl: string;
-            if (screenshot instanceof Blob) {
-              dataUrl = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = reject;
-                reader.readAsDataURL(screenshot);
-              });
-            } else {
-              throw new Error('Unexpected screenshot format');
-            }
-
-            return {
-              display,
-              dataUrl,
-            };
-          } catch (err) {
-            console.error(`[GlobalHotkeys] Failed to capture display ${display.id}:`, err);
-            return null;
+          } else {
+            throw new Error('Unexpected screenshot format');
           }
-        })
-      );
 
-      const validThumbnails = screenThumbnails.filter(Boolean);
-      if (validThumbnails.length === 0) {
-        throw new Error('Failed to capture any displays');
-      }
+          return {
+            display,
+            dataUrl,
+          };
+        } catch (err) {
+          console.error(`[GlobalHotkeys] Failed to capture display ${display.id}:`, err);
+          return null;
+        }
+      })
+    );
 
-      // Store thumbnails for selection UI
-      localStorage.setItem('gwt-screen-thumbnails', JSON.stringify(validThumbnails));
-
-      // Show screen selector - for now, just use first screen
-      // TODO: Implement screen selector UI
-      displayId = validThumbnails[0]!.display.id;
-      console.log('[GlobalHotkeys] Using display:', displayId);
-    } else {
-      // Single display - use it directly
-      displayId = displays[0]?.id;
-      console.log('[GlobalHotkeys] Single display, using:', displayId);
+    const validScreenshots = screenshots.filter(Boolean);
+    if (validScreenshots.length === 0) {
+      throw new Error('Failed to capture any displays');
     }
 
-    // First, capture a screenshot for the overlay background
-    console.log('[GlobalHotkeys] Capturing overlay screenshot on display:', displayId);
-    try {
-      const overlayScreenshot = await captureService.captureScreen(
-        displayId !== undefined
-          ? { format: 'jpg', quality: 0.75, displayId }
-          : { format: 'jpg', quality: 0.75 }
-      );
+    // Store all screenshots
+    console.log('[GlobalHotkeys] Storing', validScreenshots.length, 'screenshot(s)...');
+    localStorage.setItem('gwt-screenshot-count', validScreenshots.length.toString());
 
-      console.log('[GlobalHotkeys] Overlay screenshot captured:', overlayScreenshot);
+    validScreenshots.forEach((shot, index) => {
+      localStorage.setItem(`gwt-screenshot-${index}`, shot!.dataUrl);
+      localStorage.setItem(`gwt-screenshot-${index}-display`, JSON.stringify(shot!.display));
+    });
 
-      // Convert to data URL for overlay background
-      let overlayDataUrl: string;
-      if (overlayScreenshot instanceof Blob) {
-        console.log('[GlobalHotkeys] Converting Blob to data URL for overlay...');
-        overlayDataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(overlayScreenshot);
-        });
-        console.log('[GlobalHotkeys] Overlay data URL length:', overlayDataUrl.length);
-      } else {
-        throw new Error('Unexpected screenshot format for overlay');
-      }
-
-      // Store in localStorage for overlay to use
-      localStorage.setItem('overlay-screenshot', overlayDataUrl);
-      console.log('[GlobalHotkeys] Overlay screenshot stored in localStorage');
-    } catch (overlayError) {
-      console.error('[GlobalHotkeys] Failed to capture overlay screenshot:', overlayError);
-      // Continue anyway - overlay will just show gray background
-    }
-
-    // Show region selector to let user choose area
-    console.log('[GlobalHotkeys] Showing region selector on display:', displayId);
-    const region = await captureService.showRegionSelector(displayId);
-
-    if (!region) {
-      console.log('[GlobalHotkeys] Region selection cancelled');
-      screenshotInProgress = false;
-      return;
-    }
-
-    console.log('[GlobalHotkeys] Region selected:', region);
-    console.log('[GlobalHotkeys] Capturing region immediately...');
-
-    // Capture the selected region (instant, no countdown)
-    const screenshot = await captureService.captureRegion(region);
-
-    console.log('[GlobalHotkeys] captureScreen returned:', typeof screenshot, screenshot);
-
-    if (!screenshot) {
-      throw new Error('Screenshot capture returned null or undefined');
-    }
-
-    let dataUrl: string;
-
-    // Handle Blob (from Tauri captureScreen)
-    if (screenshot instanceof Blob) {
-      console.log('[GlobalHotkeys] Converting Blob to data URL...');
-      dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(screenshot);
-      });
-      console.log('[GlobalHotkeys] Blob converted to data URL, length:', dataUrl.length);
-    }
-    // Handle number[] array (alternative format)
-    else if (Array.isArray(screenshot)) {
-      if (screenshot.length === 0) {
-        throw new Error('Screenshot capture returned empty array');
-      }
-      console.log('[GlobalHotkeys] Converting byte array to base64...');
-      let binary = '';
-      const chunkSize = 8192;
-      for (let i = 0; i < screenshot.length; i += chunkSize) {
-        const chunk = screenshot.slice(i, i + chunkSize);
-        binary += String.fromCharCode(...chunk);
-      }
-      const base64 = btoa(binary);
-      dataUrl = `data:image/png;base64,${base64}`;
-      console.log('[GlobalHotkeys] Array converted to base64, length:', dataUrl.length);
-    }
-    else {
-      throw new Error(`Screenshot capture returned unsupported type: ${typeof screenshot}`);
-    }
-
-    // Store in localStorage for the Screenshot tool to pick up
-    localStorage.setItem('gwt-global-screenshot', dataUrl);
     localStorage.setItem('gwt-global-screenshot-timestamp', Date.now().toString());
 
-    console.log('[GlobalHotkeys] Screenshot stored in localStorage');
-
-    // Navigate to screenshot tool or focus the window
+    // Navigate to screenshot tool
     if (typeof window !== 'undefined') {
       const currentPath = window.location.pathname;
-
-      console.log('[GlobalHotkeys] Current path:', currentPath);
-
       if (currentPath === '/tools/screenshot') {
-        // Already on the tool, trigger a custom event
-        console.log('[GlobalHotkeys] Already on screenshot tool, firing event');
-        window.dispatchEvent(new CustomEvent('gwt:global-screenshot-ready'));
+        window.dispatchEvent(new CustomEvent('gwt:screenshots-ready'));
       } else {
-        // Navigate to the tool
-        console.log('[GlobalHotkeys] Navigating to screenshot tool');
         window.location.href = '/tools/screenshot';
       }
     }
 
     screenshotInProgress = false;
+    return;
+
+    // All done - screenshots stored and ready
   } catch (err) {
     console.error('[GlobalHotkeys] Screenshot capture failed:', err);
     console.error('[GlobalHotkeys] Error stack:', (err as Error).stack);
