@@ -90,56 +90,39 @@ async function handleGlobalScreenshot() {
 
     let displayId: number | undefined;
 
-    // Capture ALL displays
-    console.log(`[GlobalHotkeys] Capturing ${displays.length} display(s)...`);
+    // For multi-display: capture main display
+    // TODO: Add display selector in Screenshot tool to switch between displays
+    const mainDisplay = displays.find(d => d.isMain) || displays[0];
 
-    const screenshots = await Promise.all(
-      displays.map(async (display) => {
-        try {
-          const screenshot = await captureService.captureScreen({
-            format: 'png',
-            displayId: display.id,
-          });
+    console.log(`[GlobalHotkeys] Capturing display ${mainDisplay.id} (${displays.length} total)...`);
 
-          // Convert to data URL
-          let dataUrl: string;
-          if (screenshot instanceof Blob) {
-            dataUrl = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onloadend = () => resolve(reader.result as string);
-              reader.onerror = reject;
-              reader.readAsDataURL(screenshot);
-            });
-          } else {
-            throw new Error('Unexpected screenshot format');
-          }
-
-          return {
-            display,
-            dataUrl,
-          };
-        } catch (err) {
-          console.error(`[GlobalHotkeys] Failed to capture display ${display.id}:`, err);
-          return null;
-        }
-      })
-    );
-
-    const validScreenshots = screenshots.filter(Boolean);
-    if (validScreenshots.length === 0) {
-      throw new Error('Failed to capture any displays');
-    }
-
-    // Store all screenshots
-    console.log('[GlobalHotkeys] Storing', validScreenshots.length, 'screenshot(s)...');
-    localStorage.setItem('gwt-screenshot-count', validScreenshots.length.toString());
-
-    validScreenshots.forEach((shot, index) => {
-      localStorage.setItem(`gwt-screenshot-${index}`, shot!.dataUrl);
-      localStorage.setItem(`gwt-screenshot-${index}-display`, JSON.stringify(shot!.display));
+    const screenshot = await captureService.captureScreen({
+      format: 'png',
+      displayId: mainDisplay.id,
     });
 
+    // Convert to data URL
+    let dataUrl: string;
+    if (screenshot instanceof Blob) {
+      dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(screenshot);
+      });
+    } else {
+      throw new Error('Unexpected screenshot format');
+    }
+
+    console.log('[GlobalHotkeys] Screenshot captured, size:', dataUrl.length);
+
+    localStorage.setItem('gwt-global-screenshot', dataUrl);
     localStorage.setItem('gwt-global-screenshot-timestamp', Date.now().toString());
+
+    // Store available displays for later switching
+    if (displays.length > 1) {
+      localStorage.setItem('gwt-available-displays', JSON.stringify(displays));
+    }
 
     // Navigate to screenshot tool
     if (typeof window !== 'undefined') {
