@@ -103,6 +103,9 @@ export async function continueScreenshotWorkflow(displayId: number) {
     // Store displayId for overlay
     localStorage.setItem('overlay-display-id', displayId.toString());
 
+    // Hide main window so it's not visible in the screenshot
+    await invoke('hide_main_window');
+
     // Show region selector
     console.log('[GlobalHotkeys] Showing region selector...');
     const region = await captureService.showRegionSelector(displayId);
