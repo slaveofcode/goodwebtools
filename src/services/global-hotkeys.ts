@@ -90,9 +90,9 @@ async function handleGlobalScreenshot() {
     }
 
     console.log('[GlobalHotkeys] Region selected:', region);
-    console.log('[GlobalHotkeys] Capturing region...');
+    console.log('[GlobalHotkeys] Capturing region immediately...');
 
-    // Capture the selected region
+    // Capture the selected region (instant, no countdown)
     const screenshot = await captureService.captureRegion(region);
 
     console.log('[GlobalHotkeys] captureScreen returned:', typeof screenshot, screenshot);
