@@ -9,9 +9,12 @@ export class TauriHotkeyService implements HotkeyService {
     const id = `hotkey_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
     try {
+      console.log('[TauriHotkeyService] Attempting to register:', keys);
       await register(keys, () => {
+        console.log('[TauriHotkeyService] Hotkey triggered:', keys);
         callback();
       });
+      console.log('[TauriHotkeyService] Successfully registered:', keys);
 
       this.hotkeys.set(id, {
         id,
@@ -22,7 +25,8 @@ export class TauriHotkeyService implements HotkeyService {
 
       return id;
     } catch (error) {
-      throw new Error(`Failed to register hotkey "${keys}": ${(error as Error).message}`);
+      console.error('[TauriHotkeyService] Registration failed:', keys, error);
+      throw new Error(`Failed to register hotkey "${keys}": ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
