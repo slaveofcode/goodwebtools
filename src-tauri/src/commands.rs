@@ -484,9 +484,8 @@ pub async fn close_countdown(app: tauri::AppHandle) -> Result<(), String> {
 pub fn get_cursor_position() -> Result<(f64, f64), String> {
     #[cfg(target_os = "macos")]
     {
-        use cocoa::appkit::NSEvent;
-        use cocoa::base::nil;
         use cocoa::foundation::NSPoint;
+        use objc::{class, msg_send};
 
         unsafe {
             // Get current mouse location in screen coordinates
