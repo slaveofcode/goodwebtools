@@ -79,62 +79,46 @@ async function handleGlobalScreenshot() {
   try {
     console.log('[GlobalHotkeys] Starting region selection...');
 
-    // Get current display (where cursor is)
-    console.log('[GlobalHotkeys] Getting cursor display...');
-    const displays = await captureService.listDisplays();
+    // Get current display
+    console.log('[GlobalHotkeys] Getting current display...');
+    const { invoke } = await import('@tauri-apps/api/core');
+    const { getCurrentWindow } = await import('@tauri-apps/api/window');
 
-    // Get cursor position
-    let cursorX = 0;
-    let cursorY = 0;
+    // Get the display where the main window currently is
+    let displayId: number | undefined;
 
-    // Try to get cursor position from last mouse event
-    // This is approximate but works for hotkeys
-    const getCursorPosition = () => {
-      return new Promise<{x: number, y: number}>((resolve) => {
-        const handler = (e: MouseEvent) => {
-          document.removeEventListener('mousemove', handler);
-          resolve({ x: e.screenX, y: e.screenY });
-        };
-        document.addEventListener('mousemove', handler);
+    try {
+      const appWindow = getCurrentWindow();
+      const monitor = await appWindow.currentMonitor();
 
-        // Fallback after 100ms if no mouse movement
-        setTimeout(() => {
-          document.removeEventListener('mousemove', handler);
-          resolve({ x: window.screenX + window.innerWidth / 2, y: window.screenY + window.innerHeight / 2 });
-        }, 100);
-      });
-    };
+      if (monitor) {
+        // Try to match monitor to our display list
+        const displays = await captureService.listDisplays();
+        console.log('[GlobalHotkeys] Available displays:', displays);
+        console.log('[GlobalHotkeys] Current monitor:', monitor);
 
-    const cursorPos = await getCursorPosition();
-    cursorX = cursorPos.x;
-    cursorY = cursorPos.y;
+        // Match by position or use first display as fallback
+        const matchedDisplay = displays.find(d =>
+          Math.abs(d.x - (monitor.position?.x || 0)) < 10 &&
+          Math.abs(d.y - (monitor.position?.y || 0)) < 10
+        ) || displays[0];
 
-    console.log('[GlobalHotkeys] Cursor position:', cursorX, cursorY);
-
-    // Find display containing cursor
-    let currentDisplay = displays.find(d => {
-      const { x, y, width, height } = d;
-      return cursorX >= x && cursorX < x + width &&
-             cursorY >= y && cursorY < y + height;
-    });
-
-    // Fallback to main display if cursor not found in any display
-    if (!currentDisplay) {
-      console.log('[GlobalHotkeys] Cursor not in any display bounds, using main');
-      currentDisplay = displays.find(d => d.isMain) || displays[0];
+        displayId = matchedDisplay?.id;
+        console.log('[GlobalHotkeys] Matched display:', displayId, matchedDisplay);
+      }
+    } catch (err) {
+      console.warn('[GlobalHotkeys] Could not get current monitor:', err);
+      // Fallback to no display ID (will use main)
     }
 
-    const displayId = currentDisplay?.id;
-    console.log('[GlobalHotkeys] Using display:', displayId, currentDisplay);
-
     // First, capture a screenshot for the overlay background
-    console.log('[GlobalHotkeys] Capturing overlay screenshot...');
+    console.log('[GlobalHotkeys] Capturing overlay screenshot on display:', displayId);
     try {
-      const overlayScreenshot = await captureService.captureScreen({
-        format: 'jpg',
-        quality: 0.75,
-        displayId,
-      });
+      const overlayScreenshot = await captureService.captureScreen(
+        displayId !== undefined
+          ? { format: 'jpg', quality: 0.75, displayId }
+          : { format: 'jpg', quality: 0.75 }
+      );
 
       console.log('[GlobalHotkeys] Overlay screenshot captured:', overlayScreenshot);
 
