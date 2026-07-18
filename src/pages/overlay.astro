@@ -88,7 +88,7 @@
     </style>
   </head>
   <body>
-    <div id="instructions">Click and drag to select a region · ESC to cancel</div>
+    <div id="instructions">Click to capture full screen · Drag to select region · ESC to cancel</div>
     <div id="overlay">
       <div id="selection">
         <div id="dimensions"></div>
@@ -118,7 +118,22 @@
       let startX = 0;
       let startY = 0;
 
+      // Show full screen pre-selected on load
+      function showFullScreenSelection() {
+        selection.style.left = '0px';
+        selection.style.top = '0px';
+        selection.style.width = `${window.innerWidth}px`;
+        selection.style.height = `${window.innerHeight}px`;
+        selection.style.display = 'block';
+        dimensions.textContent = `${window.innerWidth} × ${window.innerHeight}`;
+      }
+
+      // Show pre-selection when overlay loads
+      showFullScreenSelection();
+
       overlay.addEventListener('mousedown', (e) => {
+        // Hide pre-selection when user starts dragging
+        selection.style.display = 'none';
         isSelecting = true;
         startX = e.clientX;
         startY = e.clientY;
@@ -162,30 +177,38 @@
         const left = Math.min(startX, currentX);
         const top = Math.min(startY, currentY);
 
-        // Only submit if selection is large enough (minimum 10x10)
+        // Determine bounds to submit
+        let bounds;
+
         if (width > 10 && height > 10) {
-          const bounds = {
+          // User dragged a region - capture that region
+          bounds = {
             x: Math.round(left),
             y: Math.round(top),
             width: Math.round(width),
             height: Math.round(height),
           };
-
-          try {
-            // Clean up screenshot from localStorage before closing
-            localStorage.removeItem('overlay-screenshot');
-            await invoke('submit_region_selection', { bounds });
-            // Restore main window
-            await invoke('show_main_window');
-          } catch (error) {
-            console.error('Failed to submit region:', error);
-            localStorage.removeItem('overlay-screenshot');
-            await invoke('show_main_window');
-            await invoke('close_region_selector');
-          }
         } else {
-          // Selection too small, reset
-          selection.style.display = 'none';
+          // Just a click (no drag) - capture full screen
+          bounds = {
+            x: 0,
+            y: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+          };
+        }
+
+        try {
+          // Clean up screenshot from localStorage before closing
+          localStorage.removeItem('overlay-screenshot');
+          await invoke('submit_region_selection', { bounds });
+          // Restore main window
+          await invoke('show_main_window');
+        } catch (error) {
+          console.error('Failed to submit region:', error);
+          localStorage.removeItem('overlay-screenshot');
+          await invoke('show_main_window');
+          await invoke('close_region_selector');
         }
       });
 
