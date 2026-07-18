@@ -16,7 +16,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f0f0f0;
+      background: transparent;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -69,9 +69,10 @@
         clearInterval(interval);
         // Fade out and close
         countdownEl.style.opacity = '0';
-        setTimeout(() => {
+        setTimeout(async () => {
           if (window.__TAURI__) {
-            window.__TAURI__.core.invoke('close_countdown');
+            // Don't restore window - let it stay hidden during recording
+            await window.__TAURI__.core.invoke('close_countdown');
           }
         }, 200);
       }

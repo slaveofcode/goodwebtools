@@ -97,23 +97,22 @@
 
     <script>
       import { invoke } from '@tauri-apps/api/core';
-      import { listen } from '@tauri-apps/api/event';
 
       const overlay = document.getElementById('overlay')!;
       const selection = document.getElementById('selection')!;
       const dimensions = document.getElementById('dimensions')!;
 
-      // Listen for screenshot data from the main window
-      listen('overlay-screenshot', (event: any) => {
-        console.log('[Overlay] Received screenshot');
-        const { dataUrl } = event.payload;
-
-        // Set the screenshot as the overlay background
-        overlay.style.backgroundImage = `url("${dataUrl}")`;
-        overlay.style.backgroundSize = 'cover';
-        overlay.style.backgroundPosition = 'center';
-        overlay.style.backgroundRepeat = 'no-repeat';
-      });
+      // Load screenshot from localStorage (more reliable than events)
+      const screenshotData = localStorage.getItem('overlay-screenshot');
+      if (screenshotData) {
+        console.log('[Overlay] Loading screenshot from localStorage');
+        overlay.style.backgroundImage = `url("${screenshotData}")`;
+        overlay.style.backgroundSize = '100% 100%'; // Exact size, no scaling
+        overlay.style.backgroundPosition = '0 0';
+        console.log('[Overlay] Screenshot background applied');
+      } else {
+        console.log('[Overlay] No screenshot in localStorage');
+      }
 
       let isSelecting = false;
       let startX = 0;
@@ -173,9 +172,15 @@
           };
 
           try {
+            // Clean up screenshot from localStorage before closing
+            localStorage.removeItem('overlay-screenshot');
             await invoke('submit_region_selection', { bounds });
+            // Restore main window
+            await invoke('show_main_window');
           } catch (error) {
             console.error('Failed to submit region:', error);
+            localStorage.removeItem('overlay-screenshot');
+            await invoke('show_main_window');
             await invoke('close_region_selector');
           }
         } else {
@@ -187,6 +192,10 @@
       // ESC to cancel
       document.addEventListener('keydown', async (e) => {
         if (e.key === 'Escape') {
+          // Clean up screenshot from localStorage
+          localStorage.removeItem('overlay-screenshot');
+          // Restore main window
+          await invoke('show_main_window');
           await invoke('close_region_selector');
         }
       });

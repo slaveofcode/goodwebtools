@@ -1,6 +1,6 @@
 // src-tauri/src/commands.rs
 use serde::{Deserialize, Serialize};
-use tauri::Emitter;
+use tauri::{Emitter, Manager};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -10,6 +10,7 @@ pub struct CaptureOptions {
     pub include_audio: Option<bool>,
     pub system_audio: Option<bool>,
     pub display_id: Option<i32>,
+    pub scale: Option<f32>, // Resolution scale factor (0.5 = 50%, 1.0 = 100%)
 }
 
 #[derive(Debug, Serialize)]
@@ -65,13 +66,26 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32, bounds: Option<Rec
         let bytes_per_row = image.bytes_per_row();
         let data = image.data();
 
+        // Calculate scale factor (physical pixels / logical pixels) for HiDPI displays
+        let logical_width = display.pixels_wide() as f64;
+        let logical_height = display.pixels_high() as f64;
+        let scale_x = full_width as f64 / logical_width;
+        let scale_y = full_height as f64 / logical_height;
+
+        if bounds.is_some() {
+            println!("[Capture] Scale factor: {}x (logical: {}x{}, physical: {}x{})",
+                     scale_x, logical_width, logical_height, full_width, full_height);
+        }
+
         // Determine capture region (full screen or bounded region)
         let (region_x, region_y, width, height) = if let Some(rect) = bounds {
-            // Clamp bounds to screen dimensions
-            let x = rect.x.max(0) as u32;
-            let y = rect.y.max(0) as u32;
-            let w = rect.width.min(full_width - x);
-            let h = rect.height.min(full_height - y);
+            // Scale logical bounds to physical pixels for HiDPI displays
+            let x = ((rect.x as f64 * scale_x).max(0.0) as u32);
+            let y = ((rect.y as f64 * scale_y).max(0.0) as u32);
+            let w = ((rect.width as f64 * scale_x) as u32).min(full_width - x);
+            let h = ((rect.height as f64 * scale_y) as u32).min(full_height - y);
+            println!("[Capture] Logical bounds: ({}, {}) {}x{} → Physical: ({}, {}) {}x{}",
+                     rect.x, rect.y, rect.width, rect.height, x, y, w, h);
             (x, y, w, h)
         } else {
             (0, 0, full_width, full_height)
@@ -236,30 +250,67 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
             }
         }
 
+        // Apply resolution scaling if requested (for faster encoding)
+        let (final_buffer, final_width, final_height) = if let Some(scale) = options.scale {
+            if scale > 0.0 && scale < 1.0 {
+                let scaled_width = (width as f32 * scale) as u32;
+                let scaled_height = (height as f32 * scale) as u32;
+                let sample_rate = (1.0 / scale) as u32;
+
+                println!("[Capture] Downsampling {}x{} → {}x{} (scale: {})",
+                         width, height, scaled_width, scaled_height, scale);
+
+                let mut scaled_buffer: RgbaImage = ImageBuffer::new(scaled_width, scaled_height);
+                for y in 0..scaled_height {
+                    for x in 0..scaled_width {
+                        let src_x = (x * sample_rate).min(width - 1);
+                        let src_y = (y * sample_rate).min(height - 1);
+                        let pixel = rgba_buffer.get_pixel(src_x, src_y);
+                        scaled_buffer.put_pixel(x, y, *pixel);
+                    }
+                }
+                (scaled_buffer, scaled_width, scaled_height)
+            } else {
+                (rgba_buffer, width, height)
+            }
+        } else {
+            (rgba_buffer, width, height)
+        };
+
         // Encode to PNG or JPEG based on format option
         let mut output = Vec::new();
         let format = options.format.as_deref().unwrap_or("png");
 
         match format {
             "jpg" | "jpeg" => {
+                // JPEG doesn't support alpha - convert RGBA to RGB
+                use image::{RgbImage, Rgb};
+                let mut rgb_buffer: RgbImage = ImageBuffer::new(final_width, final_height);
+                for y in 0..final_height {
+                    for x in 0..final_width {
+                        let rgba = final_buffer.get_pixel(x, y);
+                        rgb_buffer.put_pixel(x, y, Rgb([rgba[0], rgba[1], rgba[2]]));
+                    }
+                }
+
                 let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(
                     &mut output,
                     (options.quality.unwrap_or(0.92) * 100.0) as u8,
                 );
                 encoder.encode(
-                    &rgba_buffer,
-                    width,
-                    height,
-                    image::ColorType::Rgba8.into(),
+                    &rgb_buffer,
+                    final_width,
+                    final_height,
+                    image::ColorType::Rgb8.into(),
                 ).map_err(|e: image::ImageError| e.to_string())?;
             }
             _ => {
                 // Default to PNG
                 let encoder = image::codecs::png::PngEncoder::new(&mut output);
                 encoder.write_image(
-                    &rgba_buffer,
-                    width,
-                    height,
+                    &final_buffer,
+                    final_width,
+                    final_height,
                     image::ColorType::Rgba8.into(),
                 ).map_err(|e: image::ImageError| e.to_string())?;
             }
@@ -395,6 +446,28 @@ pub async fn check_screen_recording_permission() -> Result<bool, String> {
 
     #[cfg(not(target_os = "macos"))]
     Ok(true)
+}
+
+#[tauri::command]
+pub async fn hide_main_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        // Use minimize instead of hide so user can restore from dock
+        window.minimize().map_err(|e: tauri::Error| e.to_string())?;
+        println!("[Window] Main window minimized");
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn show_main_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        // Unminimize and show the window
+        window.unminimize().map_err(|e: tauri::Error| e.to_string())?;
+        window.show().map_err(|e: tauri::Error| e.to_string())?;
+        window.set_focus().map_err(|e: tauri::Error| e.to_string())?;
+        println!("[Window] Main window restored and focused");
+    }
+    Ok(())
 }
 
 #[tauri::command]

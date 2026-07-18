@@ -16,9 +16,9 @@ export async function initializeGlobalHotkeys() {
   if (!isTauri() || initialized) return;
 
   try {
-    // Screenshot hotkey: Cmd+Shift+3
+    // Screenshot hotkey: Cmd+Shift+A
     const screenshotId = await hotkeyService.register(
-      'CommandOrControl+Shift+3',
+      'CommandOrControl+Shift+A',
       async () => {
         console.log('[GlobalHotkeys] Screenshot hotkey triggered');
         await handleGlobalScreenshot();

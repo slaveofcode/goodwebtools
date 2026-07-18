@@ -174,9 +174,22 @@ export default function ImageCrop() {
                 {/* Movable selection body */}
                 <div
                   data-role="body"
-                  className="absolute cursor-move border-2 border-accent"
-                  style={{ left: sel.x, top: sel.y, width: sel.w, height: sel.h }}
-                />
+                  className="absolute cursor-move border-4 border-blue-500 bg-blue-500/20"
+                  style={{
+                    left: sel.x,
+                    top: sel.y,
+                    width: sel.w,
+                    height: sel.h,
+                    boxShadow: '0 0 0 3px rgba(255, 255, 255, 0.95), 0 0 0 7px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.8), inset 0 0 80px rgba(59, 130, 246, 0.1)'
+                  }}
+                >
+                  <div
+                    className="absolute -top-8 left-0 bg-blue-500 text-white px-3 py-1.5 rounded-md font-mono text-sm font-semibold whitespace-nowrap pointer-events-none"
+                    style={{ boxShadow: '0 0 0 2px rgba(255, 255, 255, 0.9), 0 4px 12px rgba(0, 0, 0, 0.3)' }}
+                  >
+                    {Math.round(sel.w)} × {Math.round(sel.h)}
+                  </div>
+                </div>
                 {CORNERS.map(role => {
                   const pos = {
                     nw: { left: sel.x, top: sel.y },
@@ -189,8 +202,12 @@ export default function ImageCrop() {
                     <div
                       key={role}
                       data-role={role}
-                      className={`absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 border-2 border-border bg-accent ${cursor}`}
-                      style={{ left: pos.left, top: pos.top }}
+                      className={`absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 border-2 border-white bg-blue-500 ${cursor}`}
+                      style={{
+                        left: pos.left,
+                        top: pos.top,
+                        boxShadow: '0 0 0 2px rgba(59, 130, 246, 1), 0 2px 8px rgba(0, 0, 0, 0.3)'
+                      }}
                     />
                   );
                 })}

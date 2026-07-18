@@ -103,7 +103,7 @@ export default function ScreenRecorder() {
     const registerHotkey = async () => {
       try {
         hotkeyId = await hotkeyService.register(
-          'CommandOrControl+Shift+5',
+          'CommandOrControl+Shift+R',
           () => {
             console.log('[ScreenRecorder] Global hotkey triggered');
             // Toggle recording: start if not recording, stop if recording

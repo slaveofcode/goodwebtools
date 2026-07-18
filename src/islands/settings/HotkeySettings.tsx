@@ -17,7 +17,7 @@ const BUILT_IN_HOTKEYS: HotkeyConfig[] = [
   {
     id: 'screenshot',
     name: 'Screenshot',
-    keys: 'CommandOrControl+Shift+3',
+    keys: 'CommandOrControl+Shift+A',
     description: 'Capture full screen screenshot',
     icon: Camera,
     tool: 'Screenshot',
@@ -26,7 +26,7 @@ const BUILT_IN_HOTKEYS: HotkeyConfig[] = [
   {
     id: 'screen-recorder',
     name: 'Screen Recorder',
-    keys: 'CommandOrControl+Shift+5',
+    keys: 'CommandOrControl+Shift+R',
     description: 'Toggle screen recording (start/stop)',
     icon: MonitorPlay,
     tool: 'Screen Recorder',
