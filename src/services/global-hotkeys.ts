@@ -81,28 +81,36 @@ async function handleGlobalScreenshot() {
 
     // First, capture a screenshot for the overlay background
     console.log('[GlobalHotkeys] Capturing overlay screenshot...');
-    const overlayScreenshot = await captureService.captureScreen({
-      format: 'jpg',
-      quality: 0.75,
-      scale: 0.5, // Reduce resolution for faster overlay
-    });
-
-    // Convert to data URL for overlay background
-    let overlayDataUrl: string;
-    if (overlayScreenshot instanceof Blob) {
-      overlayDataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(overlayScreenshot);
+    try {
+      const overlayScreenshot = await captureService.captureScreen({
+        format: 'jpg',
+        quality: 0.75,
       });
-    } else {
-      throw new Error('Unexpected screenshot format for overlay');
-    }
 
-    // Store in localStorage for overlay to use
-    localStorage.setItem('overlay-screenshot', overlayDataUrl);
-    console.log('[GlobalHotkeys] Overlay screenshot stored');
+      console.log('[GlobalHotkeys] Overlay screenshot captured:', overlayScreenshot);
+
+      // Convert to data URL for overlay background
+      let overlayDataUrl: string;
+      if (overlayScreenshot instanceof Blob) {
+        console.log('[GlobalHotkeys] Converting Blob to data URL for overlay...');
+        overlayDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(overlayScreenshot);
+        });
+        console.log('[GlobalHotkeys] Overlay data URL length:', overlayDataUrl.length);
+      } else {
+        throw new Error('Unexpected screenshot format for overlay');
+      }
+
+      // Store in localStorage for overlay to use
+      localStorage.setItem('overlay-screenshot', overlayDataUrl);
+      console.log('[GlobalHotkeys] Overlay screenshot stored in localStorage');
+    } catch (overlayError) {
+      console.error('[GlobalHotkeys] Failed to capture overlay screenshot:', overlayError);
+      // Continue anyway - overlay will just show gray background
+    }
 
     // Show region selector to let user choose area
     console.log('[GlobalHotkeys] Showing region selector...');
