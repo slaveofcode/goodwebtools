@@ -26,6 +26,11 @@ export async function initializeGlobalHotkeys() {
   }
 
   try {
+    // First, unregister ALL hotkeys to clear any stuck registrations
+    console.log('[GlobalHotkeys] Cleaning up any existing hotkeys...');
+    await hotkeyService.unregisterAll();
+    registeredIds.length = 0; // Clear our tracking array
+
     console.log('[GlobalHotkeys] Registering screenshot hotkey...');
 
     // Screenshot hotkey: Cmd+Shift+A (same as Lark app for muscle memory)
