@@ -484,14 +484,26 @@ pub async fn close_countdown(app: tauri::AppHandle) -> Result<(), String> {
 pub fn get_cursor_position() -> Result<(f64, f64), String> {
     #[cfg(target_os = "macos")]
     {
-        use core_graphics::event::{CGEvent, CGEventType};
+        use core_graphics::display::CGDisplay;
+        use core_graphics::event::{CGEventSource, CGEvent, EventField};
+        use core_graphics::event_source::CGEventSourceStateID;
 
-        // Get current mouse location
-        if let Some(event) = CGEvent::new(CGEventType::MouseMoved) {
-            let location = event.location();
-            return Ok((location.x, location.y));
+        // Create an event source to get mouse location
+        if let Ok(source) = CGEventSource::new(CGEventSourceStateID::CombinedSessionState) {
+            // Create a mouse event to get current location
+            if let Ok(event) = source.new_mouse_event(
+                core_graphics::event::CGEventType::MouseMoved,
+                CGDisplay::mouse_location(),
+                core_graphics::event::CGMouseButton::Left
+            ) {
+                let location = event.location();
+                return Ok((location.x, location.y));
+            }
         }
-        Err("Failed to get mouse location".to_string())
+
+        // Fallback: use CGDisplay::mouse_location() directly
+        let location = CGDisplay::mouse_location();
+        Ok((location.x, location.y))
     }
 
     #[cfg(not(target_os = "macos"))]
