@@ -178,6 +178,9 @@
           // Hide screen selector immediately
           document.body.style.display = 'none';
 
+          // Hide main window while region selector is shown
+          await invoke('hide_main_window');
+
           // Store selected display ID
           localStorage.setItem('gwt-selected-display', thumb.display.id.toString());
 
