@@ -183,7 +183,13 @@
           localStorage.removeItem('gwt-screen-thumbnails');
 
           // Close this window - main window will continue the workflow
-          await invoke('close_screen_selector');
+          console.log('[ScreenSelector] Closing screen selector window...');
+          try {
+            await invoke('close_screen_selector');
+            console.log('[ScreenSelector] Window closed successfully');
+          } catch (err) {
+            console.error('[ScreenSelector] Failed to close window:', err);
+          }
         });
 
         screensContainer.appendChild(card);
