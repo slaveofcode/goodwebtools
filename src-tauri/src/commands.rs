@@ -484,26 +484,25 @@ pub async fn close_countdown(app: tauri::AppHandle) -> Result<(), String> {
 pub fn get_cursor_position() -> Result<(f64, f64), String> {
     #[cfg(target_os = "macos")]
     {
-        use core_graphics::display::CGDisplay;
-        use core_graphics::event::{CGEventSource, CGEvent, EventField};
-        use core_graphics::event_source::CGEventSourceStateID;
+        use cocoa::appkit::NSEvent;
+        use cocoa::foundation::NSPoint;
 
-        // Create an event source to get mouse location
-        if let Ok(source) = CGEventSource::new(CGEventSourceStateID::CombinedSessionState) {
-            // Create a mouse event to get current location
-            if let Ok(event) = source.new_mouse_event(
-                core_graphics::event::CGEventType::MouseMoved,
-                CGDisplay::mouse_location(),
-                core_graphics::event::CGMouseButton::Left
-            ) {
-                let location = event.location();
-                return Ok((location.x, location.y));
-            }
+        unsafe {
+            // Get current mouse location in screen coordinates
+            let mouse_loc: NSPoint = NSEvent::mouseLocation();
+
+            // NSEvent::mouseLocation() returns coordinates with origin at bottom-left
+            // We need to flip Y coordinate to match CGDisplay coordinates (top-left origin)
+            // Get main display height for coordinate conversion
+            use core_graphics::display::CGDisplay;
+            let main_display = CGDisplay::main();
+            let display_height = main_display.pixels_high() as f64;
+
+            // Flip Y coordinate
+            let flipped_y = display_height - mouse_loc.y;
+
+            Ok((mouse_loc.x, flipped_y))
         }
-
-        // Fallback: use CGDisplay::mouse_location() directly
-        let location = CGDisplay::mouse_location();
-        Ok((location.x, location.y))
     }
 
     #[cfg(not(target_os = "macos"))]
