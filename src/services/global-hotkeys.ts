@@ -79,12 +79,61 @@ async function handleGlobalScreenshot() {
   try {
     console.log('[GlobalHotkeys] Starting region selection...');
 
+    // Get current display (where cursor is)
+    console.log('[GlobalHotkeys] Getting cursor display...');
+    const displays = await captureService.listDisplays();
+
+    // Get cursor position
+    let cursorX = 0;
+    let cursorY = 0;
+
+    // Try to get cursor position from last mouse event
+    // This is approximate but works for hotkeys
+    const getCursorPosition = () => {
+      return new Promise<{x: number, y: number}>((resolve) => {
+        const handler = (e: MouseEvent) => {
+          document.removeEventListener('mousemove', handler);
+          resolve({ x: e.screenX, y: e.screenY });
+        };
+        document.addEventListener('mousemove', handler);
+
+        // Fallback after 100ms if no mouse movement
+        setTimeout(() => {
+          document.removeEventListener('mousemove', handler);
+          resolve({ x: window.screenX + window.innerWidth / 2, y: window.screenY + window.innerHeight / 2 });
+        }, 100);
+      });
+    };
+
+    const cursorPos = await getCursorPosition();
+    cursorX = cursorPos.x;
+    cursorY = cursorPos.y;
+
+    console.log('[GlobalHotkeys] Cursor position:', cursorX, cursorY);
+
+    // Find display containing cursor
+    let currentDisplay = displays.find(d => {
+      const { x, y, width, height } = d;
+      return cursorX >= x && cursorX < x + width &&
+             cursorY >= y && cursorY < y + height;
+    });
+
+    // Fallback to main display if cursor not found in any display
+    if (!currentDisplay) {
+      console.log('[GlobalHotkeys] Cursor not in any display bounds, using main');
+      currentDisplay = displays.find(d => d.isMain) || displays[0];
+    }
+
+    const displayId = currentDisplay?.id;
+    console.log('[GlobalHotkeys] Using display:', displayId, currentDisplay);
+
     // First, capture a screenshot for the overlay background
     console.log('[GlobalHotkeys] Capturing overlay screenshot...');
     try {
       const overlayScreenshot = await captureService.captureScreen({
         format: 'jpg',
         quality: 0.75,
+        displayId,
       });
 
       console.log('[GlobalHotkeys] Overlay screenshot captured:', overlayScreenshot);
@@ -113,8 +162,8 @@ async function handleGlobalScreenshot() {
     }
 
     // Show region selector to let user choose area
-    console.log('[GlobalHotkeys] Showing region selector...');
-    const region = await captureService.showRegionSelector();
+    console.log('[GlobalHotkeys] Showing region selector on display:', displayId);
+    const region = await captureService.showRegionSelector(displayId);
 
     if (!region) {
       console.log('[GlobalHotkeys] Region selection cancelled');
