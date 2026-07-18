@@ -150,11 +150,61 @@
           // Clean up thumbnails
           localStorage.removeItem('gwt-screen-thumbnails');
 
-          // Close selector and continue with region selection
-          window.close();
+          // Continue with region selector on selected display
+          const { captureService } = await import('@/services/capture');
 
-          // Signal to continue the screenshot flow
-          window.dispatchEvent(new CustomEvent('gwt:display-selected'));
+          try {
+            const displayId = thumb.display.id;
+
+            // Capture overlay screenshot for region selector
+            const overlayScreenshot = await captureService.captureScreen({
+              format: 'jpg',
+              quality: 0.75,
+              displayId,
+            });
+
+            let overlayDataUrl;
+            if (overlayScreenshot instanceof Blob) {
+              overlayDataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(overlayScreenshot);
+              });
+            }
+
+            localStorage.setItem('overlay-screenshot', overlayDataUrl);
+
+            // Show region selector
+            const region = await captureService.showRegionSelector(displayId);
+
+            if (!region) {
+              console.log('[ScreenSelector] Region selection cancelled');
+              await invoke('show_main_window');
+              return;
+            }
+
+            // Capture the selected region
+            const screenshot = await captureService.captureRegion(region);
+
+            if (screenshot instanceof Blob) {
+              const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(screenshot);
+              });
+
+              localStorage.setItem('gwt-global-screenshot', dataUrl);
+              localStorage.setItem('gwt-global-screenshot-timestamp', Date.now().toString());
+
+              // Navigate to screenshot tool
+              window.location.href = '/tools/screenshot';
+            }
+          } catch (err) {
+            console.error('[ScreenSelector] Error:', err);
+            await invoke('show_main_window');
+          }
         });
 
         screensContainer.appendChild(card);
