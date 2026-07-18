@@ -4,6 +4,7 @@ export interface Rectangle {
   y: number;
   width: number;
   height: number;
+  displayId?: number; // Optional display ID for multi-monitor support
 }
 
 export interface DisplayInfo {

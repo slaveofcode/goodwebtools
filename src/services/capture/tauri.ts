@@ -34,7 +34,18 @@ export class TauriCaptureService implements CaptureService {
 
   async captureRegion(bounds: Rectangle): Promise<Blob> {
     try {
-      const imageBytes: number[] = await invoke('capture_region', { bounds });
+      console.log('[TauriCaptureService] captureRegion called with bounds:', bounds);
+
+      // Extract displayId if present
+      const { displayId, ...rect } = bounds;
+
+      const params = displayId !== undefined
+        ? { bounds: rect, displayId }
+        : { bounds: rect };
+
+      console.log('[TauriCaptureService] Calling capture_region with params:', params);
+
+      const imageBytes: number[] = await invoke('capture_region', params);
       return new Blob([new Uint8Array(imageBytes)], { type: 'image/png' });
     } catch (error) {
       console.warn('Native region capture failed', error);
