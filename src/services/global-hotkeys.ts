@@ -82,44 +82,68 @@ async function handleGlobalScreenshot() {
 
   screenshotInProgress = true;
   try {
-    console.log('[GlobalHotkeys] Starting region selection...');
+    console.log('[GlobalHotkeys] Starting screenshot capture...');
 
-    // Get cursor position to determine which display to use
-    console.log('[GlobalHotkeys] Getting cursor position...');
-    const { invoke } = await import('@tauri-apps/api/core');
+    // Get all displays
+    const displays = await captureService.listDisplays();
+    console.log('[GlobalHotkeys] Available displays:', displays);
 
     let displayId: number | undefined;
 
-    try {
-      // Get actual cursor position from OS
-      const [cursorX, cursorY] = await invoke<[number, number]>('get_cursor_position');
-      console.log('[GlobalHotkeys] Cursor position:', cursorX, cursorY);
+    // If multiple displays, let user choose
+    if (displays.length > 1) {
+      console.log('[GlobalHotkeys] Multiple displays detected, capturing all...');
 
-      // Get all displays and find which one contains the cursor
-      const displays = await captureService.listDisplays();
-      console.log('[GlobalHotkeys] Available displays:', displays);
+      // Capture all displays as thumbnails
+      const screenThumbnails = await Promise.all(
+        displays.map(async (display) => {
+          try {
+            const screenshot = await captureService.captureScreen({
+              format: 'jpg',
+              quality: 0.5, // Lower quality for thumbnails
+              displayId: display.id,
+            });
 
-      // Find display containing cursor
-      const cursorDisplay = displays.find(d => {
-        const { x, y, width, height } = d;
-        return cursorX >= x && cursorX < x + width &&
-               cursorY >= y && cursorY < y + height;
-      });
+            // Convert to data URL
+            let dataUrl: string;
+            if (screenshot instanceof Blob) {
+              dataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(screenshot);
+              });
+            } else {
+              throw new Error('Unexpected screenshot format');
+            }
 
-      if (cursorDisplay) {
-        displayId = cursorDisplay.id;
-        console.log('[GlobalHotkeys] Cursor is on display:', displayId, cursorDisplay);
-      } else {
-        console.warn('[GlobalHotkeys] Cursor not in any display bounds, using main');
-        const mainDisplay = displays.find(d => d.isMain) || displays[0];
-        displayId = mainDisplay?.id;
+            return {
+              display,
+              dataUrl,
+            };
+          } catch (err) {
+            console.error(`[GlobalHotkeys] Failed to capture display ${display.id}:`, err);
+            return null;
+          }
+        })
+      );
+
+      const validThumbnails = screenThumbnails.filter(Boolean);
+      if (validThumbnails.length === 0) {
+        throw new Error('Failed to capture any displays');
       }
-    } catch (err) {
-      console.error('[GlobalHotkeys] Could not get cursor position:', err);
-      // Fallback to main display
-      const displays = await captureService.listDisplays();
-      const mainDisplay = displays.find(d => d.isMain) || displays[0];
-      displayId = mainDisplay?.id;
+
+      // Store thumbnails for selection UI
+      localStorage.setItem('gwt-screen-thumbnails', JSON.stringify(validThumbnails));
+
+      // Show screen selector - for now, just use first screen
+      // TODO: Implement screen selector UI
+      displayId = validThumbnails[0]!.display.id;
+      console.log('[GlobalHotkeys] Using display:', displayId);
+    } else {
+      // Single display - use it directly
+      displayId = displays[0]?.id;
+      console.log('[GlobalHotkeys] Single display, using:', displayId);
     }
 
     // First, capture a screenshot for the overlay background
