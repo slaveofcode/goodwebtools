@@ -485,11 +485,12 @@ pub fn get_cursor_position() -> Result<(f64, f64), String> {
     #[cfg(target_os = "macos")]
     {
         use cocoa::appkit::NSEvent;
+        use cocoa::base::nil;
         use cocoa::foundation::NSPoint;
 
         unsafe {
             // Get current mouse location in screen coordinates
-            let mouse_loc: NSPoint = NSEvent::mouseLocation();
+            let mouse_loc: NSPoint = msg_send![class!(NSEvent), mouseLocation];
 
             // NSEvent::mouseLocation() returns coordinates with origin at bottom-left
             // We need to flip Y coordinate to match CGDisplay coordinates (top-left origin)
