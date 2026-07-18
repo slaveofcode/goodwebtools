@@ -28,9 +28,9 @@ export async function initializeGlobalHotkeys() {
   try {
     console.log('[GlobalHotkeys] Registering screenshot hotkey...');
 
-    // Screenshot hotkey: Cmd+Shift+X (less common, less likely to conflict)
+    // Screenshot hotkey: Cmd+Shift+A (same as Lark app for muscle memory)
     const screenshotId = await hotkeyService.register(
-      'CommandOrControl+Shift+X',
+      'CommandOrControl+Shift+A',
       async () => {
         console.log('[GlobalHotkeys] Screenshot hotkey triggered');
         await handleGlobalScreenshot();

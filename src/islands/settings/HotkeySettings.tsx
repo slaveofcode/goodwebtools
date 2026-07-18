@@ -17,7 +17,7 @@ const BUILT_IN_HOTKEYS: HotkeyConfig[] = [
   {
     id: 'screenshot',
     name: 'Screenshot',
-    keys: 'CommandOrControl+Shift+X',
+    keys: 'CommandOrControl+Shift+A',
     description: 'Capture full screen screenshot',
     icon: Camera,
     tool: 'Screenshot',
