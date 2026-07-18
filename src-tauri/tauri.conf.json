@@ -35,7 +35,11 @@
             "core:event:allow-emit",
             "core:event:allow-listen",
             "dialog:allow-save",
-            "fs:allow-write-file"
+            "fs:allow-write-file",
+            "global-shortcut:allow-register",
+            "global-shortcut:allow-unregister",
+            "global-shortcut:allow-unregister-all",
+            "global-shortcut:allow-is-registered"
           ]
         },
         {
