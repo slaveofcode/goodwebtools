@@ -238,6 +238,9 @@
               localStorage.setItem('gwt-global-screenshot', dataUrl);
               localStorage.setItem('gwt-global-screenshot-timestamp', Date.now().toString());
 
+              // Restore and focus main window
+              await invoke('show_main_window');
+
               // Navigate to screenshot tool
               window.location.href = '/tools/screenshot';
             }

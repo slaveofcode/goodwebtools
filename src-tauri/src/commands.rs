@@ -29,6 +29,8 @@ pub struct Rectangle {
     pub y: i32,
     pub width: u32,
     pub height: u32,
+    #[serde(rename = "displayId")]
+    pub display_id: Option<i32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -380,8 +382,13 @@ pub async fn capture_window(_window_id: Option<String>) -> Result<Vec<u8>, Strin
 
 #[tauri::command]
 pub async fn capture_region(bounds: Rectangle, display_id: Option<i32>) -> Result<Vec<u8>, String> {
+    // Use displayId from bounds if available, otherwise use parameter
+    let target_display = bounds.display_id.or(display_id);
+    println!("[Capture] Region capture - displayId from bounds: {:?}, from param: {:?}, using: {:?}",
+             bounds.display_id, display_id, target_display);
+
     // Use high quality settings for single-frame region capture from specified display
-    capture_screen_fast(display_id, 10, Some(bounds))
+    capture_screen_fast(target_display, 10, Some(bounds))
 }
 
 #[derive(Debug, Deserialize)]
