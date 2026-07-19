@@ -214,6 +214,9 @@ npm run download:ffmpeg  # Download platform FFmpeg sidecars to src-tauri/bin/
 npm run bundle:check     # Verify all required assets before release build
 ```
 
+See [RELEASING-DESKTOP.md](./RELEASING-DESKTOP.md) for the full release guide,
+including FFmpeg sidecar setup and signing key configuration for GitHub Actions.
+
 ## Testing
 
 Unit tests cover pure tool logic and service layer: `npm run test` — **385 tests across 43 files**.
