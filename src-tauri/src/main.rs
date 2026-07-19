@@ -4,6 +4,7 @@ mod commands;
 mod overlay;
 mod recording;
 mod audio;
+mod tray;
 
 fn main() {
     tauri::Builder::default()
@@ -12,6 +13,10 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .setup(|app| {
+            tray::setup_tray(&app.handle())?;
+            Ok(())
+        })
         // Will add later: updater
         .invoke_handler(tauri::generate_handler![
             commands::capture_screen,

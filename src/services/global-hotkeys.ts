@@ -168,9 +168,9 @@ export async function continueScreenshotWorkflow(displayId: number) {
 let screenshotInProgress = false;
 
 /**
- * Handle global screenshot capture
+ * Handle global screenshot capture (also called from tray menu)
  */
-async function handleGlobalScreenshot() {
+export async function handleGlobalScreenshot() {
   if (screenshotInProgress) {
     console.log('[GlobalHotkeys] Screenshot already in progress, ignoring');
     return;

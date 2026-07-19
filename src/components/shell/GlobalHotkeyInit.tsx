@@ -1,5 +1,10 @@
 import { useEffect } from 'react';
-import { initializeGlobalHotkeys, cleanupGlobalHotkeys, continueScreenshotWorkflow } from '@/services/global-hotkeys';
+import {
+  initializeGlobalHotkeys,
+  cleanupGlobalHotkeys,
+  continueScreenshotWorkflow,
+  handleGlobalScreenshot,
+} from '@/services/global-hotkeys';
 
 /**
  * Initializes global hotkeys for the desktop app.
@@ -9,22 +14,28 @@ export function GlobalHotkeyInit() {
   useEffect(() => {
     initializeGlobalHotkeys();
 
-    // Listen for screen selection from screen selector window via Tauri events
     let unlisten: (() => void) | null = null;
+    let unlistenTray: (() => void) | null = null;
 
     (async () => {
       const { listen } = await import('@tauri-apps/api/event');
 
+      // Screen selected from the multi-display picker window
       unlisten = await listen<number>('screen-selected', (event) => {
         const displayId = event.payload;
-        console.log('[GlobalHotkeyInit] Screen selected via Tauri event, continuing workflow with display:', displayId);
+        console.log('[GlobalHotkeyInit] Screen selected, continuing workflow with display:', displayId);
         continueScreenshotWorkflow(displayId);
       });
 
-      console.log('[GlobalHotkeyInit] Listening for screen-selected events');
+      // Tray "Take Screenshot" menu item → same workflow as the keyboard hotkey
+      unlistenTray = await listen('tray-screenshot', () => {
+        console.log('[GlobalHotkeyInit] Screenshot triggered from tray menu');
+        handleGlobalScreenshot();
+      });
+
+      console.log('[GlobalHotkeyInit] Listening for screen-selected and tray-screenshot events');
     })();
 
-    // Cleanup on unmount AND on page unload
     const handleUnload = () => {
       cleanupGlobalHotkeys();
     };
@@ -33,10 +44,11 @@ export function GlobalHotkeyInit() {
 
     return () => {
       if (unlisten) unlisten();
+      if (unlistenTray) unlistenTray();
       window.removeEventListener('beforeunload', handleUnload);
       cleanupGlobalHotkeys();
     };
   }, []);
 
-  return null; // This component renders nothing
+  return null;
 }
