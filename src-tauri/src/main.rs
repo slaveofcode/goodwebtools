@@ -5,6 +5,7 @@ mod overlay;
 mod recording;
 mod audio;
 mod tray;
+mod ffmpeg;
 
 fn main() {
     tauri::Builder::default()

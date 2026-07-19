@@ -25,7 +25,8 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "tauri:bundle": "npm run build && tauri build"
+    "tauri:bundle": "npm run build && tauri build",
+    "download:ffmpeg": "node scripts/download-ffmpeg-binaries.mjs"
   },
   "repository": {
     "type": "git",
