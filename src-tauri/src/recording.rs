@@ -40,6 +40,7 @@ struct RecordingState {
     frames: Arc<Mutex<Vec<Vec<u8>>>>,
     start_time: Instant,
     duration: Arc<Mutex<Option<Duration>>>,
+    audio_recorder: Option<crate::audio::AudioRecorder>,
 }
 
 lazy_static::lazy_static! {
@@ -73,6 +74,23 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
     let frames = Arc::new(Mutex::new(Vec::new()));
     let duration = Arc::new(Mutex::new(None));
 
+    // Start audio capture if requested
+    let audio_recorder = if include_audio || system_audio {
+        let audio_path = std::env::temp_dir().join(format!("gwt_audio_{}.aac", handle.id));
+        match crate::audio::AudioRecorder::start(audio_path, include_audio, system_audio) {
+            Ok(recorder) => {
+                println!("[Recording] Audio capture started");
+                Some(recorder)
+            }
+            Err(e) => {
+                println!("[Recording] Audio capture failed to start: {} — recording video only", e);
+                None
+            }
+        }
+    } else {
+        None
+    };
+
     let state = RecordingState {
         handle: handle.clone(),
         fps,
@@ -84,6 +102,7 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
         frames: frames.clone(),
         start_time: Instant::now(),
         duration: duration.clone(),
+        audio_recorder,
     };
 
     // Store state
@@ -211,8 +230,9 @@ pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
         return Err("No frames captured".to_string());
     }
 
-    // Phase 2 & 3: Encode frames to video (with audio if requested)
-    let include_audio = state.include_audio || state.system_audio;
+    // Stop audio capture
+    let audio_path = state.audio_recorder.as_ref().and_then(|r| r.stop());
+
     let format = state.handle.format.clone().unwrap_or_else(|| "webm".to_string());
 
     // Calculate actual FPS achieved (not target FPS)
@@ -223,30 +243,44 @@ pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {
                 println!("[Recording] Encoding with actual FPS: {:.2} (target was: {})", fps, state.fps);
                 fps
             } else {
-                println!("[Recording] Duration too short, using target FPS: {}", state.fps);
                 state.fps as f64
             }
         } else {
-            println!("[Recording] Duration not set, using target FPS: {}", state.fps);
             state.fps as f64
         }
     } else {
-        println!("[Recording] Could not read duration, using target FPS: {}", state.fps);
         state.fps as f64
     };
 
-    encode_frames_to_video(&frames_vec, actual_fps, include_audio, &format)
+    // Encode frames to video (video-only first, then mux audio if captured)
+    let video_bytes = encode_frames_to_video(&frames_vec, actual_fps, &format)?;
+
+    // Mux audio if we captured any
+    if let Some(ref audio_file) = audio_path {
+        let video_temp = std::env::temp_dir()
+            .join(format!("gwt_video_{}.{}", handle_id, format));
+        std::fs::write(&video_temp, &video_bytes)
+            .map_err(|e| format!("Failed to write temp video: {}", e))?;
+
+        match crate::audio::AudioRecorder::mux(&video_temp, audio_file, &format) {
+            Ok(muxed) => {
+                let _ = std::fs::remove_file(&video_temp);
+                let _ = std::fs::remove_file(audio_file);
+                return Ok(muxed);
+            }
+            Err(e) => {
+                println!("[Recording] Mux failed ({}), returning video-only", e);
+                let _ = std::fs::remove_file(&video_temp);
+                let _ = std::fs::remove_file(audio_file);
+            }
+        }
+    }
+
+    Ok(video_bytes)
 }
 
-fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, _include_audio: bool, format: &str) -> Result<Vec<u8>, String> {
-    println!("[Recording] Phase 2+3: Encoding {} frames to {} at {:.2}fps", frames.len(), format, fps);
-
-    // Phase 3: Audio capture is documented but not yet fully implemented
-    // For MVP, we focus on video encoding. Audio will be added in future iterations.
-    if _include_audio {
-        println!("[Recording] Phase 3: Audio requested but not yet captured");
-        println!("[Recording] Future: Will capture and mux audio with video");
-    }
+fn encode_frames_to_video(frames: &[Vec<u8>], fps: f64, format: &str) -> Result<Vec<u8>, String> {
+    println!("[Recording] Encoding {} frames to {} at {:.2}fps", frames.len(), format, fps);
 
     // Create temp directory for frames
     let temp_dir = std::env::temp_dir().join(format!("gwt_recording_{}", chrono::Utc::now().timestamp_millis()));
