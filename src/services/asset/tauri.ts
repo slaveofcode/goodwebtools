@@ -1,93 +1,75 @@
 // src/services/asset/tauri.ts
-import { fetch as tauriFetch } from '@tauri-apps/api/http';
-import { BaseDirectory, readBinaryFile, writeBinaryFile, exists, createDir, removeFile } from '@tauri-apps/api/fs';
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
+import { BaseDirectory, readFile, writeFile, exists, mkdir, remove } from '@tauri-apps/plugin-fs';
 import type { AssetService, AssetFetchOptions } from './types';
 
 export class TauriAssetService implements AssetService {
   private readonly DEFAULT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
   private readonly CACHE_DIR = 'asset-cache';
 
-  private async getCachePath(url: string): Promise<string> {
-    // Create hash of URL for filename
+  private getCachePath(url: string): string {
     const hash = Array.from(url)
       .reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0, 0)
       .toString(36);
-
     return `${this.CACHE_DIR}/${hash}.bin`;
   }
 
-  private async getCacheMetaPath(url: string): Promise<string> {
-    const cachePath = await this.getCachePath(url);
-    return `${cachePath}.meta`;
+  private getCacheMetaPath(url: string): string {
+    return `${this.getCachePath(url)}.meta`;
   }
 
   async fetch(url: string, options?: AssetFetchOptions): Promise<ArrayBuffer> {
     const maxAgeMs = options?.maxAgeMs || this.DEFAULT_TTL_MS;
-    const cachePath = await this.getCachePath(url);
-    const metaPath = await this.getCacheMetaPath(url);
+    const cachePath = this.getCachePath(url);
+    const metaPath = this.getCacheMetaPath(url);
 
     // Check if cached
     try {
-      if (await exists(cachePath, { dir: BaseDirectory.AppCache })) {
-        // Read metadata
-        const metaData = await readBinaryFile(metaPath, { dir: BaseDirectory.AppCache });
-        const metaStr = new TextDecoder().decode(metaData);
-        const meta = JSON.parse(metaStr);
+      if (await exists(cachePath, { baseDir: BaseDirectory.AppCache })) {
+        const metaData = await readFile(metaPath, { baseDir: BaseDirectory.AppCache });
+        const meta = JSON.parse(new TextDecoder().decode(metaData));
 
-        const ageMs = Date.now() - meta.timestamp;
-        if (ageMs < maxAgeMs) {
-          // Return cached
-          const data = await readBinaryFile(cachePath, { dir: BaseDirectory.AppCache });
+        if (Date.now() - meta.timestamp < maxAgeMs) {
+          const data = await readFile(cachePath, { baseDir: BaseDirectory.AppCache });
           return data.buffer;
         }
       }
-    } catch (error) {
-      // Cache miss or error reading cache
+    } catch {
+      // Cache miss — fall through to network fetch
     }
 
     // Fetch fresh
-    const response = await tauriFetch(url, { method: 'GET', responseType: 2 }); // 2 = Binary
+    const response = await tauriFetch(url, { method: 'GET' });
 
-    if (response.status !== 200) {
+    if (!response.ok) {
       throw new Error(`Failed to fetch ${url}: ${response.status}`);
     }
 
-    const data = response.data as number[];
-    const arrayBuffer = new Uint8Array(data).buffer;
+    const arrayBuffer = await response.arrayBuffer();
 
     // Cache it
     try {
-      // Ensure cache directory exists
-      await createDir(this.CACHE_DIR, { dir: BaseDirectory.AppCache, recursive: true });
-
-      // Write data
-      await writeBinaryFile(cachePath, new Uint8Array(arrayBuffer), { dir: BaseDirectory.AppCache });
-
-      // Write metadata
+      await mkdir(this.CACHE_DIR, { baseDir: BaseDirectory.AppCache, recursive: true });
+      await writeFile(cachePath, new Uint8Array(arrayBuffer), { baseDir: BaseDirectory.AppCache });
       const meta = { timestamp: Date.now(), url };
-      const metaStr = JSON.stringify(meta);
-      await writeBinaryFile(metaPath, new TextEncoder().encode(metaStr), { dir: BaseDirectory.AppCache });
-    } catch (error) {
-      console.warn('Failed to cache asset:', error);
+      await writeFile(metaPath, new TextEncoder().encode(JSON.stringify(meta)), { baseDir: BaseDirectory.AppCache });
+    } catch (err) {
+      console.warn('Failed to cache asset:', err);
     }
 
     return arrayBuffer;
   }
 
   async isCached(url: string): Promise<boolean> {
-    const cachePath = await this.getCachePath(url);
-    return await exists(cachePath, { dir: BaseDirectory.AppCache });
+    const cachePath = this.getCachePath(url);
+    return exists(cachePath, { baseDir: BaseDirectory.AppCache });
   }
 
   async clearCache(): Promise<void> {
-    // Note: This is a simplified implementation
-    // A full implementation would enumerate and delete all files
     try {
-      // For now, just remove the cache directory
-      // This would need recursive directory deletion
-      console.warn('Cache clearing not fully implemented in Tauri');
-    } catch (error) {
-      console.warn('Failed to clear cache:', error);
+      await remove(this.CACHE_DIR, { baseDir: BaseDirectory.AppCache, recursive: true });
+    } catch (err) {
+      console.warn('Failed to clear cache:', err);
     }
   }
 }

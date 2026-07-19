@@ -1,6 +1,6 @@
 // src/services/file/tauri.ts
-import { open, save } from '@tauri-apps/api/dialog';
-import { readTextFile, readBinaryFile, writeTextFile, writeBinaryFile } from '@tauri-apps/api/fs';
+import { open, save } from '@tauri-apps/plugin-dialog';
+import { readFile, writeFile } from '@tauri-apps/plugin-fs';
 import type {
   FileService,
   FilePickerOptions,
@@ -28,7 +28,7 @@ export class TauriFileService implements FileService {
     // Read files and convert to File objects
     const files = await Promise.all(
       paths.map(async (path) => {
-        const content = await readBinaryFile(path);
+        const content = await readFile(path);
         const name = path.split('/').pop() || path.split('\\').pop() || 'file';
         const blob = new Blob([content]);
 
@@ -55,10 +55,10 @@ export class TauriFileService implements FileService {
 
     try {
       if (typeof data === 'string') {
-        await writeTextFile(path, data);
+        await writeFile(path, new TextEncoder().encode(data));
       } else {
         const buffer = await data.arrayBuffer();
-        await writeBinaryFile(path, new Uint8Array(buffer));
+        await writeFile(path, new Uint8Array(buffer));
       }
       return true;
     } catch (error) {
