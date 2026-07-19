@@ -9,6 +9,17 @@ import type { RecordingHandle, DisplayInfo } from '@/services/capture';
 import { isTauri } from '@/services/platform';
 import { hotkeyService } from '@/services/hotkey';
 
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  const buf = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  const chunkSize = 8192;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+  }
+  return `data:${blob.type};base64,${btoa(binary)}`;
+}
+
 function pickMime(): { mime: string; ext: string } {
   const candidates = [
     { mime: 'video/webm;codecs=vp9,opus', ext: 'webm' },
@@ -158,7 +169,7 @@ export default function ScreenRecorder() {
         }
 
         // Get display info to calculate countdown position
-        const displayList = await invoke('list_displays') as DisplayInfo[];
+        const displayList = await captureService.listDisplays();
         const targetDisplay = displayList.find(d => d.id === selectedDisplay) || displayList.find(d => d.isMain)!;
 
         // Countdown window is 400x400 centered on display
@@ -172,20 +183,8 @@ export default function ScreenRecorder() {
         console.log('[ScreenRecorder] Capturing countdown region:', countdownBounds, 'from display:', selectedDisplay);
 
         // Capture just the countdown window region from the selected display
-        const screenshot = await invoke('capture_region', {
-          bounds: countdownBounds,
-          displayId: selectedDisplay
-        }) as number[];
-
-        // Convert to base64 in chunks
-        const chunkSize = 8192;
-        let binary = '';
-        for (let i = 0; i < screenshot.length; i += chunkSize) {
-          const chunk = screenshot.slice(i, i + chunkSize);
-          binary += String.fromCharCode(...chunk);
-        }
-        const base64 = btoa(binary);
-        const dataUrl = `data:image/png;base64,${base64}`;
+        const screenshotBlob = await captureService.captureRegion({ ...countdownBounds, displayId: selectedDisplay });
+        const dataUrl = await blobToDataUrl(screenshotBlob);
 
         // Store in localStorage for countdown to read
         localStorage.setItem('countdown-screenshot', dataUrl);
@@ -318,24 +317,13 @@ export default function ScreenRecorder() {
       await new Promise(resolve => setTimeout(resolve, 150));
 
       // Capture 50% resolution screenshot for overlay background (4× faster)
-      const screenshot = await invoke('capture_screen', {
-        options: {
-          format: 'jpg',
-          quality: 0.75,
-          scale: 0.5,  // 50% resolution for faster encoding
-          displayId: selectedDisplay
-        }
-      }) as number[];
-
-      // Convert to base64 in chunks (avoid stack overflow on large images)
-      const chunkSize = 8192;
-      let binary = '';
-      for (let i = 0; i < screenshot.length; i += chunkSize) {
-        const chunk = screenshot.slice(i, i + chunkSize);
-        binary += String.fromCharCode(...chunk);
-      }
-      const base64 = btoa(binary);
-      const dataUrl = `data:image/png;base64,${base64}`;
+      const screenshotBlob = await captureService.captureScreen({
+        format: 'jpg',
+        quality: 0.75,
+        scale: 0.5,
+        displayId: selectedDisplay,
+      });
+      const dataUrl = await blobToDataUrl(screenshotBlob);
 
       // Store in localStorage for overlay to read
       localStorage.setItem('overlay-screenshot', dataUrl);
