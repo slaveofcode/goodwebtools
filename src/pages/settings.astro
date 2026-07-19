@@ -2,6 +2,9 @@
 import { ChevronRight, Settings as SettingsIcon } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
 import HotkeySettings from '@/islands/settings/HotkeySettings';
+import DesktopSettings from '@/islands/settings/DesktopSettings';
+import PermissionStatus from '@/islands/settings/PermissionStatus';
+import UpdateChecker from '@/islands/UpdateChecker';
 ---
 
 <Base title="Settings" description="Configure GoodWebTools preferences, global hotkeys, and desktop features.">
@@ -34,7 +37,29 @@ import HotkeySettings from '@/islands/settings/HotkeySettings';
         </div>
       </section>
 
-      <!-- Future sections -->
+      <!-- Desktop Preferences -->
+      <section class="space-y-4">
+        <div class="border-2 border-border bg-background p-6 shadow-brutal">
+          <h2 class="mb-4 text-xl font-bold uppercase tracking-tight">Desktop Preferences</h2>
+          <p class="mb-6 text-sm text-muted-foreground">
+            Screenshot format, tray behaviour, and startup options.
+            <strong class="text-foreground">Desktop app only.</strong>
+          </p>
+          <DesktopSettings client:load />
+        </div>
+      </section>
+
+      <!-- Permission Status -->
+      <section class="space-y-4">
+        <div class="border-2 border-border bg-background p-6 shadow-brutal">
+          <h2 class="mb-4 text-xl font-bold uppercase tracking-tight">Permissions</h2>
+          <p class="mb-6 text-sm text-muted-foreground">
+            System permissions required for capture and recording features.
+          </p>
+          <PermissionStatus client:load />
+        </div>
+      </section>
+
       <section class="space-y-4">
         <div class="border-2 border-border bg-muted p-6 shadow-brutal-sm opacity-50">
           <h2 class="mb-2 text-xl font-bold uppercase tracking-tight">Appearance</h2>
@@ -43,9 +68,13 @@ import HotkeySettings from '@/islands/settings/HotkeySettings';
       </section>
 
       <section class="space-y-4">
-        <div class="border-2 border-border bg-muted p-6 shadow-brutal-sm opacity-50">
-          <h2 class="mb-2 text-xl font-bold uppercase tracking-tight">Updates</h2>
-          <p class="text-sm text-muted-foreground">Auto-update preferences — coming soon</p>
+        <div class="border-2 border-border bg-background p-6 shadow-brutal">
+          <h2 class="mb-4 text-xl font-bold uppercase tracking-tight">Updates</h2>
+          <p class="mb-6 text-sm text-muted-foreground">
+            Check for and install GoodWebTools updates.
+            <strong class="text-foreground">Desktop app only.</strong>
+          </p>
+          <UpdateChecker client:load />
         </div>
       </section>
     </div>

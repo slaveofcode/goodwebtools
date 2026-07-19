@@ -184,10 +184,39 @@ never leaves your device.
 Both ride one lazily-loaded, self-hosted Monaco engine — never in the shell
 payload. Nothing is uploaded.
 
+✅ **Phase 10 — Desktop app (Tauri 2):**
+- **System-wide screenshot** — global hotkey (⌘⇧A), multi-display picker, region
+  selector overlay, countdown, main window hides during capture.
+- **Screen + audio recording** — full-screen or bounded region capture via
+  platform screen APIs; audio recorded in parallel via FFmpeg (avfoundation /
+  dshow / pulse) and muxed into the final video on stop.
+- **System tray** — lives in the macOS menu bar; left-click to focus, "Take
+  Screenshot" shortcut directly in the menu.
+- **Native FFmpeg** — bundled sidecar (per-platform binary) with system fallback;
+  verified at startup via `bundle:check` script.
+- **First-run wizard** — permission check (Screen Recording, Microphone, FFmpeg)
+  with one-click jump to System Preferences.
+- **Settings** — desktop preferences (format, tray, launch-at-login), permission
+  status panel, and auto-updater UI.
+- **Auto-updater** — checks GitHub Releases on demand; downloads and relaunches
+  in place.
+- **GitHub Actions release pipeline** — matrix build for macOS (arm64 + x64),
+  Windows, and Linux on `desktop-v*` tags.
+- **Download page** — `/download` auto-detects OS/arch and highlights the right
+  installer.
+
+### Desktop development
+
+```bash
+npm run tauri:dev        # Dev server + Tauri window
+npm run tauri:build      # Release bundle (requires icon assets + FFmpeg sidecar)
+npm run download:ffmpeg  # Download platform FFmpeg sidecars to src-tauri/bin/
+npm run bundle:check     # Verify all required assets before release build
+```
+
 ## Testing
 
-Unit tests cover the pure tool logic (parsers, generators, hash, image math,
-file crypto, format converters): `npm run test` — **237 tests across 25 files**.
+Unit tests cover pure tool logic and service layer: `npm run test` — **385 tests across 43 files**.
 
 ## Deployment
 

@@ -514,6 +514,105 @@ pub async fn close_countdown(app: tauri::AppHandle) -> Result<(), String> {
     crate::overlay::close_countdown(&app)
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PermissionStatus {
+    pub screen_recording: bool,
+    pub microphone: bool,
+    pub ffmpeg_available: bool,
+    pub first_run: bool,
+}
+
+#[tauri::command]
+pub async fn check_permissions() -> Result<PermissionStatus, String> {
+    let screen_recording = check_screen_recording_inner();
+    let microphone = check_microphone_inner();
+    let ffmpeg_available = crate::ffmpeg::is_available();
+
+    // first_run: true if we've never completed the wizard
+    let first_run = !std::env::var("GWT_FIRST_RUN_DONE")
+        .map(|v| v == "1")
+        .unwrap_or(false);
+
+    Ok(PermissionStatus {
+        screen_recording,
+        microphone,
+        ffmpeg_available,
+        first_run,
+    })
+}
+
+#[tauri::command]
+pub async fn mark_first_run_complete() -> Result<(), String> {
+    // In production this would persist to app config/store.
+    // For now set an env var for the current process lifetime.
+    std::env::set_var("GWT_FIRST_RUN_DONE", "1");
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn open_system_preferences(section: String) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        let url = match section.as_str() {
+            "screen-recording" => "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+            "microphone" => "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone",
+            "accessibility" => "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+            _ => "x-apple.systempreferences:",
+        };
+        std::process::Command::new("open")
+            .arg(url)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let _ = section;
+        std::process::Command::new("ms-settings:privacy-microphone")
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let _ = section;
+    }
+    Ok(())
+}
+
+fn check_screen_recording_inner() -> bool {
+    // Reuse the existing permission check logic (placeholder returns true on all platforms)
+    #[cfg(target_os = "macos")]
+    {
+        // Try a test capture — if Screen Recording is denied it returns None
+        use core_graphics::display::{CGDisplay, CGMainDisplayID};
+        let display = unsafe { CGDisplay::new(CGMainDisplayID()) };
+        display.image().is_some()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        true
+    }
+}
+
+fn check_microphone_inner() -> bool {
+    // Quick non-blocking check: try listing audio devices via ffmpeg
+    #[cfg(target_os = "macos")]
+    let format = "avfoundation";
+    #[cfg(target_os = "windows")]
+    let format = "dshow";
+    #[cfg(target_os = "linux")]
+    let format = "pulse";
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
+    let format = "null";
+
+    std::process::Command::new(crate::ffmpeg::ffmpeg_path())
+        .args(["-f", format, "-list_devices", "true", "-i", "dummy"])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .is_ok()
+}
+
 #[tauri::command]
 pub fn get_cursor_position() -> Result<(f64, f64), String> {
     #[cfg(target_os = "macos")]

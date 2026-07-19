@@ -14,6 +14,7 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             tray::setup_tray(&app.handle())?;
             Ok(())
@@ -38,6 +39,9 @@ fn main() {
             commands::hide_main_window,
             commands::show_main_window,
             commands::get_cursor_position,
+            commands::check_permissions,
+            commands::mark_first_run_complete,
+            commands::open_system_preferences,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

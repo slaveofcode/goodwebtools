@@ -26,7 +26,9 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:bundle": "npm run build && tauri build",
-    "download:ffmpeg": "node scripts/download-ffmpeg-binaries.mjs"
+    "download:ffmpeg": "node scripts/download-ffmpeg-binaries.mjs",
+    "bundle:check": "node scripts/bundle-tauri-assets.mjs",
+    "pretauri:build": "npm run bundle:check"
   },
   "repository": {
     "type": "git",
@@ -57,6 +59,7 @@
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-global-shortcut": "^2.3.2",
     "@tauri-apps/plugin-http": "^2.5.9",
+    "@tauri-apps/plugin-updater": "^2.10.1",
     "@tensorflow/tfjs": "^4.22.0",
     "@upscalerjs/esrgan-slim": "^1.0.0",
     "astro": "^4.16.19",
