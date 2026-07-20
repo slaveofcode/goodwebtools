@@ -77,11 +77,13 @@ export async function continueScreenshotWorkflow(displayId: number) {
   try {
     const { invoke } = await import('@tauri-apps/api/core');
 
-    // Capture overlay screenshot for region selector background
+    // Capture overlay screenshot for region selector background.
+    // 50% scale = 4× fewer pixels to encode → the overlay appears sooner.
     console.log('[GlobalHotkeys] Capturing overlay screenshot on display:', displayId);
     const overlayScreenshot = await captureService.captureScreen({
       format: 'jpg',
       quality: 0.75,
+      scale: 0.5,
       displayId,
     });
 
@@ -97,14 +99,15 @@ export async function continueScreenshotWorkflow(displayId: number) {
       throw new Error('Unexpected screenshot format');
     }
 
-    localStorage.setItem('overlay-screenshot', overlayDataUrl);
-    console.log('[GlobalHotkeys] Overlay screenshot stored');
-
-    // Store displayId for overlay
-    localStorage.setItem('overlay-display-id', displayId.toString());
-
     // Hide main window so it's not visible in the screenshot
     await invoke('hide_main_window');
+
+    // Send the frozen background to the (reused) overlay via event.
+    // localStorage is unreliable across the persistent overlay webview;
+    // displayId travels to the overlay through the overlay-show event.
+    const { emit } = await import('@tauri-apps/api/event');
+    await emit('overlay-set-background', overlayDataUrl);
+    console.log('[GlobalHotkeys] Overlay background sent');
 
     // Show region selector
     console.log('[GlobalHotkeys] Showing region selector...');
@@ -248,8 +251,6 @@ export async function handleGlobalScreenshot() {
 
       // Show screen picker in separate window
       await invoke('show_screen_selector');
-
-      screenshotInProgress = false;
       return;
     } else {
       // Single display - use it directly
@@ -257,11 +258,13 @@ export async function handleGlobalScreenshot() {
       console.log('[GlobalHotkeys] Single display, using:', displayId);
     }
 
-    // Capture overlay screenshot for region selector background
+    // Capture overlay screenshot for region selector background.
+    // 50% scale = 4× fewer pixels to encode → the overlay appears sooner.
     console.log('[GlobalHotkeys] Capturing overlay screenshot on display:', displayId);
     const overlayScreenshot = await captureService.captureScreen({
       format: 'jpg',
       quality: 0.75,
+      scale: 0.5,
       displayId,
     });
 
@@ -277,13 +280,12 @@ export async function handleGlobalScreenshot() {
       throw new Error('Unexpected screenshot format');
     }
 
-    localStorage.setItem('overlay-screenshot', overlayDataUrl);
-    console.log('[GlobalHotkeys] Overlay screenshot stored');
-
-    // Store displayId for overlay
-    if (displayId !== undefined) {
-      localStorage.setItem('overlay-display-id', displayId.toString());
-    }
+    // Send the frozen background to the (reused) overlay via event.
+    // localStorage is unreliable across the persistent overlay webview;
+    // displayId travels to the overlay through the overlay-show event.
+    const { emit } = await import('@tauri-apps/api/event');
+    await emit('overlay-set-background', overlayDataUrl);
+    console.log('[GlobalHotkeys] Overlay background sent');
 
     // Show region selector
     console.log('[GlobalHotkeys] Showing region selector...');
@@ -291,7 +293,6 @@ export async function handleGlobalScreenshot() {
 
     if (!region) {
       console.log('[GlobalHotkeys] Region selection cancelled');
-      screenshotInProgress = false;
       return;
     }
 
@@ -334,15 +335,16 @@ export async function handleGlobalScreenshot() {
         window.location.href = '/tools/screenshot';
       }
     }
-
-    screenshotInProgress = false
   } catch (err) {
     console.error('[GlobalHotkeys] Screenshot capture failed:', err);
     console.error('[GlobalHotkeys] Error stack:', (err as Error).stack);
 
-    screenshotInProgress = false;
-
     // TODO: Show error notification using a toast service instead of alert
     // (alert requires dialog permissions which aren't critical for this feature)
+  } finally {
+    // Guarantee the guard clears however we exit. A hung await here (e.g. an
+    // overlay cancel that never resolved) previously left this stuck `true`,
+    // making the global hotkey silently ignore every later press.
+    screenshotInProgress = false;
   }
 }

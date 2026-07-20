@@ -420,8 +420,9 @@ pub async fn submit_region_selection(
     app.emit("region-selected", bounds)
         .map_err(|e: tauri::Error| e.to_string())?;
 
-    // Close the overlay
-    crate::overlay::close_region_selector(&app)
+    // Hide the overlay silently — selection already sent, so do NOT emit
+    // region-selector-closed (which would resolve the waiter to null).
+    crate::overlay::hide_region_selector(&app)
 }
 
 #[tauri::command]

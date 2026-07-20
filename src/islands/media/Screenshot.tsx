@@ -169,9 +169,11 @@ export default function Screenshot() {
         reader.readAsDataURL(overlayBlob);
       });
 
-      // Store in localStorage for overlay
-      localStorage.setItem('overlay-screenshot', overlayDataUrl);
-      console.log('[Screenshot] Overlay screenshot saved (JPEG)');
+      // Send background to the overlay via event (localStorage is unreliable
+      // for the reused/persistent overlay window).
+      const { emit } = await import('@tauri-apps/api/event');
+      await emit('overlay-set-background', overlayDataUrl);
+      console.log('[Screenshot] Overlay background sent (JPEG)');
 
       // STEP 2: Show overlay window (user selects region)
       const regionPromise = captureService.showRegionSelector(selectedDisplay);

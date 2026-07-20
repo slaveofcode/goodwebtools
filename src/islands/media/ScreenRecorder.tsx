@@ -325,9 +325,11 @@ export default function ScreenRecorder() {
       });
       const dataUrl = await blobToDataUrl(screenshotBlob);
 
-      // Store in localStorage for overlay to read
-      localStorage.setItem('overlay-screenshot', dataUrl);
-      console.log('[ScreenRecorder] Overlay screenshot saved to localStorage');
+      // Send background to the overlay via event (localStorage is unreliable
+      // for the reused/persistent overlay window).
+      const { emit } = await import('@tauri-apps/api/event');
+      await emit('overlay-set-background', dataUrl);
+      console.log('[ScreenRecorder] Overlay background sent');
 
       // Show overlay
       await invoke('show_region_selector', { options: { displayId: selectedDisplay } });

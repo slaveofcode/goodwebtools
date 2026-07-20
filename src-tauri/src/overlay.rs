@@ -31,10 +31,17 @@ pub fn prewarm_region_selector(app: &AppHandle) -> Result<(), String> {
     .skip_taskbar(true)
     .visible(false);
 
-    // On macOS the window is repositioned/resized per display on show; give it a
-    // sane placeholder size. On other platforms fullscreen covers all displays.
+    // Size the pre-warmed window to the main display so the common
+    // single-display case is already correct on first show (no resize lag).
+    // Multi-display shows reposition/resize and the page re-fits on `resize`.
     #[cfg(target_os = "macos")]
-    let builder = builder.inner_size(1280.0, 800.0);
+    let builder = {
+        use core_graphics::display::{CGDisplay, CGMainDisplayID};
+        let b = CGDisplay::new(unsafe { CGMainDisplayID() }).bounds();
+        builder
+            .position(b.origin.x, b.origin.y)
+            .inner_size(b.size.width, b.size.height)
+    };
     #[cfg(not(target_os = "macos"))]
     let builder = builder.fullscreen(true);
 
@@ -144,10 +151,24 @@ pub fn show_region_selector(app: &AppHandle, display_id: Option<i32>) -> Result<
 }
 
 /// Hide the region selector overlay, keeping the window warm for reuse.
-pub fn close_region_selector(app: &AppHandle) -> Result<(), String> {
+/// Silent — does not emit any event. Used by the submit path, which has already
+/// emitted `region-selected`.
+pub fn hide_region_selector(app: &AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("region-selector") {
         window.hide().map_err(|e: tauri::Error| e.to_string())?;
     }
+    Ok(())
+}
+
+/// Hide the region selector overlay on **cancel** (ESC / error).
+///
+/// Emits `region-selector-closed` so any frontend awaiting a selection
+/// (e.g. `showRegionSelector`) resolves to `null` instead of hanging forever —
+/// which previously left the screenshot-in-progress guard stuck and made the
+/// global hotkey stop responding after a cancel.
+pub fn close_region_selector(app: &AppHandle) -> Result<(), String> {
+    hide_region_selector(app)?;
+    let _ = app.emit("region-selector-closed", ());
     Ok(())
 }
 

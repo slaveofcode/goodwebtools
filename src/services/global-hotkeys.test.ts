@@ -33,6 +33,9 @@ vi.mock('./capture', () => ({
 const mockInvoke = vi.fn();
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args: any[]) => mockInvoke(...args) }));
 
+const mockEmit = vi.fn();
+vi.mock('@tauri-apps/api/event', () => ({ emit: (...args: any[]) => mockEmit(...args) }));
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function makeBlob(content = 'img'): Blob {
@@ -126,18 +129,23 @@ describe('continueScreenshotWorkflow', () => {
     vi.resetModules();
   });
 
-  it('stores overlay screenshot in localStorage', async () => {
+  it('sends the overlay background via event (not localStorage)', async () => {
     const { continueScreenshotWorkflow } = await import('./global-hotkeys');
     await continueScreenshotWorkflow(1);
 
-    expect(localStorageMock.getItem('overlay-screenshot')).toContain('data:');
+    expect(mockEmit).toHaveBeenCalledWith(
+      'overlay-set-background',
+      expect.stringContaining('data:'),
+    );
+    // The persistent overlay webview can't rely on localStorage.
+    expect(localStorageMock.getItem('overlay-screenshot')).toBeNull();
   });
 
-  it('stores displayId in localStorage', async () => {
+  it('passes displayId to the region selector', async () => {
     const { continueScreenshotWorkflow } = await import('./global-hotkeys');
     await continueScreenshotWorkflow(2);
 
-    expect(localStorageMock.getItem('overlay-display-id')).toBe('2');
+    expect(mockShowRegionSelector).toHaveBeenCalledWith(2);
   });
 
   it('hides main window before showing region selector', async () => {
