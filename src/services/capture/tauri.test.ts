@@ -15,6 +15,10 @@ vi.mock('@tauri-apps/api/event', () => ({
   listen: (...args: any[]) => mockListen(...args),
 }));
 
+// Capture commands now return raw bytes over IPC (tauri::ipc::Response),
+// which arrive as an ArrayBuffer on the JS side — not a number[].
+const buf = (bytes: number[]): ArrayBuffer => new Uint8Array(bytes).buffer;
+
 describe('TauriCaptureService', () => {
   let service: TauriCaptureService;
 
@@ -103,8 +107,7 @@ describe('TauriCaptureService', () => {
 
   describe('captureScreen', () => {
     it('passes displayId in options', async () => {
-      const mockBytes = [1, 2, 3];
-      mockInvoke.mockResolvedValue(mockBytes);
+      mockInvoke.mockResolvedValue(buf([1, 2, 3]));
 
       const result = await service.captureScreen({
         format: 'png',
@@ -122,8 +125,7 @@ describe('TauriCaptureService', () => {
     });
 
     it('handles negative displayId in captureScreen', async () => {
-      const mockBytes = [1, 2, 3];
-      mockInvoke.mockResolvedValue(mockBytes);
+      mockInvoke.mockResolvedValue(buf([1, 2, 3]));
 
       await service.captureScreen({
         format: 'png',
@@ -140,8 +142,7 @@ describe('TauriCaptureService', () => {
 
   describe('captureRegion', () => {
     it('calls invoke with bounds only when no displayId', async () => {
-      const mockBytes = [1, 2, 3, 4];
-      mockInvoke.mockResolvedValue(mockBytes);
+      mockInvoke.mockResolvedValue(buf([1, 2, 3, 4]));
 
       const bounds = { x: 10, y: 20, width: 300, height: 200 };
       const result = await service.captureRegion(bounds);
@@ -151,8 +152,7 @@ describe('TauriCaptureService', () => {
     });
 
     it('extracts displayId from bounds and passes separately', async () => {
-      const mockBytes = [1, 2, 3, 4];
-      mockInvoke.mockResolvedValue(mockBytes);
+      mockInvoke.mockResolvedValue(buf([1, 2, 3, 4]));
 
       const bounds = { x: 0, y: 0, width: 2560, height: 1440, displayId: 2 };
       await service.captureRegion(bounds);
@@ -164,7 +164,7 @@ describe('TauriCaptureService', () => {
     });
 
     it('does not pass displayId key inside bounds object', async () => {
-      mockInvoke.mockResolvedValue([]);
+      mockInvoke.mockResolvedValue(buf([]));
 
       await service.captureRegion({ x: 0, y: 0, width: 100, height: 100, displayId: 3 });
 
@@ -173,7 +173,7 @@ describe('TauriCaptureService', () => {
     });
 
     it('handles negative displayId (macOS CoreGraphics IDs)', async () => {
-      mockInvoke.mockResolvedValue([1, 2]);
+      mockInvoke.mockResolvedValue(buf([1, 2]));
 
       await service.captureRegion({ x: 0, y: 0, width: 100, height: 100, displayId: -2 });
 
@@ -184,7 +184,7 @@ describe('TauriCaptureService', () => {
     });
 
     it('returns a PNG blob', async () => {
-      mockInvoke.mockResolvedValue([137, 80, 78, 71]);
+      mockInvoke.mockResolvedValue(buf([137, 80, 78, 71]));
 
       const result = await service.captureRegion({ x: 0, y: 0, width: 50, height: 50 });
 
