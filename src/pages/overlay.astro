@@ -97,33 +97,20 @@
 
     <script>
       import { invoke } from '@tauri-apps/api/core';
+      import { listen } from '@tauri-apps/api/event';
 
       const overlay = document.getElementById('overlay')!;
       const selection = document.getElementById('selection')!;
       const dimensions = document.getElementById('dimensions')!;
 
-      // Get display ID from localStorage
-      const displayIdStr = localStorage.getItem('overlay-display-id');
-      const displayId = displayIdStr ? parseInt(displayIdStr) : undefined;
-      console.log('[Overlay] Display ID:', displayId);
-
-      // Load screenshot from localStorage (more reliable than events)
-      const screenshotData = localStorage.getItem('overlay-screenshot');
-      if (screenshotData) {
-        console.log('[Overlay] Loading screenshot from localStorage');
-        overlay.style.backgroundImage = `url("${screenshotData}")`;
-        overlay.style.backgroundSize = '100% 100%'; // Exact size, no scaling
-        overlay.style.backgroundPosition = '0 0';
-        console.log('[Overlay] Screenshot background applied');
-      } else {
-        console.log('[Overlay] No screenshot in localStorage');
-      }
+      // Display ID for the current capture — refreshed on every show.
+      let displayId: number | undefined;
 
       let isSelecting = false;
       let startX = 0;
       let startY = 0;
 
-      // Show full screen pre-selected on load
+      // Show full screen pre-selected.
       function showFullScreenSelection() {
         selection.style.left = '0px';
         selection.style.top = '0px';
@@ -133,8 +120,38 @@
         dimensions.textContent = `${window.innerWidth} × ${window.innerHeight}`;
       }
 
-      // Show pre-selection when overlay loads
-      showFullScreenSelection();
+      // (Re-)initialize the overlay for a capture. Runs on first page load AND
+      // every time the pre-warmed window is shown again (via `overlay-show`).
+      function initOverlay() {
+        isSelecting = false;
+
+        const displayIdStr = localStorage.getItem('overlay-display-id');
+        displayId = displayIdStr ? parseInt(displayIdStr) : undefined;
+        console.log('[Overlay] init, Display ID:', displayId);
+
+        // Load frozen screenshot background from localStorage.
+        const screenshotData = localStorage.getItem('overlay-screenshot');
+        if (screenshotData) {
+          overlay.style.backgroundImage = `url("${screenshotData}")`;
+          overlay.style.backgroundSize = '100% 100%'; // Exact size, no scaling
+          overlay.style.backgroundPosition = '0 0';
+          console.log('[Overlay] Screenshot background applied');
+        } else {
+          overlay.style.backgroundImage = '';
+          console.log('[Overlay] No screenshot in localStorage');
+        }
+
+        showFullScreenSelection();
+      }
+
+      // Re-init whenever the reused window is shown again.
+      listen<number | null>('overlay-show', () => {
+        console.log('[Overlay] overlay-show received');
+        initOverlay();
+      });
+
+      // First load.
+      initOverlay();
 
       overlay.addEventListener('mousedown', (e) => {
         // Hide pre-selection when user starts dragging

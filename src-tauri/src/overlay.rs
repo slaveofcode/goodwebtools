@@ -1,5 +1,5 @@
 // src-tauri/src/overlay.rs
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, WebviewUrl, WebviewWindowBuilder};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -10,40 +10,107 @@ pub struct Rectangle {
     pub height: u32,
 }
 
-/// Show transparent fullscreen overlay for region selection on specified display
-pub fn show_region_selector(app: &AppHandle, display_id: Option<i32>) -> Result<(), String> {
-    // Close any existing overlay window first
-    let _ = close_region_selector(app);
+/// Pre-create the region-selector overlay window, hidden, at app startup.
+///
+/// Building a WebviewWindow pays a large one-time WebView init penalty
+/// (WebKit on macOS, WebView2 on Windows). Doing it up front — instead of on
+/// the shortcut hot path — is what makes later shows feel instant.
+pub fn prewarm_region_selector(app: &AppHandle) -> Result<(), String> {
+    if app.get_webview_window("region-selector").is_some() {
+        return Ok(()); // already warmed
+    }
 
+    let builder = WebviewWindowBuilder::new(
+        app,
+        "region-selector",
+        WebviewUrl::App("/overlay".into()),
+    )
+    .title("Select Region")
+    .decorations(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .visible(false);
+
+    // On macOS the window is repositioned/resized per display on show; give it a
+    // sane placeholder size. On other platforms fullscreen covers all displays.
+    #[cfg(target_os = "macos")]
+    let builder = builder.inner_size(1280.0, 800.0);
+    #[cfg(not(target_os = "macos"))]
+    let builder = builder.fullscreen(true);
+
+    builder
+        .build()
+        .map_err(|e: tauri::Error| e.to_string())?;
+
+    println!("[Overlay] Pre-warmed region-selector window");
+    Ok(())
+}
+
+/// Show transparent fullscreen overlay for region selection on specified display.
+///
+/// Reuses the pre-warmed window when available (fast path): reposition to the
+/// target display, show, and emit `overlay-show` so the already-loaded page
+/// re-initializes for this capture. Falls back to building on the fly.
+pub fn show_region_selector(app: &AppHandle, display_id: Option<i32>) -> Result<(), String> {
+    // Fast path: reuse the pre-warmed window.
+    if let Some(window) = app.get_webview_window("region-selector") {
+        #[cfg(target_os = "macos")]
+        {
+            use core_graphics::display::{CGDisplay, CGMainDisplayID};
+
+            let target_display_id = display_id
+                .map(|id| id as u32)
+                .unwrap_or_else(|| unsafe { CGMainDisplayID() });
+            let bounds = CGDisplay::new(target_display_id).bounds();
+
+            println!(
+                "[Overlay] Reusing window on display {:?}: ({}, {}) {}x{}",
+                target_display_id,
+                bounds.origin.x, bounds.origin.y,
+                bounds.size.width, bounds.size.height
+            );
+
+            // Reposition + resize every show to avoid the "wrong display" reuse bug.
+            window
+                .set_position(LogicalPosition::new(bounds.origin.x, bounds.origin.y))
+                .map_err(|e: tauri::Error| e.to_string())?;
+            window
+                .set_size(LogicalSize::new(bounds.size.width, bounds.size.height))
+                .map_err(|e: tauri::Error| e.to_string())?;
+        }
+
+        window.show().map_err(|e: tauri::Error| e.to_string())?;
+        let _ = window.set_focus();
+
+        // The overlay page's script only runs once at load; nudge it to
+        // re-initialize (reset selection, reload background) for this show.
+        let _ = window.emit("overlay-show", display_id);
+
+        return Ok(());
+    }
+
+    // Fallback: no pre-warmed window — build one on the fly.
     #[cfg(target_os = "macos")]
     {
         use core_graphics::display::{CGDisplay, CGMainDisplayID};
 
-        // Get the target display (convert i32 back to u32 for Core Graphics)
         let target_display_id = display_id
             .map(|id| id as u32)
             .unwrap_or_else(|| unsafe { CGMainDisplayID() });
-        let display = CGDisplay::new(target_display_id);
+        let bounds = CGDisplay::new(target_display_id).bounds();
 
-        // Get display bounds
-        let bounds = display.bounds();
-        let x = bounds.origin.x as i32;
-        let y = bounds.origin.y as i32;
-        let width = bounds.size.width as f64;
-        let height = bounds.size.height as f64;
+        println!("[Overlay] Building window on display {:?}: ({}, {}) {}x{}",
+                 target_display_id, bounds.origin.x, bounds.origin.y,
+                 bounds.size.width, bounds.size.height);
 
-        println!("[Overlay] Display ID: {:?}, Bounds: ({}, {}) {}x{}",
-                 target_display_id, x, y, width, height);
-
-        // Create window positioned on the specific display
         let window = WebviewWindowBuilder::new(
             app,
             "region-selector",
             WebviewUrl::App("/overlay".into())
         )
         .title("Select Region")
-        .position(x as f64, y as f64)
-        .inner_size(width, height)
+        .position(bounds.origin.x, bounds.origin.y)
+        .inner_size(bounds.size.width, bounds.size.height)
         .decorations(false)
         .always_on_top(true)
         .skip_taskbar(true)
@@ -51,15 +118,12 @@ pub fn show_region_selector(app: &AppHandle, display_id: Option<i32>) -> Result<
         .build()
         .map_err(|e: tauri::Error| e.to_string())?;
 
-        // Show window after it's ready
         window.show().map_err(|e: tauri::Error| e.to_string())?;
-
         return Ok(());
     }
 
     #[cfg(not(target_os = "macos"))]
     {
-        // Fallback for non-macOS: just use fullscreen
         let window = WebviewWindowBuilder::new(
             app,
             "region-selector",
@@ -74,17 +138,15 @@ pub fn show_region_selector(app: &AppHandle, display_id: Option<i32>) -> Result<
         .build()
         .map_err(|e: tauri::Error| e.to_string())?;
 
-        // Show window after it's ready
         window.show().map_err(|e: tauri::Error| e.to_string())?;
-
         return Ok(());
     }
 }
 
-/// Close the region selector overlay
+/// Hide the region selector overlay, keeping the window warm for reuse.
 pub fn close_region_selector(app: &AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("region-selector") {
-        window.close().map_err(|e: tauri::Error| e.to_string())?;
+        window.hide().map_err(|e: tauri::Error| e.to_string())?;
     }
     Ok(())
 }
