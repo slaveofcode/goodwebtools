@@ -1,9 +1,14 @@
 // src-tauri/src/audio.rs
 // Real audio capture via FFmpeg subprocess — mic + muxing with video
 
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
+
+use crate::ffmpeg::ffmpeg_path;
 
 /// A running FFmpeg audio capture process.
 pub struct AudioRecorder {
@@ -34,9 +39,18 @@ impl AudioRecorder {
         let mut guard = self.process.lock().ok()?;
 
         if let Some(ref mut child) = *guard {
-            // Send 'q' to FFmpeg stdin to trigger a graceful shutdown
-            // (FFmpeg reads from stdin when `-nostdin` is not set)
-            let _ = child.wait(); // Just wait — we already sent SIGTERM via kill()
+            // Ask FFmpeg to finalize gracefully by sending 'q' to its stdin, so
+            // it flushes and writes a proper file trailer before exiting.
+            if let Some(stdin) = child.stdin.as_mut() {
+                let _ = stdin.write_all(b"q\n");
+                let _ = stdin.flush();
+            }
+            // Drop stdin to signal EOF, giving FFmpeg a chance to exit on its own.
+            drop(child.stdin.take());
+
+            // Give it a brief window to exit cleanly, then force-kill so stop()
+            // can never block indefinitely on a live capture that won't self-exit.
+            thread::sleep(Duration::from_millis(500));
             let _ = child.kill();
             let _ = child.wait();
             println!("[Audio] Capture stopped");
@@ -52,10 +66,7 @@ impl AudioRecorder {
     /// Mux a video file and an audio file into a single output file via FFmpeg.
     /// `video_path` and `audio_path` are consumed (temp files). Returns muxed bytes.
     pub fn mux(video_path: &Path, audio_path: &Path, format: &str) -> Result<Vec<u8>, String> {
-        let extension = match format {
-            "mp4" => "mp4",
-            _ => "webm",
-        };
+        let extension = muxed_extension(format);
         let output_path = video_path.with_extension(format!("muxed.{}", extension));
 
         println!(
@@ -65,7 +76,7 @@ impl AudioRecorder {
             output_path.display()
         );
 
-        let status = Command::new("ffmpeg")
+        let status = Command::new(ffmpeg_path())
             .args([
                 "-y",
                 "-i", &video_path.to_string_lossy(),
@@ -117,7 +128,7 @@ impl AudioRecorder {
     #[cfg(target_os = "macos")]
     fn spawn_ffmpeg_macos(output: &Path, _include_mic: bool) -> Result<Child, String> {
         // AVFoundation device index 0 = default microphone
-        Command::new("ffmpeg")
+        Command::new(ffmpeg_path())
             .args([
                 "-y",
                 "-f", "avfoundation",
@@ -136,7 +147,7 @@ impl AudioRecorder {
 
     #[cfg(target_os = "windows")]
     fn spawn_ffmpeg_windows(output: &Path, _include_mic: bool) -> Result<Child, String> {
-        Command::new("ffmpeg")
+        Command::new(ffmpeg_path())
             .args([
                 "-y",
                 "-f", "dshow",
@@ -156,7 +167,7 @@ impl AudioRecorder {
     #[cfg(target_os = "linux")]
     fn spawn_ffmpeg_linux(output: &Path, _include_mic: bool) -> Result<Child, String> {
         // Try PulseAudio first, fall back to ALSA
-        let result = Command::new("ffmpeg")
+        let result = Command::new(ffmpeg_path())
             .args([
                 "-y",
                 "-f", "pulse",
@@ -175,7 +186,7 @@ impl AudioRecorder {
             Ok(child) => Ok(child),
             Err(_) => {
                 // Fallback: ALSA
-                Command::new("ffmpeg")
+                Command::new(ffmpeg_path())
                     .args([
                         "-y",
                         "-f", "alsa",
@@ -192,5 +203,68 @@ impl AudioRecorder {
                     .map_err(|e| format!("Failed to start FFmpeg (Linux audio): {}. Install with: sudo apt install ffmpeg", e))
             }
         }
+    }
+}
+
+/// Map a requested container format to the muxed output file extension.
+/// Anything other than "mp4" falls back to "webm".
+fn muxed_extension(format: &str) -> &'static str {
+    match format {
+        "mp4" => "mp4",
+        _ => "webm",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn muxed_extension_maps_mp4() {
+        assert_eq!(muxed_extension("mp4"), "mp4");
+    }
+
+    #[test]
+    fn muxed_extension_defaults_to_webm() {
+        assert_eq!(muxed_extension("webm"), "webm");
+        assert_eq!(muxed_extension("mkv"), "webm");
+        assert_eq!(muxed_extension(""), "webm");
+    }
+
+    #[test]
+    fn start_with_no_sources_is_noop() {
+        // When neither mic nor system audio is requested, start() must succeed
+        // without spawning FFmpeg and must not error even if FFmpeg is absent.
+        let path = std::env::temp_dir().join("gwt_test_noop.aac");
+        let recorder = AudioRecorder::start(path.clone(), false, false)
+            .expect("no-op recorder should always start");
+        assert_eq!(recorder.output_path, path);
+    }
+
+    #[test]
+    fn noop_recorder_stop_returns_none() {
+        // A no-op recorder captured nothing, so stop() must return None
+        // rather than pointing at a non-existent file.
+        let path = std::env::temp_dir().join("gwt_test_noop_stop.aac");
+        let recorder = AudioRecorder::start(path, false, false).unwrap();
+        assert_eq!(recorder.stop(), None);
+    }
+
+    #[test]
+    fn noop_recorder_stop_is_idempotent() {
+        // Calling stop() twice on a no-op recorder must stay None and not panic.
+        let path = std::env::temp_dir().join("gwt_test_noop_twice.aac");
+        let recorder = AudioRecorder::start(path, false, false).unwrap();
+        assert_eq!(recorder.stop(), None);
+        assert_eq!(recorder.stop(), None);
+    }
+
+    #[test]
+    fn output_path_is_preserved() {
+        // The recorder must remember exactly the path it was given.
+        let path = std::env::temp_dir().join("gwt_test_custom_name.aac");
+        let recorder = AudioRecorder::start(path.clone(), false, false).unwrap();
+        assert_eq!(recorder.output_path, path);
+        assert_eq!(recorder.output_path.extension().unwrap(), "aac");
     }
 }
