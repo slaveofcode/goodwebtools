@@ -147,11 +147,18 @@ impl AudioRecorder {
 
     #[cfg(target_os = "windows")]
     fn spawn_ffmpeg_windows(output: &Path, _include_mic: bool) -> Result<Child, String> {
+        // Enumerate real DirectShow audio devices instead of a hardcoded GUID.
+        let device = first_dshow_audio_device().ok_or_else(|| {
+            "No DirectShow audio capture device found. Connect and enable a microphone.".to_string()
+        })?;
+        let input = format!("audio={}", device);
+        println!("[Audio] Using DirectShow device: {}", device);
+
         Command::new(ffmpeg_path())
             .args([
                 "-y",
                 "-f", "dshow",
-                "-i", "audio=@device_cm_{33D9A762-90C8-11D0-BD43-00A0C911CE86}\\wave_{...}",
+                "-i", &input,
                 "-vn",
                 "-acodec", "aac",
                 "-b:a", "128k",
@@ -215,6 +222,73 @@ fn muxed_extension(format: &str) -> &'static str {
     }
 }
 
+/// Return the first quoted substring on a line, or `None` if there isn't a pair.
+/// e.g. `[dshow] "Microphone (Realtek)" (audio)` → `Microphone (Realtek)`.
+#[allow(dead_code)]
+fn extract_first_quoted(line: &str) -> Option<String> {
+    let start = line.find('"')?;
+    let rest = &line[start + 1..];
+    let end = rest.find('"')?;
+    Some(rest[..end].to_string())
+}
+
+/// Parse the friendly names of DirectShow **audio** capture devices from the
+/// stderr FFmpeg prints for `-list_devices true -f dshow -i dummy`.
+///
+/// Handles both output styles:
+///   - Newer FFmpeg (5.x+): each device line is tagged inline, e.g. `... "Mic" (audio)`
+///   - Older FFmpeg (4.x):  devices are grouped under a `DirectShow audio devices` header
+///
+/// "Alternative name" lines and video devices are excluded.
+#[allow(dead_code)]
+fn parse_dshow_audio_devices(stderr: &str) -> Vec<String> {
+    let mut devices = Vec::new();
+    let mut in_audio_section = false;
+
+    for line in stderr.lines() {
+        let lower = line.to_lowercase();
+
+        // Section headers (older FFmpeg group style)
+        if lower.contains("directshow audio devices") {
+            in_audio_section = true;
+            continue;
+        }
+        if lower.contains("directshow video devices") {
+            in_audio_section = false;
+            continue;
+        }
+        // The alternative-name line carries the @device_... string, not a friendly name.
+        if lower.contains("alternative name") {
+            continue;
+        }
+
+        if let Some(name) = extract_first_quoted(line) {
+            if lower.contains("(audio)") {
+                devices.push(name); // newer inline tag
+            } else if lower.contains("(video)") {
+                // explicitly a video device — skip
+            } else if in_audio_section {
+                devices.push(name); // older grouped style
+            }
+        }
+    }
+
+    devices
+}
+
+/// Query FFmpeg for the first available DirectShow audio capture device.
+/// FFmpeg exits non-zero for the dummy input — that's expected; we only read stderr.
+#[cfg(target_os = "windows")]
+fn first_dshow_audio_device() -> Option<String> {
+    let output = Command::new(ffmpeg_path())
+        .args(["-hide_banner", "-list_devices", "true", "-f", "dshow", "-i", "dummy"])
+        .stdin(Stdio::null())
+        .output()
+        .ok()?;
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    parse_dshow_audio_devices(&stderr).into_iter().next()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -266,5 +340,80 @@ mod tests {
         let recorder = AudioRecorder::start(path.clone(), false, false).unwrap();
         assert_eq!(recorder.output_path, path);
         assert_eq!(recorder.output_path.extension().unwrap(), "aac");
+    }
+
+    #[test]
+    fn extract_first_quoted_pulls_device_name() {
+        assert_eq!(
+            extract_first_quoted(r#"[dshow @ 0] "Microphone (Realtek)" (audio)"#),
+            Some("Microphone (Realtek)".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_first_quoted_none_when_unquoted() {
+        assert_eq!(extract_first_quoted("[dshow @ 0] no quotes here"), None);
+        assert_eq!(extract_first_quoted(r#"only one " quote"#), None);
+    }
+
+    #[test]
+    fn parse_dshow_newer_inline_format() {
+        // FFmpeg 5.x/6.x tags each device line with (video)/(audio) inline.
+        let stderr = r#"[dshow @ 000] "Integrated Webcam" (video)
+[dshow @ 000]   Alternative name "@device_pnp_\\?\usb#vid_0000"
+[dshow @ 000] "Microphone (Realtek(R) Audio)" (audio)
+[dshow @ 000]   Alternative name "@device_cm_{33D9A762}\wave_{ABCD}"
+[dshow @ 000] "Stereo Mix (Realtek(R) Audio)" (audio)
+[dshow @ 000]   Alternative name "@device_cm_{33D9A762}\wave_{EFGH}""#;
+
+        let devices = parse_dshow_audio_devices(stderr);
+        assert_eq!(
+            devices,
+            vec![
+                "Microphone (Realtek(R) Audio)".to_string(),
+                "Stereo Mix (Realtek(R) Audio)".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_dshow_older_grouped_format() {
+        // FFmpeg 4.x groups devices under section headers with no inline tag.
+        let stderr = r#"[dshow @ 000] DirectShow video devices (some may be both video and audio devices)
+[dshow @ 000]  "Integrated Webcam"
+[dshow @ 000]     Alternative name "@device_pnp_\\?\usb#vid_0000"
+[dshow @ 000] DirectShow audio devices
+[dshow @ 000]  "Microphone (Realtek(R) Audio)"
+[dshow @ 000]     Alternative name "@device_cm_{33D9A762}\wave_{ABCD}""#;
+
+        let devices = parse_dshow_audio_devices(stderr);
+        assert_eq!(devices, vec!["Microphone (Realtek(R) Audio)".to_string()]);
+    }
+
+    #[test]
+    fn parse_dshow_no_audio_devices() {
+        // Only a webcam present → no audio devices returned.
+        let stderr = r#"[dshow @ 000] DirectShow video devices
+[dshow @ 000]  "Integrated Webcam"
+[dshow @ 000]     Alternative name "@device_pnp_\\?\usb#vid_0000"
+[dshow @ 000] DirectShow audio devices"#;
+
+        assert!(parse_dshow_audio_devices(stderr).is_empty());
+    }
+
+    #[test]
+    fn parse_dshow_excludes_alternative_names() {
+        // Alternative-name lines must never be mistaken for a device name.
+        let stderr = r#"[dshow @ 000] "Mic" (audio)
+[dshow @ 000]   Alternative name "@device_cm_{SHOULD_NOT_APPEAR}""#;
+
+        let devices = parse_dshow_audio_devices(stderr);
+        assert_eq!(devices, vec!["Mic".to_string()]);
+        assert!(!devices.iter().any(|d| d.contains("device_cm")));
+    }
+
+    #[test]
+    fn parse_dshow_empty_input() {
+        assert!(parse_dshow_audio_devices("").is_empty());
     }
 }
