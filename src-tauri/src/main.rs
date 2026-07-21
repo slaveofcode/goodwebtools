@@ -44,6 +44,7 @@ fn main() {
             commands::show_countdown,
             commands::close_countdown,
             commands::hide_main_window,
+            commands::minimize_main_window,
             commands::show_main_window,
             commands::get_cursor_position,
             commands::check_permissions,
