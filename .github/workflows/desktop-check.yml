@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
           - os: windows-latest
           - os: macos-latest
     runs-on: ${{ matrix.os }}
@@ -41,7 +41,7 @@ jobs:
 
       # Tauri + xcap (PipeWire/Wayland/X11/dbus) system deps on Linux.
       - name: Install Linux deps
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -52,10 +52,13 @@ jobs:
             libsoup-3.0-dev \
             libdbus-1-dev \
             libpipewire-0.3-dev \
+            libspa-0.2-dev \
             libwayland-dev \
             libxcb1-dev \
             libxcb-randr0-dev \
             libxcb-shm0-dev \
+            libclang-dev \
+            clang \
             pkg-config
 
       # generate_context! embeds the frontend dist at compile time; a stub is
