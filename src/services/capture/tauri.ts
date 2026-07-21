@@ -66,6 +66,10 @@ export class TauriCaptureService implements CaptureService {
           fps: options?.fps,
           displayId: options?.displayId,
           bounds: options?.bounds,
+          // Without these the Rust side never starts the audio recorder,
+          // so recordings came out silent.
+          includeAudio: options?.includeAudio,
+          systemAudio: options?.systemAudio,
         },
       });
 
