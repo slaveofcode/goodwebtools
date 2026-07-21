@@ -179,70 +179,30 @@ export default function Screenshot() {
       // STEP 2: Show overlay window (user selects region)
       const regionPromise = captureService.showRegionSelector(selectedDisplay);
 
-      // STEP 3: Capture full-res screenshot in parallel for cropping
-      const fullBlob = await captureService.captureScreen({
-        format: 'png',
-        displayId: selectedDisplay,
-      });
-
-      const fullDataUrl = await new Promise<string>((resolve, reject) => {
-        const reader2 = new FileReader();
-        reader2.onload = () => resolve(reader2.result as string);
-        reader2.onerror = reject;
-        reader2.readAsDataURL(fullBlob);
-      });
+      // STEP 3: Capture + HOLD the frozen full-res frame natively (in parallel
+      // with selection, while the main window is hidden). Only the final crop
+      // crosses IPC — never the whole screen — and the crop happens in Rust.
+      const { invoke } = await import('@tauri-apps/api/core');
+      const captureId = await invoke<string>('capture_hold', { displayId: selectedDisplay });
 
       // STEP 4: Wait for region selection
       const region = await regionPromise;
 
-      // Clean up overlay screenshot from localStorage
-      localStorage.removeItem('overlay-screenshot');
-
       if (!region) {
-        // User cancelled
+        // User cancelled — free the held frame
+        await invoke('release_held', { captureId }).catch(() => {});
         setCapturing(false);
         return;
       }
 
-      // STEP 5: Load the full-res screenshot and crop to selected region
-      const fullImg = new Image();
-      await new Promise<void>((resolve, reject) => {
-        fullImg.onload = () => resolve();
-        fullImg.onerror = () => reject(new Error('Failed to load screenshot'));
-        fullImg.src = fullDataUrl; // Use full-res screenshot for cropping
-      });
-
-      // Calculate HiDPI scale factor (physical pixels / logical pixels)
-      const targetDisplay = displays.find(d => d.id === selectedDisplay) || displays.find(d => d.isMain)!;
-      const scaleX = fullImg.width / targetDisplay.width;
-      const scaleY = fullImg.height / targetDisplay.height;
-
-      console.log('[Screenshot] Scale factor:', scaleX, 'x', scaleY,
-                  '(logical:', targetDisplay.width, 'x', targetDisplay.height,
-                  'physical:', fullImg.width, 'x', fullImg.height, ')');
-      console.log('[Screenshot] Logical region:', region);
-      console.log('[Screenshot] Physical region:',
-                  Math.round(region.x * scaleX), Math.round(region.y * scaleY),
-                  Math.round(region.width * scaleX), Math.round(region.height * scaleY));
-
-      // Scale region coordinates to physical pixels
-      const physicalX = Math.round(region.x * scaleX);
-      const physicalY = Math.round(region.y * scaleY);
-      const physicalWidth = Math.round(region.width * scaleX);
-      const physicalHeight = Math.round(region.height * scaleY);
-
-      // Create canvas with cropped region (in physical pixels)
+      // STEP 5: Crop the held frame natively (server-side HiDPI scaling) → PNG
+      const croppedBytes = await invoke<ArrayBuffer>('crop_held', { captureId, region });
+      const bmp = await createImageBitmap(new Blob([croppedBytes], { type: 'image/png' }));
       const canvas = document.createElement('canvas');
-      canvas.width = physicalWidth;
-      canvas.height = physicalHeight;
-      const ctx = canvas.getContext('2d')!;
-
-      // Draw the selected region from the full screenshot (using physical pixel coordinates)
-      ctx.drawImage(
-        fullImg,
-        physicalX, physicalY, physicalWidth, physicalHeight, // source (physical pixels)
-        0, 0, physicalWidth, physicalHeight // destination
-      );
+      canvas.width = bmp.width;
+      canvas.height = bmp.height;
+      canvas.getContext('2d')!.drawImage(bmp, 0, 0);
+      bmp.close();
 
       setShot(canvas);
       setPreviewUrl(prev => {
