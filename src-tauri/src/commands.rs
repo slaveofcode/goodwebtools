@@ -393,6 +393,144 @@ pub async fn capture_region(bounds: Rectangle, display_id: Option<i32>) -> Resul
     capture_screen_fast(target_display, 10, Some(bounds)).map(tauri::ipc::Response::new)
 }
 
+// ── Held full-res captures for native region cropping (Phase D) ──────────────
+// The in-tool region flow captures the frozen full screen once (while the main
+// window is hidden), holds it in Rust, and crops server-side after the user
+// selects — so only the small crop crosses IPC, never the whole screen.
+
+#[allow(dead_code)]
+struct HeldCapture {
+    bgra: Vec<u8>,
+    bytes_per_row: usize,
+    phys_width: u32,
+    phys_height: u32,
+    logical_width: u32,
+    logical_height: u32,
+}
+
+lazy_static::lazy_static! {
+    static ref HELD_CAPTURES: std::sync::Mutex<std::collections::HashMap<String, HeldCapture>> =
+        std::sync::Mutex::new(std::collections::HashMap::new());
+}
+
+static CAPTURE_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Map a logical-pixel selection rect to a clamped physical-pixel crop rect,
+/// applying the display's HiDPI scale. Pure — unit-tested.
+fn physical_crop_rect(
+    region: &Rectangle,
+    phys_w: u32,
+    phys_h: u32,
+    logical_w: u32,
+    logical_h: u32,
+) -> (u32, u32, u32, u32) {
+    if logical_w == 0 || logical_h == 0 || phys_w == 0 || phys_h == 0 {
+        return (0, 0, phys_w.max(1), phys_h.max(1));
+    }
+    let scale_x = phys_w as f64 / logical_w as f64;
+    let scale_y = phys_h as f64 / logical_h as f64;
+    let x = ((region.x as f64 * scale_x).max(0.0) as u32).min(phys_w.saturating_sub(1));
+    let y = ((region.y as f64 * scale_y).max(0.0) as u32).min(phys_h.saturating_sub(1));
+    let w = ((region.width as f64 * scale_x).round() as u32).clamp(1, phys_w - x);
+    let h = ((region.height as f64 * scale_y).round() as u32).clamp(1, phys_h - y);
+    (x, y, w, h)
+}
+
+/// Capture the full display and hold it in memory; returns an id for cropping.
+#[tauri::command]
+pub async fn capture_hold(display_id: Option<i32>) -> Result<String, String> {
+    #[cfg(target_os = "macos")]
+    {
+        use core_graphics::display::{CGDisplay, CGMainDisplayID};
+        let display = if let Some(id) = display_id {
+            CGDisplay::new(id as u32)
+        } else {
+            unsafe { CGDisplay::new(CGMainDisplayID()) }
+        };
+        let image = display
+            .image()
+            .ok_or_else(|| "Failed to capture screen".to_string())?;
+
+        let phys_width = image.width() as u32;
+        let phys_height = image.height() as u32;
+        let held = HeldCapture {
+            bgra: image.data().to_vec(),
+            bytes_per_row: image.bytes_per_row(),
+            phys_width,
+            phys_height,
+            logical_width: display.pixels_wide() as u32,
+            logical_height: display.pixels_high() as u32,
+        };
+
+        let id = format!(
+            "cap_{}",
+            CAPTURE_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        );
+        let mut map = HELD_CAPTURES.lock().map_err(|e| e.to_string())?;
+        map.clear(); // only one region capture is active at a time — bound memory
+        map.insert(id.clone(), held);
+        println!("[Capture] Held full-res frame {} ({}x{})", id, phys_width, phys_height);
+        return Ok(id);
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = display_id;
+        return Err("Platform not supported".to_string());
+    }
+}
+
+/// Crop a previously-held capture to the selected region and return PNG bytes.
+/// One-shot: the held frame is dropped after cropping.
+#[tauri::command]
+pub async fn crop_held(capture_id: String, region: Rectangle) -> Result<tauri::ipc::Response, String> {
+    let held = {
+        let mut map = HELD_CAPTURES.lock().map_err(|e| e.to_string())?;
+        map.remove(&capture_id)
+            .ok_or_else(|| "Held capture not found (already used or expired)".to_string())?
+    };
+
+    let (cx, cy, cw, ch) = physical_crop_rect(
+        &region,
+        held.phys_width,
+        held.phys_height,
+        held.logical_width,
+        held.logical_height,
+    );
+
+    use image::{ImageBuffer, ImageEncoder, Rgba, RgbaImage};
+    let mut out: RgbaImage = ImageBuffer::new(cw, ch);
+    for y in 0..ch {
+        for x in 0..cw {
+            // Source is BGRA (CGImage byte order); write RGBA.
+            let offset = ((cy + y) as usize * held.bytes_per_row) + ((cx + x) as usize * 4);
+            if offset + 3 < held.bgra.len() {
+                let b = held.bgra[offset];
+                let g = held.bgra[offset + 1];
+                let r = held.bgra[offset + 2];
+                let a = held.bgra[offset + 3];
+                out.put_pixel(x, y, Rgba([r, g, b, a]));
+            }
+        }
+    }
+
+    let mut png = Vec::new();
+    image::codecs::png::PngEncoder::new(&mut png)
+        .write_image(&out, cw, ch, image::ColorType::Rgba8.into())
+        .map_err(|e: image::ImageError| e.to_string())?;
+
+    println!("[Capture] Cropped held frame → {}x{} ({} bytes)", cw, ch, png.len());
+    Ok(tauri::ipc::Response::new(png))
+}
+
+/// Free a held capture without cropping (e.g. the user cancelled selection).
+#[tauri::command]
+pub async fn release_held(capture_id: String) -> Result<(), String> {
+    if let Ok(mut map) = HELD_CAPTURES.lock() {
+        map.remove(&capture_id);
+    }
+    Ok(())
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RegionSelectorOptions {
@@ -647,5 +785,57 @@ pub fn get_cursor_position() -> Result<(f64, f64), String> {
     {
         // TODO: Implement for Windows and Linux
         Err("get_cursor_position not implemented for this platform".to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn rect(x: i32, y: i32, w: u32, h: u32) -> Rectangle {
+        Rectangle { x, y, width: w, height: h, display_id: None }
+    }
+
+    #[test]
+    fn crop_rect_non_hidpi_is_identity_scale() {
+        // logical == physical (scale 1.0)
+        let (x, y, w, h) = physical_crop_rect(&rect(10, 20, 100, 50), 1920, 1080, 1920, 1080);
+        assert_eq!((x, y, w, h), (10, 20, 100, 50));
+    }
+
+    #[test]
+    fn crop_rect_scales_for_2x_retina() {
+        // physical is 2x logical → coordinates double
+        let (x, y, w, h) = physical_crop_rect(&rect(10, 20, 100, 50), 2880, 1800, 1440, 900);
+        assert_eq!((x, y, w, h), (20, 40, 200, 100));
+    }
+
+    #[test]
+    fn crop_rect_clamps_to_physical_bounds() {
+        // a region running past the edge is clamped to the frame
+        let (x, y, w, h) = physical_crop_rect(&rect(1900, 1000, 500, 500), 1920, 1080, 1920, 1080);
+        assert_eq!(x, 1900);
+        assert_eq!(y, 1000);
+        assert_eq!(w, 20); // 1920 - 1900
+        assert_eq!(h, 80); // 1080 - 1000
+    }
+
+    #[test]
+    fn crop_rect_negative_origin_floored_to_zero() {
+        let (x, y, _, _) = physical_crop_rect(&rect(-50, -30, 100, 100), 1920, 1080, 1920, 1080);
+        assert_eq!((x, y), (0, 0));
+    }
+
+    #[test]
+    fn crop_rect_zero_dims_never_produce_empty_crop() {
+        // width/height always at least 1 so the PNG encoder never sees 0
+        let (_, _, w, h) = physical_crop_rect(&rect(0, 0, 0, 0), 1920, 1080, 1920, 1080);
+        assert!(w >= 1 && h >= 1);
+    }
+
+    #[test]
+    fn crop_rect_zero_logical_falls_back_to_full_frame() {
+        let (x, y, w, h) = physical_crop_rect(&rect(10, 10, 100, 100), 1920, 1080, 0, 0);
+        assert_eq!((x, y, w, h), (0, 0, 1920, 1080));
     }
 }
