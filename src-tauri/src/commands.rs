@@ -156,7 +156,59 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32, bounds: Option<Rec
         return Ok(output);
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    {
+        let (full, logical_w, logical_h) = xcap_capture(display_id)?;
+
+        // Crop to the requested region (logical → physical) if any.
+        let cropped = if let Some(rect) = bounds {
+            crop_rgba(&full, &rect, logical_w, logical_h)
+        } else {
+            full
+        };
+
+        // Match the macOS sample-rate / quality tiers by target FPS.
+        let sample_rate: u32 = if fps == 35 {
+            1
+        } else if fps <= 10 {
+            2
+        } else if fps <= 30 {
+            1
+        } else {
+            3
+        };
+        let mut w = (cropped.width() / sample_rate).max(2);
+        let mut h = (cropped.height() / sample_rate).max(2);
+        if w % 2 != 0 { w -= 1; }
+        if h % 2 != 0 { h -= 1; }
+
+        let resized = if w != cropped.width() || h != cropped.height() {
+            image::imageops::resize(&cropped, w, h, image::imageops::FilterType::Triangle)
+        } else {
+            cropped
+        };
+
+        let rgb = image::DynamicImage::ImageRgba8(resized).to_rgb8();
+        let jpeg_quality = if fps == 35 {
+            95
+        } else if fps >= 60 {
+            75
+        } else if fps >= 30 {
+            85
+        } else {
+            90
+        };
+
+        let mut output = Vec::new();
+        let mut encoder =
+            image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, jpeg_quality);
+        encoder
+            .encode(&rgb, rgb.width(), rgb.height(), image::ColorType::Rgb8.into())
+            .map_err(|e: image::ImageError| e.to_string())?;
+        return Ok(output);
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     return Err("Platform not supported".to_string());
 }
 
@@ -322,11 +374,41 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<tauri::ipc::Respo
         return Ok(tauri::ipc::Response::new(output));
     }
 
-    #[cfg(target_os = "windows")]
-    return Err("Windows capture not yet implemented".to_string());
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    {
+        use image::ImageEncoder;
 
-    #[cfg(target_os = "linux")]
-    return Err("Linux capture not yet implemented".to_string());
+        let (mut img, _lw, _lh) = xcap_capture(options.display_id)?;
+
+        // Optional resolution downscale (e.g. 0.5 for a faster overlay background)
+        if let Some(scale) = options.scale {
+            if scale > 0.0 && scale < 1.0 {
+                let nw = ((img.width() as f32) * scale).round().max(1.0) as u32;
+                let nh = ((img.height() as f32) * scale).round().max(1.0) as u32;
+                img = image::imageops::resize(&img, nw, nh, image::imageops::FilterType::Triangle);
+            }
+        }
+
+        let format = options.format.as_deref().unwrap_or("png");
+        let mut output = Vec::new();
+        match format {
+            "jpg" | "jpeg" => {
+                let rgb = image::DynamicImage::ImageRgba8(img).to_rgb8();
+                let q = (options.quality.unwrap_or(0.92) * 100.0) as u8;
+                let mut encoder =
+                    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, q);
+                encoder
+                    .encode(&rgb, rgb.width(), rgb.height(), image::ColorType::Rgb8.into())
+                    .map_err(|e: image::ImageError| e.to_string())?;
+            }
+            _ => {
+                image::codecs::png::PngEncoder::new(&mut output)
+                    .write_image(&img, img.width(), img.height(), image::ColorType::Rgba8.into())
+                    .map_err(|e: image::ImageError| e.to_string())?;
+            }
+        }
+        return Ok(tauri::ipc::Response::new(output));
+    }
 
     #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     return Err("Unsupported platform".to_string());
@@ -366,11 +448,29 @@ pub async fn list_displays() -> Result<Vec<DisplayInfo>, String> {
         return Ok(result);
     }
 
-    #[cfg(target_os = "windows")]
-    return Err("Windows display enumeration not yet implemented".to_string());
-
-    #[cfg(target_os = "linux")]
-    return Err("Linux display enumeration not yet implemented".to_string());
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    {
+        let monitors = xcap::Monitor::all().map_err(|e| e.to_string())?;
+        let mut result = Vec::new();
+        for (i, m) in monitors.iter().enumerate() {
+            let scale = m.scale_factor().unwrap_or(1.0).max(1.0);
+            let phys_w = m.width().unwrap_or(0);
+            let phys_h = m.height().unwrap_or(0);
+            result.push(DisplayInfo {
+                id: m.id().map(|v| v as i32).unwrap_or(i as i32),
+                name: m
+                    .friendly_name()
+                    .or_else(|_| m.name())
+                    .unwrap_or_else(|_| format!("Display {}", i + 1)),
+                // Report logical dimensions (physical / scale) to match macOS,
+                // so the frontend's logical region coords scale correctly.
+                width: ((phys_w as f32) / scale).round() as u32,
+                height: ((phys_h as f32) / scale).round() as u32,
+                is_main: m.is_primary().unwrap_or(false),
+            });
+        }
+        return Ok(result);
+    }
 
     #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     return Err("Unsupported platform".to_string());
@@ -398,12 +498,10 @@ pub async fn capture_region(bounds: Rectangle, display_id: Option<i32>) -> Resul
 // window is hidden), holds it in Rust, and crops server-side after the user
 // selects — so only the small crop crosses IPC, never the whole screen.
 
-#[allow(dead_code)]
+// The held frame is stored as an RGBA image so cropping is one platform-agnostic
+// path (macOS core-graphics and Windows/Linux xcap both feed into it).
 struct HeldCapture {
-    bgra: Vec<u8>,
-    bytes_per_row: usize,
-    phys_width: u32,
-    phys_height: u32,
+    image: image::RgbaImage, // physical pixels, RGBA
     logical_width: u32,
     logical_height: u32,
 }
@@ -436,43 +534,104 @@ fn physical_crop_rect(
     (x, y, w, h)
 }
 
+/// Crop a physical RGBA frame to a logical selection rect. Pure — unit-tested.
+pub(crate) fn crop_rgba(
+    img: &image::RgbaImage,
+    region: &Rectangle,
+    logical_w: u32,
+    logical_h: u32,
+) -> image::RgbaImage {
+    let (x, y, w, h) = physical_crop_rect(region, img.width(), img.height(), logical_w, logical_h);
+    image::imageops::crop_imm(img, x, y, w, h).to_image()
+}
+
+fn store_held(held: HeldCapture) -> Result<String, String> {
+    let id = format!(
+        "cap_{}",
+        CAPTURE_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    );
+    let mut map = HELD_CAPTURES.lock().map_err(|e| e.to_string())?;
+    map.clear(); // only one region capture is active at a time — bound memory
+    map.insert(id.clone(), held);
+    Ok(id)
+}
+
+/// xcap-backed full capture for Windows/Linux. Returns (physical RGBA, logical w, logical h).
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+fn xcap_capture(display_id: Option<i32>) -> Result<(image::RgbaImage, u32, u32), String> {
+    let monitors = xcap::Monitor::all().map_err(|e| e.to_string())?;
+    let monitor = match display_id {
+        Some(id) => monitors
+            .into_iter()
+            .find(|m| m.id().map(|v| v as i32 == id).unwrap_or(false))
+            .ok_or_else(|| format!("Display {} not found", id))?,
+        None => monitors
+            .into_iter()
+            .find(|m| m.is_primary().unwrap_or(false))
+            .ok_or_else(|| "No primary monitor found".to_string())?,
+    };
+    let scale = monitor.scale_factor().unwrap_or(1.0).max(1.0);
+    let img = monitor.capture_image().map_err(|e| e.to_string())?;
+    let logical_w = ((img.width() as f32) / scale).round() as u32;
+    let logical_h = ((img.height() as f32) / scale).round() as u32;
+    Ok((img, logical_w.max(1), logical_h.max(1)))
+}
+
 /// Capture the full display and hold it in memory; returns an id for cropping.
 #[tauri::command]
 pub async fn capture_hold(display_id: Option<i32>) -> Result<String, String> {
     #[cfg(target_os = "macos")]
     {
         use core_graphics::display::{CGDisplay, CGMainDisplayID};
+        use image::{ImageBuffer, Rgba, RgbaImage};
+
         let display = if let Some(id) = display_id {
             CGDisplay::new(id as u32)
         } else {
             unsafe { CGDisplay::new(CGMainDisplayID()) }
         };
-        let image = display
+        let cg = display
             .image()
             .ok_or_else(|| "Failed to capture screen".to_string())?;
 
-        let phys_width = image.width() as u32;
-        let phys_height = image.height() as u32;
-        let held = HeldCapture {
-            bgra: image.data().to_vec(),
-            bytes_per_row: image.bytes_per_row(),
-            phys_width,
-            phys_height,
+        let phys_w = cg.width() as u32;
+        let phys_h = cg.height() as u32;
+        let bytes_per_row = cg.bytes_per_row();
+        let data = cg.data();
+
+        let mut buf: RgbaImage = ImageBuffer::new(phys_w, phys_h);
+        for y in 0..phys_h {
+            for x in 0..phys_w {
+                let offset = (y as usize * bytes_per_row) + (x as usize * 4); // BGRA
+                if offset + 3 < data.len() as usize {
+                    let b = data[offset];
+                    let g = data[offset + 1];
+                    let r = data[offset + 2];
+                    let a = data[offset + 3];
+                    buf.put_pixel(x, y, Rgba([r, g, b, a]));
+                }
+            }
+        }
+
+        let id = store_held(HeldCapture {
+            image: buf,
             logical_width: display.pixels_wide() as u32,
             logical_height: display.pixels_high() as u32,
-        };
-
-        let id = format!(
-            "cap_{}",
-            CAPTURE_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-        );
-        let mut map = HELD_CAPTURES.lock().map_err(|e| e.to_string())?;
-        map.clear(); // only one region capture is active at a time — bound memory
-        map.insert(id.clone(), held);
-        println!("[Capture] Held full-res frame {} ({}x{})", id, phys_width, phys_height);
+        })?;
+        println!("[Capture] Held full-res frame {} ({}x{})", id, phys_w, phys_h);
         return Ok(id);
     }
-    #[cfg(not(target_os = "macos"))]
+
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    {
+        let (img, logical_w, logical_h) = xcap_capture(display_id)?;
+        let (pw, ph) = (img.width(), img.height());
+        let id = store_held(HeldCapture { image: img, logical_width: logical_w, logical_height: logical_h })?;
+        println!("[Capture] Held full-res frame {} ({}x{})", id, pw, ph);
+        return Ok(id);
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     {
         let _ = display_id;
         return Err("Platform not supported".to_string());
@@ -483,42 +642,22 @@ pub async fn capture_hold(display_id: Option<i32>) -> Result<String, String> {
 /// One-shot: the held frame is dropped after cropping.
 #[tauri::command]
 pub async fn crop_held(capture_id: String, region: Rectangle) -> Result<tauri::ipc::Response, String> {
+    use image::ImageEncoder;
+
     let held = {
         let mut map = HELD_CAPTURES.lock().map_err(|e| e.to_string())?;
         map.remove(&capture_id)
             .ok_or_else(|| "Held capture not found (already used or expired)".to_string())?
     };
 
-    let (cx, cy, cw, ch) = physical_crop_rect(
-        &region,
-        held.phys_width,
-        held.phys_height,
-        held.logical_width,
-        held.logical_height,
-    );
-
-    use image::{ImageBuffer, ImageEncoder, Rgba, RgbaImage};
-    let mut out: RgbaImage = ImageBuffer::new(cw, ch);
-    for y in 0..ch {
-        for x in 0..cw {
-            // Source is BGRA (CGImage byte order); write RGBA.
-            let offset = ((cy + y) as usize * held.bytes_per_row) + ((cx + x) as usize * 4);
-            if offset + 3 < held.bgra.len() {
-                let b = held.bgra[offset];
-                let g = held.bgra[offset + 1];
-                let r = held.bgra[offset + 2];
-                let a = held.bgra[offset + 3];
-                out.put_pixel(x, y, Rgba([r, g, b, a]));
-            }
-        }
-    }
+    let cropped = crop_rgba(&held.image, &region, held.logical_width, held.logical_height);
 
     let mut png = Vec::new();
     image::codecs::png::PngEncoder::new(&mut png)
-        .write_image(&out, cw, ch, image::ColorType::Rgba8.into())
+        .write_image(&cropped, cropped.width(), cropped.height(), image::ColorType::Rgba8.into())
         .map_err(|e: image::ImageError| e.to_string())?;
 
-    println!("[Capture] Cropped held frame → {}x{} ({} bytes)", cw, ch, png.len());
+    println!("[Capture] Cropped held frame → {}x{} ({} bytes)", cropped.width(), cropped.height(), png.len());
     Ok(tauri::ipc::Response::new(png))
 }
 
@@ -837,5 +976,35 @@ mod tests {
     fn crop_rect_zero_logical_falls_back_to_full_frame() {
         let (x, y, w, h) = physical_crop_rect(&rect(10, 10, 100, 100), 1920, 1080, 0, 0);
         assert_eq!((x, y, w, h), (0, 0, 1920, 1080));
+    }
+
+    fn gradient(w: u32, h: u32) -> image::RgbaImage {
+        // Each pixel encodes its own (x, y) in the R and G channels.
+        let mut img = image::RgbaImage::new(w, h);
+        for y in 0..h {
+            for x in 0..w {
+                img.put_pixel(x, y, image::Rgba([x as u8, y as u8, 0, 255]));
+            }
+        }
+        img
+    }
+
+    #[test]
+    fn crop_rgba_extracts_region_at_scale_1() {
+        let img = gradient(4, 4);
+        let out = crop_rgba(&img, &rect(1, 1, 2, 2), 4, 4);
+        assert_eq!(out.dimensions(), (2, 2));
+        assert_eq!(out.get_pixel(0, 0), &image::Rgba([1, 1, 0, 255]));
+        assert_eq!(out.get_pixel(1, 1), &image::Rgba([2, 2, 0, 255]));
+    }
+
+    #[test]
+    fn crop_rgba_scales_logical_region_on_hidpi() {
+        // 8x8 physical, 4x4 logical (2x). Logical (1,1,2,2) → physical (2,2,4,4).
+        let img = gradient(8, 8);
+        let out = crop_rgba(&img, &rect(1, 1, 2, 2), 4, 4);
+        assert_eq!(out.dimensions(), (4, 4));
+        assert_eq!(out.get_pixel(0, 0), &image::Rgba([2, 2, 0, 255]));
+        assert_eq!(out.get_pixel(3, 3), &image::Rgba([5, 5, 0, 255]));
     }
 }

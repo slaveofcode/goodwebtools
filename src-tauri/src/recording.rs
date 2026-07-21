@@ -110,15 +110,21 @@ pub fn start_recording(options: RecordOptions) -> Result<RecordingHandle, String
     recordings.insert(handle.id.clone(), state);
     drop(recordings);
 
-    // Start recording thread
+    // Start recording thread.
+    // macOS uses a per-frame core-graphics capture loop; Windows/Linux use one
+    // persistent xcap capture stream (no per-frame desktop-portal round-trips).
     let handle_clone = handle.clone();
     thread::spawn(move || {
+        #[cfg(target_os = "macos")]
         record_frames(handle_clone.id, fps, display_id, bounds, stop_flag, frames, duration);
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        record_frames_xcap(handle_clone.id, fps, display_id, bounds, stop_flag, frames, duration);
     });
 
     Ok(handle)
 }
 
+#[cfg(target_os = "macos")]
 fn record_frames(
     recording_id: String,
     target_fps: u32,
@@ -199,6 +205,152 @@ fn record_frames(
     println!("[Recording] Recording thread ended");
     println!("[Recording] Total: {} frames in {:.2}s (actual: {:.2}fps)",
         frame_count, total_duration.as_secs_f64(), actual_fps);
+}
+
+/// Windows/Linux capture loop backed by one persistent xcap stream.
+///
+/// Instead of calling `capture_image()` per frame — which on Linux re-negotiates
+/// the xdg-desktop-portal screencast every time and is far too slow for real-time
+/// recording — this opens a single `VideoRecorder`, consumes frames from its
+/// channel, throttles to the target FPS, crops/encodes each kept frame to JPEG,
+/// and pushes it into the same `frames` buffer the encoder consumes on stop.
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+fn record_frames_xcap(
+    _recording_id: String,
+    target_fps: u32,
+    display_id: Option<i32>,
+    bounds: Option<crate::commands::Rectangle>,
+    stop_flag: Arc<Mutex<bool>>,
+    frames: Arc<Mutex<Vec<Vec<u8>>>>,
+    duration_out: Arc<Mutex<Option<Duration>>>,
+) {
+    use std::sync::mpsc::RecvTimeoutError;
+
+    // Resolve the target monitor.
+    let monitors = match xcap::Monitor::all() {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("[Recording] xcap monitor enumeration failed: {}", e);
+            return;
+        }
+    };
+    let monitor = match display_id {
+        Some(id) => monitors
+            .into_iter()
+            .find(|m| m.id().map(|v| v as i32 == id).unwrap_or(false)),
+        None => monitors.into_iter().find(|m| m.is_primary().unwrap_or(false)),
+    };
+    let monitor = match monitor {
+        Some(m) => m,
+        None => {
+            eprintln!("[Recording] target monitor not found for recording");
+            return;
+        }
+    };
+    let scale = monitor.scale_factor().unwrap_or(1.0).max(1.0);
+
+    // One persistent capture stream — no per-frame portal round-trips.
+    let (recorder, rx) = match monitor.video_recorder() {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("[Recording] xcap video_recorder init failed: {}", e);
+            return;
+        }
+    };
+    if let Err(e) = recorder.start() {
+        eprintln!("[Recording] xcap recorder start failed: {}", e);
+        return;
+    }
+    println!("[Recording] xcap capture stream started (target {}fps)", target_fps);
+
+    let normalized_fps = if target_fps == 35 { 30 } else { target_fps.max(1) };
+    let frame_interval = Duration::from_secs_f64(1.0 / normalized_fps as f64);
+    let jpeg_quality: u8 = if target_fps == 35 {
+        95
+    } else if target_fps >= 60 {
+        75
+    } else if target_fps >= 30 {
+        85
+    } else {
+        90
+    };
+
+    let start_time = Instant::now();
+    let mut last_kept: Option<Instant> = None;
+    let mut frame_count = 0usize;
+
+    loop {
+        if stop_flag.lock().map(|f| *f).unwrap_or(true) {
+            break;
+        }
+
+        // Bounded wait so we can re-check the stop flag promptly.
+        let frame = match rx.recv_timeout(Duration::from_millis(200)) {
+            Ok(f) => f,
+            Err(RecvTimeoutError::Timeout) => continue,
+            Err(RecvTimeoutError::Disconnected) => break,
+        };
+
+        // Throttle the stream down to the target frame rate.
+        if let Some(prev) = last_kept {
+            if prev.elapsed() < frame_interval {
+                continue;
+            }
+        }
+        last_kept = Some(Instant::now());
+
+        // frame.raw is physical, tightly-packed RGBA.
+        let img = match image::RgbaImage::from_raw(frame.width, frame.height, frame.raw) {
+            Some(i) => i,
+            None => continue,
+        };
+
+        // Crop to the requested region (logical → physical) if any.
+        let logical_w = ((frame.width as f32) / scale).round() as u32;
+        let logical_h = ((frame.height as f32) / scale).round() as u32;
+        let rgba = match &bounds {
+            Some(rect) => {
+                crate::commands::crop_rgba(&img, rect, logical_w.max(1), logical_h.max(1))
+            }
+            None => img,
+        };
+
+        // Force even dimensions (H.264 requires them) — deterministic, so every
+        // frame in a recording ends up the same size for the encoder.
+        let ew = (rgba.width() - rgba.width() % 2).max(2);
+        let eh = (rgba.height() - rgba.height() % 2).max(2);
+        let rgba = if ew != rgba.width() || eh != rgba.height() {
+            image::imageops::crop_imm(&rgba, 0, 0, ew, eh).to_image()
+        } else {
+            rgba
+        };
+
+        // Encode to JPEG (the frame format stop_recording's encoder expects).
+        let rgb = image::DynamicImage::ImageRgba8(rgba).to_rgb8();
+        let mut buf = Vec::new();
+        let mut enc = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buf, jpeg_quality);
+        if enc
+            .encode(&rgb, rgb.width(), rgb.height(), image::ColorType::Rgb8.into())
+            .is_ok()
+        {
+            if let Ok(mut v) = frames.lock() {
+                v.push(buf);
+                frame_count += 1;
+            }
+        }
+    }
+
+    let _ = recorder.stop();
+    let total = start_time.elapsed();
+    if let Ok(mut d) = duration_out.lock() {
+        *d = Some(total);
+    }
+    println!(
+        "[Recording] xcap stream ended: {} frames in {:.2}s (~{:.1}fps)",
+        frame_count,
+        total.as_secs_f64(),
+        frame_count as f64 / total.as_secs_f64().max(0.001),
+    );
 }
 
 pub fn stop_recording(handle_id: String) -> Result<Vec<u8>, String> {

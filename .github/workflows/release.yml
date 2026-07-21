@@ -21,7 +21,7 @@ jobs:
           - platform: windows-latest
             args: ''
             label: Windows
-          - platform: ubuntu-22.04
+          - platform: ubuntu-24.04
             args: ''
             label: Linux
 
@@ -49,14 +49,24 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: Install Linux system dependencies
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
             libappindicator3-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            libdbus-1-dev \
+            libpipewire-0.3-dev \
+            libspa-0.2-dev \
+            libwayland-dev \
+            libxcb1-dev \
+            libxcb-randr0-dev \
+            libxcb-shm0-dev \
+            libclang-dev \
+            clang \
+            pkg-config
 
       - name: Install npm dependencies
         run: npm ci --legacy-peer-deps
