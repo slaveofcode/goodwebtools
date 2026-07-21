@@ -149,8 +149,9 @@ export default function Screenshot() {
       if (isTauri()) {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('hide_main_window');
-        // Wait for window + shadow to fully disappear (macOS compositor needs time)
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // hide() is instant (no minimize animation); a couple of frames is
+        // enough for the compositor to drop the window before we capture.
+        await new Promise(resolve => setTimeout(resolve, 60));
       }
 
       // STEP 1: Capture 50% resolution screenshot for overlay background (4× faster)
@@ -169,9 +170,11 @@ export default function Screenshot() {
         reader.readAsDataURL(overlayBlob);
       });
 
-      // Store in localStorage for overlay
-      localStorage.setItem('overlay-screenshot', overlayDataUrl);
-      console.log('[Screenshot] Overlay screenshot saved (JPEG)');
+      // Send background to the overlay via event (localStorage is unreliable
+      // for the reused/persistent overlay window).
+      const { emit } = await import('@tauri-apps/api/event');
+      await emit('overlay-set-background', overlayDataUrl);
+      console.log('[Screenshot] Overlay background sent (JPEG)');
 
       // STEP 2: Show overlay window (user selects region)
       const regionPromise = captureService.showRegionSelector(selectedDisplay);

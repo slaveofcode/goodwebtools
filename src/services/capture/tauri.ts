@@ -12,8 +12,9 @@ import type {
 
 export class TauriCaptureService implements CaptureService {
   async captureScreen(options?: CaptureOptions): Promise<Blob> {
-    const imageBytes: number[] = await invoke('capture_screen', { options });
-    return new Blob([new Uint8Array(imageBytes)], {
+    // Command returns raw bytes (tauri::ipc::Response) → ArrayBuffer, not number[].
+    const imageBytes = await invoke<ArrayBuffer>('capture_screen', { options });
+    return new Blob([imageBytes], {
       type: `image/${options?.format || 'png'}`,
     });
   }
@@ -24,8 +25,8 @@ export class TauriCaptureService implements CaptureService {
 
   async captureWindow(windowId?: string): Promise<Blob> {
     try {
-      const imageBytes: number[] = await invoke('capture_window', { windowId });
-      return new Blob([new Uint8Array(imageBytes)], { type: 'image/png' });
+      const imageBytes = await invoke<ArrayBuffer>('capture_window', { windowId });
+      return new Blob([imageBytes], { type: 'image/png' });
     } catch (error) {
       console.warn('Native window capture failed', error);
       throw error;
@@ -45,8 +46,8 @@ export class TauriCaptureService implements CaptureService {
 
       console.log('[TauriCaptureService] Calling capture_region with params:', params);
 
-      const imageBytes: number[] = await invoke('capture_region', params);
-      return new Blob([new Uint8Array(imageBytes)], { type: 'image/png' });
+      const imageBytes = await invoke<ArrayBuffer>('capture_region', params);
+      return new Blob([imageBytes], { type: 'image/png' });
     } catch (error) {
       console.warn('Native region capture failed', error);
       throw error;

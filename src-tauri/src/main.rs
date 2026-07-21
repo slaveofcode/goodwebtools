@@ -17,6 +17,10 @@ fn main() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             tray::setup_tray(&app.handle())?;
+            // Pre-warm the region-selector overlay so screenshots feel instant.
+            if let Err(e) = overlay::prewarm_region_selector(&app.handle()) {
+                eprintln!("[Startup] Failed to pre-warm region selector: {}", e);
+            }
             Ok(())
         })
         // Will add later: updater

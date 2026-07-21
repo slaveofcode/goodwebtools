@@ -213,7 +213,7 @@ pub fn capture_screen_internal(display_id: Option<i32>) -> Result<Vec<u8>, Strin
 }
 
 #[tauri::command]
-pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> {
+pub async fn capture_screen(options: CaptureOptions) -> Result<tauri::ipc::Response, String> {
     #[cfg(target_os = "macos")]
     {
         use core_graphics::display::{CGDisplay, CGMainDisplayID};
@@ -318,7 +318,8 @@ pub async fn capture_screen(options: CaptureOptions) -> Result<Vec<u8>, String> 
             }
         }
 
-        return Ok(output);
+        // Return raw bytes over IPC (not a JSON number[]) — much faster + smaller.
+        return Ok(tauri::ipc::Response::new(output));
     }
 
     #[cfg(target_os = "windows")]
@@ -376,19 +377,20 @@ pub async fn list_displays() -> Result<Vec<DisplayInfo>, String> {
 }
 
 #[tauri::command]
-pub async fn capture_window(_window_id: Option<String>) -> Result<Vec<u8>, String> {
+pub async fn capture_window(_window_id: Option<String>) -> Result<tauri::ipc::Response, String> {
     Err("Window capture not yet implemented".to_string())
 }
 
 #[tauri::command]
-pub async fn capture_region(bounds: Rectangle, display_id: Option<i32>) -> Result<Vec<u8>, String> {
+pub async fn capture_region(bounds: Rectangle, display_id: Option<i32>) -> Result<tauri::ipc::Response, String> {
     // Use displayId from bounds if available, otherwise use parameter
     let target_display = bounds.display_id.or(display_id);
     println!("[Capture] Region capture - displayId from bounds: {:?}, from param: {:?}, using: {:?}",
              bounds.display_id, display_id, target_display);
 
-    // Use high quality settings for single-frame region capture from specified display
-    capture_screen_fast(target_display, 10, Some(bounds))
+    // Use high quality settings for single-frame region capture from specified display.
+    // Return raw bytes over IPC (not a JSON number[]).
+    capture_screen_fast(target_display, 10, Some(bounds)).map(tauri::ipc::Response::new)
 }
 
 #[derive(Debug, Deserialize)]
@@ -418,8 +420,9 @@ pub async fn submit_region_selection(
     app.emit("region-selected", bounds)
         .map_err(|e: tauri::Error| e.to_string())?;
 
-    // Close the overlay
-    crate::overlay::close_region_selector(&app)
+    // Hide the overlay silently — selection already sent, so do NOT emit
+    // region-selector-closed (which would resolve the waiter to null).
+    crate::overlay::hide_region_selector(&app)
 }
 
 #[tauri::command]
@@ -485,9 +488,11 @@ pub async fn check_screen_recording_permission() -> Result<bool, String> {
 #[tauri::command]
 pub async fn hide_main_window(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
-        // Use minimize instead of hide so user can restore from dock
-        window.minimize().map_err(|e: tauri::Error| e.to_string())?;
-        println!("[Window] Main window minimized");
+        // hide() removes the window in ~1 frame; minimize() plays a ~250ms
+        // macOS genie animation that has to be waited out before capturing.
+        // Instant hide is what lets the screenshot flow feel snappy.
+        window.hide().map_err(|e: tauri::Error| e.to_string())?;
+        println!("[Window] Main window hidden");
     }
     Ok(())
 }

@@ -161,8 +161,8 @@ export default function ScreenRecorder() {
           console.log('[ScreenRecorder] Hiding window for cleaner capture');
           await invoke('hide_main_window');
           windowHiddenRef.current = true;
-          // Wait for window + shadow to fully disappear
-          await new Promise(resolve => setTimeout(resolve, 200));
+          // hide() is instant; a couple of frames is enough for the compositor.
+          await new Promise(resolve => setTimeout(resolve, 60));
         } else {
           console.log('[ScreenRecorder] Keeping window visible (user preference)');
           windowHiddenRef.current = false;
@@ -313,8 +313,8 @@ export default function ScreenRecorder() {
       // Hide main window so it doesn't cover the screen
       await invoke('hide_main_window');
 
-      // Wait for window hide animation
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // hide() is instant; a couple of frames is enough for the compositor.
+      await new Promise(resolve => setTimeout(resolve, 60));
 
       // Capture 50% resolution screenshot for overlay background (4× faster)
       const screenshotBlob = await captureService.captureScreen({
@@ -325,9 +325,11 @@ export default function ScreenRecorder() {
       });
       const dataUrl = await blobToDataUrl(screenshotBlob);
 
-      // Store in localStorage for overlay to read
-      localStorage.setItem('overlay-screenshot', dataUrl);
-      console.log('[ScreenRecorder] Overlay screenshot saved to localStorage');
+      // Send background to the overlay via event (localStorage is unreliable
+      // for the reused/persistent overlay window).
+      const { emit } = await import('@tauri-apps/api/event');
+      await emit('overlay-set-background', dataUrl);
+      console.log('[ScreenRecorder] Overlay background sent');
 
       // Show overlay
       await invoke('show_region_selector', { options: { displayId: selectedDisplay } });
