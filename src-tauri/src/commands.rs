@@ -535,7 +535,7 @@ fn physical_crop_rect(
 }
 
 /// Crop a physical RGBA frame to a logical selection rect. Pure — unit-tested.
-fn crop_rgba(
+pub(crate) fn crop_rgba(
     img: &image::RgbaImage,
     region: &Rectangle,
     logical_w: u32,
