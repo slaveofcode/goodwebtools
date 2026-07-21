@@ -1,0 +1,71 @@
+name: Desktop compile check
+
+# Compile-checks the Tauri Rust app on all three desktop targets. This is the
+# verification loop for platform-specific capture code (Windows DXGI/WGC, Linux
+# PipeWire via xcap) that can't be built on a macOS dev machine.
+
+on:
+  push:
+    branches:
+      - 'feat/**'
+      - 'fix/**'
+    paths:
+      - 'src-tauri/**'
+      - '.github/workflows/desktop-check.yml'
+  pull_request:
+    branches: [develop, main, 'feat/**']
+    paths:
+      - 'src-tauri/**'
+  workflow_dispatch:
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+          - os: windows-latest
+          - os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # Tauri + xcap (PipeWire/Wayland/X11/dbus) system deps on Linux.
+      - name: Install Linux deps
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libsoup-3.0-dev \
+            libdbus-1-dev \
+            libpipewire-0.3-dev \
+            libwayland-dev \
+            libxcb1-dev \
+            libxcb-randr0-dev \
+            libxcb-shm0-dev \
+            pkg-config
+
+      # generate_context! embeds the frontend dist at compile time; a stub is
+      # enough for a compile check (we don't need the real built assets here).
+      - name: Stub frontend dist
+        shell: bash
+        run: |
+          mkdir -p dist
+          echo '<!doctype html><title>stub</title>' > dist/index.html
+
+      - name: cargo check (all targets)
+        working-directory: src-tauri
+        run: cargo check --all-targets
