@@ -156,13 +156,16 @@ export default function ScreenRecorder() {
       if (inTauriApp) {
         const { invoke } = await import('@tauri-apps/api/core');
 
-        // Hide window if user enabled the option
+        // Hide window if user enabled the option.
+        // Use MINIMIZE (not hide) for recording: the window stays hidden for the
+        // whole session, and a minimized window can be restored from the dock —
+        // a fully-hidden one can't, which locked the user out mid-recording.
         if (hideWindow) {
-          console.log('[ScreenRecorder] Hiding window for cleaner capture');
-          await invoke('hide_main_window');
+          console.log('[ScreenRecorder] Minimizing window for cleaner capture');
+          await invoke('minimize_main_window');
           windowHiddenRef.current = true;
-          // hide() is instant; a couple of frames is enough for the compositor.
-          await new Promise(resolve => setTimeout(resolve, 60));
+          // Let the minimize animation settle before capture begins.
+          await new Promise(resolve => setTimeout(resolve, 250));
         } else {
           console.log('[ScreenRecorder] Keeping window visible (user preference)');
           windowHiddenRef.current = false;

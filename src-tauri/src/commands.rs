@@ -775,9 +775,22 @@ pub async fn hide_main_window(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         // hide() removes the window in ~1 frame; minimize() plays a ~250ms
         // macOS genie animation that has to be waited out before capturing.
-        // Instant hide is what lets the screenshot flow feel snappy.
+        // Instant hide is what lets the screenshot flow feel snappy. Used where
+        // the window is restored automatically a moment later (screenshots).
         window.hide().map_err(|e: tauri::Error| e.to_string())?;
         println!("[Window] Main window hidden");
+    }
+    Ok(())
+}
+
+/// Minimize (not hide) the main window. Used for recording, where the window
+/// stays out of view for the whole session: a minimized window can be brought
+/// back from the dock, but a fully-hidden one can't — which locked users out.
+#[tauri::command]
+pub async fn minimize_main_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.minimize().map_err(|e: tauri::Error| e.to_string())?;
+        println!("[Window] Main window minimized");
     }
     Ok(())
 }
