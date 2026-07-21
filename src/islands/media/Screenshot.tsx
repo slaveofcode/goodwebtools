@@ -149,8 +149,9 @@ export default function Screenshot() {
       if (isTauri()) {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('hide_main_window');
-        // Wait for window + shadow to fully disappear (macOS compositor needs time)
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // hide() is instant (no minimize animation); a couple of frames is
+        // enough for the compositor to drop the window before we capture.
+        await new Promise(resolve => setTimeout(resolve, 60));
       }
 
       // STEP 1: Capture 50% resolution screenshot for overlay background (4× faster)

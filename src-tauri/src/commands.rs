@@ -488,9 +488,11 @@ pub async fn check_screen_recording_permission() -> Result<bool, String> {
 #[tauri::command]
 pub async fn hide_main_window(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
-        // Use minimize instead of hide so user can restore from dock
-        window.minimize().map_err(|e: tauri::Error| e.to_string())?;
-        println!("[Window] Main window minimized");
+        // hide() removes the window in ~1 frame; minimize() plays a ~250ms
+        // macOS genie animation that has to be waited out before capturing.
+        // Instant hide is what lets the screenshot flow feel snappy.
+        window.hide().map_err(|e: tauri::Error| e.to_string())?;
+        println!("[Window] Main window hidden");
     }
     Ok(())
 }
