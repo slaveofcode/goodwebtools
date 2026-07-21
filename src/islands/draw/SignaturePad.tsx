@@ -3,7 +3,7 @@ import { Download, Eraser } from 'lucide-react';
 import SignaturePadLib from 'signature_pad';
 import { Button } from '@/components/ui/Button';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 
 export default function SignaturePad() {
   const canvasRef = useRef<HTMLCanvasElement>(null);

@@ -4,7 +4,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { loadFFmpeg, fileToU8 } from '@/services/ffmpeg.service';
 

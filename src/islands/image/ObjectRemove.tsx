@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Modal } from '@/components/ui/Modal';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { toCHW, toMaskChannel, fromCHW } from '@/tools/image/object-remove.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';

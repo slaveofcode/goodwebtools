@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import MonacoEditor from './MonacoEditor';
 import { toCsv, toJson } from '@/tools/playground/result.lib';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
+import { clipboardService } from '@/services/clipboard';
 import type { Remote } from 'comlink';
 import type * as Monaco from 'monaco-editor';
 import type { QueryResult, SchemaObject, SqliteApi } from '@/tools/playground/sqlite.worker';
@@ -231,7 +232,7 @@ export default function SqlitePlayground() {
                     {grid.rows.slice(0, 1000).map((row, ri) => (
                       <tr key={ri}>
                         {row.map((cell, ci) => (
-                          <td key={ci} onClick={() => navigator.clipboard?.writeText(cell == null ? '' : String(cell))}
+                          <td key={ci} onClick={() => clipboardService.writeText(cell == null ? '' : String(cell))}
                             className="cursor-copy border-2 border-border px-2 py-1 font-mono">
                             {cell == null ? <span className="opacity-40">NULL</span> : String(cell)}
                           </td>

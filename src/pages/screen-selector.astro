@@ -1,0 +1,210 @@
+---
+// Screen Selector - Choose which display to capture
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Select Screen</title>
+    <style is:global>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      #container {
+        max-width: 90vw;
+        max-height: 90vh;
+        padding: 40px;
+      }
+
+      h1 {
+        color: white;
+        text-align: center;
+        margin-bottom: 32px;
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      #screens {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 24px;
+        justify-content: center;
+      }
+
+      .screen-card {
+        position: relative;
+        cursor: pointer !important;
+        border: 4px solid #333 !important;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        background: #1a1a1a !important;
+        opacity: 0.7 !important;
+      }
+
+      .screen-card:hover {
+        border-color: #3b82f6 !important;
+        transform: scale(1.08) translateY(-8px) !important;
+        box-shadow:
+          0 0 0 2px rgba(59, 130, 246, 0.3),
+          0 0 40px rgba(59, 130, 246, 0.6),
+          0 20px 40px rgba(0, 0, 0, 0.5) !important;
+        opacity: 1 !important;
+        cursor: grab !important;
+      }
+
+      .screen-card:active {
+        cursor: grabbing !important;
+        transform: scale(1.05) translateY(-4px) !important;
+      }
+
+      .screen-card img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .screen-label {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+      }
+
+      .screen-info {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #aaa;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        backdrop-filter: blur(10px);
+      }
+
+      #instructions {
+        position: fixed;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #aaa;
+        font-size: 14px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <h1>Select Screen to Capture</h1>
+      <div id="screens"></div>
+    </div>
+
+    <div id="instructions">
+      Click a screen to select · ESC to cancel
+    </div>
+
+    <script>
+      import { invoke } from '@tauri-apps/api/core';
+
+      (async () => {
+        const screensContainer = document.getElementById('screens')!;
+
+        // Load thumbnails from localStorage
+        const thumbnailsData = localStorage.getItem('gwt-screen-thumbnails');
+        console.log('[ScreenSelector] Thumbnails data:', thumbnailsData ? 'found' : 'not found');
+
+        if (!thumbnailsData) {
+          console.error('[ScreenSelector] No thumbnails found in localStorage');
+          alert('Error: No screen thumbnails found. Please try again.');
+          await invoke('show_main_window');
+          return;
+        }
+
+        let thumbnails;
+        try {
+          thumbnails = JSON.parse(thumbnailsData);
+          console.log('[ScreenSelector] Loaded thumbnails:', thumbnails.length, thumbnails);
+        } catch (err) {
+          console.error('[ScreenSelector] Failed to parse thumbnails:', err);
+          alert('Error parsing screen data. Please try again.');
+          await invoke('show_main_window');
+          return;
+        }
+
+        if (!thumbnails || thumbnails.length === 0) {
+          console.error('[ScreenSelector] Empty thumbnails array');
+          alert('No screens found. Please try again.');
+          await invoke('show_main_window');
+          return;
+        }
+
+      // Render screen cards
+      thumbnails.forEach((thumb: any, index: number) => {
+        const card = document.createElement('div');
+        card.className = 'screen-card';
+        card.innerHTML = `
+          <img src="${thumb.dataUrl}" alt="Screen ${index + 1}" />
+          <div class="screen-label">Screen ${index + 1}${thumb.display.isMain ? ' (Main)' : ''}</div>
+          <div class="screen-info">${thumb.display.width} × ${thumb.display.height}</div>
+        `;
+
+        card.addEventListener('click', async () => {
+          console.log('[ScreenSelector] Selected display:', thumb.display.id);
+
+          const displayId = thumb.display.id;
+
+          // Hide window immediately for better UX
+          document.body.style.display = 'none';
+
+          // Clean up thumbnails
+          localStorage.removeItem('gwt-screen-thumbnails');
+
+          // Call Tauri command to emit event and close window (from Rust side, no permission issues)
+          console.log('[ScreenSelector] Calling select_display command:', displayId);
+          try {
+            await invoke('select_display', { displayId });
+            console.log('[ScreenSelector] Display selected successfully');
+          } catch (err) {
+            console.error('[ScreenSelector] Failed to select display:', err);
+          }
+        });
+
+        screensContainer.appendChild(card);
+      });
+
+      // ESC to cancel
+      document.addEventListener('keydown', async (e) => {
+        if (e.key === 'Escape') {
+          localStorage.removeItem('gwt-screen-thumbnails');
+          await invoke('show_main_window');
+          window.close();
+        }
+      });
+      })(); // End async IIFE
+    </script>
+  </body>
+</html>

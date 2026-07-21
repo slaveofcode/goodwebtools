@@ -1,0 +1,212 @@
+---
+import { Download, Monitor, Apple, ChevronRight } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+
+const GITHUB_REPO = 'slaveofcode/goodwebtools';
+const VERSION = '1.0.0-beta.1';
+const RELEASES_BASE = `https://github.com/${GITHUB_REPO}/releases/download/desktop-v${VERSION}`;
+const RELEASES_PAGE = `https://github.com/${GITHUB_REPO}/releases`;
+
+const platforms = [
+  {
+    id: 'mac-arm',
+    label: 'macOS (Apple Silicon)',
+    icon: 'apple',
+    file: `GoodWebTools_${VERSION}_aarch64.dmg`,
+    hint: 'M1, M2, M3, M4 chips',
+    uaCheck: "mac-arm",
+  },
+  {
+    id: 'mac-intel',
+    label: 'macOS (Intel)',
+    icon: 'apple',
+    file: `GoodWebTools_${VERSION}_x64.dmg`,
+    hint: 'Intel Core i5/i7/i9',
+    uaCheck: "mac-x64",
+  },
+  {
+    id: 'win',
+    label: 'Windows',
+    icon: 'windows',
+    file: `GoodWebTools_${VERSION}_x64-setup.exe`,
+    hint: 'Windows 10 / 11, 64-bit',
+    uaCheck: "windows",
+  },
+  {
+    id: 'linux-deb',
+    label: 'Linux (Debian/Ubuntu)',
+    icon: 'linux',
+    file: `goodwebtools_${VERSION}_amd64.deb`,
+    hint: 'Ubuntu 22.04+, Debian 11+',
+    uaCheck: "linux",
+  },
+  {
+    id: 'linux-appimage',
+    label: 'Linux (AppImage)',
+    icon: 'linux',
+    file: `goodwebtools_${VERSION}_amd64.AppImage`,
+    hint: 'Any Linux distro, 64-bit',
+    uaCheck: "linux",
+  },
+];
+---
+
+<Base
+  title="Download GoodWebTools Desktop"
+  description="Download the GoodWebTools desktop app for macOS, Windows, and Linux. Get system-wide screen capture, global hotkeys, and native file access."
+>
+  <main class="page-container py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li>
+          <a href="/" class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">Home</a>
+        </li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">Download</li>
+      </ol>
+    </nav>
+
+    <div class="mb-8 flex items-center gap-3">
+      <Download className="h-8 w-8" />
+      <div>
+        <h1 class="text-3xl font-black">Download Desktop App</h1>
+        <p class="text-muted-foreground text-sm">v{VERSION} — Free, open source, no sign-up</p>
+      </div>
+    </div>
+
+    <!-- Auto-detected recommended download -->
+    <div id="recommended-banner" class="hidden mb-8 border-2 border-border bg-card shadow-brutal p-6">
+      <p class="text-sm font-bold uppercase tracking-wide text-muted-foreground mb-2">Recommended for your device</p>
+      <div id="recommended-content"></div>
+    </div>
+
+    <!-- All platforms -->
+    <h2 class="text-xl font-black mb-4">All platforms</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">
+      {platforms.map((p) => (
+        <a
+          id={`card-${p.id}`}
+          href={`${RELEASES_BASE}/${p.file}`}
+          class="group flex flex-col gap-2 border-2 border-border bg-card p-5 shadow-brutal transition-transform hover:-translate-y-0.5 hover:shadow-brutal-lg"
+          data-platform={p.uaCheck}
+          data-file={p.file}
+        >
+          <div class="flex items-center gap-2">
+            {p.icon === 'apple' && (
+              <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+            )}
+            {p.icon === 'windows' && (
+              <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M3 12V6.75l6-1.32v6.57H3zm17 0V3.5l-9 1.58V12h9zM3 13h6v6.43L3 18V13zm17 0v9L12 20.43V13h8z"/>
+              </svg>
+            )}
+            {p.icon === 'linux' && (
+              <Monitor className="h-5 w-5 shrink-0" client:load />
+            )}
+            <span class="font-bold">{p.label}</span>
+          </div>
+          <p class="text-xs text-muted-foreground">{p.hint}</p>
+          <span class="mt-auto self-start border-2 border-border bg-foreground px-3 py-1 text-xs font-bold text-background shadow-brutal-sm group-hover:shadow-brutal transition-shadow">
+            Download .{p.file.split('.').pop()}
+          </span>
+        </a>
+      ))}
+    </div>
+
+    <!-- Features -->
+    <section class="border-2 border-border bg-muted p-6 shadow-brutal mb-8">
+      <h2 class="text-lg font-black mb-4">Why download the desktop app?</h2>
+      <ul class="grid sm:grid-cols-2 gap-3 text-sm">
+        {[
+          ['⌘⇧A', 'System-wide screenshot hotkey — capture from any app'],
+          ['🖥️', 'Multi-monitor support with display picker'],
+          ['📂', 'Native file picker — no drag & drop limitations'],
+          ['📋', 'Full clipboard access including images'],
+          ['🔒', 'Everything still runs locally — zero uploads'],
+          ['🔄', 'Auto-updates when new versions are released'],
+        ].map(([icon, text]) => (
+          <li class="flex gap-2">
+            <span class="shrink-0">{icon}</span>
+            <span>{text}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- Requirements -->
+    <section class="text-sm text-muted-foreground mb-6">
+      <h2 class="font-bold text-foreground mb-2">System requirements</h2>
+      <ul class="list-disc list-inside space-y-1">
+        <li>macOS 10.15 Catalina or later</li>
+        <li>Windows 10 version 1903 or later (64-bit)</li>
+        <li>Ubuntu 22.04 / Debian 11 or later</li>
+        <li>Screen Recording permission required on macOS for capture features</li>
+      </ul>
+    </section>
+
+    <p class="text-sm text-muted-foreground">
+      All releases and changelogs are on{' '}
+      <a href={RELEASES_PAGE} class="underline font-bold" target="_blank" rel="noopener">
+        GitHub Releases
+      </a>.
+      The web app at <a href="/" class="underline font-bold">goodwebtools.com</a> always works without installing anything.
+    </p>
+  </main>
+</Base>
+
+<script>
+  // Detect OS + architecture and highlight the right download
+  function detectPlatform(): string {
+    const ua = navigator.userAgent;
+    const platform = (navigator.platform || '').toLowerCase();
+
+    if (/mac/i.test(platform)) {
+      // Apple Silicon detection: check for arm in the UA or use canvas trick
+      const isArm =
+        /arm/i.test(ua) ||
+        // Chrome/Safari on Apple Silicon sometimes reports arm64
+        (typeof window !== 'undefined' && (window as any).__isAppleSilicon);
+      return isArm ? 'mac-arm' : 'mac-x64';
+    }
+    if (/win/i.test(platform)) return 'windows';
+    if (/linux/i.test(platform)) return 'linux';
+    return '';
+  }
+
+  const detected = detectPlatform();
+  if (!detected) return;
+
+  // Highlight matching card(s)
+  document.querySelectorAll<HTMLAnchorElement>('[data-platform]').forEach((card) => {
+    if (card.dataset.platform === detected) {
+      card.classList.add('ring-2', 'ring-foreground');
+    }
+  });
+
+  // Show recommended banner
+  const primaryCard = document.querySelector<HTMLAnchorElement>(`[data-platform="${detected}"]`);
+  if (primaryCard) {
+    const banner = document.getElementById('recommended-banner');
+    const content = document.getElementById('recommended-content');
+    if (banner && content) {
+      const label = primaryCard.querySelector('.font-bold')?.textContent ?? '';
+      const file = primaryCard.dataset.file ?? '';
+      content.innerHTML = `
+        <a href="${primaryCard.href}"
+           class="inline-flex items-center gap-3 border-2 border-border bg-foreground px-5 py-3 text-background font-bold shadow-brutal hover:shadow-brutal-lg transition-shadow">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download for ${label}
+        </a>
+        <p class="mt-2 text-xs text-muted-foreground">${file}</p>
+      `;
+      banner.classList.remove('hidden');
+    }
+  }
+</script>

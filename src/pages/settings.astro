@@ -1,0 +1,82 @@
+---
+import { ChevronRight, Settings as SettingsIcon } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import HotkeySettings from '@/islands/settings/HotkeySettings';
+import DesktopSettings from '@/islands/settings/DesktopSettings';
+import PermissionStatus from '@/islands/settings/PermissionStatus';
+import UpdateChecker from '@/islands/UpdateChecker';
+---
+
+<Base title="Settings" description="Configure GoodWebTools preferences, global hotkeys, and desktop features.">
+  <main class="page-container py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li>
+          <a href="/" class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">Home</a>
+        </li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">Settings</li>
+      </ol>
+    </nav>
+
+    <div class="mb-6 flex items-center gap-3">
+      <SettingsIcon className="h-8 w-8" />
+      <h1 class="text-3xl font-bold uppercase tracking-tight">Settings</h1>
+    </div>
+
+    <div class="max-w-4xl space-y-8">
+      <!-- Global Hotkeys Section -->
+      <section class="space-y-4">
+        <div class="border-2 border-border bg-background p-6 shadow-brutal">
+          <h2 class="mb-4 text-xl font-bold uppercase tracking-tight">Global Hotkeys</h2>
+          <p class="mb-6 text-sm text-muted-foreground">
+            Configure system-wide keyboard shortcuts. These hotkeys work even when GoodWebTools is not focused.
+            <strong class="text-foreground">Desktop app only</strong> — not available in browser.
+          </p>
+          <HotkeySettings client:load />
+        </div>
+      </section>
+
+      <!-- Desktop Preferences -->
+      <section class="space-y-4">
+        <div class="border-2 border-border bg-background p-6 shadow-brutal">
+          <h2 class="mb-4 text-xl font-bold uppercase tracking-tight">Desktop Preferences</h2>
+          <p class="mb-6 text-sm text-muted-foreground">
+            Screenshot format, tray behaviour, and startup options.
+            <strong class="text-foreground">Desktop app only.</strong>
+          </p>
+          <DesktopSettings client:load />
+        </div>
+      </section>
+
+      <!-- Permission Status -->
+      <section class="space-y-4">
+        <div class="border-2 border-border bg-background p-6 shadow-brutal">
+          <h2 class="mb-4 text-xl font-bold uppercase tracking-tight">Permissions</h2>
+          <p class="mb-6 text-sm text-muted-foreground">
+            System permissions required for capture and recording features.
+          </p>
+          <PermissionStatus client:load />
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <div class="border-2 border-border bg-muted p-6 shadow-brutal-sm opacity-50">
+          <h2 class="mb-2 text-xl font-bold uppercase tracking-tight">Appearance</h2>
+          <p class="text-sm text-muted-foreground">Theme and display preferences — coming soon</p>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <div class="border-2 border-border bg-background p-6 shadow-brutal">
+          <h2 class="mb-4 text-xl font-bold uppercase tracking-tight">Updates</h2>
+          <p class="mb-6 text-sm text-muted-foreground">
+            Check for and install GoodWebTools updates.
+            <strong class="text-foreground">Desktop app only.</strong>
+          </p>
+          <UpdateChecker client:load />
+        </div>
+      </section>
+    </div>
+  </main>
+</Base>

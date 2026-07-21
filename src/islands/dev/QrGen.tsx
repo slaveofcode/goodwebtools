@@ -4,7 +4,7 @@ import QRCode from 'qrcode';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { canvasSupportsType } from '@/tools/image/encode.lib';
 
 type ErrorLevel = 'L' | 'M' | 'Q' | 'H';

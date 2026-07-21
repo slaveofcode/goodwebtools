@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
 

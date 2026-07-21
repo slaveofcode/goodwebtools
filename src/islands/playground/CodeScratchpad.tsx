@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, X, FolderOpen, Save, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import MonacoEditor from './MonacoEditor';
 import { extensionToLanguage } from '@/tools/playground/language.lib';
 import { loadFiles, saveFiles, type ScratchFile } from '@/tools/playground/scratchpad.store';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
+import { fileService } from '@/services/file';
+import { clipboardService } from '@/services/clipboard';
 
 let counter = 0;
 const newId = () => `f${Date.now()}-${counter++}`;
@@ -16,8 +18,6 @@ function blankFile(): ScratchFile {
 export default function CodeScratchpad() {
   const [files, setFiles] = useState<ScratchFile[]>([]);
   const [activeId, setActiveId] = useState<string>('');
-  // File System Access handles, kept out of IndexedDB (not structured-clonable across our store).
-  const handles = useRef<Map<string, FileSystemFileHandle>>(new Map());
   const [ready, setReady] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -60,7 +60,6 @@ export default function CodeScratchpad() {
   };
 
   const closeFile = (id: string) => {
-    handles.current.delete(id);
     setFiles((fs) => {
       const next = fs.filter((f) => f.id !== id);
       const result = next.length ? next : [blankFile()];
@@ -70,37 +69,32 @@ export default function CodeScratchpad() {
   };
 
   const openFromDisk = async () => {
-    if ('showOpenFilePicker' in window) {
-      try {
-        const [handle] = await (window as unknown as { showOpenFilePicker: (o?: unknown) => Promise<FileSystemFileHandle[]> }).showOpenFilePicker();
-        const file = await handle.getFile();
-        const content = await file.text();
-        const f: ScratchFile = { id: newId(), name: file.name, language: extensionToLanguage(file.name), content };
-        handles.current.set(f.id, handle);
-        setFiles((fs) => [...fs, f]);
-        setActiveId(f.id);
-      } catch (e) {
-        if ((e as Error).name !== 'AbortError') alert('Could not open file.');
-      }
-    } else {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.onchange = async () => {
-        const file = input.files?.[0];
-        if (!file) return;
-        const content = await file.text();
-        const f: ScratchFile = { id: newId(), name: file.name, language: extensionToLanguage(file.name), content };
-        setFiles((fs) => [...fs, f]);
-        setActiveId(f.id);
+    try {
+      const files = await fileService.openFile({ multiple: false });
+      if (files.length === 0) return;
+
+      const file = files[0];
+      const content = await fileService.readFile(file);
+      const f: ScratchFile = {
+        id: newId(),
+        name: file.name,
+        language: extensionToLanguage(file.name),
+        content
       };
-      input.click();
+
+      setFiles((fs) => [...fs, f]);
+      setActiveId(f.id);
+    } catch (e) {
+      if ((e as Error).message !== 'No files selected' && (e as Error).name !== 'AbortError') {
+        alert('Could not open file.');
+      }
     }
   };
 
   const copyActive = async () => {
     if (!active) return;
     try {
-      await navigator.clipboard.writeText(active.content);
+      await clipboardService.writeText(active.content);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -110,27 +104,14 @@ export default function CodeScratchpad() {
 
   const saveActive = async () => {
     if (!active) return;
-    const handle = handles.current.get(active.id);
-    const blob = new Blob([active.content], { type: 'text/plain' });
-    if (handle) {
-      const writable = await (handle as unknown as { createWritable: () => Promise<{ write: (b: Blob) => Promise<void>; close: () => Promise<void> }> }).createWritable();
-      await writable.write(blob);
-      await writable.close();
-      return;
+    try {
+      await fileService.saveFile(active.content, {
+        suggestedName: active.name,
+      });
+    } catch (e) {
+      // User cancelled or error - no action needed
+      console.warn('Save cancelled or failed:', e);
     }
-    if ('showSaveFilePicker' in window) {
-      try {
-        const h = await (window as unknown as { showSaveFilePicker: (o?: unknown) => Promise<FileSystemFileHandle> }).showSaveFilePicker({ suggestedName: active.name });
-        handles.current.set(active.id, h);
-        const writable = await (h as unknown as { createWritable: () => Promise<{ write: (b: Blob) => Promise<void>; close: () => Promise<void> }> }).createWritable();
-        await writable.write(blob);
-        await writable.close();
-        return;
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return;
-      }
-    }
-    await downloadService.download(blob, active.name);
   };
 
   if (!ready) return <p className="text-sm text-muted-foreground">Loading…</p>;

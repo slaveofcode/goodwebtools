@@ -1,9 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, Circle, Square } from 'lucide-react';
+import { Download, Circle, Square, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
-import { downloadService } from '@/services/download.service';
+import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
+import { captureService } from '@/services/capture';
+import type { RecordingHandle, DisplayInfo } from '@/services/capture';
+import { isTauri } from '@/services/platform';
+import { hotkeyService } from '@/services/hotkey';
+
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  const buf = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  const chunkSize = 8192;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+  }
+  return `data:${blob.type};base64,${btoa(binary)}`;
+}
 
 function pickMime(): { mime: string; ext: string } {
   const candidates = [
@@ -19,84 +34,324 @@ function pickMime(): { mime: string; ext: string } {
 }
 
 export default function ScreenRecorder() {
-  const [supported, setSupported] = useState(true);
+  // Start as false for SSR, then check in useEffect
+  const [supported, setSupported] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [withMic, setWithMic] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [result, setResult] = useState<Blob | null>(null);
   const [resultUrl, setResultUrl] = useState('');
   const [error, setError] = useState('');
+  const [displays, setDisplays] = useState<DisplayInfo[]>([]);
+  const [selectedDisplay, setSelectedDisplay] = useState<number | undefined>();
+  const [format, setFormat] = useState<'webm' | 'mp4'>('webm');
+  const [fps, setFps] = useState<number>(10);
+  const [regionMode, setRegionMode] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState<{x: number; y: number; width: number; height: number} | null>(null);
+  const [hideWindow, setHideWindow] = useState(true); // Hide window during recording by default
 
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const streamsRef = useRef<MediaStream[]>([]);
+  const inTauriApp = isTauri();
+
+  const handleRef = useRef<RecordingHandle | null>(null);
   const extRef = useRef('webm');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const windowHiddenRef = useRef(false);
 
   useEffect(() => {
-    setSupported(typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia && typeof MediaRecorder !== 'undefined');
-  }, []);
+    // Check if recording is supported (browser or Tauri)
+    const browserSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia && typeof MediaRecorder !== 'undefined';
+
+    // In Tauri, we use native APIs (not browser APIs)
+    setSupported(inTauriApp || browserSupported);
+
+    // Load displays in Tauri
+    if (inTauriApp) {
+      captureService.listDisplays().then((displayList) => {
+        setDisplays(displayList);
+        const mainDisplay = displayList.find((d) => d.isMain);
+        if (mainDisplay) {
+          setSelectedDisplay(mainDisplay.id);
+        }
+      }).catch((err) => {
+        console.error('Failed to load displays:', err);
+      });
+    }
+  }, [inTauriApp]);
+
+  useEffect(() => {
+    // Listen for region selection event in Tauri
+    if (inTauriApp) {
+      (async () => {
+        const { listen } = await import('@tauri-apps/api/event');
+        const { invoke } = await import('@tauri-apps/api/core');
+        const unlisten = await listen<{x: number; y: number; width: number; height: number}>('region-selected', async (event) => {
+          console.log('[ScreenRecorder] Region selected:', event.payload);
+          setSelectedRegion(event.payload);
+          // Clean up overlay screenshot from localStorage
+          localStorage.removeItem('overlay-screenshot');
+          // Restore main window immediately
+          try {
+            await invoke('show_main_window');
+            console.log('[ScreenRecorder] Window restored after region selection');
+          } catch (err) {
+            console.error('[ScreenRecorder] Failed to restore window:', err);
+          }
+        });
+        return () => { unlisten(); };
+      })();
+    }
+  }, [inTauriApp]);
+
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
-  const stopTracks = () => {
-    streamsRef.current.forEach(s => s.getTracks().forEach(t => t.stop()));
-    streamsRef.current = [];
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-  };
+  // Register global hotkey for screen recording (Tauri only)
+  useEffect(() => {
+    if (!inTauriApp) return;
+
+    let hotkeyId: string | null = null;
+
+    const registerHotkey = async () => {
+      try {
+        hotkeyId = await hotkeyService.register(
+          'CommandOrControl+Shift+R',
+          () => {
+            console.log('[ScreenRecorder] Global hotkey triggered');
+            // Toggle recording: start if not recording, stop if recording
+            if (recording) {
+              stop();
+            } else if (!stopping) {
+              start();
+            }
+          },
+          'Toggle screen recording'
+        );
+        console.log('[ScreenRecorder] Registered global hotkey:', hotkeyId);
+      } catch (err) {
+        console.warn('[ScreenRecorder] Failed to register hotkey:', err);
+      }
+    };
+
+    registerHotkey();
+
+    return () => {
+      if (hotkeyId) {
+        hotkeyService.unregister(hotkeyId).catch(console.warn);
+      }
+    };
+  }, [recording, stopping]);
 
   const start = async () => {
     setError('');
     setResult(null);
-    try {
-      const display = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: 30 },
-        audio: true, // system/tab audio when the browser/OS allows it
-      });
-      const tracks = [...display.getVideoTracks(), ...display.getAudioTracks()];
-      streamsRef.current = [display];
 
-      if (withMic) {
-        try {
-          const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-          streamsRef.current.push(mic);
-          tracks.push(...mic.getAudioTracks());
-        } catch {
-          // mic denied — carry on with screen audio only
+    // Validate region selection if region mode is enabled
+    if (regionMode && !selectedRegion) {
+      setError('Please select a region first by clicking "Select Region"');
+      return;
+    }
+
+    try {
+      // Show countdown overlay on selected display
+      if (inTauriApp) {
+        const { invoke } = await import('@tauri-apps/api/core');
+
+        // Hide window if user enabled the option
+        if (hideWindow) {
+          console.log('[ScreenRecorder] Hiding window for cleaner capture');
+          await invoke('hide_main_window');
+          windowHiddenRef.current = true;
+          // hide() is instant; a couple of frames is enough for the compositor.
+          await new Promise(resolve => setTimeout(resolve, 60));
+        } else {
+          console.log('[ScreenRecorder] Keeping window visible (user preference)');
+          windowHiddenRef.current = false;
         }
+
+        // Get display info to calculate countdown position
+        const displayList = await captureService.listDisplays();
+        const targetDisplay = displayList.find(d => d.id === selectedDisplay) || displayList.find(d => d.isMain)!;
+
+        // Countdown window is 400x400 centered on display
+        const countdownBounds = {
+          x: Math.floor((targetDisplay.width - 400) / 2),
+          y: Math.floor((targetDisplay.height - 400) / 2),
+          width: 400,
+          height: 400,
+        };
+
+        console.log('[ScreenRecorder] Capturing countdown region:', countdownBounds, 'from display:', selectedDisplay);
+
+        // Capture just the countdown window region from the selected display
+        const screenshotBlob = await captureService.captureRegion({ ...countdownBounds, displayId: selectedDisplay });
+        const dataUrl = await blobToDataUrl(screenshotBlob);
+
+        // Store in localStorage for countdown to read
+        localStorage.setItem('countdown-screenshot', dataUrl);
+        console.log('[ScreenRecorder] Screenshot saved to localStorage');
+
+        await invoke('show_countdown', { displayId: selectedDisplay });
+
+        // Wait for countdown (5 seconds) + a bit extra
+        await new Promise(resolve => setTimeout(resolve, 5500));
+
+        // Clean up
+        localStorage.removeItem('countdown-screenshot');
+
+        // Keep window hidden during recording for cleaner capture
+        console.log('[ScreenRecorder] Window stays hidden during recording');
       }
 
-      const combined = new MediaStream(tracks);
-      const { mime, ext } = pickMime();
-      extRef.current = ext;
-      const recorder = new MediaRecorder(combined, mime ? { mimeType: mime } : undefined);
-      chunksRef.current = [];
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      recorder.onstop = () => {
-        stopTracks();
-        const blob = new Blob(chunksRef.current, { type: mime || 'video/webm' });
-        setResult(blob);
-        setResultUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(blob); });
-        setRecording(false);
-      };
-      // If the user stops sharing via the browser's own bar, end the recording.
-      display.getVideoTracks()[0].addEventListener('ended', () => {
-        if (recorder.state !== 'inactive') recorder.stop();
+      // Use selected format or browser-compatible format
+      const selectedFormat = inTauriApp ? format : pickMime().ext;
+      extRef.current = selectedFormat;
+
+      const recordBounds = regionMode && selectedRegion ? selectedRegion : undefined;
+      console.log('[ScreenRecorder] Starting recording with bounds:', recordBounds);
+
+      const handle = await captureService.startRecording({
+        format: selectedFormat,
+        includeAudio: withMic,
+        fps: fps,
+        displayId: inTauriApp ? selectedDisplay : undefined,
+        bounds: recordBounds,
       });
 
-      recorder.start();
-      recorderRef.current = recorder;
+      handleRef.current = handle;
       setRecording(true);
       setElapsed(0);
       timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
     } catch (e) {
-      stopTracks();
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      // Restore window on error (only if we hid it)
+      if (inTauriApp && windowHiddenRef.current) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('show_main_window');
+          windowHiddenRef.current = false;
+        } catch (err) {
+          console.error('[ScreenRecorder] Failed to restore window:', err);
+        }
+      }
       if (e instanceof DOMException && e.name === 'NotAllowedError') setError('Screen sharing was cancelled.');
       else setError(e instanceof Error ? e.message : 'Could not start screen recording.');
     }
   };
 
-  const stop = () => {
-    if (recorderRef.current && recorderRef.current.state !== 'inactive') recorderRef.current.stop();
+  const stop = async () => {
+    if (!handleRef.current) return;
+
+    setStopping(true);
+
+    try {
+      const blob = await captureService.stopRecording(handleRef.current);
+
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      // Restore window after recording stops (only if we hid it)
+      if (inTauriApp && windowHiddenRef.current) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('show_main_window');
+          windowHiddenRef.current = false;
+          console.log('[ScreenRecorder] Window restored after recording stopped');
+        } catch (err) {
+          console.error('[ScreenRecorder] Failed to restore window:', err);
+        }
+      }
+
+      setResult(blob);
+      setResultUrl(prev => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(blob);
+      });
+      setRecording(false);
+      handleRef.current = null;
+    } catch (e) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      const message = e instanceof Error ? e.message : 'Failed to stop recording.';
+
+      // Phase 1: Show captured frames count as info, not error
+      if (message.includes('Captured') && message.includes('frames')) {
+        setError(`✅ ${message}`);
+      } else {
+        setError(message);
+      }
+
+      setRecording(false);
+      handleRef.current = null;
+    } finally {
+      // Always restore window when stopping completes (only if we hid it)
+      if (inTauriApp && windowHiddenRef.current) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('show_main_window');
+          windowHiddenRef.current = false;
+        } catch (err) {
+          console.error('[ScreenRecorder] Failed to restore window in finally:', err);
+        }
+      }
+      setStopping(false);
+    }
+  };
+
+  const selectRegion = async () => {
+    if (!inTauriApp) return;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      // Hide main window so it doesn't cover the screen
+      await invoke('hide_main_window');
+
+      // hide() is instant; a couple of frames is enough for the compositor.
+      await new Promise(resolve => setTimeout(resolve, 60));
+
+      // Capture 50% resolution screenshot for overlay background (4× faster)
+      const screenshotBlob = await captureService.captureScreen({
+        format: 'jpg',
+        quality: 0.75,
+        scale: 0.5,
+        displayId: selectedDisplay,
+      });
+      const dataUrl = await blobToDataUrl(screenshotBlob);
+
+      // Send background to the overlay via event (localStorage is unreliable
+      // for the reused/persistent overlay window).
+      const { emit } = await import('@tauri-apps/api/event');
+      await emit('overlay-set-background', dataUrl);
+      console.log('[ScreenRecorder] Overlay background sent');
+
+      // Show overlay
+      await invoke('show_region_selector', { options: { displayId: selectedDisplay } });
+
+      // Failsafe: restore window after 30 seconds if still hidden
+      setTimeout(async () => {
+        try {
+          await invoke('show_main_window');
+          console.log('[ScreenRecorder] Failsafe: Window restored after timeout');
+        } catch (err) {
+          console.error('[ScreenRecorder] Failsafe failed:', err);
+        }
+      }, 30000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to show region selector');
+      // Restore window on error
+      try {
+        await invoke('show_main_window');
+      } catch (err) {
+        console.error('[ScreenRecorder] Failed to restore window:', err);
+      }
+    }
   };
 
   const download = () => {
@@ -120,10 +375,110 @@ export default function ScreenRecorder() {
         </p>
       </div>
 
+      {inTauriApp && displays.length > 0 && (
+        <div className="flex items-center gap-3">
+          <label htmlFor="display-select" className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            Screen
+          </label>
+          <select
+            id="display-select"
+            value={selectedDisplay}
+            disabled={recording || stopping}
+            onChange={(e) => setSelectedDisplay(Number(e.target.value))}
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50"
+          >
+            {displays.map((display) => (
+              <option key={display.id} value={display.id}>
+                {display.name} ({display.width}×{display.height}){display.isMain ? ' - Main' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {inTauriApp && (
+        <div className="flex items-center gap-3">
+          <label htmlFor="format-select" className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            Format
+          </label>
+          <select
+            id="format-select"
+            value={format}
+            disabled={recording || stopping}
+            onChange={(e) => setFormat(e.target.value as 'webm' | 'mp4')}
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50"
+          >
+            <option value="webm">WebM (VP9)</option>
+            <option value="mp4">MP4 (H.264)</option>
+          </select>
+        </div>
+      )}
+
+      {inTauriApp && (
+        <div className="flex items-center gap-3">
+          <label htmlFor="fps-select" className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            FPS
+          </label>
+          <select
+            id="fps-select"
+            value={fps}
+            disabled={recording || stopping}
+            onChange={(e) => setFps(Number(e.target.value))}
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm disabled:opacity-50"
+          >
+            <option value="5">Low (5 fps - smaller files)</option>
+            <option value="10">Medium (10 fps - balanced)</option>
+            <option value="15">High (15 fps - smooth)</option>
+            <option value="20">Very High (20 fps)</option>
+            <option value="30">Ultra (30 fps)</option>
+            <option value="35">Max Quality (30fps target - best quality)</option>
+            <option value="60">Max Speed (60 fps - lower quality, smooth)</option>
+          </select>
+        </div>
+      )}
+
+      {inTauriApp && (
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={regionMode}
+              disabled={recording || stopping}
+              onChange={e => {
+                setRegionMode(e.target.checked);
+                if (!e.target.checked) setSelectedRegion(null);
+              }}
+              className="h-4 w-4 accent-violet-600"
+            />
+            <span className="font-bold uppercase tracking-wide text-muted-foreground">Record specific region</span>
+          </label>
+
+          {regionMode && (
+            <div className="flex items-center gap-3">
+              <Button onClick={selectRegion} disabled={recording || stopping} variant="secondary" size="sm">
+                {selectedRegion ? 'Change Region' : 'Select Region'}
+              </Button>
+              {selectedRegion && (
+                <span className="text-sm text-muted-foreground font-mono">
+                  {selectedRegion.width} × {selectedRegion.height} at ({selectedRegion.x}, {selectedRegion.y})
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={withMic} disabled={recording} onChange={e => setWithMic(e.target.checked)} className="h-4 w-4 accent-violet-600" />
+        <input type="checkbox" checked={withMic} disabled={recording || stopping} onChange={e => setWithMic(e.target.checked)} className="h-4 w-4 accent-violet-600" />
         <span className="font-bold uppercase tracking-wide text-muted-foreground">Also record microphone</span>
       </label>
+
+      {inTauriApp && (
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={hideWindow} disabled={recording || stopping} onChange={e => setHideWindow(e.target.checked)} className="h-4 w-4 accent-violet-600" />
+          <span className="font-bold uppercase tracking-wide text-muted-foreground">Hide window during recording</span>
+        </label>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         {!recording ? (
@@ -131,16 +486,27 @@ export default function ScreenRecorder() {
             <Circle className="h-4 w-4 fill-red-500 text-red-500" />
             Start recording
           </Button>
+        ) : stopping ? (
+          <Button disabled variant="secondary" className="border-yellow-600 bg-yellow-600 text-white">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Saving...
+          </Button>
         ) : (
           <Button onClick={stop} variant="secondary" className="border-red-600 bg-red-600 text-white hover:bg-red-700">
             <Square className="h-4 w-4 fill-current" />
             Stop
           </Button>
         )}
-        {recording && (
+        {(recording || stopping) && (
           <span className="flex items-center gap-2 font-mono text-sm font-bold">
-            <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
-            {mmss}
+            {stopping ? (
+              <span className="text-yellow-600">Processing...</span>
+            ) : (
+              <>
+                <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                {mmss}
+              </>
+            )}
           </span>
         )}
       </div>

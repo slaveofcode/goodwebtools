@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Github, Bookmark, Info, ExternalLink } from 'lucide-react';
+import { Search, Github, Bookmark, Info, ExternalLink, Settings } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { CommandPalette } from './CommandPalette';
 import { Modal } from '@/components/ui/Modal';
@@ -48,6 +48,9 @@ export function ShellIsland() {
                   <kbd className="border-2 border-border bg-background px-1.5 py-0.5 text-xs">⌘K</kbd> to search
                 </span>
               </button>
+              <a href="/settings" aria-label="Settings" title="Settings" className={iconBtn}>
+                <Settings className="h-4 w-4" />
+              </a>
               <a href="/about" aria-label="About" title="About" className={iconBtn}>
                 <Info className="h-4 w-4" />
               </a>
