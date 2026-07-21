@@ -57,6 +57,8 @@ export default function ScreenRecorder() {
   const extRef = useRef('webm');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const windowHiddenRef = useRef(false);
+  // Always holds the latest toggle logic so the hotkey callback never goes stale.
+  const toggleRecordingRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     // Check if recording is supported (browser or Tauri)
@@ -105,41 +107,33 @@ export default function ScreenRecorder() {
 
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
-  // Register global hotkey for screen recording (Tauri only)
+  // Register the global recording hotkey ONCE (Tauri only). Registering it in an
+  // effect keyed on [recording, stopping] re-registered on every start/stop; the
+  // async unregister/register raced and could hit "already registered", silently
+  // killing the shortcut. A single stable registration that reads the ref fixes it.
   useEffect(() => {
     if (!inTauriApp) return;
 
     let hotkeyId: string | null = null;
-
-    const registerHotkey = async () => {
-      try {
-        hotkeyId = await hotkeyService.register(
-          'CommandOrControl+Shift+R',
-          () => {
-            console.log('[ScreenRecorder] Global hotkey triggered');
-            // Toggle recording: start if not recording, stop if recording
-            if (recording) {
-              stop();
-            } else if (!stopping) {
-              start();
-            }
-          },
-          'Toggle screen recording'
-        );
-        console.log('[ScreenRecorder] Registered global hotkey:', hotkeyId);
-      } catch (err) {
-        console.warn('[ScreenRecorder] Failed to register hotkey:', err);
-      }
-    };
-
-    registerHotkey();
+    hotkeyService
+      .register(
+        'CommandOrControl+Shift+R',
+        () => {
+          console.log('[ScreenRecorder] Recording hotkey triggered');
+          toggleRecordingRef.current();
+        },
+        'Toggle screen recording',
+      )
+      .then((id) => {
+        hotkeyId = id;
+        console.log('[ScreenRecorder] Registered recording hotkey:', id);
+      })
+      .catch((err) => console.warn('[ScreenRecorder] Failed to register hotkey:', err));
 
     return () => {
-      if (hotkeyId) {
-        hotkeyService.unregister(hotkeyId).catch(console.warn);
-      }
+      if (hotkeyId) hotkeyService.unregister(hotkeyId).catch(console.warn);
     };
-  }, [recording, stopping]);
+  }, [inTauriApp]);
 
   const start = async () => {
     setError('');
@@ -360,6 +354,12 @@ export default function ScreenRecorder() {
   const download = () => {
     if (!result) return;
     downloadService.download(result, `screen-recording.${extRef.current}`);
+  };
+
+  // Keep the hotkey's toggle current with live state (runs every render).
+  toggleRecordingRef.current = () => {
+    if (recording) stop();
+    else if (!stopping) start();
   };
 
   const mmss = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
