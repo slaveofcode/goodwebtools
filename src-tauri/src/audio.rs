@@ -76,13 +76,21 @@ impl AudioRecorder {
             output_path.display()
         );
 
+        // The captured audio is AAC, but the container dictates the codec:
+        // WebM (VP9) can't hold AAC — it needs Opus; MP4 takes AAC. Using the
+        // wrong codec makes the mux fail, leaving a silent video-only file.
+        let audio_codec = match format {
+            "mp4" => "aac",
+            _ => "libopus", // webm
+        };
+
         let status = Command::new(ffmpeg_path())
             .args([
                 "-y",
                 "-i", &video_path.to_string_lossy(),
                 "-i", &audio_path.to_string_lossy(),
                 "-c:v", "copy",
-                "-c:a", "aac",
+                "-c:a", audio_codec,
                 "-shortest",
                 &output_path.to_string_lossy(),
             ])

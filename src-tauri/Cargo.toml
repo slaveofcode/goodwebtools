@@ -41,6 +41,6 @@ default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 
 [lints.rust]
-# The `objc` crate's msg_send! macro expands to a `cfg(cargo-clippy)` check;
-# declare it as a known cfg so it doesn't trip the unexpected_cfgs lint.
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cargo-clippy)'] }
+# The `objc` crate's msg_send! macro references a `cargo-clippy` cfg that trips
+# the unexpected_cfgs lint — it's from the dependency macro, not our code.
+unexpected_cfgs = "allow"
