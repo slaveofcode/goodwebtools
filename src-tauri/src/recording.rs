@@ -7,7 +7,6 @@ use std::time::{Duration, Instant};
 use std::process::Command;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -29,6 +28,9 @@ pub struct RecordingHandle {
     pub format: Option<String>,
 }
 
+// Several fields snapshot the request for diagnostics/future use; the live
+// recording thread reads the Arc-shared ones. Keep them without warning.
+#[allow(dead_code)]
 struct RecordingState {
     handle: RecordingHandle,
     fps: u32,

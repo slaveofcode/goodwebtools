@@ -4,6 +4,9 @@ use tauri::{Emitter, Manager};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+// include_audio/system_audio are part of the frontend wire contract but only
+// used by the recording path, not by still capture — keep them, don't warn.
+#[allow(dead_code)]
 pub struct CaptureOptions {
     pub format: Option<String>,
     pub quality: Option<f32>,
@@ -35,6 +38,9 @@ pub struct Rectangle {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+// video_bitrate/audio_bitrate are accepted from the frontend but not yet
+// threaded into the encoder — reserved config, keep without warning.
+#[allow(dead_code)]
 pub struct RecordOptions {
     pub format: Option<String>,
     pub video_bitrate: Option<u32>,
@@ -82,8 +88,8 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32, bounds: Option<Rec
         // Determine capture region (full screen or bounded region)
         let (region_x, region_y, width, height) = if let Some(rect) = bounds {
             // Scale logical bounds to physical pixels for HiDPI displays
-            let x = ((rect.x as f64 * scale_x).max(0.0) as u32);
-            let y = ((rect.y as f64 * scale_y).max(0.0) as u32);
+            let x = (rect.x as f64 * scale_x).max(0.0) as u32;
+            let y = (rect.y as f64 * scale_y).max(0.0) as u32;
             let w = ((rect.width as f64 * scale_x) as u32).min(full_width - x);
             let h = ((rect.height as f64 * scale_y) as u32).min(full_height - y);
             println!("[Capture] Logical bounds: ({}, {}) {}x{} → Physical: ({}, {}) {}x{}",
@@ -212,7 +218,9 @@ pub fn capture_screen_fast(display_id: Option<i32>, fps: u32, bounds: Option<Rec
     return Err("Platform not supported".to_string());
 }
 
-// Internal helper for recording (not exposed as command)
+// Internal helper for recording (not exposed as command).
+// Kept as a reference PNG-capture path; recording uses capture_screen_fast.
+#[allow(dead_code)]
 pub fn capture_screen_internal(display_id: Option<i32>) -> Result<Vec<u8>, String> {
     #[cfg(target_os = "macos")]
     {

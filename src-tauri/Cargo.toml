@@ -39,3 +39,8 @@ xcap = "0.9.4"
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
+
+[lints.rust]
+# The `objc` crate's msg_send! macro expands to a `cfg(cargo-clippy)` check;
+# declare it as a known cfg so it doesn't trip the unexpected_cfgs lint.
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cargo-clippy)'] }
