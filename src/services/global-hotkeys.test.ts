@@ -104,11 +104,22 @@ describe('initializeGlobalHotkeys', () => {
     );
   });
 
+  it('registers the Cmd+Shift+R recording hotkey', async () => {
+    const { initializeGlobalHotkeys } = await import('./global-hotkeys');
+    await initializeGlobalHotkeys();
+    expect(mockHotkeyRegister).toHaveBeenCalledWith(
+      'CommandOrControl+Shift+R',
+      expect.any(Function),
+      expect.any(String)
+    );
+  });
+
   it('does not register twice if called again', async () => {
     const { initializeGlobalHotkeys } = await import('./global-hotkeys');
     await initializeGlobalHotkeys();
     await initializeGlobalHotkeys();
-    expect(mockHotkeyRegister).toHaveBeenCalledTimes(1);
+    // Two global hotkeys (screenshot + recording), registered once total.
+    expect(mockHotkeyRegister).toHaveBeenCalledTimes(2);
   });
 });
 

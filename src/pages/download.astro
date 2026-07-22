@@ -176,8 +176,9 @@ const platforms = [
   }
 
   const detected = detectPlatform();
-  if (!detected) return;
-
+  // Astro <script> is an ES module — a top-level `return` is a syntax error and
+  // breaks the whole build. Guard with a block instead.
+  if (detected) {
   // Highlight matching card(s)
   document.querySelectorAll<HTMLAnchorElement>('[data-platform]').forEach((card) => {
     if (card.dataset.platform === detected) {
@@ -208,5 +209,6 @@ const platforms = [
       `;
       banner.classList.remove('hidden');
     }
+  }
   }
 </script>

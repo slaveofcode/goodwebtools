@@ -4,6 +4,7 @@
 import { hotkeyService } from './hotkey';
 import { captureService } from './capture';
 import { isTauri } from './platform';
+import { toggleGlobalRecording } from './global-recording';
 
 let initialized = false;
 const registeredIds: string[] = [];
@@ -44,9 +45,18 @@ export async function initializeGlobalHotkeys() {
     );
     registeredIds.push(screenshotId);
 
-    // Screen Recorder toggle: Cmd+Shift+5
-    // Note: This will conflict with the in-tool hotkey, so we'll handle it differently
-    // For now, we'll let the in-tool hotkey handle recording since it needs state access
+    // Screen Recorder toggle: Cmd+Shift+R — truly global via the recording
+    // manager (single source of truth), so it starts/stops from any page.
+    console.log('[GlobalHotkeys] Registering recording hotkey...');
+    const recordingId = await hotkeyService.register(
+      'CommandOrControl+Shift+R',
+      async () => {
+        console.log('[GlobalHotkeys] Recording hotkey triggered');
+        await toggleGlobalRecording();
+      },
+      'Toggle screen recording'
+    );
+    registeredIds.push(recordingId);
 
     initialized = true;
     console.log('[GlobalHotkeys] Initialized', registeredIds.length, 'global hotkeys');
