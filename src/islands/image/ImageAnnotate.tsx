@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/Button';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
 import { downloadService } from '@/services/download';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import { takePendingImage } from '@/services/handoff';
 
 type Tool = 'select' | 'rect' | 'ellipse' | 'line' | 'arrow' | 'pencil' | 'highlighter' | 'text' | 'blur';
 
@@ -470,6 +471,15 @@ export default function ImageAnnotate() {
   };
 
   usePasteImage(f => onDrop([f]));
+
+  // If another tool handed us an image (via the annotator handoff), load it as
+  // the base image on mount. No-op when nothing is pending.
+  useEffect(() => {
+    takePendingImage().then(pending => {
+      if (pending) onDrop([new File([pending.blob], pending.name, { type: pending.blob.type })]);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pointer = (e: { clientX: number; clientY: number }) => {
     const c = viewRef.current!;
