@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -330,6 +330,17 @@ export const tools: ToolDef[] = [
     icon: Replace,
     summary: 'Convert images between PNG, JPEG, and WebP',
     load: () => import('@/islands/image/ImageConvert'),
+    status: 'stable'
+  },
+  {
+    id: 'monochrome',
+    name: 'Monochrome',
+    category: 'Image',
+    route: '/tools/monochrome',
+    keywords: ['monochrome', 'grayscale', 'greyscale', 'black and white', 'bw', 'threshold', 'dither', 'desaturate'],
+    icon: Contrast,
+    summary: 'Convert images to grayscale, black & white, or dithered',
+    load: () => import('@/islands/image/Monochrome'),
     status: 'stable'
   },
   {
