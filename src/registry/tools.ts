@@ -652,6 +652,17 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
+    id: 'db-diagram',
+    name: 'DB Diagram',
+    category: 'Draw',
+    route: '/tools/db-diagram',
+    keywords: ['dbml', 'erd', 'er diagram', 'schema', 'database', 'diagram', 'sql', 'tables'],
+    icon: Database,
+    summary: 'Design database schemas in DBML with a live ER diagram, SQL and image export',
+    load: () => import('@/islands/draw/DbDiagram'),
+    status: 'beta'
+  },
+  {
     id: 'signature',
     name: 'Signature Pad',
     category: 'Draw',
