@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
+import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
@@ -146,6 +147,7 @@ export default function PortraitBlur() {
               Download PNG
             </Button>
             <CopyImageButton blob={result} />
+          <EditInAnnotatorButton blob={result} filename={file.name.replace(/\.[^.]+$/, '') + '-portrait.png'} />
           </div>
         </div>
       )}

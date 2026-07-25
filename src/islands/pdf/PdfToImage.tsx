@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
+import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { openPdfRenderer, type PdfRenderer } from '@/tools/pdf/render.lib';
 
 const WINDOW = 5;
@@ -237,12 +238,15 @@ export default function PdfToImage() {
                     {page.width}×{page.height}
                   </span>
                 </span>
-                <button
-                  onClick={() => downloadService.download(page.blob, `${baseName}-${page.pageNumber}.${ext}`)}
-                  className="flex shrink-0 items-center gap-1 border-2 border-border bg-accent px-2 py-1 text-xs font-bold uppercase text-accent-foreground shadow-brutal-sm press-brutal"
-                >
-                  <Download className="h-3 w-3" /> {ext.toUpperCase()}
-                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    onClick={() => downloadService.download(page.blob, `${baseName}-${page.pageNumber}.${ext}`)}
+                    className="flex shrink-0 items-center gap-1 border-2 border-border bg-accent px-2 py-1 text-xs font-bold uppercase text-accent-foreground shadow-brutal-sm press-brutal"
+                  >
+                    <Download className="h-3 w-3" /> {ext.toUpperCase()}
+                  </button>
+                  <EditInAnnotatorButton blob={page.blob} filename={`${baseName}-${page.pageNumber}.${ext}`} />
+                </div>
               </div>
             </div>
           ))}

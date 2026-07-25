@@ -4,6 +4,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
+import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
@@ -105,6 +106,7 @@ export default function BackgroundRemove() {
               Download PNG
             </Button>
             <CopyImageButton blob={result} />
+            <EditInAnnotatorButton blob={result} filename={(srcName.replace(/\.[^.]+$/, '') || 'image') + '-no-bg.png'} />
           </div>
         </div>
       )}

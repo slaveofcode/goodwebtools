@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
+import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { downloadService } from '@/services/download';
 import { canvasSupportsType } from '@/tools/image/encode.lib';
 
@@ -167,6 +168,7 @@ export default function QrGen() {
           </div>
 
           <CopyImageButton blob={ready ? toPngBlob : null} disabled={!ready} />
+          <EditInAnnotatorButton blob={ready ? toPngBlob : null} filename="qrcode.png" disabled={!ready} />
         </div>
       </div>
     </div>
