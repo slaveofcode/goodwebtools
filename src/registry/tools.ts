@@ -333,6 +333,17 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
+    id: 'svg-viewer',
+    name: 'SVG Viewer & Converter',
+    category: 'Image',
+    route: '/tools/svg-viewer',
+    keywords: ['svg', 'viewer', 'vector', 'rasterize', 'convert', 'png', 'jpeg', 'webp'],
+    icon: FileImage,
+    summary: 'View SVG files and export them as PNG, JPEG, or WebP',
+    load: () => import('@/islands/image/SvgViewer'),
+    status: 'stable'
+  },
+  {
     id: 'monochrome',
     name: 'Monochrome',
     category: 'Image',
