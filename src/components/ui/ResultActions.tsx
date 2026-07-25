@@ -2,6 +2,7 @@ import { Download } from 'lucide-react';
 import { downloadService } from '@/services/download';
 import { Button } from './Button';
 import { CopyImageButton } from './CopyImageButton';
+import { EditInAnnotatorButton } from './EditInAnnotatorButton';
 
 export interface ResultActionsProps {
   blob: Blob | null;
@@ -24,6 +25,7 @@ export function ResultActions({ blob, filename, disabled }: ResultActionsProps) 
         Download {filename}
       </Button>
       {isImage && <CopyImageButton blob={blob} disabled={disabled} />}
+      {isImage && <EditInAnnotatorButton blob={blob} filename={filename} disabled={disabled} />}
     </div>
   );
 }
