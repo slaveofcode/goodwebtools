@@ -40,6 +40,7 @@ export default function DbDiagram() {
   const [nodes, setNodes] = useState<Record<string, unknown>[]>([]);
   const [edges, setEdges] = useState<Record<string, unknown>[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const positions = useRef<Record<string, { x: number; y: number }>>({});
   const loaded = useRef(false);
 
@@ -106,16 +107,49 @@ export default function DbDiagram() {
     [RF],
   );
 
+  const onNodeMouseEnter = useCallback((_e: unknown, node: { id: string }) => setHoveredId(node.id), []);
+  const onNodeMouseLeave = useCallback(() => setHoveredId(null), []);
+
   const diagram = useMemo(() => {
     if (!RF) return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading diagram…</div>;
     const { ReactFlow, Background, Controls, MiniMap } = RF;
+
+    // Derive hover emphasis: connected edges + neighbour tables pop; the rest dim.
+    const connEdges = hoveredId
+      ? (edges as { id: string; source: string; target: string; sourceHandle: string; targetHandle: string }[]).filter(
+          (e) => e.source === hoveredId || e.target === hoveredId,
+        )
+      : [];
+    const neighbours = new Set<string>();
+    const hotByTable: Record<string, Set<string>> = {};
+    for (const e of connEdges) {
+      neighbours.add(e.source);
+      neighbours.add(e.target);
+      (hotByTable[e.source] ??= new Set()).add(e.sourceHandle);
+      (hotByTable[e.target] ??= new Set()).add(e.targetHandle);
+    }
+    const connIds = new Set(connEdges.map((e) => e.id));
+
+    const dispNodes = (nodes as { id: string; data: Record<string, unknown> }[]).map((n) => {
+      if (!hoveredId) return n;
+      const emphasis = n.id === hoveredId ? 'active' : neighbours.has(n.id) ? 'neighbor' : 'dim';
+      return { ...n, data: { ...n.data, emphasis, hotColumns: hotByTable[n.id] } };
+    });
+    const dispEdges = (edges as { id: string; data?: Record<string, unknown> }[]).map((e) => {
+      if (!hoveredId) return e;
+      const emphasis = connIds.has(e.id) ? 'active' : 'dim';
+      return { ...e, data: { ...(e.data ?? {}), emphasis } };
+    });
+
     return (
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
+        nodes={dispNodes}
+        edges={dispEdges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
+        onNodeMouseEnter={onNodeMouseEnter}
+        onNodeMouseLeave={onNodeMouseLeave}
         fitView
         minZoom={0.1}
         proOptions={{ hideAttribution: true }}
@@ -125,7 +159,7 @@ export default function DbDiagram() {
         <MiniMap pannable zoomable />
       </ReactFlow>
     );
-  }, [RF, nodes, edges, onNodesChange]);
+  }, [RF, nodes, edges, onNodesChange, hoveredId, onNodeMouseEnter, onNodeMouseLeave]);
 
   return (
     <div className="space-y-3">
