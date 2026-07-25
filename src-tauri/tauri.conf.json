@@ -68,7 +68,7 @@
   "plugins": {
     "updater": {
       "active": true,
-      "pubkey": "RWTovWhUkpeUMzechbe21jKECb/8ZGsH7Amlto0RHbyQaXK2Jvz6QCuy",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDFGOEQzOUI5NkYzOEUzMgpSV1F5anZPV205UDRBUjk1bjJCM3pZZGQ1V2hjQzUzS2c0QzN4ZmkyWG9hTSswaDZ6MEFHWklCRgo=",
       "endpoints": [
         "https://github.com/slaveofcode/goodwebtools/releases/latest/download/latest.json"
       ],

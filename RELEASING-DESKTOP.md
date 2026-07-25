@@ -19,29 +19,22 @@ auto-updater can verify downloads haven't been tampered with.
 
 ### Generating the keypair (one-time, already done)
 
-The keypair was generated once and the public key is already committed to
+The keypair was generated with the **Tauri signer** (not OpenSSL — Tauri's
+updater requires its own minisign key format), and the public key is committed to
 `src-tauri/tauri.conf.json` under `plugins.updater.pubkey`.
 
 If you ever need to regenerate it:
 
 ```bash
-# 1. Generate an Ed25519 private key
-openssl genpkey -algorithm ed25519 -out ~/.tauri/goodwebtools_priv.pem
+# Generate a Tauri updater keypair (empty password → set the CI secret to "")
+npm run tauri -- signer generate --password "" -w ~/.tauri/gwt-updater.key --force
 
-# 2. Extract the public key
-openssl pkey -in ~/.tauri/goodwebtools_priv.pem -pubout -out ~/.tauri/goodwebtools_pub.pem
+# Files produced:
+#   ~/.tauri/gwt-updater.key      → the PRIVATE key (goes in TAURI_SIGNING_PRIVATE_KEY)
+#   ~/.tauri/gwt-updater.key.pub  → the PUBLIC key
 
-# 3. Build the minisign public key (magic "Ed" + 8-byte key-id + 32-byte pk)
-python3 - << 'EOF'
-import base64, os
-spki = base64.b64decode(open('/Users/tada-adityakresna/.tauri/goodwebtools_pub.pem')
-    .read().replace('-----BEGIN PUBLIC KEY-----','').replace('-----END PUBLIC KEY-----','').strip())
-raw_pk = spki[12:]  # skip 12-byte SPKI header
-minisign_pub = base64.b64encode(b'Ed' + os.urandom(8) + raw_pk).decode()
-print(f'pubkey: {minisign_pub}')
-EOF
-
-# 4. Put the printed pubkey into src-tauri/tauri.conf.json → plugins.updater.pubkey
+# Put the .pub file's contents into tauri.conf.json → plugins.updater.pubkey:
+cat ~/.tauri/gwt-updater.key.pub
 ```
 
 ### Adding the private key to GitHub Actions
@@ -49,20 +42,19 @@ EOF
 The CI release workflow (`release.yml`) needs the private key to sign each
 platform artifact. Store it as a GitHub Actions secret:
 
-1. Export the private key as base64:
+1. The private key is just the contents of the generated key file:
 
    ```bash
-   openssl pkey -in ~/.tauri/goodwebtools_priv.pem -traditional | openssl base64 -A
+   gh secret set TAURI_SIGNING_PRIVATE_KEY --repo <owner>/<repo> < ~/.tauri/gwt-updater.key
+   printf '' | gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD --repo <owner>/<repo>
    ```
 
-2. Go to **GitHub → repo → Settings → Secrets and variables → Actions → New repository secret**.
-
-3. Create the following secrets:
+   Or via the UI (**Settings → Secrets and variables → Actions**):
 
    | Secret name                        | Value                                      |
    |------------------------------------|--------------------------------------------|
-   | `TAURI_SIGNING_PRIVATE_KEY`        | Base64 string from step 1                  |
-   | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Leave empty (no password was set)        |
+   | `TAURI_SIGNING_PRIVATE_KEY`        | Full contents of `~/.tauri/gwt-updater.key`|
+   | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Empty (the key was generated without one)|
 
 4. The `release.yml` workflow already reads these via:
 
