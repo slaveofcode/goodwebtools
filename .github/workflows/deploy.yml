@@ -25,6 +25,9 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Build
+        env:
+          # The asset-heavy Astro build OOMs on the default ~2 GB Node heap.
+          NODE_OPTIONS: --max-old-space-size=8192
         run: npm run build
 
       - name: Deploy to Cloudflare Pages
