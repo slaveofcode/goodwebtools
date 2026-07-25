@@ -5,6 +5,11 @@ import { loadDoc, saveDoc, type DbDiagramDoc } from '@/tools/draw/dbdiagram.stor
 import TableNode from './db-diagram/TableNode';
 import RelationEdge from './db-diagram/RelationEdge';
 import { Alert } from '@/components/ui/Alert';
+import { Button } from '@/components/ui/Button';
+import { ImageResult } from '@/components/ui/ImageResult';
+import { downloadService } from '@/services/download';
+import { exportSql, DIALECTS, type Dialect } from '@/tools/draw/sql-export.lib';
+import { exportDiagramImage, type ImageFormat } from '@/tools/draw/diagram-image.lib';
 import '@xyflow/react/dist/style.css';
 
 const SEED = `Table users {
@@ -41,6 +46,13 @@ export default function DbDiagram() {
   const [edges, setEdges] = useState<Record<string, unknown>[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [dialect, setDialect] = useState<Dialect>('postgres');
+  const [sql, setSql] = useState<string | null>(null);
+  const [sqlErr, setSqlErr] = useState<string | null>(null);
+  const [imgFormat, setImgFormat] = useState<ImageFormat>('png');
+  const [imgScale, setImgScale] = useState(2);
+  const [imgBlob, setImgBlob] = useState<Blob | null>(null);
+  const flowWrapper = useRef<HTMLDivElement | null>(null);
   const positions = useRef<Record<string, { x: number; y: number }>>({});
   const loaded = useRef(false);
 
@@ -107,6 +119,24 @@ export default function DbDiagram() {
     [RF],
   );
 
+  const runSqlExport = () => {
+    setSqlErr(null);
+    setSql(null);
+    try {
+      setSql(exportSql(dbml, dialect));
+    } catch (e) {
+      setSqlErr(e instanceof Error ? e.message : 'Export failed');
+    }
+  };
+
+  const runImageExport = async () => {
+    // Export the whole diagram: html-to-image captures the react-flow viewport DOM.
+    const el = flowWrapper.current?.querySelector('.react-flow__viewport') as HTMLElement | null;
+    const target = el ?? flowWrapper.current;
+    if (!target) return;
+    setImgBlob(await exportDiagramImage(target, { format: imgFormat, scale: imgScale }));
+  };
+
   const onNodeMouseEnter = useCallback((_e: unknown, node: { id: string }) => setHoveredId(node.id), []);
   const onNodeMouseLeave = useCallback(() => setHoveredId(null), []);
 
@@ -167,6 +197,33 @@ export default function DbDiagram() {
         Write your schema in <a href="https://dbml.dbdiagram.io/docs/" target="_blank" rel="noopener noreferrer" className="font-bold underline underline-offset-2">DBML</a> on the left; the ER diagram updates live. Drag tables to arrange them — your layout and schema are saved in your browser.
       </p>
 
+      <div className="flex flex-wrap items-end gap-4 border-2 border-border bg-muted/40 p-3">
+        <div className="space-y-1">
+          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">SQL dialect</span>
+          <select value={dialect} onChange={(e) => setDialect(e.target.value as Dialect)} className="border-2 border-border bg-background px-2 py-1.5 text-sm">
+            {DIALECTS.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
+          </select>
+        </div>
+        <Button onClick={runSqlExport} disabled={!!error}>Export SQL</Button>
+
+        <div className="space-y-1">
+          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">Image</span>
+          <select value={imgFormat} onChange={(e) => setImgFormat(e.target.value as ImageFormat)} className="border-2 border-border bg-background px-2 py-1.5 text-sm">
+            <option value="png">PNG</option>
+            <option value="jpeg">JPEG</option>
+            <option value="webp">WebP</option>
+            <option value="svg">SVG</option>
+          </select>
+        </div>
+        <div className="space-y-1">
+          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">Scale</span>
+          <select value={imgScale} onChange={(e) => setImgScale(Number(e.target.value))} className="border-2 border-border bg-background px-2 py-1.5 text-sm">
+            <option value={1}>1×</option><option value={2}>2×</option><option value={3}>3×</option>
+          </select>
+        </div>
+        <Button variant="secondary" onClick={runImageExport}>Export image</Button>
+      </div>
+
       {error && <Alert variant="error">{error}</Alert>}
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[2fr_3fr]">
@@ -176,8 +233,20 @@ export default function DbDiagram() {
           spellCheck={false}
           className="h-[75vh] w-full resize-none border-2 border-border bg-background p-3 font-mono text-xs leading-relaxed"
         />
-        <div className="h-[75vh] w-full overflow-hidden border-2 border-border">{diagram}</div>
+        <div ref={flowWrapper} className="h-[75vh] w-full overflow-hidden border-2 border-border">{diagram}</div>
       </div>
+
+      {sqlErr && <Alert variant="error">{sqlErr}</Alert>}
+      {sql && (
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => navigator.clipboard?.writeText(sql)}>Copy SQL</Button>
+            <Button variant="secondary" onClick={() => downloadService.download(new Blob([sql], { type: 'text/sql' }), `schema-${dialect}.sql`)}>Download .sql</Button>
+          </div>
+          <pre className="max-h-[40vh] overflow-auto border-2 border-border bg-background p-3 font-mono text-xs">{sql}</pre>
+        </div>
+      )}
+      {imgBlob && <ImageResult blob={imgBlob} filename={`db-diagram.${imgFormat === 'jpeg' ? 'jpg' : imgFormat}`} />}
     </div>
   );
 }
