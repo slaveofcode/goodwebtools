@@ -5,6 +5,10 @@ import {
   continueScreenshotWorkflow,
   handleGlobalScreenshot,
 } from '@/services/global-hotkeys';
+import {
+  consumePendingRecordingSelect,
+  startRecordingOnDisplay,
+} from '@/services/global-recording';
 
 /**
  * Initializes global hotkeys for the desktop app.
@@ -20,11 +24,18 @@ export function GlobalHotkeyInit() {
     (async () => {
       const { listen } = await import('@tauri-apps/api/event');
 
-      // Screen selected from the multi-display picker window
+      // Screen selected from the multi-display picker window. The picker is
+      // shared, so route to recording when a recording pick is pending,
+      // otherwise fall through to the screenshot workflow.
       unlisten = await listen<number>('screen-selected', (event) => {
         const displayId = event.payload;
-        console.log('[GlobalHotkeyInit] Screen selected, continuing workflow with display:', displayId);
-        continueScreenshotWorkflow(displayId);
+        if (consumePendingRecordingSelect()) {
+          console.log('[GlobalHotkeyInit] Screen selected for recording:', displayId);
+          startRecordingOnDisplay(displayId);
+        } else {
+          console.log('[GlobalHotkeyInit] Screen selected for screenshot:', displayId);
+          continueScreenshotWorkflow(displayId);
+        }
       });
 
       // Tray "Take Screenshot" menu item → same workflow as the keyboard hotkey

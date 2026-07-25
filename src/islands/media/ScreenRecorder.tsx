@@ -5,9 +5,15 @@ import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { captureService } from '@/services/capture';
-import type { RecordingHandle, DisplayInfo } from '@/services/capture';
+import type { DisplayInfo } from '@/services/capture';
 import { isTauri } from '@/services/platform';
-import { hotkeyService } from '@/services/hotkey';
+import {
+  startManaged,
+  stopManaged,
+  isRecording as isRecordingGlobal,
+  getRecordingStartedAt,
+  saveRecorderSettings,
+} from '@/services/global-recording';
 
 async function blobToDataUrl(blob: Blob): Promise<string> {
   const buf = await blob.arrayBuffer();
@@ -53,12 +59,8 @@ export default function ScreenRecorder() {
 
   const inTauriApp = isTauri();
 
-  const handleRef = useRef<RecordingHandle | null>(null);
   const extRef = useRef('webm');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const windowHiddenRef = useRef(false);
-  // Always holds the latest toggle logic so the hotkey callback never goes stale.
-  const toggleRecordingRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     // Check if recording is supported (browser or Tauri)
@@ -107,33 +109,72 @@ export default function ScreenRecorder() {
 
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
-  // Register the global recording hotkey ONCE (Tauri only). Registering it in an
-  // effect keyed on [recording, stopping] re-registered on every start/stop; the
-  // async unregister/register raced and could hit "already registered", silently
-  // killing the shortcut. A single stable registration that reads the ref fixes it.
+  // Recording is owned by the global recording manager (so ⌘⇧R can drive it from
+  // anywhere). Mirror its state into the UI and pick up results it produces —
+  // whether a recording was started here or via the global hotkey.
+  useEffect(() => {
+    // Tick elapsed from the manager's real start time (accurate even if we
+    // navigated to this page mid-recording, and immune to background throttling).
+    const startTimer = () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      const tick = () => {
+        const s = getRecordingStartedAt();
+        setElapsed(s ? Math.max(0, Math.floor((Date.now() - s) / 1000)) : 0);
+      };
+      tick();
+      timerRef.current = setInterval(tick, 1000);
+    };
+    const stopTimer = () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+
+    const onState = (e: Event) => {
+      const rec = (e as CustomEvent).detail?.recording as boolean;
+      setRecording(rec);
+      if (rec) {
+        startTimer();
+      } else {
+        stopTimer();
+        setStopping(false);
+      }
+    };
+    const onResult = (e: Event) => {
+      const blob = (e as CustomEvent).detail?.blob as Blob | undefined;
+      if (!blob) return;
+      setResult(blob);
+      setResultUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(blob);
+      });
+    };
+    window.addEventListener('gwt:recording-state', onState);
+    window.addEventListener('gwt:recording-result', onResult);
+    // Reflect any recording already in progress (e.g. started via hotkey before
+    // this page mounted) — and resume the ticking timer from its real start.
+    if (isRecordingGlobal()) {
+      setRecording(true);
+      startTimer();
+    }
+    return () => {
+      window.removeEventListener('gwt:recording-state', onState);
+      window.removeEventListener('gwt:recording-result', onResult);
+    };
+  }, []);
+
+  // Persist settings so a hotkey-triggered recording uses the same configuration.
   useEffect(() => {
     if (!inTauriApp) return;
-
-    let hotkeyId: string | null = null;
-    hotkeyService
-      .register(
-        'CommandOrControl+Shift+R',
-        () => {
-          console.log('[ScreenRecorder] Recording hotkey triggered');
-          toggleRecordingRef.current();
-        },
-        'Toggle screen recording',
-      )
-      .then((id) => {
-        hotkeyId = id;
-        console.log('[ScreenRecorder] Registered recording hotkey:', id);
-      })
-      .catch((err) => console.warn('[ScreenRecorder] Failed to register hotkey:', err));
-
-    return () => {
-      if (hotkeyId) hotkeyService.unregister(hotkeyId).catch(console.warn);
-    };
-  }, [inTauriApp]);
+    saveRecorderSettings({
+      displayId: selectedDisplay,
+      format,
+      fps,
+      includeAudio: withMic,
+      hideWindow,
+    });
+  }, [inTauriApp, selectedDisplay, format, fps, withMic, hideWindow]);
 
   const start = async () => {
     setError('');
@@ -146,158 +187,42 @@ export default function ScreenRecorder() {
     }
 
     try {
-      // Show countdown overlay on selected display
-      if (inTauriApp) {
-        const { invoke } = await import('@tauri-apps/api/core');
-
-        // Hide window if user enabled the option.
-        // Use MINIMIZE (not hide) for recording: the window stays hidden for the
-        // whole session, and a minimized window can be restored from the dock —
-        // a fully-hidden one can't, which locked the user out mid-recording.
-        if (hideWindow) {
-          console.log('[ScreenRecorder] Minimizing window for cleaner capture');
-          await invoke('minimize_main_window');
-          windowHiddenRef.current = true;
-          // Let the minimize animation settle before capture begins.
-          await new Promise(resolve => setTimeout(resolve, 250));
-        } else {
-          console.log('[ScreenRecorder] Keeping window visible (user preference)');
-          windowHiddenRef.current = false;
-        }
-
-        // Get display info to calculate countdown position
-        const displayList = await captureService.listDisplays();
-        const targetDisplay = displayList.find(d => d.id === selectedDisplay) || displayList.find(d => d.isMain)!;
-
-        // Countdown window is 400x400 centered on display
-        const countdownBounds = {
-          x: Math.floor((targetDisplay.width - 400) / 2),
-          y: Math.floor((targetDisplay.height - 400) / 2),
-          width: 400,
-          height: 400,
-        };
-
-        console.log('[ScreenRecorder] Capturing countdown region:', countdownBounds, 'from display:', selectedDisplay);
-
-        // Capture just the countdown window region from the selected display
-        const screenshotBlob = await captureService.captureRegion({ ...countdownBounds, displayId: selectedDisplay });
-        const dataUrl = await blobToDataUrl(screenshotBlob);
-
-        // Store in localStorage for countdown to read
-        localStorage.setItem('countdown-screenshot', dataUrl);
-        console.log('[ScreenRecorder] Screenshot saved to localStorage');
-
-        await invoke('show_countdown', { displayId: selectedDisplay });
-
-        // Wait for countdown (5 seconds) + a bit extra
-        await new Promise(resolve => setTimeout(resolve, 5500));
-
-        // Clean up
-        localStorage.removeItem('countdown-screenshot');
-
-        // Keep window hidden during recording for cleaner capture
-        console.log('[ScreenRecorder] Window stays hidden during recording');
-      }
-
       // Use selected format or browser-compatible format
       const selectedFormat = inTauriApp ? format : pickMime().ext;
       extRef.current = selectedFormat;
 
       const recordBounds = regionMode && selectedRegion ? selectedRegion : undefined;
-      console.log('[ScreenRecorder] Starting recording with bounds:', recordBounds);
 
-      const handle = await captureService.startRecording({
-        format: selectedFormat,
+      // The global recording manager owns state, the window (minimize/restore),
+      // and the produced blob — recording state and the result come back to this
+      // component via the gwt:recording-* events wired above.
+      await startManaged({
+        format: selectedFormat as 'webm' | 'mp4',
+        fps,
         includeAudio: withMic,
-        fps: fps,
         displayId: inTauriApp ? selectedDisplay : undefined,
         bounds: recordBounds,
+        manageWindow: inTauriApp && hideWindow,
+        // 5s countdown on the target display (shows which screen, gives prep time).
+        countdown: inTauriApp,
       });
-
-      handleRef.current = handle;
-      setRecording(true);
-      setElapsed(0);
-      timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
     } catch (e) {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      // Restore window on error (only if we hid it)
-      if (inTauriApp && windowHiddenRef.current) {
-        try {
-          const { invoke } = await import('@tauri-apps/api/core');
-          await invoke('show_main_window');
-          windowHiddenRef.current = false;
-        } catch (err) {
-          console.error('[ScreenRecorder] Failed to restore window:', err);
-        }
-      }
       if (e instanceof DOMException && e.name === 'NotAllowedError') setError('Screen sharing was cancelled.');
       else setError(e instanceof Error ? e.message : 'Could not start screen recording.');
     }
   };
 
   const stop = async () => {
-    if (!handleRef.current) return;
-
+    if (!isRecordingGlobal()) return;
     setStopping(true);
-
     try {
-      const blob = await captureService.stopRecording(handleRef.current);
-
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-
-      // Restore window after recording stops (only if we hid it)
-      if (inTauriApp && windowHiddenRef.current) {
-        try {
-          const { invoke } = await import('@tauri-apps/api/core');
-          await invoke('show_main_window');
-          windowHiddenRef.current = false;
-          console.log('[ScreenRecorder] Window restored after recording stopped');
-        } catch (err) {
-          console.error('[ScreenRecorder] Failed to restore window:', err);
-        }
-      }
-
-      setResult(blob);
-      setResultUrl(prev => {
-        if (prev) URL.revokeObjectURL(prev);
-        return URL.createObjectURL(blob);
-      });
-      setRecording(false);
-      handleRef.current = null;
+      // Result + recording=false arrive via the gwt:recording-* events.
+      await stopManaged();
     } catch (e) {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-
       const message = e instanceof Error ? e.message : 'Failed to stop recording.';
-
-      // Phase 1: Show captured frames count as info, not error
-      if (message.includes('Captured') && message.includes('frames')) {
-        setError(`✅ ${message}`);
-      } else {
-        setError(message);
-      }
-
-      setRecording(false);
-      handleRef.current = null;
-    } finally {
-      // Always restore window when stopping completes (only if we hid it)
-      if (inTauriApp && windowHiddenRef.current) {
-        try {
-          const { invoke } = await import('@tauri-apps/api/core');
-          await invoke('show_main_window');
-          windowHiddenRef.current = false;
-        } catch (err) {
-          console.error('[ScreenRecorder] Failed to restore window in finally:', err);
-        }
-      }
+      // A "Captured N frames" message is informational, not a hard error.
+      if (message.includes('Captured') && message.includes('frames')) setError(`✅ ${message}`);
+      else setError(message);
       setStopping(false);
     }
   };
@@ -342,8 +267,9 @@ export default function ScreenRecorder() {
       }, 30000);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to show region selector');
-      // Restore window on error
+      // Restore window on error (re-import: the try-scoped invoke isn't visible here)
       try {
+        const { invoke } = await import('@tauri-apps/api/core');
         await invoke('show_main_window');
       } catch (err) {
         console.error('[ScreenRecorder] Failed to restore window:', err);
@@ -354,12 +280,6 @@ export default function ScreenRecorder() {
   const download = () => {
     if (!result) return;
     downloadService.download(result, `screen-recording.${extRef.current}`);
-  };
-
-  // Keep the hotkey's toggle current with live state (runs every render).
-  toggleRecordingRef.current = () => {
-    if (recording) stop();
-    else if (!stopping) start();
   };
 
   const mmss = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
