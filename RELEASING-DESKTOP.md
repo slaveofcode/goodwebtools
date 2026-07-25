@@ -72,6 +72,33 @@ platform artifact. Store it as a GitHub Actions secret:
      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
    ```
 
+### GitHub Actions secrets — full reference
+
+`release.yml` references the secrets below. Set them under **repo → Settings →
+Secrets and variables → Actions**. The **updater** secrets are required for a
+usable release; the **Apple** secrets are optional but recommended for macOS
+(without them, macOS builds are unsigned/un-notarized and Gatekeeper warns users).
+
+| Secret | Required | Purpose | How to obtain |
+|--------|----------|---------|---------------|
+| `TAURI_SIGNING_PRIVATE_KEY` | **Yes** | Signs each artifact so the auto-updater can verify it | `openssl pkey -in ~/.tauri/goodwebtools_priv.pem -traditional \| openssl base64 -A` |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | **Yes** (may be empty) | Password for the signing key | Empty string if the key has no password |
+| `APPLE_CERTIFICATE` | macOS only | Base64 of the Developer ID Application `.p12` | `base64 -i cert.p12 \| pbcopy` |
+| `APPLE_CERTIFICATE_PASSWORD` | macOS only | Password for the `.p12` | Set when exporting the cert |
+| `APPLE_SIGNING_IDENTITY` | macOS only | Codesign identity | e.g. `Developer ID Application: Your Name (TEAMID)` |
+| `APPLE_ID` | macOS only | Apple ID for notarization | Your Apple developer account email |
+| `APPLE_PASSWORD` | macOS only | App-specific password for notarization | appleid.apple.com → Sign-In & Security → App-Specific Passwords |
+| `APPLE_TEAM_ID` | macOS only | Apple Developer Team ID | Apple Developer → Membership |
+
+> **Minimum to ship a beta:** just the two `TAURI_SIGNING_*` secrets. Without the
+> Apple secrets the macOS `.app`/`.dmg` still builds, but users must right-click →
+> Open to bypass Gatekeeper. Windows/Linux need no additional secrets.
+
+**Verify a release built correctly:** after the tag build finishes, the GitHub
+Release should contain per-platform installers **and** a `latest.json` (the
+updater manifest, signed with `TAURI_SIGNING_PRIVATE_KEY`). If `latest.json` is
+missing, the signing secrets weren't set.
+
 > **Keep the private key safe.** Never commit `~/.tauri/goodwebtools_priv.pem`
 > to the repository. It is already covered by `.gitignore` via `src-tauri/bin/`
 > exclusion, but store an offline backup in a password manager.

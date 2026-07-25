@@ -14,7 +14,11 @@ export function hashToHex(buffer: Uint8Array): string {
 }
 
 export async function hashFile(fileBuffer: ArrayBuffer): Promise<string> {
-  const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
+  // Wrap in a Uint8Array view: SubtleCrypto.digest takes any BufferSource, and a
+  // TypedArray sidesteps cross-realm `instanceof ArrayBuffer` checks that can
+  // reject a bare ArrayBuffer under jsdom/node (breaking CI even though it's fine
+  // in the browser).
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new Uint8Array(fileBuffer));
   const hashArray = new Uint8Array(hashBuffer);
   return hashToHex(hashArray);
 }
