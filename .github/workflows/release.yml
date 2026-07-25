@@ -72,6 +72,9 @@ jobs:
             libxcb1-dev \
             libxcb-randr0-dev \
             libxcb-shm0-dev \
+            libgbm-dev \
+            libegl1-mesa-dev \
+            libgl1-mesa-dev \
             libclang-dev \
             clang \
             pkg-config
