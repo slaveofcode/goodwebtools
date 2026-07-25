@@ -2,95 +2,60 @@
 /**
  * download-ffmpeg-binaries.mjs
  *
- * Downloads pre-built static FFmpeg binaries into src-tauri/bin/ so they
- * can be bundled with the Tauri app as sidecar resources.
+ * Downloads a static FFmpeg binary for the CURRENT host into src-tauri/bin/ so
+ * `tauri build` can bundle it as a sidecar (externalBin "bin/ffmpeg"). Needed for
+ * local release builds; CI does the same per target in release.yml.
  *
- * Sources (static builds, no runtime deps):
- *   macOS  → evermeet.cx  (aarch64 + x86_64)
- *   Windows → gyan.dev     (x86_64)
- *   Linux   → johnvansickle (x86_64)
+ * Source: eugeneware/ffmpeg-static (raw single-file binaries, no extraction).
  *
- * Run: node scripts/download-ffmpeg-binaries.mjs
- * Or:  npm run download:ffmpeg
+ * Run: npm run download:ffmpeg
  */
 
-import { createWriteStream, existsSync, mkdirSync } from 'node:fs';
-import { pipeline } from 'node:stream/promises';
+import { existsSync, mkdirSync, writeFileSync, chmodSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createGunzip } from 'node:zlib';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BIN_DIR = join(__dirname, '..', 'src-tauri', 'bin');
+const FFMPEG_STATIC_TAG = 'b6.0';
 
-const BINARIES = [
-  {
-    platform: 'darwin-aarch64',
-    url: 'https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip',
-    filename: 'ffmpeg-aarch64-apple-darwin',
-  },
-  {
-    platform: 'darwin-x86_64',
-    url: 'https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip',
-    filename: 'ffmpeg-x86_64-apple-darwin',
-  },
-  {
-    platform: 'windows-x86_64',
-    url: 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip',
-    filename: 'ffmpeg-x86_64-pc-windows-msvc.exe',
-  },
-  {
-    platform: 'linux-x86_64',
-    url: 'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz',
-    filename: 'ffmpeg-x86_64-unknown-linux-gnu',
-  },
-];
+// host platform/arch → { rust target triple, ffmpeg-static asset name }
+const TARGETS = {
+  'darwin-arm64': { triple: 'aarch64-apple-darwin', asset: 'ffmpeg-darwin-arm64' },
+  'darwin-x64': { triple: 'x86_64-apple-darwin', asset: 'ffmpeg-darwin-x64' },
+  'win32-x64': { triple: 'x86_64-pc-windows-msvc', asset: 'ffmpeg-win32-x64' },
+  'linux-x64': { triple: 'x86_64-unknown-linux-gnu', asset: 'ffmpeg-linux-x64' },
+};
 
-if (!existsSync(BIN_DIR)) {
-  mkdirSync(BIN_DIR, { recursive: true });
-}
-
-const host = process.platform;
-const arch = process.arch;
-
-// Determine which binary to download for the current build machine
-let target;
-if (host === 'darwin') {
-  target = arch === 'arm64' ? 'darwin-aarch64' : 'darwin-x86_64';
-} else if (host === 'win32') {
-  target = 'windows-x86_64';
-} else {
-  target = 'linux-x86_64';
-}
-
-const entry = BINARIES.find(b => b.platform === target);
-if (!entry) {
-  console.error(`No FFmpeg binary configured for platform: ${host}/${arch}`);
+const key = `${process.platform}-${process.arch}`;
+const target = TARGETS[key];
+if (!target) {
+  console.error(`No FFmpeg binary configured for ${key}.`);
+  console.error(`Supported: ${Object.keys(TARGETS).join(', ')}`);
   process.exit(1);
 }
 
-const outPath = join(BIN_DIR, entry.filename);
+const ext = process.platform === 'win32' ? '.exe' : '';
+const outPath = join(BIN_DIR, `ffmpeg-${target.triple}${ext}`);
 
 if (existsSync(outPath)) {
-  console.log(`✓ FFmpeg binary already exists: ${outPath}`);
+  console.log(`✓ Already present: ${outPath}`);
   process.exit(0);
 }
 
-console.log(`Downloading FFmpeg for ${target}…`);
-console.log(`  URL: ${entry.url}`);
-console.log(`  → ${outPath}`);
-console.log('');
-console.log('NOTE: Automatic extraction from zip/tar is not implemented here.');
-console.log('Please download FFmpeg manually from one of these sources:');
-console.log('  macOS:   https://evermeet.cx/ffmpeg/');
-console.log('  Windows: https://www.gyan.dev/ffmpeg/builds/');
-console.log('  Linux:   https://johnvansickle.com/ffmpeg/');
-console.log('');
-console.log(`Then place the binary at: ${outPath}`);
-console.log('');
-console.log('Alternatively, install system FFmpeg:');
-console.log('  macOS:   brew install ffmpeg');
-console.log('  Ubuntu:  sudo apt install ffmpeg');
-console.log('  Windows: winget install ffmpeg');
-console.log('');
-console.log('The app falls back to system FFmpeg if bundled binary is not found.');
+const url = `https://github.com/eugeneware/ffmpeg-static/releases/download/${FFMPEG_STATIC_TAG}/${target.asset}`;
+
+mkdirSync(BIN_DIR, { recursive: true });
+console.log(`Downloading FFmpeg (${key}) …`);
+console.log(`  ${url}`);
+
+const res = await fetch(url, { redirect: 'follow' });
+if (!res.ok) {
+  console.error(`Download failed: HTTP ${res.status} ${res.statusText}`);
+  process.exit(1);
+}
+const buf = Buffer.from(await res.arrayBuffer());
+writeFileSync(outPath, buf);
+if (process.platform !== 'win32') chmodSync(outPath, 0o755);
+
+console.log(`✓ Saved ${(buf.length / 1_000_000).toFixed(1)} MB → ${outPath}`);

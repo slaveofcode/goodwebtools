@@ -76,9 +76,10 @@
     }
   },
   "bundle": {
-    "active": false,
+    "active": true,
     "targets": "all",
     "resources": [],
+    "externalBin": ["bin/ffmpeg"],
     "category": "Utility",
     "shortDescription": "Privacy-first client-side tools",
     "longDescription": "GoodWebTools Desktop brings browser-based tools to your desktop with system-wide capture, global hotkeys, and native file access."
