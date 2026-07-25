@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
+import { Maximize2, Minimize2, ChevronUp, ChevronDown } from 'lucide-react';
 import { parseDbml, buildFlow } from '@/tools/draw/dbml.lib';
 import { layoutNodes } from '@/tools/draw/layout.lib';
 import { loadDoc, saveDoc, type DbDiagramDoc } from '@/tools/draw/dbdiagram.store';
@@ -53,8 +54,39 @@ export default function DbDiagram() {
   const [imgScale, setImgScale] = useState(2);
   const [imgBlob, setImgBlob] = useState<Blob | null>(null);
   const flowWrapper = useRef<HTMLDivElement | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [navHidden, setNavHidden] = useState(false);
+  const [navBottom, setNavBottom] = useState(67);
   const positions = useRef<Record<string, { x: number; y: number }>>({});
   const loaded = useRef(false);
+
+  const setExpandedPersist = (v: boolean) => { setExpanded(v); try { localStorage.setItem('gwt-dbdiagram-expanded', v ? '1' : '0'); } catch { /* ignore */ } };
+  const setNavHiddenPersist = (v: boolean) => { setNavHidden(v); try { localStorage.setItem('gwt-dbdiagram-navhidden', v ? '1' : '0'); } catch { /* ignore */ } };
+
+  useEffect(() => {
+    if (localStorage.getItem('gwt-dbdiagram-expanded') === '1') setExpanded(true);
+    if (localStorage.getItem('gwt-dbdiagram-navhidden') === '1') setNavHidden(true);
+  }, []);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setExpandedPersist(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expanded]);
+
+  useEffect(() => {
+    const header = document.querySelector('header') as HTMLElement | null;
+    if (!header) return;
+    header.style.display = expanded && navHidden ? 'none' : '';
+    if (!expanded || navHidden) return () => { header.style.display = ''; };
+    const measure = () => setNavBottom(Math.round(header.getBoundingClientRect().bottom || 0));
+    measure();
+    window.addEventListener('resize', measure);
+    return () => { window.removeEventListener('resize', measure); header.style.display = ''; };
+  }, [expanded, navHidden]);
+
+  const topOffset = navHidden ? 0 : navBottom;
 
   useEffect(() => {
     let alive = true;
@@ -222,6 +254,9 @@ export default function DbDiagram() {
           </select>
         </div>
         <Button variant="secondary" onClick={runImageExport}>Export image</Button>
+        {!expanded && (
+          <Button variant="secondary" onClick={() => setExpandedPersist(true)}><Maximize2 className="h-4 w-4" />Expand</Button>
+        )}
       </div>
 
       {error && <Alert variant="error">{error}</Alert>}
@@ -233,8 +268,33 @@ export default function DbDiagram() {
           spellCheck={false}
           className="h-[75vh] w-full resize-none border-2 border-border bg-background p-3 font-mono text-xs leading-relaxed"
         />
-        <div ref={flowWrapper} className="h-[75vh] w-full overflow-hidden border-2 border-border">{diagram}</div>
+        <div
+          ref={flowWrapper}
+          className={expanded
+            ? 'fixed inset-x-0 bottom-0 z-30 overflow-hidden border-t-2 border-border bg-background'
+            : 'h-[75vh] w-full overflow-hidden border-2 border-border'}
+          style={expanded ? { top: topOffset } : undefined}
+        >
+          {diagram}
+        </div>
       </div>
+
+      {expanded && (
+        <>
+          <button
+            onClick={() => setNavHiddenPersist(!navHidden)}
+            title={navHidden ? 'Show navbar' : 'Hide navbar for more space'}
+            aria-label={navHidden ? 'Show navbar' : 'Hide navbar'}
+            className={`fixed left-1/2 z-50 -translate-x-1/2 rounded-b-md border-2 border-t-0 border-border bg-background px-5 py-0.5 shadow-brutal-sm hover:bg-muted ${navHidden ? '' : '-translate-y-full'}`}
+            style={{ top: topOffset }}
+          >
+            {navHidden ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </button>
+          <div className="fixed right-4 z-40 flex items-center gap-3" style={{ top: topOffset + 8 }}>
+            <Button variant="secondary" onClick={() => setExpandedPersist(false)} className="shadow-brutal"><Minimize2 className="h-4 w-4" />Exit</Button>
+          </div>
+        </>
+      )}
 
       {sqlErr && <Alert variant="error">{sqlErr}</Alert>}
       {sql && (
