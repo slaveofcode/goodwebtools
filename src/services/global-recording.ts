@@ -84,6 +84,15 @@ async function restoreWindow(): Promise<void> {
   managedWindow = false;
 }
 
+/** Always bring the main window back to front (used when a recording stops, so
+ *  ⌘⇧R reliably reveals the app regardless of who minimized it). */
+async function showMainWindow(): Promise<void> {
+  managedWindow = false;
+  if (!isTauri()) return;
+  const { invoke } = await import('@tauri-apps/api/core');
+  await invoke('show_main_window').catch(() => {});
+}
+
 async function blobToDataUrl(blob: Blob): Promise<string> {
   const bytes = new Uint8Array(await blob.arrayBuffer());
   let binary = '';
@@ -180,7 +189,7 @@ export async function stopManaged(): Promise<Blob | null> {
     const blob = await captureService.stopRecording(handle);
     activeHandle = null;
     startedAt = null;
-    await restoreWindow();
+    await showMainWindow(); // always reveal the app when recording ends
     emitState();
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('gwt:recording-result', { detail: { blob } }));
@@ -189,7 +198,7 @@ export async function stopManaged(): Promise<Blob | null> {
   } catch (e) {
     activeHandle = null;
     startedAt = null;
-    await restoreWindow();
+    await showMainWindow();
     emitState();
     throw e;
   } finally {
