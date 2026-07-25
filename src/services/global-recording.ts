@@ -6,7 +6,7 @@
 // in-page UI drive it, and it emits DOM events the component subscribes to.
 
 import { captureService } from './capture';
-import type { RecordingHandle, Rectangle } from './capture';
+import type { RecordingHandle, Rectangle, DisplayInfo } from './capture';
 import { isTauri } from './platform';
 
 const SETTINGS_KEY = 'gwt-recorder-settings';
@@ -206,10 +206,68 @@ export async function stopManaged(): Promise<Blob | null> {
   }
 }
 
+// ── Multi-display picker (shared with the screenshot flow's screen selector) ─
+
+let pendingRecordingSelect = false;
+
+/** True (once) if a screen pick is pending for a recording, so the shared
+ *  `screen-selected` listener routes to recording instead of screenshot. */
+export function consumePendingRecordingSelect(): boolean {
+  if (!pendingRecordingSelect) return false;
+  pendingRecordingSelect = false;
+  return true;
+}
+
+/** Capture per-display thumbnails and open the screen-picker window; recording
+ *  starts once the user picks (via `startRecordingOnDisplay`). */
+async function showScreenPicker(displays: DisplayInfo[]): Promise<void> {
+  const { invoke } = await import('@tauri-apps/api/core');
+  const thumbnails = await Promise.all(
+    displays.map(async (display) => {
+      try {
+        const blob = await captureService.captureScreen({
+          format: 'jpg',
+          quality: 0.3,
+          displayId: display.id,
+        });
+        return { display, dataUrl: await blobToDataUrl(blob) };
+      } catch {
+        return null;
+      }
+    }),
+  );
+  try {
+    localStorage.setItem('gwt-screen-thumbnails', JSON.stringify(thumbnails.filter(Boolean)));
+  } catch {
+    /* ignore quota */
+  }
+  pendingRecordingSelect = true;
+  await invoke('show_screen_selector');
+}
+
+/** Continue a recording after the user picks a display in the screen picker. */
+export async function startRecordingOnDisplay(displayId: number): Promise<void> {
+  saveRecorderSettings({ displayId });
+  const s = getRecorderSettings();
+  try {
+    await startManaged({
+      format: s.format,
+      fps: s.fps,
+      includeAudio: s.includeAudio,
+      displayId,
+      manageWindow: true,
+      countdown: true,
+    });
+  } catch (e) {
+    console.error('[GlobalRecording] start failed:', e);
+  }
+}
+
 /**
- * Global hotkey entry point: toggle a full-screen recording from anywhere.
- * On stop, if the Screen Recorder page isn't open (no UI to show the result),
- * the file is downloaded directly; otherwise the mounted component shows it.
+ * Global hotkey entry point: toggle recording from anywhere. When starting with
+ * multiple displays, the screen picker opens first; recording begins after the
+ * user chooses. On stop, if the Screen Recorder page isn't open the file is
+ * downloaded directly; otherwise the mounted component shows it.
  */
 export async function toggleGlobalRecording(): Promise<void> {
   if (!isTauri()) return;
@@ -240,14 +298,30 @@ export async function toggleGlobalRecording(): Promise<void> {
     return;
   }
 
-  // Start a full-screen recording using the last-configured settings.
+  // Ignore repeat presses while the screen picker is already open.
+  if (pendingRecordingSelect) return;
+
+  // Starting: with multiple displays, ask which screen first.
+  let displays: DisplayInfo[] = [];
+  try {
+    displays = await captureService.listDisplays();
+  } catch {
+    /* fall back to the configured display below */
+  }
+
+  if (displays.length > 1) {
+    await showScreenPicker(displays);
+    return; // recording begins in startRecordingOnDisplay after the user picks
+  }
+
+  // Single (or unknown) display — record it directly with the saved settings.
   const s = getRecorderSettings();
   try {
     await startManaged({
       format: s.format,
       fps: s.fps,
       includeAudio: s.includeAudio,
-      displayId: s.displayId,
+      displayId: displays[0]?.id ?? s.displayId,
       manageWindow: true,
       countdown: true,
     });
