@@ -8,6 +8,9 @@ on:
 
 jobs:
   build:
+    # tauri-action creates the GitHub Release + uploads assets, which needs write.
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:

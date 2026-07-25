@@ -77,7 +77,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "app", "dmg", "deb", "appimage"],
+    "targets": ["nsis", "app", "dmg", "deb"],
     "resources": [],
     "category": "Utility",
     "shortDescription": "Privacy-first client-side tools",
