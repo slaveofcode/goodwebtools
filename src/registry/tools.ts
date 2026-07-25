@@ -333,6 +333,17 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
+    id: 'image-viewer',
+    name: 'Image Viewer & Metadata',
+    category: 'Image',
+    route: '/tools/image-viewer',
+    keywords: ['image', 'viewer', 'metadata', 'exif', 'ico', 'favicon', 'dimensions', 'inspect'],
+    icon: Eye,
+    summary: 'View any image with dimensions, EXIF, and ICO sizes',
+    load: () => import('@/islands/image/ImageViewer'),
+    status: 'stable'
+  },
+  {
     id: 'svg-viewer',
     name: 'SVG Viewer & Converter',
     category: 'Image',
