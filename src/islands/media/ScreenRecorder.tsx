@@ -11,6 +11,7 @@ import {
   startManaged,
   stopManaged,
   isRecording as isRecordingGlobal,
+  getRecordingStartedAt,
   saveRecorderSettings,
 } from '@/services/global-recording';
 
@@ -112,18 +113,31 @@ export default function ScreenRecorder() {
   // anywhere). Mirror its state into the UI and pick up results it produces —
   // whether a recording was started here or via the global hotkey.
   useEffect(() => {
+    // Tick elapsed from the manager's real start time (accurate even if we
+    // navigated to this page mid-recording, and immune to background throttling).
+    const startTimer = () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      const tick = () => {
+        const s = getRecordingStartedAt();
+        setElapsed(s ? Math.max(0, Math.floor((Date.now() - s) / 1000)) : 0);
+      };
+      tick();
+      timerRef.current = setInterval(tick, 1000);
+    };
+    const stopTimer = () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+
     const onState = (e: Event) => {
       const rec = (e as CustomEvent).detail?.recording as boolean;
       setRecording(rec);
       if (rec) {
-        setElapsed(0);
-        if (timerRef.current) clearInterval(timerRef.current);
-        timerRef.current = setInterval(() => setElapsed((x) => x + 1), 1000);
+        startTimer();
       } else {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
+        stopTimer();
         setStopping(false);
       }
     };
@@ -138,8 +152,12 @@ export default function ScreenRecorder() {
     };
     window.addEventListener('gwt:recording-state', onState);
     window.addEventListener('gwt:recording-result', onResult);
-    // Reflect any recording already in progress (e.g. started via hotkey elsewhere).
-    setRecording(isRecordingGlobal());
+    // Reflect any recording already in progress (e.g. started via hotkey before
+    // this page mounted) — and resume the ticking timer from its real start.
+    if (isRecordingGlobal()) {
+      setRecording(true);
+      startTimer();
+    }
     return () => {
       window.removeEventListener('gwt:recording-state', onState);
       window.removeEventListener('gwt:recording-result', onResult);
@@ -185,6 +203,8 @@ export default function ScreenRecorder() {
         displayId: inTauriApp ? selectedDisplay : undefined,
         bounds: recordBounds,
         manageWindow: inTauriApp && hideWindow,
+        // 5s countdown on the target display (shows which screen, gives prep time).
+        countdown: inTauriApp,
       });
     } catch (e) {
       if (e instanceof DOMException && e.name === 'NotAllowedError') setError('Screen sharing was cancelled.');

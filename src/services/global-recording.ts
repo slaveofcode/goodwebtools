@@ -50,9 +50,15 @@ export function saveRecorderSettings(partial: Partial<RecorderSettings>): void {
 let activeHandle: RecordingHandle | null = null;
 let busy = false; // guards the start/stop transition
 let managedWindow = false; // whether WE minimized the window (so WE restore it)
+let startedAt: number | null = null; // epoch ms when capture actually began
 
 export function isRecording(): boolean {
   return activeHandle !== null;
+}
+
+/** Epoch ms the current recording started (after any countdown), or null. */
+export function getRecordingStartedAt(): number | null {
+  return startedAt;
 }
 
 function emitState(): void {
@@ -78,6 +84,57 @@ async function restoreWindow(): Promise<void> {
   managedWindow = false;
 }
 
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 8192) {
+    binary += String.fromCharCode(...bytes.slice(i, i + 8192));
+  }
+  return `data:${blob.type};base64,${btoa(binary)}`;
+}
+
+/**
+ * Show a 5-second countdown centered on the target display before recording
+ * starts. Also signals which screen is being recorded (the countdown appears on
+ * it). The countdown window self-closes after counting down.
+ */
+async function showCountdown(displayId?: number): Promise<void> {
+  if (!isTauri()) return;
+  const { invoke } = await import('@tauri-apps/api/core');
+  try {
+    // Capture the area behind the 400×400 countdown window so it blends in.
+    const displays = await captureService.listDisplays();
+    const target =
+      displays.find((d) => d.id === displayId) || displays.find((d) => d.isMain) || displays[0];
+    if (target) {
+      const bounds = {
+        x: Math.floor((target.width - 400) / 2),
+        y: Math.floor((target.height - 400) / 2),
+        width: 400,
+        height: 400,
+        displayId: target.id,
+      };
+      try {
+        localStorage.setItem(
+          'countdown-screenshot',
+          await blobToDataUrl(await captureService.captureRegion(bounds)),
+        );
+      } catch {
+        /* the countdown still works without a background */
+      }
+    }
+    await invoke('show_countdown', { displayId });
+    // Countdown runs 5→1 then closes itself (~5.2s).
+    await new Promise((r) => setTimeout(r, 5200));
+  } finally {
+    try {
+      localStorage.removeItem('countdown-screenshot');
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 /**
  * Start a recording. `manageWindow` lets the manager minimize/restore the main
  * window around the session (the hotkey path). No-op if already recording.
@@ -89,11 +146,13 @@ export async function startManaged(opts: {
   displayId?: number;
   bounds?: Rectangle;
   manageWindow: boolean;
+  countdown?: boolean;
 }): Promise<void> {
   if (activeHandle || busy) return;
   busy = true;
   try {
     if (opts.manageWindow) await minimizeWindow();
+    if (opts.countdown) await showCountdown(opts.displayId);
     activeHandle = await captureService.startRecording({
       format: opts.format,
       includeAudio: opts.includeAudio,
@@ -101,8 +160,10 @@ export async function startManaged(opts: {
       displayId: opts.displayId,
       bounds: opts.bounds,
     });
+    startedAt = Date.now();
     emitState();
   } catch (e) {
+    startedAt = null;
     await restoreWindow();
     throw e;
   } finally {
@@ -118,6 +179,7 @@ export async function stopManaged(): Promise<Blob | null> {
   try {
     const blob = await captureService.stopRecording(handle);
     activeHandle = null;
+    startedAt = null;
     await restoreWindow();
     emitState();
     if (typeof window !== 'undefined') {
@@ -126,6 +188,7 @@ export async function stopManaged(): Promise<Blob | null> {
     return blob;
   } catch (e) {
     activeHandle = null;
+    startedAt = null;
     await restoreWindow();
     emitState();
     throw e;
@@ -177,6 +240,7 @@ export async function toggleGlobalRecording(): Promise<void> {
       includeAudio: s.includeAudio,
       displayId: s.displayId,
       manageWindow: true,
+      countdown: true,
     });
   } catch (e) {
     console.error('[GlobalRecording] start failed:', e);
