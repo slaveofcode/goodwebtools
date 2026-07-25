@@ -15,15 +15,23 @@ jobs:
           - platform: macos-latest
             args: '--target aarch64-apple-darwin'
             label: macOS (Apple Silicon)
+            rustTarget: aarch64-apple-darwin
+            ffmpegAsset: ffmpeg-darwin-arm64
           - platform: macos-latest
             args: '--target x86_64-apple-darwin'
             label: macOS (Intel)
+            rustTarget: x86_64-apple-darwin
+            ffmpegAsset: ffmpeg-darwin-x64
           - platform: windows-latest
             args: ''
             label: Windows
+            rustTarget: x86_64-pc-windows-msvc
+            ffmpegAsset: ffmpeg-win32-x64
           - platform: ubuntu-24.04
             args: ''
             label: Linux
+            rustTarget: x86_64-unknown-linux-gnu
+            ffmpegAsset: ffmpeg-linux-x64
 
     name: Build — ${{ matrix.label }}
     runs-on: ${{ matrix.platform }}
@@ -73,6 +81,22 @@ jobs:
 
       - name: Run tests
         run: npm test -- --run
+
+      # Download the FFmpeg binary for this target and place it where Tauri's
+      # externalBin expects it (bin/ffmpeg-<triple>[.exe]). Bundled into the app
+      # so recordings need no system ffmpeg — and never committed to git.
+      - name: Download FFmpeg sidecar
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p src-tauri/bin
+          EXT=""
+          [ "${{ runner.os }}" = "Windows" ] && EXT=".exe"
+          DEST="src-tauri/bin/ffmpeg-${{ matrix.rustTarget }}${EXT}"
+          curl -fL --retry 3 -o "$DEST" \
+            "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/${{ matrix.ffmpegAsset }}"
+          chmod +x "$DEST" || true
+          ls -la src-tauri/bin
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0

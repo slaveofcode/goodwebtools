@@ -56,7 +56,7 @@ platform artifact. Store it as a GitHub Actions secret:
    | `TAURI_SIGNING_PRIVATE_KEY`        | Full contents of `~/.tauri/gwt-updater.key`|
    | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Empty (the key was generated without one)|
 
-4. The `release.yml` workflow already reads these via:
+2. The `release.yml` workflow already reads these via:
 
    ```yaml
    env:
@@ -99,25 +99,35 @@ missing, the signing secrets weren't set.
 
 ## Bundling FFmpeg
 
-Screen recording with audio requires a platform-specific FFmpeg binary bundled
-inside the app. Place each binary at `src-tauri/bin/ffmpeg-<triple>`:
+Screen recording with audio bundles a static FFmpeg binary inside the app (via
+Tauri `externalBin: ["bin/ffmpeg"]`), so recordings need **no system ffmpeg**. The
+binaries are **not committed to git** (they're ~45 MB each) — they're downloaded
+at build time.
 
-| Platform          | Triple                           | Extension |
-|-------------------|----------------------------------|-----------|
-| macOS Apple Silicon | `aarch64-apple-darwin`         | (none)    |
-| macOS Intel       | `x86_64-apple-darwin`            | (none)    |
-| Windows x64       | `x86_64-pc-windows-msvc`         | `.exe`    |
-| Linux x64         | `x86_64-unknown-linux-gnu`       | (none)    |
+**In CI:** `release.yml` downloads the correct binary for each target (from
+[`eugeneware/ffmpeg-static`](https://github.com/eugeneware/ffmpeg-static)) into
+`src-tauri/bin/ffmpeg-<triple>` before `tauri build`. Nothing to do.
 
-Download static FFmpeg builds from:
-- macOS/Linux: <https://evermeet.cx/ffmpeg/> or <https://johnvansickle.com/ffmpeg/>
-- Windows: <https://www.gyan.dev/ffmpeg/builds/> (essentials build)
-
-Or run the helper script:
+**Local release build:** run this once (downloads the binary for your host):
 
 ```bash
 npm run download:ffmpeg
 ```
+
+It writes `src-tauri/bin/ffmpeg-<triple>` (`.exe` on Windows) for your platform:
+
+| Platform            | Triple                     | Extension |
+|---------------------|----------------------------|-----------|
+| macOS Apple Silicon | `aarch64-apple-darwin`     | (none)    |
+| macOS Intel         | `x86_64-apple-darwin`      | (none)    |
+| Windows x64         | `x86_64-pc-windows-msvc`   | `.exe`    |
+| Linux x64           | `x86_64-unknown-linux-gnu` | (none)    |
+
+> `tauri dev` doesn't need the sidecar (it falls back to system ffmpeg); only
+> `tauri build` (bundling) requires it.
+>
+> **License note:** `ffmpeg-static` ships a GPL build of FFmpeg. Bundling it makes
+> the distributed app GPL-encumbered — fine while GoodWebTools stays open source.
 
 Verify everything is in place before building:
 
