@@ -90,8 +90,12 @@ usable release; the **Apple** secrets are optional but recommended for macOS
 | `APPLE_TEAM_ID` | macOS only | Apple Developer Team ID | Apple Developer → Membership |
 
 > **Minimum to ship a beta:** just the two `TAURI_SIGNING_*` secrets. Without the
-> Apple secrets the macOS `.app`/`.dmg` still builds, but users must right-click →
-> Open to bypass Gatekeeper. Windows/Linux need no additional secrets.
+> Apple secrets the macOS `.app`/`.dmg` still builds, but it's unsigned/un-notarized,
+> so macOS shows **"GoodWebTools is damaged and can't be opened"** (right-click → Open
+> does *not* bypass this variant). Users clear the download quarantine instead: drag the
+> app to **Applications**, then run `xattr -cr /Applications/GoodWebTools.app` in Terminal.
+> Set the Apple secrets to notarize and remove this friction entirely. Windows/Linux need
+> no additional secrets.
 
 **Verify a release built correctly:** after the tag build finishes, the GitHub
 Release should contain per-platform installers **and** a `latest.json` (the
