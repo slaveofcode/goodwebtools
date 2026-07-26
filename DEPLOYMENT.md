@@ -97,23 +97,29 @@ layout. `npm run stage:models` fetches/copies them all into `public/models/`:
 | `lama/` | Object Remover (LaMa ONNX, fixed 512×512) | ~200 MB |
 | `ffmpeg/` | Video → GIF and other Media tools (ffmpeg.wasm **ESM** core) | ~31 MB |
 
-Stage, then upload the whole tree (keys must keep their subfolders):
+Stage, then sync the whole tree to R2 (keys keep their subfolders). `sync:r2`
+reads the bucket name(s) from `wrangler.jsonc`, so it targets whatever
+production/staging are configured to use:
 
 ```bash
-npm run stage:models   # → public/models/** (gitignored; downloads LaMa + face model)
+npm run stage:models       # → public/models/** (gitignored; downloads LaMa + face model)
 
-# upload every staged file to R2, preserving the relative path as the key
-cd public/models
-find . -type f | while read -r f; do
-  key="${f#./}"
-  npx wrangler r2 object put "goodwebtools-models/$key" --file "$f"
-done
-cd ../..
+# Cloudflare auth first: set CLOUDFLARE_API_TOKEN, or run `npx wrangler login`
+npm run sync:r2            # upload to every configured bucket (prod + staging, deduped)
+# or target one environment:
+npm run sync:r2:prod       # production bucket only
+npm run sync:r2:staging    # staging bucket only
+# preview without uploading:
+npm run sync:r2 -- --dry-run
 ```
 
-(You can also drag the folders into the bucket via the Cloudflare dashboard, or
-use `rclone` for the bulk upload.) After bumping a model version, re-stage and
-re-upload that prefix. **Until the models are in R2, the AI tools 404 in prod.**
+Uploads are idempotent (`wrangler r2 object put --remote`), so re-running retries
+any failures and re-staging + re-syncing updates a bumped model version. (You can
+also drag the folders into the bucket via the Cloudflare dashboard, or use
+`rclone`.) **Until the models are in R2, the AI tools 404 in prod.**
+
+> Production and staging currently share one bucket (`goodwebtools-models`), so
+> `sync:r2` uploads once; if they diverge in `wrangler.jsonc`, it uploads to each.
 
 > **Local dev:** `npm run stage:models` also lets `npm run dev` serve the models
 > from `public/models/**`. Remove that folder before a *local* `wrangler deploy`
