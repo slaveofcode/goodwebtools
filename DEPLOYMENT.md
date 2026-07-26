@@ -78,8 +78,9 @@ develop → staging), see [DEPLOYMENT-GIT.md](./DEPLOYMENT-GIT.md).
 You need a Cloudflare account and the Wrangler CLI (pinned as a devDependency).
 
 ```bash
-npx wrangler login                                  # authenticate
-npx wrangler r2 bucket create goodwebtools-models   # create the model bucket
+npx wrangler login                                          # authenticate
+npx wrangler r2 bucket create goodwebtools-models           # production model bucket
+npx wrangler r2 bucket create goodwebtools-models-staging   # staging model bucket
 ```
 
 ### Upload the ML model assets to R2
@@ -118,8 +119,9 @@ any failures and re-staging + re-syncing updates a bumped model version. (You ca
 also drag the folders into the bucket via the Cloudflare dashboard, or use
 `rclone`.) **Until the models are in R2, the AI tools 404 in prod.**
 
-> Production and staging currently share one bucket (`goodwebtools-models`), so
-> `sync:r2` uploads once; if they diverge in `wrangler.jsonc`, it uploads to each.
+> Production uses `goodwebtools-models` and staging uses
+> `goodwebtools-models-staging`, so `sync:r2` uploads to **both**. Create the
+> staging bucket once: `npx wrangler r2 bucket create goodwebtools-models-staging`.
 
 > **Local dev:** `npm run stage:models` also lets `npm run dev` serve the models
 > from `public/models/**`. Remove that folder before a *local* `wrangler deploy`

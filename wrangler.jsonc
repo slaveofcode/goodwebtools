@@ -48,7 +48,7 @@
         "not_found_handling": "404-page"
       },
       "r2_buckets": [
-        { "binding": "MODELS", "bucket_name": "goodwebtools-models" }
+        { "binding": "MODELS", "bucket_name": "goodwebtools-models-staging" }
       ],
       "observability": {
         "enabled": false,
