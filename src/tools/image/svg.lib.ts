@@ -50,26 +50,34 @@ function prepareForRaster(markup: string, w: number, h: number): string {
   });
 }
 
+// Keep the canvas within browser limits so toBlob() doesn't silently return null
+// on an oversized canvas. 8192px per side stays under every browser's cap.
+const MAX_SIDE = 8192;
+
 /** Rasterize SVG markup to a PNG/JPEG/WebP blob at a scale or explicit size. */
 export function rasterizeSvg(markup: string, opts: RasterizeOpts): Promise<Blob> {
   const { width: iw, height: ih } = parseSvgSize(markup);
-  const targetW = Math.max(1, Math.round(opts.width ?? iw * (opts.scale ?? 1)));
-  const targetH = Math.max(1, Math.round(opts.height ?? ih * (opts.scale ?? 1)));
-  // Load the SVG via a data URL, not a blob: URL. A blob: URL taints the canvas
-  // in Chrome/WebKit, which makes toBlob() fail on export ("Failed to encode
-  // image"); a data URL keeps the canvas origin-clean. Force the SVG to the
-  // target size so it always renders at concrete dimensions.
-  const dataUrl =
-    'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(prepareForRaster(markup, targetW, targetH));
+  let targetW = Math.max(1, Math.round(opts.width ?? iw * (opts.scale ?? 1)));
+  let targetH = Math.max(1, Math.round(opts.height ?? ih * (opts.scale ?? 1)));
+  // Clamp to the max canvas side while preserving aspect ratio.
+  const over = Math.max(targetW, targetH) / MAX_SIDE;
+  if (over > 1) { targetW = Math.max(1, Math.round(targetW / over)); targetH = Math.max(1, Math.round(targetH / over)); }
+
+  // Load via a blob: URL — data: URLs silently fail to load once the encoded
+  // string gets large (multi-MB SVGs), so the promise would hang forever. Force
+  // the SVG to the target size so it always renders at concrete dimensions.
+  const prepared = prepareForRaster(markup, targetW, targetH);
+  const url = URL.createObjectURL(new Blob([prepared], { type: 'image/svg+xml' }));
 
   return new Promise<Blob>((resolve, reject) => {
     const img = new Image();
+    const done = (fn: () => void) => { URL.revokeObjectURL(url); fn(); };
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = targetW;
       canvas.height = targetH;
       const ctx = canvas.getContext('2d');
-      if (!ctx) return reject(new Error('Canvas is not supported in this browser'));
+      if (!ctx) return done(() => reject(new Error('Canvas is not supported in this browser')));
       if (opts.type === 'image/jpeg' || opts.background) {
         ctx.fillStyle = opts.background ?? '#ffffff';
         ctx.fillRect(0, 0, targetW, targetH);
@@ -77,16 +85,16 @@ export function rasterizeSvg(markup: string, opts: RasterizeOpts): Promise<Blob>
       ctx.drawImage(img, 0, 0, targetW, targetH);
       try {
         canvas.toBlob(
-          (b) => (b ? resolve(b) : reject(new Error('Failed to encode image'))),
+          (b) => done(() => (b ? resolve(b) : reject(new Error('Failed to encode image')))),
           opts.type,
           opts.quality,
         );
       } catch (e) {
-        // Tainted-canvas SecurityError or unsupported type.
-        reject(e instanceof Error ? e : new Error('Failed to encode image'));
+        // Tainted canvas (SVG embeds external images) or unsupported type.
+        done(() => reject(e instanceof Error ? e : new Error('Failed to encode image')));
       }
     };
-    img.onerror = () => reject(new Error("Couldn't render this SVG."));
-    img.src = dataUrl;
+    img.onerror = () => done(() => reject(new Error("Couldn't render this SVG.")));
+    img.src = url;
   });
 }
