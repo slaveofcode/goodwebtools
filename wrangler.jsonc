@@ -16,6 +16,25 @@
     { "binding": "MODELS", "bucket_name": "goodwebtools-models" }
   ],
 
+  // Workers observability, declared here so deploys stay in sync with the
+  // dashboard-configured settings (otherwise each deploy can reset them).
+  // Named environments don't inherit this, so it's repeated under `staging`.
+  "observability": {
+    "enabled": false,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  },
+
   // Staging environment (deployed from the `develop` branch). Bindings and
   // `assets` are NOT inherited by named environments, so they're repeated here.
   // Deploy with: npx wrangler deploy --env staging
@@ -30,7 +49,22 @@
       },
       "r2_buckets": [
         { "binding": "MODELS", "bucket_name": "goodwebtools-models" }
-      ]
+      ],
+      "observability": {
+        "enabled": false,
+        "head_sampling_rate": 1,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true,
+          "invocation_logs": true
+        },
+        "traces": {
+          "enabled": false,
+          "persist": true,
+          "head_sampling_rate": 1
+        }
+      }
     }
   }
 }
