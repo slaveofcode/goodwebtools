@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
+import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { detectCompanion, companionCapture } from '@/services/companion';
 import { captureService } from '@/services/capture';
 import type { DisplayInfo } from '@/services/capture';
@@ -465,6 +466,7 @@ export default function Screenshot() {
               Download {fmt.toUpperCase()}
             </Button>
             <CopyImageButton blob={result} />
+            <EditInAnnotatorButton blob={result} filename={`screenshot.${fmt}`} />
           </div>
         </div>
       )}

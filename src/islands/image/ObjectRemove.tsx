@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Modal } from '@/components/ui/Modal';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
+import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { toCHW, toMaskChannel, fromCHW } from '@/tools/image/object-remove.lib';
@@ -299,6 +300,7 @@ export default function ObjectRemove() {
               Download PNG
             </Button>
             <CopyImageButton blob={result} />
+          <EditInAnnotatorButton blob={result} filename={file.name.replace(/\.[^.]+$/, '') + '-removed.png'} />
           </div>
         </div>
       )}

@@ -3,6 +3,7 @@ import { Download, Eraser } from 'lucide-react';
 import SignaturePadLib from 'signature_pad';
 import { Button } from '@/components/ui/Button';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
+import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { downloadService } from '@/services/download';
 
 export default function SignaturePad() {
@@ -106,6 +107,7 @@ export default function SignaturePad() {
           Download SVG
         </Button>
         <CopyImageButton blob={empty ? null : toPngBlob} disabled={empty} />
+        <EditInAnnotatorButton blob={empty ? null : toPngBlob} filename="signature.png" disabled={empty} />
         <Button variant="ghost" onClick={clear} disabled={empty}>
           <Eraser className="h-4 w-4" />
           Clear

@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -333,6 +333,39 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
+    id: 'image-viewer',
+    name: 'Image Viewer & Metadata',
+    category: 'Image',
+    route: '/tools/image-viewer',
+    keywords: ['image', 'viewer', 'metadata', 'exif', 'ico', 'favicon', 'dimensions', 'inspect'],
+    icon: Eye,
+    summary: 'View any image with dimensions, EXIF, and ICO sizes',
+    load: () => import('@/islands/image/ImageViewer'),
+    status: 'stable'
+  },
+  {
+    id: 'svg-viewer',
+    name: 'SVG Viewer & Converter',
+    category: 'Image',
+    route: '/tools/svg-viewer',
+    keywords: ['svg', 'viewer', 'vector', 'rasterize', 'convert', 'png', 'jpeg', 'webp'],
+    icon: FileImage,
+    summary: 'View SVG files and export them as PNG, JPEG, or WebP',
+    load: () => import('@/islands/image/SvgViewer'),
+    status: 'stable'
+  },
+  {
+    id: 'monochrome',
+    name: 'Monochrome',
+    category: 'Image',
+    route: '/tools/monochrome',
+    keywords: ['monochrome', 'grayscale', 'greyscale', 'black and white', 'bw', 'threshold', 'dither', 'desaturate'],
+    icon: Contrast,
+    summary: 'Convert images to grayscale, black & white, or dithered',
+    load: () => import('@/islands/image/Monochrome'),
+    status: 'stable'
+  },
+  {
     id: 'image-compress',
     name: 'Image Compressor',
     category: 'Image',
@@ -617,6 +650,17 @@ export const tools: ToolDef[] = [
     summary: 'Sketch, diagram, and mind-map on an infinite canvas',
     load: () => import('@/islands/draw/Whiteboard'),
     status: 'stable'
+  },
+  {
+    id: 'db-diagram',
+    name: 'DB Diagram',
+    category: 'Draw',
+    route: '/tools/db-diagram',
+    keywords: ['dbml', 'erd', 'er diagram', 'schema', 'database', 'diagram', 'sql', 'tables'],
+    icon: Database,
+    summary: 'Design database schemas in DBML with a live ER diagram, SQL and image export',
+    load: () => import('@/islands/draw/DbDiagram'),
+    status: 'beta'
   },
   {
     id: 'signature',

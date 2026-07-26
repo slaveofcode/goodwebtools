@@ -4,6 +4,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { CopyImageButton } from '@/components/ui/CopyImageButton';
+import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { expandBox, type Box } from '@/tools/image/face-blur.lib';
@@ -203,6 +204,7 @@ export default function FaceBlur() {
               Download PNG
             </Button>
             <CopyImageButton blob={result} />
+          <EditInAnnotatorButton blob={result} filename={(srcName.replace(/\.[^.]+$/, '') || 'image') + '-blurred.png'} />
           </div>
         </div>
       )}
