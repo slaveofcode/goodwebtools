@@ -112,6 +112,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^9.39.5",
     "eslint-plugin-astro": "^2.1.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^23.2.0",
     "prettier": "^3.9.5",
