@@ -4,6 +4,26 @@ import tailwind from '@astrojs/tailwind';
 import AstroPWA from '@vite-pwa/astro';
 import sitemap from '@astrojs/sitemap';
 
+// --- Deploy-context gating ---------------------------------------------------
+// Production and staging share one Cloudflare Worker, so we can't tell them apart
+// by build mode (both run `astro build`). Instead, use the branch that Cloudflare
+// Workers Builds injects (WORKERS_CI_BRANCH) to decide: only the production branch
+// (`main`) loads Google Analytics and is indexable; every other branch (develop /
+// preview builds) runs analytics-free and emits robots `noindex`.
+//
+// Only applied on Workers Builds (WORKERS_CI=1) so local/manual builds keep their
+// existing behavior. An explicitly-set PUBLIC_* env var always wins (overrides).
+const PROD_GA_ID = 'G-4Q9F8CL7FW';
+if (process.env.WORKERS_CI === '1') {
+  const isProductionBranch = (process.env.WORKERS_CI_BRANCH || '') === 'main';
+  if (process.env.PUBLIC_GA_ID === undefined) {
+    process.env.PUBLIC_GA_ID = isProductionBranch ? PROD_GA_ID : '';
+  }
+  if (process.env.PUBLIC_NOINDEX === undefined) {
+    process.env.PUBLIC_NOINDEX = isProductionBranch ? '' : '1';
+  }
+}
+
 export default defineConfig({
   output: 'static',
   // Canonical origin — powers <link rel="canonical">, OG URLs, and the sitemap.
