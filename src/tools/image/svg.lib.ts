@@ -34,11 +34,20 @@ export function parseSvgSize(markup: string): {
   return { width, height, viewBox };
 }
 
-/** Ensure the root <svg> declares the SVG namespace so it renders as an <img>. */
-function ensureXmlns(markup: string): string {
-  return /<svg\b[^>]*\sxmlns\s*=/.test(markup)
+/**
+ * Prepare SVG markup for rasterization: ensure the SVG namespace is present and
+ * force concrete width/height on the root <svg>. Without explicit pixel sizes a
+ * viewBox-only or percentage-sized SVG loads as an <img> at 0×0, so drawImage
+ * paints nothing and the export comes out blank.
+ */
+function prepareForRaster(markup: string, w: number, h: number): string {
+  const withNs = /<svg\b[^>]*\sxmlns\s*=/.test(markup)
     ? markup
     : markup.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
+  return withNs.replace(/<svg\b([^>]*)>/, (_m, attrs: string) => {
+    const stripped = attrs.replace(/\s(width|height)\s*=\s*["'][^"']*["']/gi, '');
+    return `<svg${stripped} width="${w}" height="${h}">`;
+  });
 }
 
 /** Rasterize SVG markup to a PNG/JPEG/WebP blob at a scale or explicit size. */
@@ -48,8 +57,10 @@ export function rasterizeSvg(markup: string, opts: RasterizeOpts): Promise<Blob>
   const targetH = Math.max(1, Math.round(opts.height ?? ih * (opts.scale ?? 1)));
   // Load the SVG via a data URL, not a blob: URL. A blob: URL taints the canvas
   // in Chrome/WebKit, which makes toBlob() fail on export ("Failed to encode
-  // image"); a data URL keeps the canvas origin-clean.
-  const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ensureXmlns(markup));
+  // image"); a data URL keeps the canvas origin-clean. Force the SVG to the
+  // target size so it always renders at concrete dimensions.
+  const dataUrl =
+    'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(prepareForRaster(markup, targetW, targetH));
 
   return new Promise<Blob>((resolve, reject) => {
     const img = new Image();
