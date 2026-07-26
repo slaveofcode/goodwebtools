@@ -41,7 +41,7 @@
   // Staging environment (deployed from the `develop` branch). Bindings and
   // `assets` are NOT inherited by named environments, so they're repeated here.
   // Deploy with: npx wrangler deploy --env staging
-  // See DEPLOYMENT-GIT.md.
+  // See DEPLOYMENT.md.
   "env": {
     "staging": {
       "name": "goodwebtools-staging",
