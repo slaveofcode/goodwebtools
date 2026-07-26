@@ -102,10 +102,18 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
 
     <ViewTransitions />
     <script is:inline>
-      const stored = localStorage.getItem('theme');
-      if (stored === 'dark') {
-        document.documentElement.classList.add('dark');
+      // Apply the saved theme before paint — on the initial load AND after every
+      // View Transitions navigation. Without the astro:after-swap re-apply, the
+      // runtime `dark` class is lost when the incoming (light) page swaps in, so
+      // dark mode "resets" when navigating between pages.
+      function applyStoredTheme() {
+        document.documentElement.classList.toggle(
+          'dark',
+          localStorage.getItem('theme') === 'dark',
+        );
       }
+      applyStoredTheme();
+      document.addEventListener('astro:after-swap', applyStoredTheme);
     </script>
 
     <!-- Google Analytics (GDPR): loads only when configured AND consent granted. -->
