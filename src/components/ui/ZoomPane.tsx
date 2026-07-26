@@ -1,23 +1,34 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import { Button } from './Button';
 
 const MIN = 0.25;
 const MAX = 8;
+const clamp = (z: number) => Math.min(MAX, Math.max(MIN, z));
 
 /** A checkerboard-backed pane that zooms (buttons + wheel) and pans (drag). */
 export function ZoomPane({ children, className }: { children: ReactNode; className?: string }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const dragging = useRef<{ x: number; y: number } | null>(null);
+  const surfaceRef = useRef<HTMLDivElement | null>(null);
 
-  const clamp = (z: number) => Math.min(MAX, Math.max(MIN, z));
   const reset = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
 
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    setZoom((z) => clamp(z * (e.deltaY < 0 ? 1.1 : 0.9)));
-  };
+  // React attaches `onWheel` as a passive listener, so preventDefault() there is
+  // a no-op and warns. Attach a native non-passive listener to zoom without
+  // scrolling the page.
+  useEffect(() => {
+    const el = surfaceRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setZoom((z) => clamp(z * (e.deltaY < 0 ? 1.1 : 0.9)));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
   const onPointerDown = (e: React.PointerEvent) => {
     dragging.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -37,9 +48,9 @@ export function ZoomPane({ children, className }: { children: ReactNode; classNa
       </div>
       <span className="absolute left-2 top-2 z-10 rounded bg-background/80 px-2 py-0.5 text-xs font-mono">{Math.round(zoom * 100)}%</span>
       <div
+        ref={surfaceRef}
         className="flex h-full w-full cursor-grab items-center justify-center active:cursor-grabbing"
         style={{ backgroundImage: 'conic-gradient(#0000 90deg, #8883 0 180deg, #0000 0 270deg, #8883 0)', backgroundSize: '20px 20px' }}
-        onWheel={onWheel}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

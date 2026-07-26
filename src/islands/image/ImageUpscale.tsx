@@ -179,7 +179,7 @@ export default function ImageUpscale() {
               Download PNG
             </Button>
             <CopyImageButton blob={result} />
-          <EditInAnnotatorButton blob={result} filename={file.name.replace(/\.[^.]+$/, '') + '-upscaled.png'} />
+          <EditInAnnotatorButton blob={result} filename={(file?.name ?? 'image').replace(/\.[^.]+$/, '') + '-upscaled.png'} />
           </div>
         </div>
       )}

@@ -76,7 +76,8 @@ export default defineConfig({
         globPatterns: ['**/*.{css,js,html,svg,png,ico,txt,woff2}'],
         // Monaco's language workers (ts.worker is ~12 MB) and its main chunk are
         // route-level and far exceed the precache size limit — load them on demand
-        // instead of precaching them into the service worker.
+        // instead of precaching them into the service worker. The DB Diagram tool's
+        // chunk (~16 MB, bundles @dbml/core + react-flow) is the same case.
         globIgnores: [
           '**/ts.worker-*.js',
           '**/editor.worker-*.js',
@@ -84,6 +85,7 @@ export default defineConfig({
           '**/css.worker-*.js',
           '**/html.worker-*.js',
           '**/monaco-setup*.js',
+          '**/DbDiagram*.js',
         ],
         runtimeCaching: [
           {

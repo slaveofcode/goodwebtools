@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
-import { Maximize2, Minimize2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Maximize2, Minimize2, ChevronUp, ChevronDown, Save, FolderOpen, Check } from 'lucide-react';
 import { parseDbml, buildFlow } from '@/tools/draw/dbml.lib';
 import { layoutNodes } from '@/tools/draw/layout.lib';
 import { loadDoc, saveDoc, type DbDiagramDoc } from '@/tools/draw/dbdiagram.store';
@@ -11,6 +11,7 @@ import { ImageResult } from '@/components/ui/ImageResult';
 import { downloadService } from '@/services/download';
 import { exportSql, DIALECTS, type Dialect } from '@/tools/draw/sql-export.lib';
 import { exportDiagramImage, type ImageFormat } from '@/tools/draw/diagram-image.lib';
+import { addRef, removeRef, type RefColumn } from '@/tools/draw/refs.lib';
 import '@xyflow/react/dist/style.css';
 
 const SEED = `Table users {
@@ -40,6 +41,7 @@ export default function DbDiagram() {
     Controls: ComponentType<Record<string, unknown>>;
     MiniMap: ComponentType<Record<string, unknown>>;
     applyNodeChanges: (changes: unknown[], nodes: unknown[]) => unknown[];
+    applyEdgeChanges: (changes: unknown[], edges: unknown[]) => unknown[];
   } | null>(null);
 
   const [dbml, setDbml] = useState(SEED);
@@ -53,7 +55,9 @@ export default function DbDiagram() {
   const [imgFormat, setImgFormat] = useState<ImageFormat>('png');
   const [imgScale, setImgScale] = useState(2);
   const [imgBlob, setImgBlob] = useState<Blob | null>(null);
+  const [saveState, setSaveState] = useState<'saved' | 'saving'>('saved');
   const flowWrapper = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [navHidden, setNavHidden] = useState(false);
   const [navBottom, setNavBottom] = useState(67);
@@ -98,6 +102,7 @@ export default function DbDiagram() {
         Controls: m.Controls as unknown as ComponentType<Record<string, unknown>>,
         MiniMap: m.MiniMap as unknown as ComponentType<Record<string, unknown>>,
         applyNodeChanges: m.applyNodeChanges as unknown as (c: unknown[], n: unknown[]) => unknown[],
+        applyEdgeChanges: m.applyEdgeChanges as unknown as (c: unknown[], e: unknown[]) => unknown[],
       });
     });
     return () => { alive = false; };
@@ -122,18 +127,23 @@ export default function DbDiagram() {
       setError(err);
       if (err) return; // keep previous nodes/edges
       const flow = buildFlow(db);
-      const positioned = layoutNodes(flow.nodes, flow.edges, positions.current);
+      // deletable:false so pressing Delete on a selected table doesn't remove it
+      // (only relationship edges are deletable on the canvas).
+      const positioned = layoutNodes(flow.nodes, flow.edges, positions.current).map((n) => ({ ...n, deletable: false }));
       setNodes(positioned as unknown as Record<string, unknown>[]);
       setEdges(flow.edges.map((e) => ({ ...e, type: 'relation' })) as unknown as Record<string, unknown>[]);
     }, 400);
     return () => clearTimeout(t);
   }, [dbml]);
 
-  // Debounced autosave of DBML + positions.
+  // Debounced autosave of DBML + positions, with a visible status indicator.
   useEffect(() => {
     if (!loaded.current) return;
+    setSaveState('saving');
     const t = setTimeout(() => {
-      void saveDoc({ dbml, positions: positions.current, updatedAt: Date.now() } satisfies DbDiagramDoc);
+      void saveDoc({ dbml, positions: positions.current, updatedAt: Date.now() } satisfies DbDiagramDoc).then(() =>
+        setSaveState('saved'),
+      );
     }, 800);
     return () => clearTimeout(t);
   }, [dbml, nodes]);
@@ -150,6 +160,40 @@ export default function DbDiagram() {
     },
     [RF],
   );
+
+  // Save the full scene (DBML + layout) to a project file, Excalidraw-style.
+  const saveProject = () => {
+    const doc = { dbml, positions: positions.current, updatedAt: Date.now() } satisfies DbDiagramDoc;
+    downloadService.download(
+      new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' }),
+      'schema.dbdiagram.json',
+    );
+  };
+
+  // Export just the schema as a portable .dbml text file.
+  const exportDbmlFile = () => {
+    downloadService.download(new Blob([dbml], { type: 'text/plain' }), 'schema.dbml');
+  };
+
+  // Open a .dbdiagram.json project (restores layout) or a raw .dbml (auto-layout).
+  const openFile = async (file: File) => {
+    const text = await file.text();
+    const looksJson = file.name.toLowerCase().endsWith('.json') || /^\s*\{/.test(text);
+    if (looksJson) {
+      try {
+        const doc = JSON.parse(text) as Partial<DbDiagramDoc>;
+        if (typeof doc.dbml === 'string') {
+          positions.current = doc.positions ?? {};
+          setDbml(doc.dbml);
+          return;
+        }
+      } catch {
+        /* not valid JSON — fall through and treat the whole file as DBML */
+      }
+    }
+    positions.current = {}; // raw schema → re-layout from scratch
+    setDbml(text);
+  };
 
   const runSqlExport = () => {
     setSqlErr(null);
@@ -168,6 +212,52 @@ export default function DbDiagram() {
     if (!target) return;
     setImgBlob(await exportDiagramImage(target, { format: imgFormat, scale: imgScale }));
   };
+
+  // Apply edge changes (selection, removal) — required for controlled edges,
+  // otherwise clicking a relationship can't select it.
+  const onEdgesChange = useCallback(
+    (changes: unknown[]) => {
+      if (!RF) return;
+      setEdges((es) => RF.applyEdgeChanges(changes, es) as unknown as Record<string, unknown>[]);
+    },
+    [RF],
+  );
+
+  // Look up a column's key flags from the current diagram nodes.
+  const columnInfo = useCallback(
+    (table: string, column: string): RefColumn | null => {
+      const node = (nodes as { id: string; data: { columns: { name: string; pk?: boolean; unique?: boolean }[] } }[]).find((n) => n.id === table);
+      const col = node?.data?.columns?.find((c) => c.name === column);
+      if (!col) return null;
+      return { table, column, pk: !!col.pk, unique: !!col.unique };
+    },
+    [nodes],
+  );
+
+  // Drag column→column to add a relationship (writes a Ref line into the DBML).
+  const onConnect = useCallback(
+    (c: { source: string | null; sourceHandle: string | null; target: string | null; targetHandle: string | null }) => {
+      if (!c.source || !c.target || !c.sourceHandle || !c.targetHandle) return;
+      const from = columnInfo(c.source, c.sourceHandle);
+      const to = columnInfo(c.target, c.targetHandle);
+      if (!from || !to) return;
+      setDbml((prev) => addRef(prev, from, to));
+    },
+    [columnInfo],
+  );
+
+  // Delete a selected relationship (removes its Ref line from the DBML).
+  const onEdgesDelete = useCallback(
+    (deleted: { source: string; target: string; sourceHandle?: string | null; targetHandle?: string | null }[]) => {
+      setDbml((prev) =>
+        deleted.reduce((acc, e) => {
+          if (!e.sourceHandle || !e.targetHandle) return acc;
+          return removeRef(acc, { table: e.source, column: e.sourceHandle }, { table: e.target, column: e.targetHandle });
+        }, prev),
+      );
+    },
+    [],
+  );
 
   const onNodeMouseEnter = useCallback((_e: unknown, node: { id: string }) => setHoveredId(node.id), []);
   const onNodeMouseLeave = useCallback(() => setHoveredId(null), []);
@@ -210,8 +300,12 @@ export default function DbDiagram() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onEdgesDelete={onEdgesDelete}
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
+        deleteKeyCode={['Backspace', 'Delete']}
         fitView
         minZoom={0.1}
         proOptions={{ hideAttribution: true }}
@@ -221,13 +315,33 @@ export default function DbDiagram() {
         <MiniMap pannable zoomable />
       </ReactFlow>
     );
-  }, [RF, nodes, edges, onNodesChange, hoveredId, onNodeMouseEnter, onNodeMouseLeave]);
+  }, [RF, nodes, edges, onNodesChange, onEdgesChange, onConnect, onEdgesDelete, hoveredId, onNodeMouseEnter, onNodeMouseLeave]);
 
   return (
     <div className="space-y-3">
       <p className="max-w-3xl text-sm text-muted-foreground">
         Write your schema in <a href="https://dbml.dbdiagram.io/docs/" target="_blank" rel="noopener noreferrer" className="font-bold underline underline-offset-2">DBML</a> on the left; the ER diagram updates live. Drag tables to arrange them — your layout and schema are saved in your browser.
       </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="secondary" onClick={saveProject}><Save className="h-4 w-4" />Save project</Button>
+        <Button variant="secondary" onClick={exportDbmlFile}>Export .dbml</Button>
+        <Button variant="secondary" onClick={() => fileInputRef.current?.click()}><FolderOpen className="h-4 w-4" />Open…</Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,.dbml,application/json,text/plain"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) void openFile(f); e.target.value = ''; }}
+        />
+        <span className="ml-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide">
+          {saveState === 'saving' ? (
+            <span className="flex items-center gap-1.5 text-amber-600"><span className="inline-block h-2 w-2 rounded-full bg-amber-500" />Saving…</span>
+          ) : (
+            <span className="flex items-center gap-1 text-muted-foreground"><Check className="h-3.5 w-3.5" />Saved</span>
+          )}
+        </span>
+      </div>
 
       <div className="flex flex-wrap items-end gap-4 border-2 border-border bg-muted/40 p-3">
         <div className="space-y-1">

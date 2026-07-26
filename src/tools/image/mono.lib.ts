@@ -75,14 +75,18 @@ export async function applyMono(
   }
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close?.();
-  const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const src = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const result =
     opts.mode === 'grayscale'
-      ? toGrayscale(data)
+      ? toGrayscale(src)
       : opts.mode === 'dither'
-        ? toDitheredBW(data)
-        : toBlackWhite(data, opts.threshold ?? 128);
-  ctx.putImageData(result, 0, 0);
+        ? toDitheredBW(src)
+        : toBlackWhite(src, opts.threshold ?? 128);
+  // The transforms return a plain {width,height,data} clone; copy the bytes back
+  // into the real ImageData from getImageData so putImageData accepts it (the
+  // browser rejects a duck-typed object).
+  src.data.set(result.data);
+  ctx.putImageData(src, 0, 0);
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Failed to encode image'))), 'image/png'),
   );

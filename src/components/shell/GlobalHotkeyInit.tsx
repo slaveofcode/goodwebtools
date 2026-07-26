@@ -9,6 +9,7 @@ import {
   consumePendingRecordingSelect,
   startRecordingOnDisplay,
 } from '@/services/global-recording';
+import { isTauri } from '@/services/platform';
 
 /**
  * Initializes global hotkeys for the desktop app.
@@ -22,6 +23,9 @@ export function GlobalHotkeyInit() {
     let unlistenTray: (() => void) | null = null;
 
     (async () => {
+      // Tauri's event API needs the desktop runtime — skip in the browser,
+      // otherwise `listen()` throws (reading 'transformCallback' of undefined).
+      if (!isTauri()) return;
       const { listen } = await import('@tauri-apps/api/event');
 
       // Screen selected from the multi-display picker window. The picker is

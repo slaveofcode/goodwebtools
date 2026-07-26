@@ -356,10 +356,10 @@ export const tools: ToolDef[] = [
   },
   {
     id: 'monochrome',
-    name: 'Monochrome',
+    name: 'Black/White & Monochrome',
     category: 'Image',
     route: '/tools/monochrome',
-    keywords: ['monochrome', 'grayscale', 'greyscale', 'black and white', 'bw', 'threshold', 'dither', 'desaturate'],
+    keywords: ['monochrome', 'grayscale', 'greyscale', 'black and white', 'black white', 'bw', 'threshold', 'dither', 'desaturate'],
     icon: Contrast,
     summary: 'Convert images to grayscale, black & white, or dithered',
     load: () => import('@/islands/image/Monochrome'),
