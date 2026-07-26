@@ -1,0 +1,37 @@
+name: Bug report
+description: Something in a tool is broken or behaves unexpectedly
+labels: ["bug"]
+body:
+  - type: input
+    id: tool
+    attributes:
+      label: Which tool?
+      placeholder: e.g. Image Compressor, DB Diagram, PDF to Image
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the tool
+        2. Drop file X
+        3. Click Y
+  - type: input
+    id: env
+    attributes:
+      label: Browser / OS
+      placeholder: e.g. Chrome 130 on macOS 15
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors (if any)
+      description: Open DevTools → Console and paste any errors.
+      render: shell

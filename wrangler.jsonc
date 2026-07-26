@@ -1,0 +1,73 @@
+// NOTE: The worker names, R2 bucket names, and domain below are specific to the
+// upstream GoodWebTools deployment. To self-host, rename them to your own (and
+// create your own R2 buckets — see DEPLOYMENT.md "Deploy your own instance").
+{
+  // Deploys the static Astro build (dist/) plus a small Worker that streams ML
+  // model files from R2 at /models/*. Build first (`npm run build`), then
+  // `npx wrangler deploy`. The R2 bucket must exist:
+  //   npx wrangler r2 bucket create goodwebtools-models
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "goodwebtools",
+  "compatibility_date": "2026-07-13",
+  "main": "worker/index.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page"
+  },
+  "r2_buckets": [
+    { "binding": "MODELS", "bucket_name": "goodwebtools-models" }
+  ],
+
+  // Workers observability, declared here so deploys stay in sync with the
+  // dashboard-configured settings (otherwise each deploy can reset them).
+  // Named environments don't inherit this, so it's repeated under `staging`.
+  "observability": {
+    "enabled": false,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  },
+
+  // Staging environment (deployed from the `develop` branch). Bindings and
+  // `assets` are NOT inherited by named environments, so they're repeated here.
+  // Deploy with: npx wrangler deploy --env staging
+  // See DEPLOYMENT-GIT.md.
+  "env": {
+    "staging": {
+      "name": "goodwebtools-staging",
+      "assets": {
+        "directory": "./dist",
+        "binding": "ASSETS",
+        "not_found_handling": "404-page"
+      },
+      "r2_buckets": [
+        { "binding": "MODELS", "bucket_name": "goodwebtools-models-staging" }
+      ],
+      "observability": {
+        "enabled": false,
+        "head_sampling_rate": 1,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true,
+          "invocation_logs": true
+        },
+        "traces": {
+          "enabled": false,
+          "persist": true,
+          "head_sampling_rate": 1
+        }
+      }
+    }
+  }
+}

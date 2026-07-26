@@ -1,0 +1,78 @@
+---
+import { ChevronRight } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import ToolHost from '@/islands/ToolHost';
+import { tools, getToolById } from '@/registry/tools';
+import { SITE_URL, SITE_NAME } from '@/config';
+
+export function getStaticPaths() {
+  return tools.map(tool => ({
+    params: { tool: tool.id },
+    props: { toolId: tool.id },
+  }));
+}
+
+const { toolId } = Astro.props;
+const tool = getToolById(toolId)!;
+const toolUrl = new URL(tool.route, SITE_URL).href;
+// Sharper, keyword-aware description for search results.
+const metaDescription = `${tool.summary}. Free, on-device, and private — runs entirely in your browser with no uploads. Part of ${SITE_NAME}.`;
+
+const softwareJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: tool.name,
+  description: tool.summary,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any (web browser)',
+  url: toolUrl,
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  browserRequirements: 'Requires a modern web browser with JavaScript.',
+  publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+};
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
+    { '@type': 'ListItem', position: 2, name: tool.name, item: toolUrl },
+  ],
+};
+---
+
+<Base
+  title={tool.name}
+  description={metaDescription}
+  keywords={tool.keywords}
+  jsonLd={[softwareJsonLd, breadcrumbJsonLd]}
+>
+  <main class="page-container py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li>
+          <a
+            href="/"
+            class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal"
+            >Home</a
+          >
+        </li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{tool.name}</li>
+      </ol>
+    </nav>
+
+    <div class="mb-6">
+      <div class="mb-1 flex flex-wrap items-center gap-2">
+        <h1 class="text-3xl font-bold uppercase tracking-tight">{tool.name}</h1>
+        {tool.status !== 'stable' && (
+          <span class="border-2 border-border bg-accent px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent-foreground">
+            {tool.status}
+          </span>
+        )}
+      </div>
+      <p class="text-muted-foreground">{tool.summary}</p>
+    </div>
+    <ToolHost client:load toolId={toolId} />
+  </main>
+</Base>

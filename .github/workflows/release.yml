@@ -1,0 +1,146 @@
+name: Release Desktop App
+
+# Trigger on tags like "desktop-v1.0.0-beta.1" or "desktop-v1.2.3"
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+
+jobs:
+  build:
+    # tauri-action creates the GitHub Release + uploads assets, which needs write.
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: '--target aarch64-apple-darwin'
+            label: macOS (Apple Silicon)
+            rustTarget: aarch64-apple-darwin
+            ffmpegAsset: ffmpeg-darwin-arm64
+          - platform: macos-latest
+            args: '--target x86_64-apple-darwin'
+            label: macOS (Intel)
+            rustTarget: x86_64-apple-darwin
+            ffmpegAsset: ffmpeg-darwin-x64
+          - platform: windows-latest
+            args: ''
+            label: Windows
+            rustTarget: x86_64-pc-windows-msvc
+            ffmpegAsset: ffmpeg-win32-x64
+          - platform: ubuntu-24.04
+            args: ''
+            label: Linux
+            rustTarget: x86_64-unknown-linux-gnu
+            ffmpegAsset: ffmpeg-linux-x64
+
+    name: Build — ${{ matrix.label }}
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libdbus-1-dev \
+            libpipewire-0.3-dev \
+            libspa-0.2-dev \
+            libwayland-dev \
+            libxcb1-dev \
+            libxcb-randr0-dev \
+            libxcb-shm0-dev \
+            libgbm-dev \
+            libegl1-mesa-dev \
+            libgl1-mesa-dev \
+            libclang-dev \
+            clang \
+            pkg-config
+
+      - name: Install npm dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run tests
+        run: npm test -- --run
+
+      # Download the FFmpeg binary for this target and place it where Tauri's
+      # externalBin expects it (bin/ffmpeg-<triple>[.exe]). Bundled into the app
+      # so recordings need no system ffmpeg — and never committed to git.
+      - name: Download FFmpeg sidecar
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p src-tauri/bin
+          EXT=""
+          [ "${{ runner.os }}" = "Windows" ] && EXT=".exe"
+          DEST="src-tauri/bin/ffmpeg-${{ matrix.rustTarget }}${EXT}"
+          curl -fL --retry 3 -o "$DEST" \
+            "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/${{ matrix.ffmpegAsset }}"
+          chmod +x "$DEST" || true
+          ls -la src-tauri/bin
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The asset-heavy Astro build OOMs on the default Node heap.
+          NODE_OPTIONS: --max-old-space-size=8192
+          # Updater signing (required — tauri.conf.json declares a pubkey).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Apple code signing / notarization is intentionally NOT wired: the
+          # APPLE_* secrets aren't set, and passing empty ones makes tauri-action
+          # attempt `security import` and fail ("failed to import keychain
+          # certificate"). macOS beta builds ship unsigned (Gatekeeper: right-click
+          # → Open). To enable signing, set the APPLE_* secrets (see
+          # RELEASING-DESKTOP.md) and re-add them here.
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'GoodWebTools Desktop ${{ github.ref_name }}'
+          releaseBody: |
+            ## GoodWebTools Desktop ${{ github.ref_name }}
+
+            ### What's new
+            See [CHANGELOG.md](https://github.com/slaveofcode/goodwebtools/blob/main/CHANGELOG.md) for details.
+
+            ### Downloads
+            Pick the right file for your system:
+            | Platform | File |
+            |----------|------|
+            | macOS (Apple Silicon) | `*_aarch64.dmg` |
+            | macOS (Intel) | `*_x64.dmg` |
+            | Windows | `*_x64-setup.exe` |
+            | Linux (Debian/Ubuntu) | `*.deb` |
+            | Linux (AppImage) | `*.AppImage` |
+
+            ### First run on macOS
+            If macOS blocks the app, open **System Settings → Privacy & Security** and click **Open Anyway**.
+            For screen capture to work, grant **Screen Recording** permission in **Privacy & Security → Screen Recording**.
+          releaseDraft: true
+          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+          args: ${{ matrix.args }}

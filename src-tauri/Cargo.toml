@@ -1,0 +1,46 @@
+[package]
+name = "goodwebtools"
+version = "1.0.0-beta.1"
+description = "Privacy-first client-side tools"
+authors = ["Kresna <kresnapmn@gmail.com>"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-shell = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-updater = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+chrono = "0.4"
+lazy_static = "1.5"
+image = "0.25"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cocoa = "0.25"
+objc = "0.2"
+core-graphics = "0.23"
+
+# Cross-platform screen capture (Windows DXGI/WGC, Linux PipeWire portal).
+# macOS keeps its hand-rolled core-graphics path; xcap backs Windows + Linux.
+[target.'cfg(target_os = "windows")'.dependencies]
+xcap = { version = "0.9.4", features = ["wgc"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+xcap = "0.9.4"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[lints.rust]
+# The `objc` crate's msg_send! macro references a `cargo-clippy` cfg that trips
+# the unexpected_cfgs lint — it's from the dependency macro, not our code.
+unexpected_cfgs = "allow"

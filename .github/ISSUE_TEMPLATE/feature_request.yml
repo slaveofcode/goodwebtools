@@ -1,0 +1,23 @@
+name: Feature or tool request
+description: Suggest a new tool or an improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: Describe the tool or improvement and the problem it solves.
+    validations:
+      required: true
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Fits the project?
+      options:
+        - label: This can work fully client-side (no server / no data leaving the browser)
+          required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else?
+      description: Prior art, links, or libraries that could help.

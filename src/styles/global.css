@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Self-hosted Space Grotesk (variable, same-origin — keeps zero external requests) */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk.woff2') format('woff2');
+}
+
+/*
+ * Neo-Brutalism design tokens
+ * - Cream light / near-black dark
+ * - Black borders + hard offset shadows (no blur)
+ * - Sharp corners (radius 0)
+ */
+:root {
+  --background: 255 253 245; /* cream */
+  --foreground: 10 10 10;
+  --border: 10 10 10; /* solid black outlines */
+  --muted: 255 255 255; /* white surface blocks */
+  --muted-foreground: 82 82 82;
+  --accent: 124 58 237; /* violet */
+  --accent-foreground: 255 255 255;
+  --shadow: 10 10 10; /* hard offset shadow color */
+}
+
+.dark {
+  --background: 10 10 10;
+  --foreground: 250 250 250;
+  --border: 250 250 250; /* light outlines pop on dark */
+  --muted: 26 26 26;
+  --muted-foreground: 163 163 163;
+  --accent: 167 139 250; /* lighter violet */
+  --accent-foreground: 10 10 10;
+  --shadow: 250 250 250; /* light hard shadow on dark */
+}
+
+body {
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * Fluid page container: full-width with adaptive gutters, capped on ultrawide
+ * so text/code tools don't hit unreadable line lengths. Shared by the header
+ * and every page so content aligns with the nav.
+ */
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-[100rem] px-4 sm:px-6 lg:px-8;
+  }
+}
+
+/* Neo-Brutalism utilities ------------------------------------------------- */
+
+/* Hard offset shadows — no blur, solid block */
+.shadow-brutal-sm { box-shadow: 2px 2px 0 0 rgb(var(--shadow)); }
+.shadow-brutal { box-shadow: 4px 4px 0 0 rgb(var(--shadow)); }
+.shadow-brutal-lg { box-shadow: 6px 6px 0 0 rgb(var(--shadow)); }
+
+/* Thick outline */
+.border-brutal { border: 2px solid rgb(var(--border)); }
+.border-brutal-thick { border: 3px solid rgb(var(--border)); }
+
+/*
+ * Mechanical press: element lifts on hover (bigger shadow) and slams down on
+ * active (shadow collapses, element shifts into its shadow's place).
+ */
+.press-brutal {
+  transition: transform 100ms ease, box-shadow 100ms ease;
+}
+.press-brutal:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 rgb(var(--shadow));
+}
+.press-brutal:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 rgb(var(--shadow));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .press-brutal { transition: none; }
+  .press-brutal:hover,
+  .press-brutal:active { transform: none; }
+}
+
+/* Rendered markdown (sanitized HTML has no utility classes) */
+.markdown-preview h1 { font-size: 1.5rem; font-weight: 700; margin: 0.8em 0 0.4em; }
+.markdown-preview h2 { font-size: 1.25rem; font-weight: 700; margin: 0.8em 0 0.4em; }
+.markdown-preview h3 { font-size: 1.1rem; font-weight: 600; margin: 0.8em 0 0.4em; }
+.markdown-preview p { margin: 0.6em 0; line-height: 1.6; }
+.markdown-preview ul, .markdown-preview ol { margin: 0.6em 0; padding-left: 1.4em; }
+.markdown-preview ul { list-style: disc; }
+.markdown-preview ol { list-style: decimal; }
+.markdown-preview li { margin: 0.2em 0; }
+.markdown-preview a { color: rgb(var(--accent)); text-decoration: underline; }
+.markdown-preview code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.875em;
+  background: rgb(var(--background));
+  padding: 0.1em 0.3em;
+  border: 1px solid rgb(var(--border));
+}
+.markdown-preview pre {
+  background: rgb(var(--background));
+  padding: 0.8em;
+  border: 2px solid rgb(var(--border));
+  overflow-x: auto;
+  margin: 0.6em 0;
+}
+.markdown-preview pre code { background: none; padding: 0; border: none; }
+.markdown-preview blockquote {
+  border-left: 4px solid rgb(var(--border));
+  padding-left: 1em;
+  margin: 0.6em 0;
+  color: rgb(var(--muted-foreground));
+}
+.markdown-preview table { border-collapse: collapse; margin: 0.6em 0; }
+.markdown-preview th, .markdown-preview td {
+  border: 2px solid rgb(var(--border));
+  padding: 0.4em 0.6em;
+}
+.markdown-preview hr { border: none; border-top: 2px solid rgb(var(--border)); margin: 1em 0; }
+
+/* Drop-up popover entrance (e.g. Merge grid column picker, opens above trigger). */
+@keyframes gwtDropup {
+  from { opacity: 0; transform: translateY(6px) scaleY(0.96); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="gwtDropup"] { animation: none !important; }
+}
+
+/* Syntax highlighting (highlight.js) — neo-brutalist palette, theme-aware.
+   Only the token classes our languages (JSON/YAML/XML/TOML) emit are styled. */
+.hljs { color: rgb(var(--foreground)); background: transparent; }
+.hljs-attr,
+.hljs-attribute,
+.hljs-name,
+.hljs-tag,
+.hljs-selector-tag { color: #6d28d9; }                 /* keys / tags — violet */
+.hljs-string,
+.hljs-bullet { color: #15803d; }                        /* strings — green */
+.hljs-number { color: #b45309; }                        /* numbers — amber */
+.hljs-literal,
+.hljs-keyword,
+.hljs-built_in,
+.hljs-type { color: #be123c; }                          /* true/false/null — rose */
+.hljs-section { color: #0e7490; }                       /* [tables] — cyan */
+.hljs-comment { color: rgb(var(--muted-foreground)); font-style: italic; }
+.hljs-punctuation,
+.hljs-meta { color: rgb(var(--muted-foreground)); }
+
+.dark .hljs-attr,
+.dark .hljs-attribute,
+.dark .hljs-name,
+.dark .hljs-tag,
+.dark .hljs-selector-tag { color: #c4b5fd; }
+.dark .hljs-string,
+.dark .hljs-bullet { color: #4ade80; }
+.dark .hljs-number { color: #fbbf24; }
+.dark .hljs-literal,
+.dark .hljs-keyword,
+.dark .hljs-built_in,
+.dark .hljs-type { color: #fb7185; }
+.dark .hljs-section { color: #22d3ee; }
+
+/* Checkerboard behind transparent images (e.g. background remover result). */
+.gwt-checkerboard {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #d4d4d4 25%, transparent 25%),
+    linear-gradient(-45deg, #d4d4d4 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d4d4d4 75%),
+    linear-gradient(-45deg, transparent 75%, #d4d4d4 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}

@@ -1,0 +1,69 @@
+import { useEffect, useState } from 'react';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+
+/**
+ * The ESM default export can be either a ready sanitizer or a factory that
+ * needs `window` (depends on bundler/runtime). Resolve it defensively so
+ * `.sanitize` is always callable in the browser.
+ */
+function resolvePurifier(): { sanitize: (html: string) => string } | null {
+  const dp = DOMPurify as unknown as {
+    sanitize?: (html: string) => string;
+  } & ((win: Window) => { sanitize: (html: string) => string });
+  // Already a ready sanitizer.
+  if (typeof dp.sanitize === 'function') return dp as { sanitize: (html: string) => string };
+  // Factory form — instantiate with the browser window.
+  if (typeof dp === 'function' && typeof window !== 'undefined') return dp(window);
+  return null;
+}
+
+const SAMPLE = `# Hello, Markdown
+
+Type on the **left**, see the preview on the **right**.
+
+- Lists
+- [Links](https://example.com)
+- \`inline code\`
+
+> Everything renders locally — nothing is uploaded.
+`;
+
+export default function Markdown() {
+  const [input, setInput] = useState(SAMPLE);
+  const [html, setHtml] = useState('');
+
+  // marked + DOMPurify run browser-only (DOMPurify needs a DOM). Computing in
+  // an effect keeps SSR safe and avoids a hydration mismatch.
+  useEffect(() => {
+    const purifier = resolvePurifier();
+    const raw = marked.parse(input, { async: false }) as string;
+    setHtml(purifier ? purifier.sanitize(raw) : '');
+  }, [input]);
+
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <label className="block space-y-1.5">
+        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Markdown
+        </span>
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          spellCheck={false}
+          className="h-[32rem] w-full resize-y border-2 border-border bg-muted p-3 font-mono text-sm outline-none focus:shadow-brutal"
+        />
+      </label>
+
+      <div className="space-y-1.5">
+        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Preview
+        </span>
+        <div
+          className="markdown-preview h-[32rem] overflow-auto border-2 border-border bg-muted p-4"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </div>
+    </div>
+  );
+}

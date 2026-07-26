@@ -1,0 +1,267 @@
+---
+// Region Selector Overlay - Transparent fullscreen marquee selection
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Select Region</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        cursor: crosshair;
+        background: transparent;
+      }
+
+      #overlay {
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: #f0f0f0;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+
+      #selection {
+        position: absolute;
+        border: 4px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.2);
+        box-shadow:
+          0 0 0 3px rgba(255, 255, 255, 0.95),
+          0 0 0 7px rgba(59, 130, 246, 0.6),
+          0 0 30px rgba(59, 130, 246, 0.8),
+          inset 0 0 80px rgba(59, 130, 246, 0.1);
+        display: none;
+        pointer-events: none;
+      }
+
+      #dimensions {
+        position: absolute;
+        top: -32px;
+        left: 0;
+        background: #3b82f6;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        pointer-events: none;
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.9),
+          0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      #instructions {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        z-index: 1000;
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.2),
+          0 8px 24px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(10px);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="instructions">Click to capture full screen · Drag to select region · ESC to cancel</div>
+    <div id="overlay">
+      <div id="selection">
+        <div id="dimensions"></div>
+      </div>
+    </div>
+
+    <script>
+      import { invoke } from '@tauri-apps/api/core';
+      import { listen } from '@tauri-apps/api/event';
+
+      const overlay = document.getElementById('overlay')!;
+      const selection = document.getElementById('selection')!;
+      const dimensions = document.getElementById('dimensions')!;
+
+      // Display ID for the current capture — refreshed on every show via event.
+      let displayId: number | undefined;
+
+      let isSelecting = false;
+      let startX = 0;
+      let startY = 0;
+
+      // Show full screen pre-selected.
+      function showFullScreenSelection() {
+        selection.style.left = '0px';
+        selection.style.top = '0px';
+        selection.style.width = `${window.innerWidth}px`;
+        selection.style.height = `${window.innerHeight}px`;
+        selection.style.display = 'block';
+        dimensions.textContent = `${window.innerWidth} × ${window.innerHeight}`;
+      }
+
+      function applyBackground(url: string | null | undefined) {
+        if (url) {
+          overlay.style.backgroundImage = `url("${url}")`;
+          overlay.style.backgroundSize = '100% 100%'; // Exact size, no scaling
+          overlay.style.backgroundPosition = '0 0';
+        } else {
+          overlay.style.backgroundImage = '';
+        }
+      }
+
+      // Background + displayId arrive via events, NOT localStorage. This window
+      // is pre-warmed and reused, and a persistent webview's localStorage is
+      // stale relative to the main window's writes — so events are the only
+      // reliable channel here.
+      listen<string>('overlay-set-background', (e) => {
+        console.log('[Overlay] background received');
+        applyBackground(e.payload);
+      });
+
+      // Reset selection + refresh displayId each time the overlay is shown.
+      listen<number | null>('overlay-show', (e) => {
+        console.log('[Overlay] overlay-show, displayId:', e.payload);
+        if (e.payload !== null && e.payload !== undefined) displayId = e.payload;
+        isSelecting = false;
+        showFullScreenSelection();
+      });
+
+      // The native window may still be resizing when overlay-show fires (a
+      // reused window was just repositioned/resized to a new display), so
+      // window.innerWidth/Height can be stale. Re-fit the full-screen
+      // pre-selection whenever the webview actually resizes.
+      window.addEventListener('resize', () => {
+        if (!isSelecting) showFullScreenSelection();
+      });
+
+      // Initial state on first load.
+      showFullScreenSelection();
+
+      overlay.addEventListener('mousedown', (e) => {
+        // Hide pre-selection when user starts dragging
+        selection.style.display = 'none';
+        isSelecting = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        selection.style.left = `${startX}px`;
+        selection.style.top = `${startY}px`;
+        selection.style.width = '0px';
+        selection.style.height = '0px';
+        selection.style.display = 'block';
+      });
+
+      overlay.addEventListener('mousemove', (e) => {
+        if (!isSelecting) return;
+
+        const currentX = e.clientX;
+        const currentY = e.clientY;
+
+        const width = Math.abs(currentX - startX);
+        const height = Math.abs(currentY - startY);
+        const left = Math.min(startX, currentX);
+        const top = Math.min(startY, currentY);
+
+        selection.style.left = `${left}px`;
+        selection.style.top = `${top}px`;
+        selection.style.width = `${width}px`;
+        selection.style.height = `${height}px`;
+
+        dimensions.textContent = `${width} × ${height}`;
+      });
+
+      overlay.addEventListener('mouseup', async (e) => {
+        if (!isSelecting) return;
+
+        isSelecting = false;
+
+        const currentX = e.clientX;
+        const currentY = e.clientY;
+
+        const width = Math.abs(currentX - startX);
+        const height = Math.abs(currentY - startY);
+        const left = Math.min(startX, currentX);
+        const top = Math.min(startY, currentY);
+
+        // Determine bounds to submit
+        let bounds;
+
+        if (width > 10 && height > 10) {
+          // User dragged a region - capture that region
+          bounds = {
+            x: Math.round(left),
+            y: Math.round(top),
+            width: Math.round(width),
+            height: Math.round(height),
+          };
+        } else {
+          // Just a click (no drag) - capture full screen
+          bounds = {
+            x: 0,
+            y: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+          };
+        }
+
+        try {
+          // Clean up screenshot from localStorage before closing
+          localStorage.removeItem('overlay-screenshot');
+          localStorage.removeItem('overlay-display-id');
+
+          // Submit bounds WITH displayId
+          const region = displayId !== undefined
+            ? { ...bounds, displayId }
+            : bounds;
+
+          console.log('[Overlay] Submitting region:', region);
+          await invoke('submit_region_selection', { bounds: region });
+
+          // Restore main window
+          await invoke('show_main_window');
+        } catch (error) {
+          console.error('Failed to submit region:', error);
+          localStorage.removeItem('overlay-screenshot');
+          localStorage.removeItem('overlay-display-id');
+          await invoke('show_main_window');
+          await invoke('close_region_selector');
+        }
+      });
+
+      // ESC to cancel
+      document.addEventListener('keydown', async (e) => {
+        if (e.key === 'Escape') {
+          // Clean up screenshot from localStorage
+          localStorage.removeItem('overlay-screenshot');
+          // Restore main window
+          await invoke('show_main_window');
+          await invoke('close_region_selector');
+        }
+      });
+
+      // Prevent context menu
+      document.addEventListener('contextmenu', (e) => e.preventDefault());
+    </script>
+  </body>
+</html>
