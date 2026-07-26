@@ -1,0 +1,21 @@
+---
+import Base from '@/layouts/Base.astro';
+---
+
+<Base title="Not found" description="This page could not be found." noindex={true}>
+  <main class="page-container flex min-h-[60vh] flex-col items-center justify-center gap-6 py-16 text-center">
+    <div class="inline-block border-2 border-border bg-accent px-4 py-2 text-accent-foreground shadow-brutal">
+      <span class="text-5xl font-bold tracking-tight">404</span>
+    </div>
+    <div class="space-y-2">
+      <h1 class="text-2xl font-bold uppercase tracking-tight">Page not found</h1>
+      <p class="text-muted-foreground">The page you're looking for doesn't exist or has moved.</p>
+    </div>
+    <a
+      href="/"
+      class="inline-flex items-center border-2 border-border bg-muted px-4 py-2 font-bold uppercase tracking-wide shadow-brutal press-brutal"
+    >
+      Back to tools
+    </a>
+  </main>
+</Base>

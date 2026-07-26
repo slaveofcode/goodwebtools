@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      overflow: hidden;
+    }
+    #countdown {
+      font-size: 240px;
+      font-weight: 900;
+      color: white;
+      -webkit-text-stroke: 3px rgba(0, 0, 0, 0.3);
+      text-stroke: 3px rgba(0, 0, 0, 0.3);
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="countdown">5</div>
+
+  <script>
+    // Load screenshot from localStorage
+    const screenshotData = localStorage.getItem('countdown-screenshot');
+    if (screenshotData) {
+      console.log('[Countdown] Loading screenshot from localStorage');
+      document.body.style.backgroundImage = `url("${screenshotData}")`;
+      document.body.style.backgroundSize = '100% 100%'; // Exact size, no scaling
+      document.body.style.backgroundPosition = '0 0';
+      console.log('[Countdown] Screenshot background applied');
+    } else {
+      console.log('[Countdown] No screenshot in localStorage');
+    }
+
+    // Countdown from 5 to 1, then close
+    let count = 5;
+    const countdownEl = document.getElementById('countdown');
+
+    const interval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        countdownEl.textContent = count.toString();
+        // Pulse animation
+        countdownEl.style.transform = 'scale(1.15)';
+        countdownEl.style.opacity = '0.7';
+        setTimeout(() => {
+          countdownEl.style.transform = 'scale(1)';
+          countdownEl.style.opacity = '1';
+        }, 150);
+      } else {
+        clearInterval(interval);
+        // Fade out and close
+        countdownEl.style.opacity = '0';
+        setTimeout(async () => {
+          if (window.__TAURI__) {
+            // Don't restore window - let it stay hidden during recording
+            await window.__TAURI__.core.invoke('close_countdown');
+          }
+        }, 200);
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

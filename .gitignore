@@ -1,0 +1,30 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/bin/
+.astro/
+.DS_Store
+
+# Secrets & local env (this repo is public — never commit these)
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+*.local
+.cloudflare/
+
+# Cloudflare / Wrangler local state
+.wrangler/
+
+# WASM/worker assets copied from node_modules by copy:wasm
+public/mupdf-wasm.wasm
+public/libarchive/
+
+# ML model assets — staged locally, uploaded to R2, never committed
+public/models/
+models-r2/
+
+# Excalidraw fonts (copied by copy:wasm)
+public/excalidraw/
+public/sqlite/

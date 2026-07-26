@@ -1,0 +1,57 @@
+---
+import Base from '@/layouts/Base.astro';
+---
+
+<Base
+  title="Privacy"
+  description="How GoodWebTools protects your privacy: files never leave your browser, and analytics are optional, anonymized, and only load with your consent."
+>
+  <main class="page-container py-8 max-w-3xl">
+    <h1 class="text-4xl font-bold mb-6">Privacy & Verifiability</h1>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold mb-4">No Data Leaves Your Device</h2>
+      <p class="text-muted-foreground mb-4">
+        All processing happens in your browser. No files, images, or documents are ever uploaded to a server.
+      </p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold mb-4">Analytics & Cookies</h2>
+      <p class="text-muted-foreground mb-4">
+        We use a single privacy-friendly analytics cookie (Google Analytics, with IP anonymization) to
+        understand which tools people find useful. It <strong>only loads after you click “Accept”</strong>
+        in the cookie banner — decline and no analytics cookie is set. This never includes your files or
+        their contents; your documents are always processed entirely on your device.
+      </p>
+      <p class="text-muted-foreground">
+        You can change your mind anytime by clearing this site&apos;s data in your browser settings, which
+        resets the banner.
+      </p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold mb-4">Verify It Yourself</h2>
+      <ol class="list-decimal list-inside space-y-2 text-muted-foreground">
+        <li>Open Developer Tools (F12)</li>
+        <li>Go to the Network tab</li>
+        <li>Use any tool and process a file</li>
+        <li>Watch: zero network requests to external servers</li>
+      </ol>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold mb-4">Works Offline</h2>
+      <p class="text-muted-foreground mb-4">
+        After first use, tools work with your network completely off. This is the strongest proof that nothing leaves your device.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-semibold mb-4">Open Source</h2>
+      <p class="text-muted-foreground">
+        The code is open source and will be available on GitHub at launch. You can audit it yourself or run it locally.
+      </p>
+    </section>
+  </main>
+</Base>
