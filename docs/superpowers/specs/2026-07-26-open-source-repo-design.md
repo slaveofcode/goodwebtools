@@ -29,6 +29,8 @@
 ### A1. Private safety backup (before anything destructive)
 `git bundle create ../goodwebtools-full-history-<stamp>.bundle --all` → a single-file, complete copy of all 426 commits + refs, stored outside the repo (private). Recoverable via `git clone <bundle>`. Optionally also push all refs to a private backup remote. This is insurance only; not published.
 
+**Prerequisite gate:** the Tauri updater signing key (`~/.tauri/gwt-updater.key` — the only copy) must be backed up before the release/public steps, since losing it permanently breaks the auto-updater for installed apps. (Confirmed backed up 2026-07-26.) The key is **not** in the repo, so going public does not expose it.
+
 ### A2. `design-history` branch (public, clean)
 A single **orphan** commit containing only the internal planning artifacts:
 - `docs/superpowers/**` (specs + plans)
@@ -43,7 +45,7 @@ After all cleanup (B/C/D) is merged to `main` and the deploy is verified:
 - `develop` is reset to match `main` (single commit) so the two branches share the clean base going forward.
 
 ### A4. Tag `desktop-v1.0.0-beta.1`
-Deleted locally and on origin (`git push origin :refs/tags/desktop-v1.0.0-beta.1`), and its draft GitHub Release removed. It points at soon-to-be-purged commits and never published assets (billing-blocked). Desktop can be re-tagged fresh from the new history later.
+The old tag is deleted locally and on origin (`git push origin :refs/tags/desktop-v1.0.0-beta.1`) and its draft GitHub Release removed — it points at soon-to-be-purged commits and never published assets (was billing-blocked). It is then **re-cut fresh after the repo goes public** (see E9): going public removes the Actions billing constraint, so tagging `desktop-v1.0.0-beta.1` from the new clean history finally builds + signs + publishes the installers.
 
 **Interface — Produces:** a clean public `main` (1 commit), a public `design-history` branch, a private history bundle. **Consumes:** the fully-cleaned tree from B/C/D.
 
@@ -107,10 +109,11 @@ This is separate from `release.yml` (desktop) and does not deploy.
 4. **Verify staging** — push `develop`; confirm Cloudflare staging build succeeds, `npm test`/`build`/`lint` green.
 5. **Promote** — PR `develop`→`main`, merge; confirm **production** still deploys and GA loads (with `SITE_GA_ID` set in Cloudflare).
 6. **Purge history** — squash `main` to one commit + force-push (A3); reset `develop` to match; delete the desktop tag/release (A4).
-7. **Go public** — `gh repo edit --visibility public`.
+7. **Go public** — `gh repo edit --visibility public`. This also **removes the GitHub Actions billing constraint** (Actions is free/unlimited on standard runners for public repos), unblocking the desktop release.
 8. **Repo settings** — Component F.
+9. **Cut the desktop release (post-public)** — with signing secrets already set and Actions now free: `git push origin desktop-v1.0.0-beta.1` → `release.yml` builds + signs macOS/Windows/Linux installers and publishes the GitHub Release. Verify all platform artifacts attach. (Secrets stay private; the tag trigger is maintainer-only, so fork PRs never touch them.)
 
-Steps 1–5 are reversible; the irreversible steps (6–7) happen only after the deploy is proven green on the cleaned tree.
+Steps 1–5 are reversible; the irreversible steps (6–7) happen only after the deploy is proven green on the cleaned tree. Step 9 is optional/independent and can be deferred.
 
 ---
 
@@ -136,6 +139,6 @@ Via `gh` / dashboard, after going public:
 ## Out of scope (YAGNI)
 
 - Migrating deploys to a different provider or a second repo.
-- A new desktop release (billing-blocked; separate effort).
+- Desktop-app *code* changes (the desktop release in E9 just tags/builds the existing app; FFmpeg sidecar bundling remains deferred).
 - Marketing/launch posts, website redesign, logo/social-preview art (owner follow-up).
 - Rewriting tool code for style; only infra/docs/scaffolding change here.
