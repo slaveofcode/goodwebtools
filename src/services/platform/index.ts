@@ -20,7 +20,7 @@ export function getPlatform(): Platform {
 export function getArchitecture(): Architecture {
   if (typeof window === 'undefined') return 'unknown';
 
-  // @ts-ignore - navigator.userAgentData is experimental
+  // @ts-expect-error - navigator.userAgentData is experimental
   const uaData = navigator.userAgentData;
 
   if (uaData && uaData.platform) {
