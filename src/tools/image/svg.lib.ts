@@ -34,18 +34,26 @@ export function parseSvgSize(markup: string): {
   return { width, height, viewBox };
 }
 
+/** Ensure the root <svg> declares the SVG namespace so it renders as an <img>. */
+function ensureXmlns(markup: string): string {
+  return /<svg\b[^>]*\sxmlns\s*=/.test(markup)
+    ? markup
+    : markup.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
+}
+
 /** Rasterize SVG markup to a PNG/JPEG/WebP blob at a scale or explicit size. */
 export function rasterizeSvg(markup: string, opts: RasterizeOpts): Promise<Blob> {
   const { width: iw, height: ih } = parseSvgSize(markup);
   const targetW = Math.max(1, Math.round(opts.width ?? iw * (opts.scale ?? 1)));
   const targetH = Math.max(1, Math.round(opts.height ?? ih * (opts.scale ?? 1)));
-  const svgBlob = new Blob([markup], { type: 'image/svg+xml' });
-  const url = URL.createObjectURL(svgBlob);
+  // Load the SVG via a data URL, not a blob: URL. A blob: URL taints the canvas
+  // in Chrome/WebKit, which makes toBlob() fail on export ("Failed to encode
+  // image"); a data URL keeps the canvas origin-clean.
+  const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ensureXmlns(markup));
 
   return new Promise<Blob>((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      URL.revokeObjectURL(url);
       const canvas = document.createElement('canvas');
       canvas.width = targetW;
       canvas.height = targetH;
@@ -56,12 +64,18 @@ export function rasterizeSvg(markup: string, opts: RasterizeOpts): Promise<Blob>
         ctx.fillRect(0, 0, targetW, targetH);
       }
       ctx.drawImage(img, 0, 0, targetW, targetH);
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Failed to encode image'))), opts.type, opts.quality);
+      try {
+        canvas.toBlob(
+          (b) => (b ? resolve(b) : reject(new Error('Failed to encode image'))),
+          opts.type,
+          opts.quality,
+        );
+      } catch (e) {
+        // Tainted-canvas SecurityError or unsupported type.
+        reject(e instanceof Error ? e : new Error('Failed to encode image'));
+      }
     };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Couldn't render this SVG."));
-    };
-    img.src = url;
+    img.onerror = () => reject(new Error("Couldn't render this SVG."));
+    img.src = dataUrl;
   });
 }
