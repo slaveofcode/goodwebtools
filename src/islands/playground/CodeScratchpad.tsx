@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/Button';
 import MonacoEditor from './MonacoEditor';
 import { extensionToLanguage } from '@/tools/playground/language.lib';
 import { loadFiles, saveFiles, type ScratchFile } from '@/tools/playground/scratchpad.store';
-import { downloadService } from '@/services/download';
 import { fileService } from '@/services/file';
 import { clipboardService } from '@/services/clipboard';
 

@@ -195,11 +195,13 @@ export default function JsonCompare() {
     parseAndCompare(leftJson, value);
   };
 
-  // Re-compare when ignoreArrayOrder changes
+  // Re-compare only when ignoreArrayOrder toggles; edits to left/right already
+  // trigger a compare via their change handlers, so they're intentionally omitted.
   useEffect(() => {
     if (leftJson.trim() && rightJson.trim()) {
       parseAndCompare(leftJson, rightJson);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ignoreArrayOrder]);
 
   return (
