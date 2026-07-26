@@ -41,6 +41,7 @@ export default function DbDiagram() {
     Controls: ComponentType<Record<string, unknown>>;
     MiniMap: ComponentType<Record<string, unknown>>;
     applyNodeChanges: (changes: unknown[], nodes: unknown[]) => unknown[];
+    applyEdgeChanges: (changes: unknown[], edges: unknown[]) => unknown[];
   } | null>(null);
 
   const [dbml, setDbml] = useState(SEED);
@@ -101,6 +102,7 @@ export default function DbDiagram() {
         Controls: m.Controls as unknown as ComponentType<Record<string, unknown>>,
         MiniMap: m.MiniMap as unknown as ComponentType<Record<string, unknown>>,
         applyNodeChanges: m.applyNodeChanges as unknown as (c: unknown[], n: unknown[]) => unknown[],
+        applyEdgeChanges: m.applyEdgeChanges as unknown as (c: unknown[], e: unknown[]) => unknown[],
       });
     });
     return () => { alive = false; };
@@ -211,6 +213,16 @@ export default function DbDiagram() {
     setImgBlob(await exportDiagramImage(target, { format: imgFormat, scale: imgScale }));
   };
 
+  // Apply edge changes (selection, removal) — required for controlled edges,
+  // otherwise clicking a relationship can't select it.
+  const onEdgesChange = useCallback(
+    (changes: unknown[]) => {
+      if (!RF) return;
+      setEdges((es) => RF.applyEdgeChanges(changes, es) as unknown as Record<string, unknown>[]);
+    },
+    [RF],
+  );
+
   // Look up a column's key flags from the current diagram nodes.
   const columnInfo = useCallback(
     (table: string, column: string): RefColumn | null => {
@@ -288,6 +300,7 @@ export default function DbDiagram() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onEdgesDelete={onEdgesDelete}
         onNodeMouseEnter={onNodeMouseEnter}
@@ -302,7 +315,7 @@ export default function DbDiagram() {
         <MiniMap pannable zoomable />
       </ReactFlow>
     );
-  }, [RF, nodes, edges, onNodesChange, onConnect, onEdgesDelete, hoveredId, onNodeMouseEnter, onNodeMouseLeave]);
+  }, [RF, nodes, edges, onNodesChange, onEdgesChange, onConnect, onEdgesDelete, hoveredId, onNodeMouseEnter, onNodeMouseLeave]);
 
   return (
     <div className="space-y-3">
