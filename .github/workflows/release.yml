@@ -139,8 +139,12 @@ jobs:
             | Linux (AppImage) | `*.AppImage` |
 
             ### First run on macOS
-            If macOS blocks the app, open **System Settings → Privacy & Security** and click **Open Anyway**.
-            For screen capture to work, grant **Screen Recording** permission in **Privacy & Security → Screen Recording**.
+            macOS may say the app is **"damaged and can't be opened."** It isn't — the app just isn't
+            Apple-notarized, so macOS quarantines the download. Fix it in one step: drag **GoodWebTools.app**
+            into **Applications**, then in **Terminal** run:
+            `xattr -cr /Applications/GoodWebTools.app`
+            and open it normally. (Right-click → Open does *not* work for the "damaged" message.)
+            For screen capture, grant **Screen Recording** in **System Settings → Privacy & Security → Screen Recording**.
           releaseDraft: true
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
           args: ${{ matrix.args }}
