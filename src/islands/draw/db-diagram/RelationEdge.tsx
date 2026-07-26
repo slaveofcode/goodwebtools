@@ -16,7 +16,7 @@ export default function RelationEdge(props: EdgeProps) {
       id={props.id}
       path={path}
       style={{
-        stroke: active ? HIGHLIGHT.color : 'var(--border, #999)',
+        stroke: active ? HIGHLIGHT.color : 'rgb(var(--border, 10 10 10))',
         strokeWidth: active ? HIGHLIGHT.edgeWidth : HIGHLIGHT.edgeWidthIdle,
         strokeDasharray: active ? '6 3' : undefined,
         opacity: dim ? HIGHLIGHT.dimOpacity : 1,

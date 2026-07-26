@@ -3,11 +3,13 @@ import { KeyRound, Link2 } from 'lucide-react';
 import type { TableColumn } from '@/tools/draw/dbml.lib';
 
 // Central, tunable emphasis config — bolder than dbdiagram.io's defaults.
+// The theme stores colors as RGB components (e.g. --accent: 124 58 237), so they
+// must be wrapped in rgb(); using var(--accent) directly is an invalid color.
 export const HIGHLIGHT = {
   edgeWidth: 3.5,
   edgeWidthIdle: 1.5,
-  color: 'var(--accent, #f59e0b)',
-  glow: 'drop-shadow(0 0 4px var(--accent, #f59e0b))',
+  color: 'rgb(var(--accent, 124 58 237))',
+  glow: 'drop-shadow(0 0 5px rgb(var(--accent, 124 58 237)))',
   dimOpacity: 0.25,
   nodeBorderWidth: 2.5,
 };
@@ -51,7 +53,7 @@ export default function TableNode({ data }: NodeProps) {
                 position={Position.Left}
                 id={c.name}
                 className="opacity-0 transition-opacity group-hover:opacity-100"
-                style={{ width: 10, height: 10, background: HIGHLIGHT.color }}
+                style={{ width: 13, height: 13, background: HIGHLIGHT.color, border: '2px solid #111', zIndex: 10 }}
               />
               <span className="flex items-center gap-1 font-mono">
                 {c.pk && <KeyRound className="h-3 w-3" />}
@@ -64,7 +66,7 @@ export default function TableNode({ data }: NodeProps) {
                 position={Position.Right}
                 id={c.name}
                 className="opacity-0 transition-opacity group-hover:opacity-100"
-                style={{ width: 10, height: 10, background: HIGHLIGHT.color }}
+                style={{ width: 13, height: 13, background: HIGHLIGHT.color, border: '2px solid #111', zIndex: 10 }}
               />
             </div>
           );
