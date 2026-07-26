@@ -125,7 +125,9 @@ export default function DbDiagram() {
       setError(err);
       if (err) return; // keep previous nodes/edges
       const flow = buildFlow(db);
-      const positioned = layoutNodes(flow.nodes, flow.edges, positions.current);
+      // deletable:false so pressing Delete on a selected table doesn't remove it
+      // (only relationship edges are deletable on the canvas).
+      const positioned = layoutNodes(flow.nodes, flow.edges, positions.current).map((n) => ({ ...n, deletable: false }));
       setNodes(positioned as unknown as Record<string, unknown>[]);
       setEdges(flow.edges.map((e) => ({ ...e, type: 'relation' })) as unknown as Record<string, unknown>[]);
     }, 400);
@@ -290,7 +292,6 @@ export default function DbDiagram() {
         onEdgesDelete={onEdgesDelete}
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
-        nodesDeletable={false}
         deleteKeyCode={['Backspace', 'Delete']}
         fitView
         minZoom={0.1}
