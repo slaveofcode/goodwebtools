@@ -2,12 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { Command } from 'cmdk';
 import { searchTools } from '@/registry/tools';
 import { categories } from '@/registry/categories';
+import { isTauri } from '@/services/platform';
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [isDesktop, setIsDesktop] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const results = searchTools(search);
+  // Desktop-only tools (e.g. Hotkey Test) are excluded from web search results.
+  const results = searchTools(search).filter(tool => isDesktop || !tool.desktopOnly);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -19,6 +22,7 @@ export function CommandPalette() {
     // Let any element open search by clicking (dispatch 'gwt:open-search'),
     // so it works without a keyboard.
     const openSearch = () => setOpen(true);
+    setIsDesktop(isTauri());
     document.addEventListener('keydown', down);
     window.addEventListener('gwt:open-search', openSearch);
     return () => {
