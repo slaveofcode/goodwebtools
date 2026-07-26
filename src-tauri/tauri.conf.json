@@ -4,7 +4,8 @@
   "version": "1.0.0-beta.2",
   "identifier": "com.goodwebtools.app",
   "build": {
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run download:ffmpeg",
+    "beforeBuildCommand": "npm run download:ffmpeg && npm run build",
     "frontendDist": "../dist",
     "devUrl": "http://localhost:4321"
   },
@@ -78,6 +79,7 @@
   "bundle": {
     "active": true,
     "createUpdaterArtifacts": true,
+    "externalBin": ["bin/ffmpeg"],
     "targets": ["nsis", "app", "dmg", "deb"],
     "resources": [],
     "category": "Utility",
