@@ -11,6 +11,7 @@ import { ImageResult } from '@/components/ui/ImageResult';
 import { downloadService } from '@/services/download';
 import { exportSql, DIALECTS, type Dialect } from '@/tools/draw/sql-export.lib';
 import { exportDiagramImage, type ImageFormat } from '@/tools/draw/diagram-image.lib';
+import { addRef, removeRef, type RefColumn } from '@/tools/draw/refs.lib';
 import '@xyflow/react/dist/style.css';
 
 const SEED = `Table users {
@@ -208,6 +209,42 @@ export default function DbDiagram() {
     setImgBlob(await exportDiagramImage(target, { format: imgFormat, scale: imgScale }));
   };
 
+  // Look up a column's key flags from the current diagram nodes.
+  const columnInfo = useCallback(
+    (table: string, column: string): RefColumn | null => {
+      const node = (nodes as { id: string; data: { columns: { name: string; pk?: boolean; unique?: boolean }[] } }[]).find((n) => n.id === table);
+      const col = node?.data?.columns?.find((c) => c.name === column);
+      if (!col) return null;
+      return { table, column, pk: !!col.pk, unique: !!col.unique };
+    },
+    [nodes],
+  );
+
+  // Drag column→column to add a relationship (writes a Ref line into the DBML).
+  const onConnect = useCallback(
+    (c: { source: string | null; sourceHandle: string | null; target: string | null; targetHandle: string | null }) => {
+      if (!c.source || !c.target || !c.sourceHandle || !c.targetHandle) return;
+      const from = columnInfo(c.source, c.sourceHandle);
+      const to = columnInfo(c.target, c.targetHandle);
+      if (!from || !to) return;
+      setDbml((prev) => addRef(prev, from, to));
+    },
+    [columnInfo],
+  );
+
+  // Delete a selected relationship (removes its Ref line from the DBML).
+  const onEdgesDelete = useCallback(
+    (deleted: { source: string; target: string; sourceHandle?: string | null; targetHandle?: string | null }[]) => {
+      setDbml((prev) =>
+        deleted.reduce((acc, e) => {
+          if (!e.sourceHandle || !e.targetHandle) return acc;
+          return removeRef(acc, { table: e.source, column: e.sourceHandle }, { table: e.target, column: e.targetHandle });
+        }, prev),
+      );
+    },
+    [],
+  );
+
   const onNodeMouseEnter = useCallback((_e: unknown, node: { id: string }) => setHoveredId(node.id), []);
   const onNodeMouseLeave = useCallback(() => setHoveredId(null), []);
 
@@ -249,8 +286,12 @@ export default function DbDiagram() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
+        onConnect={onConnect}
+        onEdgesDelete={onEdgesDelete}
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
+        nodesDeletable={false}
+        deleteKeyCode={['Backspace', 'Delete']}
         fitView
         minZoom={0.1}
         proOptions={{ hideAttribution: true }}
@@ -260,7 +301,7 @@ export default function DbDiagram() {
         <MiniMap pannable zoomable />
       </ReactFlow>
     );
-  }, [RF, nodes, edges, onNodesChange, hoveredId, onNodeMouseEnter, onNodeMouseLeave]);
+  }, [RF, nodes, edges, onNodesChange, onConnect, onEdgesDelete, hoveredId, onNodeMouseEnter, onNodeMouseLeave]);
 
   return (
     <div className="space-y-3">

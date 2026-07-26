@@ -33,7 +33,7 @@ export default function TableNode({ data }: NodeProps) {
   };
 
   return (
-    <div className="min-w-[200px] border-2 border-border bg-background text-sm shadow-brutal-sm" style={style}>
+    <div className="group min-w-[200px] border-2 border-border bg-background text-sm shadow-brutal-sm" style={style}>
       <div className="border-b-2 border-border bg-muted px-3 py-1.5 font-bold">{d.name}</div>
       <div>
         {d.columns.map((c) => {
@@ -44,15 +44,28 @@ export default function TableNode({ data }: NodeProps) {
               className="relative flex items-center justify-between gap-3 px-3 py-1"
               style={hot ? { background: HIGHLIGHT.color, color: '#000' } : undefined}
             >
-              {/* Column-level handles (both sides) so edges attach at the row. */}
-              <Handle type="target" position={Position.Left} id={c.name} style={{ opacity: 0 }} />
+              {/* Column-level handles (both sides) so edges attach at the row.
+                  Hidden until the table is hovered, then draggable to connect. */}
+              <Handle
+                type="target"
+                position={Position.Left}
+                id={c.name}
+                className="opacity-0 transition-opacity group-hover:opacity-100"
+                style={{ width: 10, height: 10, background: HIGHLIGHT.color }}
+              />
               <span className="flex items-center gap-1 font-mono">
                 {c.pk && <KeyRound className="h-3 w-3" />}
                 {c.fk && !c.pk && <Link2 className="h-3 w-3" />}
                 {c.name}
               </span>
               <span className="font-mono text-xs text-muted-foreground">{c.type}</span>
-              <Handle type="source" position={Position.Right} id={c.name} style={{ opacity: 0 }} />
+              <Handle
+                type="source"
+                position={Position.Right}
+                id={c.name}
+                className="opacity-0 transition-opacity group-hover:opacity-100"
+                style={{ width: 10, height: 10, background: HIGHLIGHT.color }}
+              />
             </div>
           );
         })}
