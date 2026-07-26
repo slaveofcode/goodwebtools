@@ -22,7 +22,7 @@ export function ToolGrid() {
               />
               <h2 className="text-xl font-bold uppercase tracking-tight">{category}</h2>
               <span className="text-sm font-bold text-muted-foreground">
-                ({categoryTools.length})
+                ({categoryTools.filter(tool => !tool.desktopOnly).length})
               </span>
             </div>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -32,6 +32,7 @@ export function ToolGrid() {
                   <a
                     key={tool.id}
                     href={tool.route}
+                    {...(tool.desktopOnly ? { 'data-desktop-only': '' } : {})}
                     className="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal press-brutal"
                   >
                     <span
