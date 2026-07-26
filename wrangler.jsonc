@@ -1,3 +1,6 @@
+// NOTE: The worker names, R2 bucket names, and domain below are specific to the
+// upstream GoodWebTools deployment. To self-host, rename them to your own (and
+// create your own R2 buckets — see DEPLOYMENT.md "Deploy your own instance").
 {
   // Deploys the static Astro build (dist/) plus a small Worker that streams ML
   // model files from R2 at /models/*. Build first (`npm run build`), then

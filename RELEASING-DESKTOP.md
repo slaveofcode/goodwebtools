@@ -2,6 +2,13 @@
 
 How to build, sign, and publish a GoodWebTools desktop release.
 
+> **Self-hosting note:** The signing key, GitHub secrets, and updater endpoints
+> below are specific to the upstream release. A fork building its own desktop
+> app must generate its own signing key (`npm run tauri -- signer generate`),
+> set its own `TAURI_SIGNING_PRIVATE_KEY` secret, and point the updater endpoints
+> in `src-tauri/tauri.conf.json` at its own releases. The upstream private key is
+> never in this repo.
+
 ## Prerequisites
 
 - Rust + Cargo (stable)

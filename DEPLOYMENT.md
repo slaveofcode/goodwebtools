@@ -172,3 +172,23 @@ npm run deploy          # = npm run build && wrangler deploy
 Cloudflare's free tier covers this comfortably: static assets have unlimited
 bandwidth, and R2 has a generous free tier for storage + egress (models are
 immutable and hard-cached, so they download once per visitor).
+
+## Deploy your own instance
+
+GoodWebTools is self-hostable on Cloudflare Workers. To run your own copy:
+
+1. **Fork** this repo and clone it.
+2. **Rename the deployment identifiers** in `wrangler.jsonc` (`name`,
+   `env.staging.name`) and the R2 bucket names to values you own.
+3. **Create the R2 buckets:**
+   `npx wrangler r2 bucket create <your-bucket>` (and a `-staging` one).
+4. **Point branding at your domain** in `src/config.ts` (`SITE_URL`, `REPO_URL`)
+   and `astro.config.mjs` (`site`); update `public/robots.txt`.
+5. **(Optional) analytics:** set `SITE_GA_ID` as a production build variable
+   (Workers Builds → Settings → Build). Leave unset to disable.
+6. **Stage & upload the ML models to R2:** `npm run stage:models` then
+   `npm run sync:r2` (see the section above).
+7. **Connect Workers Builds** to your fork (production branch `main`, build
+   command `npm run build`) and push.
+
+Nothing sends data anywhere except your own Cloudflare account.
