@@ -14,7 +14,7 @@ export class FileService {
     return Array.from(source);
   }
 
-  async getFileHandle(file: File): Promise<FileSystemFileHandle | null> {
+  async getFileHandle(_file: File): Promise<FileSystemFileHandle | null> {
     // File System Access API - may not be available
     if (!('showOpenFilePicker' in window)) {
       return null;
