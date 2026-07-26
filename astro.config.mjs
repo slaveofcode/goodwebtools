@@ -13,7 +13,10 @@ import sitemap from '@astrojs/sitemap';
 //
 // Only applied on Workers Builds (WORKERS_CI=1) so local/manual builds keep their
 // existing behavior. An explicitly-set PUBLIC_* env var always wins (overrides).
-const PROD_GA_ID = 'G-4Q9F8CL7FW';
+// The production Google Analytics ID is provided by the deploy environment
+// (SITE_GA_ID build var), not hard-coded — so forks never report to the
+// upstream Analytics property. Owner sets SITE_GA_ID on the production build.
+const PROD_GA_ID = process.env.SITE_GA_ID || '';
 if (process.env.WORKERS_CI === '1') {
   const isProductionBranch = (process.env.WORKERS_CI_BRANCH || '') === 'main';
   if (process.env.PUBLIC_GA_ID === undefined) {
