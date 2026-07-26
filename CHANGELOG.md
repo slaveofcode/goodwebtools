@@ -2,6 +2,20 @@
 
 All notable changes to GoodWebTools are documented here.
 
+## [1.0.0-beta.2] — 2026-07-27
+
+### Fixed
+- Desktop auto-updater now publishes its manifest + signatures (`latest.json` / `.sig`) so update checks work.
+- Dark mode no longer resets to light when navigating between pages.
+- SVG export handles multi-MB files; monochrome and image viewers render correctly.
+
+### Changed
+- **Settings** and **Hotkey Test** are now desktop-only — hidden on the web.
+
+### Added
+- New tools: **DB Diagram** (DBML ER designer with SQL/image export), **SVG Viewer & Converter**, **Image Viewer & Metadata**, **Black/White & Monochrome**.
+- **Edit in Annotator** handoff on every image-producing tool.
+
 ## [1.0.0-beta.1] — 2026-07-19
 
 ### Desktop app (Tauri 2) — first beta release
