@@ -300,7 +300,7 @@ export default function ObjectRemove() {
               Download PNG
             </Button>
             <CopyImageButton blob={result} />
-          <EditInAnnotatorButton blob={result} filename={file.name.replace(/\.[^.]+$/, '') + '-removed.png'} />
+          <EditInAnnotatorButton blob={result} filename={(file?.name ?? 'image').replace(/\.[^.]+$/, '') + '-removed.png'} />
           </div>
         </div>
       )}

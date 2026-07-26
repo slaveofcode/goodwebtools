@@ -147,7 +147,7 @@ export default function PortraitBlur() {
               Download PNG
             </Button>
             <CopyImageButton blob={result} />
-          <EditInAnnotatorButton blob={result} filename={file.name.replace(/\.[^.]+$/, '') + '-portrait.png'} />
+          <EditInAnnotatorButton blob={result} filename={(file?.name ?? 'image').replace(/\.[^.]+$/, '') + '-portrait.png'} />
           </div>
         </div>
       )}
