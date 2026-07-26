@@ -102,18 +102,18 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
 
     <ViewTransitions />
     <script is:inline>
-      // Apply the saved theme before paint — on the initial load AND after every
-      // View Transitions navigation. Without the astro:after-swap re-apply, the
-      // runtime `dark` class is lost when the incoming (light) page swaps in, so
-      // dark mode "resets" when navigating between pages.
-      function applyStoredTheme() {
-        document.documentElement.classList.toggle(
-          'dark',
-          localStorage.getItem('theme') === 'dark',
-        );
+      // Apply environment classes before paint — on initial load AND after every
+      // View Transitions navigation (otherwise the class is lost when the incoming
+      // static page swaps in). `dark` = saved theme; `tauri` = running in the
+      // desktop app (reveals desktop-only tools that are hidden on the web).
+      var __isTauri = '__TAURI__' in window && window.__TAURI__ !== undefined;
+      function applyEnvClasses() {
+        var root = document.documentElement;
+        root.classList.toggle('dark', localStorage.getItem('theme') === 'dark');
+        root.classList.toggle('tauri', __isTauri);
       }
-      applyStoredTheme();
-      document.addEventListener('astro:after-swap', applyStoredTheme);
+      applyEnvClasses();
+      document.addEventListener('astro:after-swap', applyEnvClasses);
     </script>
 
     <!-- Google Analytics (GDPR): loads only when configured AND consent granted. -->

@@ -99,7 +99,8 @@ export const tools: ToolDef[] = [
     icon: Keyboard,
     summary: 'Test global hotkey registration (desktop only)',
     load: () => import('@/islands/dev/HotkeyTest'),
-    status: 'beta'
+    status: 'beta',
+    desktopOnly: true
   },
   {
     id: 'csv-json',
