@@ -78,7 +78,7 @@ export default function ObjectRemove() {
 
   usePasteImage(f => onDrop([f]));
 
-  useEffect(() => { if (ready) redraw(); /* eslint-disable-next-line */ }, [ready]);
+  useEffect(() => { if (ready) redraw(); }, [ready]);
 
   const pointer = (e: React.PointerEvent) => {
     const c = viewRef.current!;

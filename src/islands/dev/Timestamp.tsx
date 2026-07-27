@@ -6,6 +6,7 @@ import { Alert } from '@/components/ui/Alert';
 import {
   describeDate,
   parseTimestamp,
+  detectNumericUnit,
   formatInTimeZone,
   listTimeZones,
   getLocalTimeZone,
@@ -19,6 +20,7 @@ export default function Timestamp() {
   const [date, setDate] = useState<Date | null>(null);
   const [timeZone, setTimeZone] = useState(() => getLocalTimeZone());
   const [error, setError] = useState('');
+  const [detectedUnit, setDetectedUnit] = useState('');
   const [pickerValue, setPickerValue] = useState('');
   const [pickerZone, setPickerZone] = useState<'local' | 'utc'>('local');
 
@@ -27,6 +29,7 @@ export default function Timestamp() {
     setPickerValue(value);
     setPickerZone(zone);
     setError('');
+    setDetectedUnit('');
     if (!value) return;
     const parsed = parseDateTimeLocal(value, zone);
     if (parsed) setDate(parsed);
@@ -35,6 +38,7 @@ export default function Timestamp() {
   const convert = () => {
     setError('');
     setDate(null);
+    setDetectedUnit('');
     const trimmed = input.trim();
     if (!trimmed) return;
     const parsed = parseTimestamp(trimmed);
@@ -43,10 +47,13 @@ export default function Timestamp() {
       return;
     }
     setDate(parsed);
+    // Surface how an all-digits value was interpreted (seconds/ms/µs/ns).
+    if (/^\d+$/.test(trimmed)) setDetectedUnit(detectNumericUnit(trimmed));
   };
 
   const now = () => {
     setError('');
+    setDetectedUnit('');
     setDate(new Date());
   };
 
@@ -69,7 +76,7 @@ export default function Timestamp() {
         label="Unix timestamp or date string"
         value={input}
         onChange={e => setInput(e.target.value)}
-        placeholder="1720000000  ·  2026-07-12  ·  Jul 12 2026 10:00"
+        placeholder="1720000000 (s · ms · µs · ns)  ·  2026-07-12  ·  Jul 12 2026 10:00"
         rows={2}
       />
 
@@ -113,12 +120,19 @@ export default function Timestamp() {
           </div>
         </div>
 
-        <Button variant="ghost" onClick={() => { setInput(''); setDate(null); setError(''); setPickerValue(''); }}>
+        <Button variant="ghost" onClick={() => { setInput(''); setDate(null); setError(''); setDetectedUnit(''); setPickerValue(''); }}>
           Clear
         </Button>
       </div>
 
       {error && <Alert variant="error">{error}</Alert>}
+
+      {detectedUnit && (
+        <p className="text-sm text-muted-foreground">
+          Detected numeric input as{' '}
+          <span className="font-bold text-foreground">Unix {detectedUnit}</span>.
+        </p>
+      )}
 
       {date && (
         <>

@@ -478,7 +478,6 @@ export default function ImageAnnotate() {
     takePendingImage().then(pending => {
       if (pending) onDrop([new File([pending.blob], pending.name, { type: pending.blob.type })]);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pointer = (e: { clientX: number; clientY: number }) => {
@@ -759,7 +758,6 @@ export default function ImageAnnotate() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // undo/redo use functional state updaters, so a stable listener is fine.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [textEdit]);
 
   const toPngBlob = async (): Promise<Blob> => {

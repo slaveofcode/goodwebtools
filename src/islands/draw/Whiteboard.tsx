@@ -113,7 +113,6 @@ export default function Whiteboard() {
       window.removeEventListener('pagehide', flushSave);
       window.removeEventListener('beforeunload', onBeforeUnload);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

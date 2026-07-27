@@ -14,6 +14,6 @@ export function setProgress(id: string, label: string, percent: number): void {
 
 export function removeProgress(id: string): void {
   const current = progressMap.get();
-  const { [id]: removed, ...rest } = current;
+  const { [id]: _removed, ...rest } = current;
   progressMap.set(rest);
 }
