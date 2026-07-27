@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   describeDate,
   parseTimestamp,
+  detectNumericUnit,
   formatInTimeZone,
   listTimeZones,
   getLocalTimeZone,
@@ -21,6 +22,24 @@ describe('parseTimestamp', () => {
     expect(date!.getTime()).toBe(1700000000000);
   });
 
+  it('parses a 16-digit numeric string as Unix microseconds', () => {
+    const date = parseTimestamp('1700000000000000');
+    expect(date).not.toBeNull();
+    expect(date!.getTime()).toBe(1700000000000);
+  });
+
+  it('parses a 19-digit numeric string as Unix nanoseconds', () => {
+    const date = parseTimestamp('1700000000000000000');
+    expect(date).not.toBeNull();
+    expect(date!.getTime()).toBe(1700000000000);
+  });
+
+  it('parses the reported 19-digit nanosecond value instead of erroring', () => {
+    const date = parseTimestamp('1784694237438743460');
+    expect(date).not.toBeNull();
+    expect(date!.getUTCFullYear()).toBe(2026);
+  });
+
   it('parses an ISO date string', () => {
     const date = parseTimestamp('2026-07-12');
     expect(date).not.toBeNull();
@@ -29,6 +48,15 @@ describe('parseTimestamp', () => {
 
   it('returns null for an unparseable string', () => {
     expect(parseTimestamp('not a date')).toBeNull();
+  });
+});
+
+describe('detectNumericUnit', () => {
+  it('maps digit length to the epoch unit', () => {
+    expect(detectNumericUnit('1700000000')).toBe('seconds'); // 10
+    expect(detectNumericUnit('1700000000000')).toBe('milliseconds'); // 13
+    expect(detectNumericUnit('1700000000000000')).toBe('microseconds'); // 16
+    expect(detectNumericUnit('1784694237438743460')).toBe('nanoseconds'); // 19
   });
 });
 
