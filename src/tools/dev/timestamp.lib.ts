@@ -69,13 +69,40 @@ export function listTimeZones(): string[] {
   return ['UTC', ...zones.filter(zone => zone !== 'UTC')];
 }
 
+export type NumericUnit = 'seconds' | 'milliseconds' | 'microseconds' | 'nanoseconds';
+
+/** Convert a numeric epoch value in the given unit to milliseconds. */
+const TO_MILLIS: Record<NumericUnit, (n: number) => number> = {
+  seconds: n => n * 1000,
+  milliseconds: n => n,
+  microseconds: n => n / 1e3,
+  nanoseconds: n => n / 1e6,
+};
+
+/**
+ * Infer the epoch unit of an all-digits timestamp from its length. Tuned so
+ * present-day values land on the right unit: ~10 digits = seconds,
+ * ~13 = milliseconds, ~16 = microseconds, ~19 = nanoseconds. The seconds/millis
+ * cutoffs (≤10, ≤13) match the tool's original behavior.
+ */
+export function detectNumericUnit(digits: string): NumericUnit {
+  const len = digits.length;
+  if (len <= 10) return 'seconds';
+  if (len <= 13) return 'milliseconds';
+  if (len <= 16) return 'microseconds';
+  return 'nanoseconds';
+}
+
 export function parseTimestamp(input: string): Date | null {
   const trimmed = input.trim();
   let date: Date;
   if (/^\d+$/.test(trimmed)) {
-    // Numeric: treat 10-digit as seconds, 13-digit as milliseconds.
-    const num = Number(trimmed);
-    date = new Date(trimmed.length <= 10 ? num * 1000 : num);
+    // Numeric epoch value: infer the unit (s/ms/µs/ns) from its digit length
+    // and convert to milliseconds for the Date constructor. This lets us accept
+    // high-resolution timestamps (e.g. 19-digit nanoseconds) that would blow
+    // past Date's range if naively treated as milliseconds.
+    const millis = TO_MILLIS[detectNumericUnit(trimmed)](Number(trimmed));
+    date = new Date(millis);
   } else {
     date = new Date(trimmed);
   }
