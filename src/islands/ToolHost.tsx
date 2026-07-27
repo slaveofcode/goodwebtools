@@ -48,10 +48,12 @@ class ToolErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 export default function ToolHost({ toolId }: ToolHostProps) {
   const tool = getToolById(toolId);
 
+  // `tool` is a stable registry reference derived from `toolId`, so keying on
+  // both is equivalent to keying on `toolId` alone — and satisfies the linter.
   const LazyTool = useMemo(() => {
     if (!tool) return null;
     return lazy(tool.load);
-  }, [toolId]);
+  }, [toolId, tool]);
 
   if (!tool || !LazyTool) {
     return <div className="py-12 text-center text-muted-foreground">Tool not found.</div>;

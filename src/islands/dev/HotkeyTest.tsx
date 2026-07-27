@@ -29,7 +29,7 @@ export default function HotkeyTest() {
   const registerTestHotkey = async (keys: string, description: string) => {
     setError(null);
     try {
-      const id = await hotkeyService.register(
+      await hotkeyService.register(
         keys,
         () => {
           setLastTriggered(`${description} (${keys})`);

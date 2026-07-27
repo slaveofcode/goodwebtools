@@ -2,6 +2,17 @@
 
 All notable changes to GoodWebTools are documented here.
 
+## [1.0.0-beta.3] — 2026-07-27
+
+### Added
+- Desktop app now **bundles FFmpeg**, so screen recording with audio works without a separate system FFmpeg install.
+
+### Fixed
+- **Unix Timestamp Converter** now detects and converts microsecond (16-digit) and nanosecond (19-digit) values instead of failing with a parse error.
+
+### Changed
+- Internal: resolved all source-code lint warnings (no behavior change).
+
 ## [1.0.0-beta.2] — 2026-07-27
 
 ### Fixed

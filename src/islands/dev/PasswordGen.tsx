@@ -37,7 +37,6 @@ export default function PasswordGen() {
   // Regenerate whenever any option changes.
   useEffect(() => {
     setPassword(generatePassword({ length, enabled, avoidAmbiguous, minNumbers, minSpecial }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [length, enabled, avoidAmbiguous, minNumbers, minSpecial]);
 
   const clampMin = (value: number) => setMinLength(Math.min(Math.max(value || 1, 1), maxLength));

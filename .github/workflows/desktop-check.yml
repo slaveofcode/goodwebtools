@@ -69,6 +69,16 @@ jobs:
           mkdir -p dist
           echo '<!doctype html><title>stub</title>' > dist/index.html
 
+      # externalBin ("bin/ffmpeg") is validated at compile time by tauri-build;
+      # an empty file is enough for `cargo check` — we never execute it here.
+      - name: Stub ffmpeg sidecar
+        shell: bash
+        run: |
+          mkdir -p src-tauri/bin
+          TRIPLE=$(rustc -vV | sed -n 's/host: //p')
+          EXT=""; [ "${{ runner.os }}" = "Windows" ] && EXT=".exe"
+          : > "src-tauri/bin/ffmpeg-${TRIPLE}${EXT}"
+
       - name: cargo check (all targets)
         working-directory: src-tauri
         run: cargo check --all-targets
