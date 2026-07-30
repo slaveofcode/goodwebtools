@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -475,6 +475,28 @@ export const tools: ToolDef[] = [
     summary: 'Auto-detect and hide faces with on-device AI',
     load: () => import('@/islands/image/FaceBlur'),
     status: 'stable'
+  },
+  {
+    id: 'image-ocr',
+    name: 'Image to Text (OCR)',
+    category: 'Image',
+    route: '/tools/image-ocr',
+    keywords: ['ocr', 'receipt', 'scan', 'text', 'extract', 'recognize', 'read', 'document'],
+    icon: ScanText,
+    summary: 'Extract text from an image or PDF with on-device AI',
+    load: () => import('@/islands/image/ImageOcr'),
+    status: 'beta'
+  },
+  {
+    id: 'image-receipt-scanner',
+    name: 'Receipt Scanner',
+    category: 'Image',
+    route: '/tools/image-receipt-scanner',
+    keywords: ['receipt', 'scanner', 'expense', 'invoice', 'ocr', 'extract', 'total', 'merchant'],
+    icon: Receipt,
+    summary: 'Pull merchant, date, and totals from a receipt on-device',
+    load: () => import('@/islands/image/ReceiptScanner'),
+    status: 'beta'
   },
   {
     id: 'image-bg-remove',
