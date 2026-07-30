@@ -122,16 +122,49 @@ function findMerchant(lines: OcrLine[], kw: ReceiptKeywords): string | null {
   return null;
 }
 
-export function parseReceipt(ocr: OcrResult, keywords: ReceiptKeywords = EN_KEYWORDS): ReceiptData {
-  const { lines } = ocr;
-  const date = parseDate(lines.map((l) => l.text).join('\n'));
+// Merge a set of same-row segments into one line: text joined left-to-right,
+// box spanning them all, lowest confidence kept.
+function mergeRow(seg: OcrLine[]): OcrLine {
+  const ordered = [...seg].sort((a, b) => a.box.x - b.box.x);
+  const x = Math.min(...ordered.map((l) => l.box.x));
+  const y = Math.min(...ordered.map((l) => l.box.y));
+  const right = Math.max(...ordered.map((l) => l.box.x + l.box.width));
+  const bottom = Math.max(...ordered.map((l) => l.box.y + l.box.height));
   return {
-    merchant: findMerchant(lines, keywords),
+    text: ordered.map((l) => l.text).join(' '),
+    box: { x, y, width: right - x, height: bottom - y },
+    confidence: Math.min(...ordered.map((l) => l.confidence)),
+  };
+}
+
+// Group detections into visual rows by vertical overlap. PP-OCR often emits a
+// label and its amount as separate boxes on the same line; the finders need
+// them combined so "Subtotal" and "$100.00" match as one row.
+export function groupRows(lines: OcrLine[]): OcrLine[] {
+  const sorted = [...lines].sort((a, b) => a.box.y - b.box.y || a.box.x - b.box.x);
+  const groups: OcrLine[][] = [];
+  for (const l of sorted) {
+    const anchor = groups[groups.length - 1]?.[0];
+    const tol = anchor ? Math.min(anchor.box.height, l.box.height) * 0.6 : 0;
+    if (anchor && Math.abs(l.box.y - anchor.box.y) <= tol) {
+      groups[groups.length - 1].push(l);
+    } else {
+      groups.push([l]);
+    }
+  }
+  return groups.map(mergeRow);
+}
+
+export function parseReceipt(ocr: OcrResult, keywords: ReceiptKeywords = EN_KEYWORDS): ReceiptData {
+  const rows = groupRows(ocr.lines);
+  const date = parseDate(rows.map((l) => l.text).join('\n'));
+  return {
+    merchant: findMerchant(rows, keywords),
     dateRaw: date?.raw ?? null,
     dateIso: date?.iso ?? null,
-    currency: findCurrency(lines),
-    subtotal: firstAmount(lines, keywords.subtotal),
-    tax: firstAmount(lines, keywords.tax),
-    total: findTotal(lines, keywords),
+    currency: findCurrency(rows),
+    subtotal: firstAmount(rows, keywords.subtotal),
+    tax: firstAmount(rows, keywords.tax),
+    total: findTotal(rows, keywords),
   };
 }

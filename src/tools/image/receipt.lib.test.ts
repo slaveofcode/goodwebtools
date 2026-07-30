@@ -12,6 +12,17 @@ function ocr(rows: [string, number][]): OcrResult {
   return { text: rows.map((r) => r[0]).join('\n'), lines, backend: 'wasm' };
 }
 
+// Build an OcrResult from [text, x, y] triples — lets a label and its amount be
+// two separate detections on the same row, as real PP-OCR output often is.
+function ocrXY(rows: [string, number, number][]): OcrResult {
+  const lines: OcrLine[] = rows.map(([text, x, y]) => ({
+    text,
+    box: { x, y, width: 40, height: 12 },
+    confidence: 0.9,
+  }));
+  return { text: rows.map((r) => r[0]).join('\n'), lines, backend: 'wasm' };
+}
+
 describe('parseAmount', () => {
   const cases: [string, number | null][] = [
     ['$12.34', 12.34],
@@ -80,6 +91,24 @@ describe('parseReceipt', () => {
     expect(parseReceipt(ocr([['xxxxx', 0], ['yyyyy', 10]]))).toEqual({
       merchant: 'xxxxx', dateRaw: null, dateIso: null, currency: null, subtotal: null, tax: null, total: null,
     });
+  });
+
+  it('groups label + amount detected as separate boxes on the same row', () => {
+    // Real PP-OCR splits "Subtotal   $100.00" into two boxes at the same y.
+    const r = parseReceipt(
+      ocrXY([
+        ['Invoice', 0, 0],
+        ['Subtotal', 0, 60],
+        ['$100.00', 200, 60],
+        ['Total', 0, 74],
+        ['$100.00', 200, 74],
+        ['Amount due', 0, 88],
+        ['$100.00 USD', 200, 88],
+      ]),
+    );
+    expect(r.subtotal).toBe(100);
+    expect(r.total).toBe(100);
+    expect(r.currency).toBe('$');
   });
 
   it('accepts a custom keyword set', () => {
