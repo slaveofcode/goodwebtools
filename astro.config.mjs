@@ -109,6 +109,8 @@ export default defineConfig({
           '**/html.worker-*.js',
           '**/monaco-setup*.js',
           '**/DbDiagram*.js',
+          '**/ppu-paddle-ocr*.js',
+          '**/ort-*.wasm',
         ],
         runtimeCaching: [
           {
