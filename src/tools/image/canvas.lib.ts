@@ -61,6 +61,18 @@ async function encodeCanvas(
   );
 }
 
+/**
+ * Map a user-facing Scale percent (1–100) to a `fontScale` fraction of the
+ * image's shorter side. Larger percents yield a bigger font and — because the
+ * tiled layout derives its gap from font size — proportionally wider gaps.
+ */
+export function scaleToFontScale(percent: number): number {
+  const MIN_FS = 1 / 24; // narrow
+  const MAX_FS = 1 / 4; // big
+  const clamped = Math.min(100, Math.max(1, percent));
+  return MIN_FS + ((clamped - 1) / 99) * (MAX_FS - MIN_FS);
+}
+
 export type WatermarkLayout = 'diagonal' | 'tiled' | 'bottom-right';
 
 export interface ImageWatermarkOptions {
