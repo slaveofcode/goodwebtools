@@ -433,6 +433,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'image-qr',
+    name: 'Add QR to Image',
+    category: 'Image',
+    route: '/tools/image-qr',
+    keywords: ['image', 'qr', 'qrcode', 'qr code', 'overlay', 'corner', 'url', 'link', 'add'],
+    icon: QrCode,
+    summary: 'Overlay a QR code onto a corner of an image',
+    load: () => import('@/islands/image/ImageQr'),
+    status: 'beta'
+  },
+  {
     id: 'image-merge',
     name: 'Merge Images',
     category: 'Image',
