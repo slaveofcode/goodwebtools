@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { ImageResult } from '@/components/ui/ImageResult';
-import { CopyImageButton } from '@/components/ui/CopyImageButton';
-import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import CameraCapture from './CameraCapture';
 
 export default function CameraTool() {
@@ -26,12 +24,9 @@ export default function CameraTool() {
 
       {photo && (
         <div className="space-y-2">
+          {/* ImageResult already renders Download / Copy image / Edit in Annotator. */}
           <ImageResult blob={photo} filename={photo.name} />
-          <div className="flex flex-wrap gap-2">
-            <CopyImageButton blob={photo} />
-            <EditInAnnotatorButton blob={photo} filename={photo.name} />
-            <Button variant="secondary" onClick={retake}>Retake</Button>
-          </div>
+          <Button variant="secondary" onClick={retake}>Retake</Button>
         </div>
       )}
     </div>
