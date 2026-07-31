@@ -422,6 +422,17 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
+    id: 'image-stamp',
+    name: 'Image Stamp',
+    category: 'Image',
+    route: '/tools/image-stamp',
+    keywords: ['image', 'stamp', 'confidential', 'paid', 'draft', 'approved', 'rubber stamp', 'status', 'mark'],
+    icon: Stamp,
+    summary: 'Stamp CONFIDENTIAL, PAID and other status marks onto an image',
+    load: () => import('@/islands/image/ImageStamp'),
+    status: 'beta'
+  },
+  {
     id: 'image-merge',
     name: 'Merge Images',
     category: 'Image',
