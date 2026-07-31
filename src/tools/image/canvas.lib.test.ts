@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { scaleToWidth, scaleToHeight, formatBytes } from './canvas.lib';
+import { scaleToWidth, scaleToHeight, formatBytes, scaleToFontScale } from './canvas.lib';
 
 describe('scaleToWidth', () => {
   it('preserves aspect ratio when scaling by width', () => {
@@ -21,6 +21,21 @@ describe('scaleToHeight', () => {
   });
   it('handles a zero source height', () => {
     expect(scaleToHeight(1000, 0, 250)).toBe(0);
+  });
+});
+
+describe('scaleToFontScale', () => {
+  it('maps 1% to the narrow bound (1/24) and 100% to the wide bound (1/4)', () => {
+    expect(scaleToFontScale(1)).toBeCloseTo(1 / 24, 5);
+    expect(scaleToFontScale(100)).toBeCloseTo(1 / 4, 5);
+  });
+  it('increases monotonically with the percent', () => {
+    expect(scaleToFontScale(20)).toBeLessThan(scaleToFontScale(80));
+  });
+  it('clamps out-of-range percents to [1, 100]', () => {
+    expect(scaleToFontScale(0)).toBe(scaleToFontScale(1));
+    expect(scaleToFontScale(-50)).toBe(scaleToFontScale(1));
+    expect(scaleToFontScale(150)).toBe(scaleToFontScale(100));
   });
 });
 

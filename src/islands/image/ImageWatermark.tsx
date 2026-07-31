@@ -3,7 +3,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
-import { watermarkImage, keepFormat, type WatermarkLayout } from '@/tools/image/canvas.lib';
+import { watermarkImage, keepFormat, scaleToFontScale, type WatermarkLayout } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
 
 const LAYOUTS: { value: WatermarkLayout; label: string }[] = [
@@ -12,17 +12,11 @@ const LAYOUTS: { value: WatermarkLayout; label: string }[] = [
   { value: 'bottom-right', label: 'Corner' },
 ];
 
-const SIZES = [
-  { value: 1 / 16, label: 'Small' },
-  { value: 1 / 10, label: 'Medium' },
-  { value: 1 / 6, label: 'Large' },
-];
-
 export default function ImageWatermark() {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState('© GoodWebTools');
   const [layout, setLayout] = useState<WatermarkLayout>('diagonal');
-  const [fontScale, setFontScale] = useState(1 / 10);
+  const [scale, setScale] = useState(30);
   const [opacity, setOpacity] = useState(60);
   const [color, setColor] = useState('#808080');
   const [result, setResult] = useState<Blob | null>(null);
@@ -50,7 +44,7 @@ export default function ImageWatermark() {
       const { blob } = await watermarkImage(file, {
         text: text.trim(),
         layout,
-        fontScale,
+        fontScale: scaleToFontScale(scale),
         opacity: opacity / 100,
         color,
       });
@@ -102,23 +96,20 @@ export default function ImageWatermark() {
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Size
+      <label className="block space-y-1.5">
+        <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          <span>Scale</span>
+          <span>{scale}%</span>
         </span>
-        <div className="flex flex-wrap gap-2">
-          {SIZES.map(({ value, label }) => (
-            <Button
-              key={label}
-              variant={fontScale === value ? 'primary' : 'secondary'}
-              aria-pressed={fontScale === value}
-              onClick={() => setFontScale(value)}
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-      </div>
+        <input
+          type="range"
+          min={1}
+          max={100}
+          value={scale}
+          onChange={e => setScale(Number(e.target.value))}
+          className="w-full accent-accent"
+        />
+      </label>
 
       <div className="flex flex-wrap items-end gap-6">
         <label className="flex-1 space-y-1.5">
