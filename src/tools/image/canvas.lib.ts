@@ -47,7 +47,7 @@ export function keepFormat(type: string): { mime: string; ext: string; quality?:
   return { mime: 'image/png', ext: 'png' };
 }
 
-async function encodeCanvas(
+export async function encodeCanvas(
   canvas: HTMLCanvasElement,
   mimeType: string,
   quality?: number
