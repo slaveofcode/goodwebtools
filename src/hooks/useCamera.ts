@@ -32,19 +32,23 @@ export function useCamera() {
     setStream(null);
   }, []);
 
-  const open = useCallback(async (mode: 'environment' | 'user') => {
+  const open = useCallback(async (mode: 'environment' | 'user'): Promise<boolean> => {
     setError(null);
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       setError({ reason: 'unsupported', message: MESSAGES.unsupported });
-      return;
+      return false;
     }
     if (typeof window !== 'undefined' && window.isSecureContext === false) {
       setError({ reason: 'insecure', message: MESSAGES.insecure });
-      return;
+      return false;
     }
+    // Release the current camera BEFORE requesting another. Some devices/browsers
+    // only allow one open stream, so requesting a second while the first is live
+    // throws NotReadableError ("Could not start the camera").
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
     try {
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: false });
-      streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = s;
       setStream(s);
       setFacingMode(mode);
@@ -54,17 +58,24 @@ export function useCamera() {
       } catch {
         setHasMultiple(false);
       }
+      return true;
     } catch (err) {
+      setStream(null);
       const reason = classify(err);
       setError({ reason, message: MESSAGES[reason] });
+      return false;
     }
   }, []);
 
-  const start = useCallback(() => open('environment'), [open]);
-  const switchCamera = useCallback(
-    () => open(facingMode === 'environment' ? 'user' : 'environment'),
-    [open, facingMode],
-  );
+  const start = useCallback(async () => { await open('environment'); }, [open]);
+
+  // Try the other camera; if it can't be opened, fall back to the current one so
+  // the user is never stranded on an error screen with no working camera.
+  const switchCamera = useCallback(async () => {
+    const next = facingMode === 'environment' ? 'user' : 'environment';
+    const ok = await open(next);
+    if (!ok) await open(facingMode);
+  }, [open, facingMode]);
 
   // Attach the stream to the <video> element whenever it changes.
   useEffect(() => {
