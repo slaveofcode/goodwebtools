@@ -6,6 +6,7 @@ import { usePasteImage } from '@/hooks/usePasteImage';
 import { applyCleanup, rotate90 } from '@/tools/image/ocr-preprocess.lib';
 import { recognize, OcrError, type OcrResult } from '@/tools/image/ocr.lib';
 import { getPdfPageCount, renderPdfPage } from '@/tools/image/ocr-pdf.lib';
+import CameraCapture from './CameraCapture';
 
 const MAX_DIM = 2000;
 
@@ -60,6 +61,7 @@ export default function OcrWorkbench({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [retryable, setRetryable] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const previewRef = useRef<HTMLCanvasElement | null>(null);
 
   const reset = () => {
@@ -127,12 +129,22 @@ export default function OcrWorkbench({
 
   return (
     <div className="space-y-4">
-      <Dropzone onDrop={onDrop} accept="image/*,application/pdf" multiple={false}>
-        <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an image or PDF, or click to browse</p>
-          <p className="text-sm text-muted-foreground">Runs on-device · or paste (⌘V). First use downloads the OCR model once.</p>
+      {cameraOpen ? (
+        <CameraCapture
+          onCapture={(f) => { setCameraOpen(false); onDrop([f]); }}
+          onCancel={() => setCameraOpen(false)}
+        />
+      ) : (
+        <div className="space-y-2">
+          <Dropzone onDrop={onDrop} accept="image/*,application/pdf" multiple={false}>
+            <div className="space-y-1">
+              <p className="text-lg font-bold">Drop an image or PDF, or click to browse</p>
+              <p className="text-sm text-muted-foreground">Runs on-device · or paste (⌘V). First use downloads the OCR model once.</p>
+            </div>
+          </Dropzone>
+          <Button variant="secondary" onClick={() => setCameraOpen(true)}>Use camera</Button>
         </div>
-      </Dropzone>
+      )}
 
       {file && <p className="text-sm font-bold text-foreground">{file.name}</p>}
 
