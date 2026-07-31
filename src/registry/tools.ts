@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -618,6 +618,17 @@ export const tools: ToolDef[] = [
     summary: 'Turn a video clip into an animated GIF (client-side)',
     load: () => import('@/islands/media/VideoToGif'),
     status: 'stable'
+  },
+  {
+    id: 'voice-to-text',
+    name: 'Voice to Text',
+    category: 'Media',
+    route: '/tools/voice-to-text',
+    keywords: ['voice', 'speech', 'transcribe', 'transcription', 'whisper', 'audio to text', 'dictation', 'subtitles', 'srt', 'vtt', 'stt'],
+    icon: Mic,
+    summary: 'Transcribe speech to text on-device (Whisper), with SRT/VTT export',
+    load: () => import('@/islands/media/VoiceToText'),
+    status: 'beta'
   },
   {
     id: 'video-convert',

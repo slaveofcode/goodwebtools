@@ -111,6 +111,8 @@ export default defineConfig({
           '**/DbDiagram*.js',
           '**/ppu-paddle-ocr*.js',
           '**/ort-*.wasm',
+          '**/transformers*.js',
+          '**/*huggingface*.js',
         ],
         runtimeCaching: [
           {
