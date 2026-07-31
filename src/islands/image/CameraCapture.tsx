@@ -39,8 +39,10 @@ export default function CameraCapture({
 
   const onFallbackFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) onCapture(file);
+    if (file) { stop(); onCapture(file); }
   };
+
+  const useDeviceCamera = () => fileInputRef.current?.click();
 
   return (
     <div className="space-y-3 border-2 border-border p-3">
@@ -48,17 +50,9 @@ export default function CameraCapture({
         <div className="space-y-2">
           <Alert variant="error">{error.message}</Alert>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>Use device camera</Button>
+            <Button variant="secondary" onClick={useDeviceCamera}>Use device camera</Button>
             <Button variant="ghost" onClick={cancel}>Cancel</Button>
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={onFallbackFile}
-            className="hidden"
-          />
         </div>
       ) : (
         <div className="space-y-3">
@@ -66,10 +60,22 @@ export default function CameraCapture({
           <div className="flex flex-wrap gap-2">
             <Button onClick={capture} disabled={busy || !stream}>{busy ? 'Capturing…' : 'Capture'}</Button>
             {hasMultiple && <Button variant="secondary" onClick={switchCamera}>Switch camera</Button>}
+            {/* Always available — opens the OS camera app on phones. */}
+            <Button variant="secondary" onClick={useDeviceCamera}>Use device camera</Button>
             <Button variant="ghost" onClick={cancel}>Cancel</Button>
           </div>
         </div>
       )}
+
+      {/* Native capture input, always mounted so it works in either state. */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={onFallbackFile}
+        className="hidden"
+      />
     </div>
   );
 }
