@@ -67,6 +67,7 @@
     "@tauri-apps/plugin-http": "^2.5.9",
     "@tauri-apps/plugin-updater": "^2.10.1",
     "@tensorflow/tfjs": "^4.22.0",
+    "@tmcw/togeojson": "^7.1.2",
     "@upscalerjs/esrgan-slim": "^1.0.0",
     "@xyflow/react": "^12.11.2",
     "astro": "^4.16.19",
