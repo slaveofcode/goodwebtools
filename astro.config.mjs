@@ -66,7 +66,10 @@ export default defineConfig({
   integrations: [
     react(),
     tailwind(),
-    sitemap(),
+    sitemap({
+      // Emit hreflang alternates linking each page to its /id/ counterpart.
+      i18n: { defaultLocale: 'en', locales: { en: 'en', id: 'id' } },
+    }),
     AstroPWA({
       mode: 'production',
       base: '/',

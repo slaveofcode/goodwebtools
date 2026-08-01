@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Github, Bookmark, Info, ExternalLink, Settings } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { LangSwitcher } from './LangSwitcher';
 import { CommandPalette } from './CommandPalette';
 import { Modal } from '@/components/ui/Modal';
 import { initTheme } from '@/stores/theme.store';
@@ -68,6 +69,7 @@ export function ShellIsland() {
               <button onClick={() => setModal('bookmark')} aria-label="Bookmark this site" title="Bookmark this site" className={iconBtn}>
                 <Bookmark className="h-4 w-4" />
               </button>
+              <LangSwitcher />
               <ThemeToggle />
             </div>
           </div>
