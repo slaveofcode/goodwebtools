@@ -2,6 +2,7 @@
 import { ChevronRight } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
 import ToolHost from '@/islands/ToolHost';
+import ShareButton from '@/islands/share/ShareButton';
 import { tools, getToolById } from '@/registry/tools';
 import { SITE_URL, SITE_NAME } from '@/config';
 
@@ -63,13 +64,16 @@ const breadcrumbJsonLd = {
     </nav>
 
     <div class="mb-6">
-      <div class="mb-1 flex flex-wrap items-center gap-2">
-        <h1 class="text-3xl font-bold uppercase tracking-tight">{tool.name}</h1>
-        {tool.status !== 'stable' && (
-          <span class="border-2 border-border bg-accent px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent-foreground">
-            {tool.status}
-          </span>
-        )}
+      <div class="mb-1 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="text-3xl font-bold uppercase tracking-tight">{tool.name}</h1>
+          {tool.status !== 'stable' && (
+            <span class="border-2 border-border bg-accent px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent-foreground">
+              {tool.status}
+            </span>
+          )}
+        </div>
+        <ShareButton client:idle url={toolUrl} title={`${tool.name} — ${SITE_NAME}`} text={tool.summary} />
       </div>
       <p class="text-muted-foreground">{tool.summary}</p>
     </div>
