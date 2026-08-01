@@ -21,6 +21,7 @@ export default function MapExplorer() {
   const measureMarkersRef = useRef<MlMarker[]>([]);
   const measureRef = useRef<LatLng[]>([]);
   const measuringRef = useRef(false);
+  const roRef = useRef<ResizeObserver | null>(null);
 
   const [style, setStyle] = useState<StyleChoice>('auto');
   const [pin, setPin] = useState<LatLng | null>(null);
@@ -86,9 +87,16 @@ export default function MapExplorer() {
       map.addControl(new ml.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: false }), 'top-right');
       map.on('click', e => handleClick(e.lngLat.lat, e.lngLat.lng));
       map.on('style.load', () => { ensureMeasureLayer(); refreshMeasureLine(); });
+      map.on('load', () => map.resize());
+      // The container is mounted via a dynamically-imported island, so it can be
+      // laid out after the map is created — resize once it (or its size) settles,
+      // otherwise the map renders blank at 0×0.
+      const ro = new ResizeObserver(() => map.resize());
+      if (containerRef.current) ro.observe(containerRef.current);
+      roRef.current = ro;
       mapRef.current = map;
     })();
-    return () => { cancelled = true; mapRef.current?.remove(); mapRef.current = null; };
+    return () => { cancelled = true; roRef.current?.disconnect(); mapRef.current?.remove(); mapRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
