@@ -113,6 +113,7 @@ export default defineConfig({
           '**/ort-*.wasm',
           '**/transformers*.js',
           '**/*huggingface*.js',
+          '**/maplibre-gl*.js',
         ],
         runtimeCaching: [
           {
