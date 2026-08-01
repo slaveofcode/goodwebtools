@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -552,6 +552,17 @@ export const tools: ToolDef[] = [
     summary: 'Remove EXIF, GPS, and all metadata from an image',
     load: () => import('@/islands/image/ImageScrub'),
     status: 'stable'
+  },
+  {
+    id: 'file-transfer',
+    name: 'P2P File Transfer',
+    category: 'Files',
+    route: '/tools/file-transfer',
+    keywords: ['file', 'transfer', 'send', 'share', 'p2p', 'peer to peer', 'webrtc', 'direct', 'device to device'],
+    icon: Send,
+    summary: 'Send a file directly to another device, peer-to-peer',
+    load: () => import('@/islands/files/FileTransfer'),
+    status: 'beta'
   },
   {
     id: 'file-crypt',
