@@ -13,6 +13,10 @@ export interface ManualOptions {
   iceServers?: RTCIceServer[];
   onState?: (state: RTCPeerConnectionState) => void;
   onChannel?: (channel: RTCDataChannel) => void;
+  /** Local media whose tracks are added to the connection (video call). */
+  localStream?: MediaStream;
+  /** Called with the remote media stream (video call). */
+  onTrack?: (stream: MediaStream) => void;
 }
 
 export interface ManualConnection {
@@ -47,9 +51,16 @@ export function createManualConnection(opts: ManualOptions): ManualConnection {
   const pc = new RTCPeerConnection({ iceServers: opts.iceServers ?? DEFAULT_ICE_SERVERS });
   pc.onconnectionstatechange = () => opts.onState?.(pc.connectionState);
 
+  if (opts.onTrack) pc.ontrack = e => { if (e.streams[0]) opts.onTrack!(e.streams[0]); };
+  if (opts.localStream) {
+    for (const track of opts.localStream.getTracks()) pc.addTrack(track, opts.localStream);
+  }
+
   if (opts.initiator) {
-    const channel = pc.createDataChannel('data', { ordered: true });
-    opts.onChannel?.(channel);
+    if (opts.onChannel) {
+      const channel = pc.createDataChannel('data', { ordered: true });
+      opts.onChannel(channel);
+    }
   } else {
     pc.ondatachannel = e => opts.onChannel?.(e.channel);
   }
