@@ -34,3 +34,21 @@ export const categoryColors: Record<Category, string> = {
 export const categoryNotes: Partial<Record<Category, string>> = {
   Network: 'These tools connect two devices directly (peer-to-peer). By default a minimal signaling server only introduces the devices — your media and files never pass through it — and you can switch to a fully serverless manual mode or bring your own STUN/TURN servers.',
 };
+
+/** URL slug for a category hub page, e.g. 'PDF' → 'pdf'. */
+export function categorySlug(category: Category): string {
+  return category.toLowerCase();
+}
+
+/** SEO lead copy for each category hub page (unique, keyword-aware). */
+export const categoryDescriptions: Record<Category, string> = {
+  Dev: 'Free developer utilities that run entirely in your browser — format and validate JSON, encode Base64 and URLs, hash and diff text, generate UUIDs, and more. Nothing is uploaded.',
+  PDF: 'Work with PDFs privately in your browser — merge, split, compress, convert, repair, protect and edit. Your documents never leave your device, so even confidential files stay safe.',
+  Image: 'Edit and convert images on your device — resize, crop, compress, convert formats, remove backgrounds, upscale, blur faces, extract text and more. No uploads, no watermarks.',
+  Files: 'Everyday file utilities that keep your data local — archive, extract, encrypt and inspect files right in the browser with nothing sent to a server.',
+  Draw: 'Simple drawing and diagramming tools that run in your browser — sketch, annotate and create diagrams without an account or any upload.',
+  Media: 'Private audio and video utilities — convert, trim, record and transcribe media entirely on your device using on-device processing. Your recordings never leave your browser.',
+  Network: 'Peer-to-peer tools that connect two devices directly to transfer files or communicate — your data flows device to device, not through a server.',
+  Maps: 'Open-source mapping tools — convert coordinates, explore and export maps, and view GeoJSON, GPX and KML files. Built on open map data, running in your browser.',
+  Playground: 'Interactive playgrounds and experiments to explore and learn — all running client-side in your browser.',
+};
