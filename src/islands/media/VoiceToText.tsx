@@ -79,6 +79,12 @@ export default function VoiceToText() {
   // Revoke the preview URL on unmount.
   useEffect(() => () => { if (urlRef.current) URL.revokeObjectURL(urlRef.current); }, []);
 
+  // Ask the browser to keep this origin's storage persistent, so the (potentially
+  // large) cached Whisper model isn't evicted between sessions and re-downloaded.
+  useEffect(() => {
+    navigator.storage?.persist?.().catch(() => {});
+  }, []);
+
   // Tick an elapsed counter while transcribing (the worker keeps the UI responsive).
   useEffect(() => {
     if (!transcribing) return;
