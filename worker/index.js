@@ -28,6 +28,31 @@ export default {
       return env.SIGNAL.getByName(roomId).fetch(request);
     }
 
+    // Same-origin proxy for Hugging Face model files. transformers.js fetches
+    // Whisper weights from huggingface.co, which 302-redirects large files to a
+    // CDN — the browser/Workbox can't reliably cache those redirected responses,
+    // so the model re-downloaded on every refresh. Proxying resolves the redirect
+    // server-side and returns the bytes same-origin with an immutable cache header,
+    // so the browser HTTP-caches them and they survive refreshes.
+    if (url.pathname.startsWith('/hf/')) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      const upstream = 'https://huggingface.co/' + url.pathname.slice('/hf/'.length) + url.search;
+      const res = await fetch(upstream, {
+        headers: { 'user-agent': 'goodwebtools-proxy' },
+        cf: { cacheEverything: true, cacheTtl: 31536000 },
+      });
+      if (!res.ok && res.status !== 206) {
+        return new Response('Upstream model fetch failed', { status: res.status || 502 });
+      }
+      const headers = new Headers(res.headers);
+      headers.set('cache-control', 'public, max-age=31536000, immutable');
+      headers.set('access-control-allow-origin', '*');
+      headers.delete('set-cookie');
+      return new Response(res.body, { status: res.status, headers });
+    }
+
     if (url.pathname.startsWith('/models/')) {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         return new Response('Method not allowed', { status: 405 });
