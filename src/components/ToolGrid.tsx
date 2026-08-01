@@ -1,11 +1,13 @@
 import { tools } from '@/registry/tools';
 import { categories, categoryColors, categoryNotes } from '@/registry/categories';
+import { localizePath, DEFAULT_LOCALE, type Lang } from '@/i18n/config';
 
 /**
  * Static tool grid grouped by category. Rendered without a client directive so
- * Astro emits plain HTML (icons become inline SVG) — no JS shipped.
+ * Astro emits plain HTML (icons become inline SVG) — no JS shipped. `lang`
+ * localizes the tool links (e.g. /id/tools/x on the Indonesian home page).
  */
-export function ToolGrid() {
+export function ToolGrid({ lang = DEFAULT_LOCALE }: { lang?: Lang }) {
   const usedCategories = categories.filter(category =>
     tools.some(tool => tool.category === category)
   );
@@ -34,7 +36,7 @@ export function ToolGrid() {
                 return (
                   <a
                     key={tool.id}
-                    href={tool.route}
+                    href={localizePath(tool.route, lang)}
                     {...(tool.desktopOnly ? { 'data-desktop-only': '' } : {})}
                     className="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal press-brutal"
                   >

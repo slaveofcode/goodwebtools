@@ -1,4 +1,5 @@
 import type { Category } from '@/types/tool';
+import type { Lang } from '@/i18n/config';
 
 export const categories: Category[] = [
   'Dev',
@@ -39,6 +40,24 @@ export const categoryNotes: Partial<Record<Category, string>> = {
 export function categorySlug(category: Category): string {
   return category.toLowerCase();
 }
+
+/** Category lead copy in the given language (English fallback). */
+export function catDescription(category: Category, lang: Lang): string {
+  return lang === 'id' ? categoryDescriptionsId[category] : categoryDescriptions[category];
+}
+
+/** SEO lead copy for each category hub page, per language (falls back to English). */
+export const categoryDescriptionsId: Record<Category, string> = {
+  Dev: 'Utilitas pengembang gratis yang berjalan sepenuhnya di browser Anda — format dan validasi JSON, enkode Base64 dan URL, hash dan bandingkan teks, buat UUID, dan lainnya. Tidak ada yang diunggah.',
+  PDF: 'Kelola PDF secara privat di browser Anda — gabung, pisah, perkecil, konversi, perbaiki, lindungi, dan edit. Dokumen Anda tidak pernah meninggalkan perangkat, jadi berkas rahasia pun tetap aman.',
+  Image: 'Edit dan konversi gambar di perangkat Anda — ubah ukuran, potong, perkecil, konversi format, hapus latar belakang, tingkatkan resolusi, buramkan wajah, ekstrak teks, dan lainnya. Tanpa unggahan, tanpa tanda air.',
+  Files: 'Utilitas berkas sehari-hari yang menjaga data Anda tetap lokal — arsipkan, ekstrak, enkripsi, dan periksa berkas langsung di browser tanpa mengirim apa pun ke server.',
+  Draw: 'Tool menggambar dan membuat diagram sederhana yang berjalan di browser Anda — membuat sketsa, anotasi, dan diagram tanpa akun atau unggahan apa pun.',
+  Media: 'Utilitas audio dan video privat — konversi, pangkas, rekam, dan transkripsi media sepenuhnya di perangkat Anda. Rekaman Anda tidak pernah meninggalkan browser.',
+  Network: 'Tool peer-to-peer yang menghubungkan dua perangkat secara langsung untuk mentransfer berkas atau berkomunikasi — data Anda mengalir antar perangkat, bukan melalui server.',
+  Maps: 'Tool pemetaan sumber terbuka — konversi koordinat, jelajahi dan ekspor peta, serta lihat berkas GeoJSON, GPX, dan KML. Dibangun di atas data peta terbuka, berjalan di browser Anda.',
+  Playground: 'Playground interaktif dan eksperimen untuk menjelajah dan belajar — semuanya berjalan di sisi klien di browser Anda.',
+};
 
 /** SEO lead copy for each category hub page (unique, keyword-aware). */
 export const categoryDescriptions: Record<Category, string> = {

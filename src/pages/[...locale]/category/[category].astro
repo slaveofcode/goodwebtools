@@ -2,27 +2,32 @@
 import { ChevronRight } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
 import { tools } from '@/registry/tools';
-import { categories, categoryColors, categoryDescriptions, categorySlug } from '@/registry/categories';
+import { categories, categoryColors, catDescription, categorySlug } from '@/registry/categories';
 import { SITE_URL, SITE_NAME } from '@/config';
 import type { Category } from '@/types/tool';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+import { t } from '@/i18n/ui';
 
 export function getStaticPaths() {
-  return categories
-    .filter(category => tools.some(t => t.category === category && !t.desktopOnly))
-    .map(category => ({ params: { category: categorySlug(category) }, props: { category } }));
+  return LOCALES.flatMap(lang =>
+    categories
+      .filter(category => tools.some(t2 => t2.category === category && !t2.desktopOnly))
+      .map(category => ({ params: { locale: localeParam(lang), category: categorySlug(category) }, props: { category, lang } })),
+  );
 }
 
-const { category } = Astro.props as { category: Category };
-const categoryTools = tools.filter(t => t.category === category && !t.desktopOnly);
-const pageTitle = `${category} Tools`;
-const description = categoryDescriptions[category];
-const pageUrl = new URL(`/category/${categorySlug(category)}`, SITE_URL).href;
+const { category, lang } = Astro.props as { category: Category; lang: Lang };
+const categoryTools = tools.filter(t2 => t2.category === category && !t2.desktopOnly);
+const pageTitle = t(lang, 'category.heading', { category });
+const description = catDescription(category, lang);
+const homePath = localizePath('/', lang);
+const pageUrl = new URL(localizePath(`/category/${categorySlug(category)}`, lang), SITE_URL).href;
 
 const breadcrumbJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
+    { '@type': 'ListItem', position: 1, name: t(lang, 'nav.home'), item: new URL(homePath, SITE_URL).href },
     { '@type': 'ListItem', position: 2, name: pageTitle, item: pageUrl },
   ],
 };
@@ -31,26 +36,28 @@ const itemListJsonLd = {
   '@type': 'ItemList',
   name: `${category} tools on ${SITE_NAME}`,
   numberOfItems: categoryTools.length,
-  itemListElement: categoryTools.map((t, i) => ({
+  itemListElement: categoryTools.map((t2, i) => ({
     '@type': 'ListItem',
     position: i + 1,
-    name: t.name,
-    url: new URL(t.route, SITE_URL).href,
+    name: t2.name,
+    url: new URL(localizePath(t2.route, lang), SITE_URL).href,
   })),
 };
 ---
 
 <Base
-  title={`${pageTitle} — Free & Private`}
+  title={t(lang, 'category.freePrivate', { category })}
   description={description}
   keywords={[`${category.toLowerCase()} tools`, 'free', 'online', 'browser', 'privacy', 'no upload']}
   jsonLd={[breadcrumbJsonLd, itemListJsonLd]}
+  lang={lang}
+  localized
 >
   <main class="page-container py-8">
-    <nav aria-label="Breadcrumb" class="mb-4">
+    <nav aria-label={t(lang, 'a11y.breadcrumb')} class="mb-4">
       <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
         <li>
-          <a href="/" class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">Home</a>
+          <a href={homePath} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{t(lang, 'nav.home')}</a>
         </li>
         <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
         <li aria-current="page" class="text-foreground">{pageTitle}</li>
@@ -70,7 +77,7 @@ const itemListJsonLd = {
       {categoryTools.map(tool => {
         const Icon = tool.icon;
         return (
-          <a href={tool.route} class="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal press-brutal">
+          <a href={localizePath(tool.route, lang)} class="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal press-brutal">
             <span class={`mt-0.5 border-2 border-border p-2 text-black ${categoryColors[tool.category]}`}>
               <Icon className="h-5 w-5" />
             </span>
