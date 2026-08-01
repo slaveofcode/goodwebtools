@@ -157,10 +157,15 @@ export default function VoiceToText() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <Button onClick={transcribe} disabled={!audioBlob || busy}>
           {busy ? 'Transcribing…' : 'Transcribe'}
         </Button>
+        {!audioBlob && !busy && (
+          <span className="text-sm text-muted-foreground">
+            {recorder.recording ? 'Press Stop to finish the recording first.' : 'Record or drop a file to enable this.'}
+          </span>
+        )}
       </div>
 
       {modelProgress !== null && (
