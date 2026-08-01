@@ -1,0 +1,86 @@
+---
+import { ChevronRight } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import { tools } from '@/registry/tools';
+import { categories, categoryColors, categoryDescriptions, categorySlug } from '@/registry/categories';
+import { SITE_URL, SITE_NAME } from '@/config';
+import type { Category } from '@/types/tool';
+
+export function getStaticPaths() {
+  return categories
+    .filter(category => tools.some(t => t.category === category && !t.desktopOnly))
+    .map(category => ({ params: { category: categorySlug(category) }, props: { category } }));
+}
+
+const { category } = Astro.props as { category: Category };
+const categoryTools = tools.filter(t => t.category === category && !t.desktopOnly);
+const pageTitle = `${category} Tools`;
+const description = categoryDescriptions[category];
+const pageUrl = new URL(`/category/${categorySlug(category)}`, SITE_URL).href;
+
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
+    { '@type': 'ListItem', position: 2, name: pageTitle, item: pageUrl },
+  ],
+};
+const itemListJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: `${category} tools on ${SITE_NAME}`,
+  numberOfItems: categoryTools.length,
+  itemListElement: categoryTools.map((t, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: t.name,
+    url: new URL(t.route, SITE_URL).href,
+  })),
+};
+---
+
+<Base
+  title={`${pageTitle} — Free & Private`}
+  description={description}
+  keywords={[`${category.toLowerCase()} tools`, 'free', 'online', 'browser', 'privacy', 'no upload']}
+  jsonLd={[breadcrumbJsonLd, itemListJsonLd]}
+>
+  <main class="page-container py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li>
+          <a href="/" class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">Home</a>
+        </li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{pageTitle}</li>
+      </ol>
+    </nav>
+
+    <header class="mb-8">
+      <div class="mb-2 flex items-center gap-2">
+        <span class={`inline-block h-5 w-5 border-2 border-border ${categoryColors[category]}`} />
+        <h1 class="text-3xl font-bold uppercase tracking-tight">{pageTitle}</h1>
+        <span class="text-sm font-bold text-muted-foreground">({categoryTools.length})</span>
+      </div>
+      <p class="max-w-3xl text-muted-foreground">{description}</p>
+    </header>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {categoryTools.map(tool => {
+        const Icon = tool.icon;
+        return (
+          <a href={tool.route} class="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal press-brutal">
+            <span class={`mt-0.5 border-2 border-border p-2 text-black ${categoryColors[tool.category]}`}>
+              <Icon className="h-5 w-5" />
+            </span>
+            <span class="min-w-0">
+              <span class="block font-bold">{tool.name}</span>
+              <span class="block text-sm text-muted-foreground">{tool.summary}</span>
+            </span>
+          </a>
+        );
+      })}
+    </div>
+  </main>
+</Base>
