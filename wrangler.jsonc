@@ -19,6 +19,18 @@
     { "binding": "MODELS", "bucket_name": "goodwebtools-models" }
   ],
 
+  // WebRTC signaling rendezvous for the P2P tools (file transfer, video call).
+  // SQLite-backed Durable Object = free tier. Relays only the tiny SDP/ICE
+  // handshake; media/files travel peer-to-peer.
+  "durable_objects": {
+    "bindings": [
+      { "name": "SIGNAL", "class_name": "SignalRoom" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["SignalRoom"] }
+  ],
+
   // Workers observability, declared here so deploys stay in sync with the
   // dashboard-configured settings (otherwise each deploy can reset them).
   // Named environments don't inherit this, so it's repeated under `staging`.
@@ -52,6 +64,14 @@
       },
       "r2_buckets": [
         { "binding": "MODELS", "bucket_name": "goodwebtools-models-staging" }
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "SIGNAL", "class_name": "SignalRoom" }
+        ]
+      },
+      "migrations": [
+        { "tag": "v1", "new_sqlite_classes": ["SignalRoom"] }
       ],
       "observability": {
         "enabled": false,
