@@ -67,6 +67,7 @@ export default function VoiceToText() {
   const [modelProgress, setModelProgress] = useState<number | null>(null);
   const [transcribing, setTranscribing] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [modelCached, setModelCached] = useState(false);
   const [segments, setSegments] = useState<TranscriptSegment[] | null>(null);
   const [editedText, setEditedText] = useState('');
   const [tab, setTab] = useState<Tab>('text');
@@ -145,6 +146,20 @@ export default function VoiceToText() {
     }
   };
 
+  // Is the selected model already in the browser cache? (Definitive — the bar
+  // shows even on a cache read, so this tells the user whether it's a real download.)
+  const refreshModelCached = async () => {
+    try {
+      const cache = await caches.open('transformers-cache');
+      const keys = await cache.keys();
+      setModelCached(keys.some(r => r.url.includes(`${model}/resolve`)));
+    } catch { setModelCached(false); }
+  };
+  useEffect(() => {
+    void refreshModelCached();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [model]);
+
   const transcribe = async () => {
     if (!audioBlob) return;
     audioRef.current?.pause(); // don't leave the preview playing while inference blocks the thread
@@ -163,6 +178,7 @@ export default function VoiceToText() {
         r => setModelProgress(r),
       );
       setModelProgress(null); // model ready (or cached) — now inference (indeterminate)
+      void refreshModelCached(); // it's cached now
       setSegments(segs);
       setEditedText(segmentsToText(segs));
       setTab('text');
@@ -268,7 +284,7 @@ export default function VoiceToText() {
       </div>
 
       {modelProgress !== null && (
-        <ProgressBar percent={modelProgress * 100} label="Downloading model (first time only)" />
+        <ProgressBar percent={modelProgress * 100} label={modelCached ? 'Loading model from cache…' : 'Downloading model (first time only)…'} />
       )}
       {busy && modelProgress === null && (
         <p className="text-sm text-muted-foreground">

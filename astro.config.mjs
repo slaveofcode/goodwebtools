@@ -132,9 +132,10 @@ export default defineConfig({
           },
           {
             // On-device ML model weights + runtime (Whisper from Hugging Face, ORT
-            // wasm from jsDelivr). CacheFirst so they load from our cache on refresh
-            // instead of re-downloading. Immutable, versioned by URL.
-            urlPattern: /^https:\/\/([^/]*\.)?(huggingface\.co|hf\.co)\/.*|^https:\/\/cdn\.jsdelivr\.net\/.*/i,
+            // wasm from jsDelivr, PaddleOCR models from GitHub raw/LFS). CacheFirst so
+            // they load from our cache on refresh instead of re-downloading. Immutable,
+            // versioned by URL.
+            urlPattern: /^https:\/\/([^/]*\.)?(huggingface\.co|hf\.co)\/.*|^https:\/\/cdn\.jsdelivr\.net\/.*|^https:\/\/(raw|media)\.githubusercontent\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'ml-models-cache',
