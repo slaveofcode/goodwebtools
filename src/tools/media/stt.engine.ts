@@ -45,8 +45,11 @@ export async function createTranscriber(
 
   const pipe = await pipeline('automatic-speech-recognition', model, {
     device: backend,
-    // Quantize on WASM to shrink the download; full precision on WebGPU for quality.
-    dtype: backend === 'wasm' ? 'q8' : 'fp32',
+    // Whisper is an encoder-decoder model. Per-module dtype is required: the
+    // quantized (q8/q4) decoder — which holds embed_tokens — trips an ONNX Runtime
+    // "MatMulNBits: Missing required scale" error, so load the decoder full
+    // precision. The encoder can stay quantized to keep the download smaller.
+    dtype: { encoder_model: backend === 'webgpu' ? 'fp32' : 'q8', decoder_model_merged: 'fp32' },
     progress_callback: (p: { status?: string; progress?: number }) => {
       if (onProgress && p?.status === 'progress' && typeof p.progress === 'number') {
         onProgress(Math.min(1, Math.max(0, p.progress / 100)));
