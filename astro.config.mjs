@@ -128,6 +128,23 @@ export default defineConfig({
                 statuses: [0, 200]
               }
             }
+          },
+          {
+            // On-device ML model weights + runtime (Whisper from Hugging Face, ORT
+            // wasm from jsDelivr). CacheFirst so they load from our cache on refresh
+            // instead of re-downloading. Immutable, versioned by URL.
+            urlPattern: /^https:\/\/([^/]*\.)?(huggingface\.co|hf\.co)\/.*|^https:\/\/cdn\.jsdelivr\.net\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'ml-models-cache',
+              expiration: {
+                maxEntries: 120,
+                maxAgeSeconds: 60 * 60 * 24 * 90 // 90 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
           }
         ]
       },
