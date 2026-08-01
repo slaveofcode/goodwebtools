@@ -69,6 +69,25 @@ export default {
       return new Response(object.body, { headers });
     }
 
+    // Geo language hint: send first-time Indonesian visitors to the Bahasa (/id/)
+    // version of localized public pages. Humans only — crawlers must see both trees,
+    // and a manual choice (gwt.lang cookie, set by the header switcher) always wins.
+    if (request.method === 'GET') {
+      const accept = request.headers.get('accept') || '';
+      const p = url.pathname;
+      const isLocalized = p === '/' || p.startsWith('/tools/') || p.startsWith('/category/');
+      const alreadyId = p === '/id' || p.startsWith('/id/');
+      const cookie = request.headers.get('cookie') || '';
+      const hasChoice = /(?:^|;\s*)gwt\.lang=/.test(cookie);
+      const ua = request.headers.get('user-agent') || '';
+      const isBot = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|preview|whatsapp|telegram|discord/i.test(ua);
+      const country = request.cf && request.cf.country;
+      if (accept.includes('text/html') && isLocalized && !alreadyId && !hasChoice && !isBot && country === 'ID') {
+        const to = '/id' + (p === '/' ? '' : p);
+        return Response.redirect(url.origin + to + url.search, 302);
+      }
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
