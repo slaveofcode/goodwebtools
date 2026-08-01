@@ -55,6 +55,40 @@ const api = {
     }
   },
 
+  /**
+   * Repair a damaged PDF. mupdf rebuilds a broken cross-reference table when it
+   * opens the file, and re-saving with garbage collection + sanitize writes a
+   * clean structure. `force` rebuilds the document page-by-page into a fresh one,
+   * discarding broken global structure (recovers what's still readable).
+   * Returns the repaired bytes and the recovered page count.
+   */
+  async repair(bytes: Uint8Array, force: boolean): Promise<{ bytes: Uint8Array; pages: number }> {
+    const mupdf = await loadMupdf();
+    const doc = open(mupdf, bytes); // opening auto-repairs a broken xref
+    try {
+      if (!force) {
+        const pages = doc.countPages();
+        const out = save(doc, 'garbage=deduplicate,sanitize=yes,clean=yes');
+        return Comlink.transfer({ bytes: out, pages }, [out.buffer]);
+      }
+      const rebuilt: any = new (mupdf as any).PDFDocument();
+      try {
+        const count = doc.countPages();
+        for (let i = 0; i < count; i++) {
+          try { rebuilt.graftPage(-1, doc, i); } catch { /* skip an unrecoverable page */ }
+        }
+        const pages = rebuilt.countPages();
+        if (pages === 0) throw new Error('Could not recover any readable pages from this file.');
+        const out = save(rebuilt, 'garbage=deduplicate,sanitize=yes');
+        return Comlink.transfer({ bytes: out, pages }, [out.buffer]);
+      } finally {
+        rebuilt.destroy?.();
+      }
+    } finally {
+      doc.destroy?.();
+    }
+  },
+
   async countPages(bytes: Uint8Array): Promise<number> {
     const mupdf = await loadMupdf();
     const doc = open(mupdf, bytes);
