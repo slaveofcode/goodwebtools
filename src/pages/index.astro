@@ -1,8 +1,9 @@
 ---
 import Base from '@/layouts/Base.astro';
 import { ToolGrid } from '@/components/ToolGrid';
+import ShareButton from '@/islands/share/ShareButton';
 import { tools } from '@/registry/tools';
-import { SITE_URL, SITE_NAME } from '@/config';
+import { SITE_URL, SITE_NAME, SITE_TAGLINE } from '@/config';
 
 const homeTitle = `${SITE_NAME} — Free Privacy-First Browser Tools`;
 const homeDescription = `${tools.length} free online tools that run entirely in your browser — PDF, image, file, developer, and media utilities. No uploads, no sign-up, works offline. Your files never leave your device.`;
@@ -51,6 +52,9 @@ const toolList = {
         <kbd class="border-2 border-border bg-background px-1.5 py-0.5 font-mono text-xs">⌘K</kbd>
         to search tools
       </button>
+      <div class="mt-4">
+        <ShareButton client:idle url={SITE_URL} title={SITE_NAME} text={SITE_TAGLINE} />
+      </div>
     </header>
 
     <ToolGrid />
