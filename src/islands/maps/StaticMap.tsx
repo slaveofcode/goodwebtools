@@ -17,6 +17,7 @@ export default function StaticMap() {
   const mapRef = useRef<MlMap | null>(null);
   const mlRef = useRef<typeof import('maplibre-gl') | null>(null);
   const markerRef = useRef<MlMarker | null>(null);
+  const roRef = useRef<ResizeObserver | null>(null);
 
   const [style, setStyle] = useState<StyleChoice>('auto');
   const [pinCenter, setPinCenter] = useState(false);
@@ -40,9 +41,13 @@ export default function StaticMap() {
         preserveDrawingBuffer: true, // required to read the canvas for PNG export
       });
       map.addControl(new ml.NavigationControl(), 'top-right');
+      map.on('load', () => map.resize());
+      const ro = new ResizeObserver(() => map.resize());
+      if (containerRef.current) ro.observe(containerRef.current);
+      roRef.current = ro;
       mapRef.current = map;
     })();
-    return () => { cancelled = true; mapRef.current?.remove(); mapRef.current = null; };
+    return () => { cancelled = true; roRef.current?.disconnect(); mapRef.current?.remove(); mapRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
