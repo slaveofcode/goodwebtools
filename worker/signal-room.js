@@ -10,6 +10,13 @@ import { DurableObject } from 'cloudflare:workers';
  * Uses the WebSocket Hibernation API so the object costs nothing while idle.
  */
 export class SignalRoom extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    // Auto-answer keepalive pings without waking the object, and without
+    // relaying them to the other peer.
+    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
+  }
+
   async fetch(request) {
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response('Expected WebSocket', { status: 426 });
