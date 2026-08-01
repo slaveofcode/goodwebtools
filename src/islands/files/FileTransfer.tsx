@@ -37,6 +37,7 @@ export default function FileTransfer() {
   const [pastedOffer, setPastedOffer] = useState('');
   const [manualBusy, setManualBusy] = useState(false);
   const [manualErr, setManualErr] = useState('');
+  const [queuedName, setQueuedName] = useState('');
 
   const sentName = useRef('');
 
@@ -81,7 +82,7 @@ export default function FileTransfer() {
 
   const onDrop = (files: File[]) => {
     const f = files[0];
-    if (f) { sentName.current = f.name; t.sendFile(f); }
+    if (f) { sentName.current = f.name; setQueuedName(f.name); t.queueFile(f); }
   };
 
   const downloadReceived = () => {
@@ -280,15 +281,24 @@ export default function FileTransfer() {
       )}
       {t.error && <Alert variant="error">{t.error}</Alert>}
 
-      {isSending && (t.status === 'connected' || t.status === 'done') && (
-        <Dropzone onDrop={onDrop} multiple={false}>
-          <div className="space-y-1">
-            <p className="flex items-center justify-center gap-2 text-lg font-bold">
-              <Send className="h-5 w-5" /> Drop a file to send
-            </p>
-            <p className="text-sm text-muted-foreground">or click to browse · sent directly to the other device</p>
-          </div>
-        </Dropzone>
+      {isSending && (t.status === 'connecting' || t.status === 'waiting' || t.status === 'connected') && (
+        <div className="space-y-2">
+          <Dropzone onDrop={onDrop} multiple={false}>
+            <div className="space-y-1">
+              <p className="flex items-center justify-center gap-2 text-lg font-bold">
+                <Send className="h-5 w-5" /> {queuedName ? 'Choose a different file' : 'Pick a file to send'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t.status === 'connected'
+                  ? 'Sent directly to the other device.'
+                  : 'Pick it now — it sends automatically once the other device connects.'}
+              </p>
+            </div>
+          </Dropzone>
+          {queuedName && (t.status === 'connecting' || t.status === 'waiting') && (
+            <p className="text-sm font-bold">Ready to send: {queuedName} — waiting for the other device…</p>
+          )}
+        </div>
       )}
 
       {(t.status === 'transferring' || (t.status === 'done' && isSending)) && (
