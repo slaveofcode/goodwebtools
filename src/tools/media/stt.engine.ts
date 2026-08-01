@@ -28,18 +28,31 @@ async function webgpuAvailable(): Promise<boolean> {
   }
 }
 
+// Cache the built pipeline so repeated transcriptions with the same model reuse
+// it — otherwise every run re-initializes the ONNX session (re-reading weights,
+// re-running the load progress, blocking the main thread).
+let cached: { model: SttModelId; transcriber: Transcriber } | null = null;
+
+/** Drop the cached transcriber (e.g. for tests). */
+export function resetTranscriber(): void {
+  cached = null;
+}
+
 /**
  * Create the on-device speech-to-text engine. This is the ONLY file that touches
  * transformers.js — keep it thin so the SDK stays swappable. WebGPU is used when
  * available, otherwise a quantized WASM model keeps the download smaller.
  *
  * Audio never leaves the browser; only the model weights are fetched (from the HF
- * CDN) the first time a model is used, then cached by the browser.
+ * CDN) the first time a model is used, then cached by the browser. The built
+ * pipeline is cached in-memory so subsequent runs skip re-initialization.
  */
 export async function createTranscriber(
   model: SttModelId,
   onProgress?: (ratio: number) => void,
 ): Promise<Transcriber> {
+  if (cached && cached.model === model) return cached.transcriber;
+
   const { pipeline } = await import('@huggingface/transformers');
   const backend: SttBackend = (await webgpuAvailable()) ? 'webgpu' : 'wasm';
 
@@ -57,7 +70,7 @@ export async function createTranscriber(
     },
   });
 
-  return {
+  const transcriber: Transcriber = {
     backend,
     async transcribe(audio: Float32Array): Promise<TranscriptSegment[]> {
       const out = (await pipe(audio, {
@@ -77,4 +90,7 @@ export async function createTranscriber(
       return [{ start: 0, end: 0, text: out.text ?? '' }];
     },
   };
+
+  cached = { model, transcriber };
+  return transcriber;
 }
