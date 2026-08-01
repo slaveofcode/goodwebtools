@@ -13,6 +13,8 @@ export {
   pdfNeedsPassword,
   protectPdf,
   unlockPdf,
+  repairPdf,
+  type RepairResult,
 } from './mupdf.client';
 import { normalizePdf } from './mupdf.client';
 
