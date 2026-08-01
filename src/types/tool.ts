@@ -9,6 +9,31 @@ export interface AssetRef {
   description: string;
 }
 
+export interface ToolFaq {
+  q: string;
+  a: string;
+}
+
+/**
+ * Per-tool SEO content, authored and keyed by tool id (see registry/tool-seo).
+ * All fields optional — a tool with no entry renders exactly as before. This is
+ * the raw material for richer <title>/description, on-page copy, and FAQPage/
+ * HowTo structured data. Kept out of ToolDef so the registry stays lean and this
+ * layer can go per-language later.
+ */
+export interface ToolSeoContent {
+  /** Optimized <title> body ("| GoodWebTools" is appended). ~45-55 chars. */
+  title?: string;
+  /** Unique meta/OG description. ~150-160 chars. */
+  description?: string;
+  /** Lead paragraph shown under the H1 (unique, keyword-aware). */
+  intro?: string;
+  /** "How to use" steps → rendered on-page + HowTo JSON-LD. */
+  howTo?: string[];
+  /** FAQ → rendered on-page + FAQPage JSON-LD. */
+  faqs?: ToolFaq[];
+}
+
 export interface ToolDef {
   id: string;
   name: string;
