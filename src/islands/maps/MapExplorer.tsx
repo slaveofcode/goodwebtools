@@ -1,0 +1,204 @@
+import { useEffect, useRef, useState } from 'react';
+import { useStore } from '@nanostores/react';
+import { LocateFixed, Ruler, Search, X } from 'lucide-react';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import type { Map as MlMap, Marker as MlMarker, GeoJSONSource } from 'maplibre-gl';
+import { themeAtom } from '@/stores/theme.store';
+import { Button } from '@/components/ui/Button';
+import { CopyButton } from '@/components/ui/CopyButton';
+import { resolveStyle, MAP_STYLES, haversineMeters, formatDistance, type StyleChoice } from '@/tools/geo/map-styles.lib';
+import { ddToDms, ddToUtm, encodeGeohash, formatDd, type LatLng } from '@/tools/geo/coord.lib';
+
+const STYLE_KEY = 'gwt.map.style';
+type SearchHit = { name: string; lat: number; lng: number };
+
+export default function MapExplorer() {
+  const theme = useStore(themeAtom);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<MlMap | null>(null);
+  const mlRef = useRef<typeof import('maplibre-gl') | null>(null);
+  const pinMarkerRef = useRef<MlMarker | null>(null);
+  const measureMarkersRef = useRef<MlMarker[]>([]);
+  const measureRef = useRef<LatLng[]>([]);
+  const measuringRef = useRef(false);
+
+  const [style, setStyle] = useState<StyleChoice>('auto');
+  const [pin, setPin] = useState<LatLng | null>(null);
+  const [measuring, setMeasuring] = useState(false);
+  const [measureDist, setMeasureDist] = useState(0);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SearchHit[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => { measuringRef.current = measuring; }, [measuring]);
+
+  // Restore saved style choice.
+  useEffect(() => {
+    try { const s = localStorage.getItem(STYLE_KEY) as StyleChoice | null; if (s) setStyle(s); } catch { /* */ }
+  }, []);
+
+  const ensureMeasureLayer = () => {
+    const map = mapRef.current;
+    if (!map || map.getSource('measure')) return;
+    map.addSource('measure', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} } });
+    map.addLayer({ id: 'measure-line', type: 'line', source: 'measure', paint: { 'line-color': '#7c3aed', 'line-width': 3, 'line-dasharray': [2, 1] } });
+  };
+
+  const refreshMeasureLine = () => {
+    const map = mapRef.current;
+    const src = map?.getSource('measure') as GeoJSONSource | undefined;
+    src?.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: measureRef.current.map(p => [p.lng, p.lat]) }, properties: {} });
+  };
+
+  const handleClick = (lat: number, lng: number) => {
+    const ml = mlRef.current;
+    const map = mapRef.current;
+    if (!ml || !map) return;
+    if (measuringRef.current) {
+      measureRef.current.push({ lat, lng });
+      const marker = new ml.Marker({ color: '#7c3aed', scale: 0.7 }).setLngLat([lng, lat]).addTo(map);
+      measureMarkersRef.current.push(marker);
+      let total = 0;
+      for (let i = 1; i < measureRef.current.length; i++) total += haversineMeters(measureRef.current[i - 1], measureRef.current[i]);
+      setMeasureDist(total);
+      refreshMeasureLine();
+    } else {
+      setPin({ lat, lng });
+      if (!pinMarkerRef.current) pinMarkerRef.current = new ml.Marker({ color: '#dc2626' }).setLngLat([lng, lat]).addTo(map);
+      else pinMarkerRef.current.setLngLat([lng, lat]);
+    }
+  };
+
+  // Init the map once.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ml = await import('maplibre-gl');
+      if (cancelled || !containerRef.current || mapRef.current) return;
+      mlRef.current = ml;
+      const map = new ml.Map({
+        container: containerRef.current,
+        style: resolveStyle(style, theme).url,
+        center: [106.8272, -6.1751],
+        zoom: 3,
+      });
+      map.addControl(new ml.NavigationControl(), 'top-right');
+      map.addControl(new ml.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: false }), 'top-right');
+      map.on('click', e => handleClick(e.lngLat.lat, e.lngLat.lng));
+      map.on('style.load', () => { ensureMeasureLayer(); refreshMeasureLine(); });
+      mapRef.current = map;
+    })();
+    return () => { cancelled = true; mapRef.current?.remove(); mapRef.current = null; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Re-style on choice or site-theme change.
+  useEffect(() => {
+    mapRef.current?.setStyle(resolveStyle(style, theme).url);
+  }, [style, theme]);
+
+  const pickStyle = (s: StyleChoice) => { setStyle(s); try { localStorage.setItem(STYLE_KEY, s); } catch { /* */ } };
+
+  const clearMeasure = () => {
+    measureMarkersRef.current.forEach(m => m.remove());
+    measureMarkersRef.current = [];
+    measureRef.current = [];
+    setMeasureDist(0);
+    refreshMeasureLine();
+  };
+
+  const toggleMeasure = () => {
+    if (measuring) clearMeasure();
+    setMeasuring(m => !m);
+  };
+
+  const search = async () => {
+    if (!query.trim()) return;
+    setSearching(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' } });
+      const data = (await res.json()) as { display_name: string; lat: string; lon: string }[];
+      setResults(data.map(d => ({ name: d.display_name, lat: +d.lat, lng: +d.lon })));
+    } catch { setResults([]); } finally { setSearching(false); }
+  };
+
+  const goTo = (hit: SearchHit) => {
+    setResults([]);
+    setQuery(hit.name.split(',')[0]);
+    mapRef.current?.flyTo({ center: [hit.lng, hit.lat], zoom: 14 });
+    handleClick(hit.lat, hit.lng);
+  };
+
+  const myLocation = () => {
+    navigator.geolocation?.getCurrentPosition(pos => {
+      mapRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 15 });
+      handleClick(pos.coords.latitude, pos.coords.longitude);
+    });
+  };
+
+  const coordRows = pin
+    ? [
+        { label: 'Decimal', value: formatDd(pin.lat, pin.lng) },
+        { label: 'DMS', value: `${ddToDms(pin.lat, pin.lng).lat} ${ddToDms(pin.lat, pin.lng).lng}` },
+        { label: 'UTM', value: (() => { const u = ddToUtm(pin.lat, pin.lng); return `${u.zone}${u.hemisphere} ${Math.round(u.easting)}E ${Math.round(u.northing)}N`; })() },
+        { label: 'Geohash', value: encodeGeohash(pin.lat, pin.lng, 10) },
+      ]
+    : [];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex flex-1 items-center gap-2">
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') search(); }}
+            placeholder="Search a place…"
+            className="w-full border-2 border-border bg-muted px-3 py-2 text-sm outline-none focus:shadow-brutal-sm"
+          />
+          <Button variant="secondary" onClick={search} disabled={searching}><Search className="h-4 w-4" /></Button>
+          {results.length > 0 && (
+            <div className="absolute left-0 top-full z-20 mt-1 max-h-64 w-full overflow-y-auto border-2 border-border bg-background shadow-brutal">
+              {results.map((r, i) => (
+                <button key={i} onClick={() => goTo(r)} className="block w-full truncate px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground">{r.name}</button>
+              ))}
+            </div>
+          )}
+        </div>
+        <Button variant="secondary" onClick={myLocation}><LocateFixed className="h-4 w-4" /></Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Style</span>
+        {MAP_STYLES.map(s => (
+          <Button key={s.id} variant={style === s.id ? 'primary' : 'secondary'} aria-pressed={style === s.id} onClick={() => pickStyle(s.id)}>{s.label}</Button>
+        ))}
+        <Button variant={measuring ? 'primary' : 'secondary'} onClick={toggleMeasure}><Ruler className="h-4 w-4" /> {measuring ? 'Measuring…' : 'Measure'}</Button>
+        {measuring && measureRef.current.length > 0 && <Button variant="ghost" onClick={clearMeasure}><X className="h-4 w-4" /> Clear</Button>}
+      </div>
+
+      <div ref={containerRef} className="h-[60vh] w-full border-2 border-border" />
+
+      <p className="text-xs text-muted-foreground">
+        {measuring ? 'Click points on the map to measure distance.' : 'Click anywhere on the map to drop a pin and read its coordinates.'}
+        {' '}Maps © OpenFreeMap / OpenStreetMap contributors.
+      </p>
+
+      {measuring && measureRef.current.length > 1 && (
+        <p className="text-sm font-bold">Distance: {formatDistance(measureDist)} ({measureRef.current.length} points)</p>
+      )}
+
+      {pin && !measuring && (
+        <div className="space-y-2 border-2 border-border p-3">
+          {coordRows.map(r => (
+            <div key={r.label} className="flex flex-wrap items-center gap-2">
+              <span className="w-24 shrink-0 text-sm font-bold uppercase tracking-wide text-muted-foreground">{r.label}</span>
+              <code className="min-w-0 flex-1 break-all border-2 border-border bg-muted px-2 py-1 text-sm">{r.value}</code>
+              <CopyButton value={r.value} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
