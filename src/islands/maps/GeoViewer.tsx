@@ -19,6 +19,7 @@ export default function GeoViewer() {
   const mapRef = useRef<MlMap | null>(null);
   const mlRef = useRef<typeof import('maplibre-gl') | null>(null);
   const fcRef = useRef<FeatureCollection>(EMPTY);
+  const roRef = useRef<ResizeObserver | null>(null);
 
   const [style, setStyle] = useState<StyleChoice>('auto');
   const [count, setCount] = useState(0);
@@ -56,9 +57,13 @@ export default function GeoViewer() {
         const feats = map.queryRenderedFeatures(e.point, { layers: ['geo-fill', 'geo-line', 'geo-point'] });
         setSelected(feats[0]?.properties ?? null);
       });
+      map.on('load', () => map.resize());
+      const ro = new ResizeObserver(() => map.resize());
+      if (containerRef.current) ro.observe(containerRef.current);
+      roRef.current = ro;
       mapRef.current = map;
     })();
-    return () => { cancelled = true; mapRef.current?.remove(); mapRef.current = null; };
+    return () => { cancelled = true; roRef.current?.disconnect(); mapRef.current?.remove(); mapRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
