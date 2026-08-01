@@ -59,7 +59,18 @@ export async function createTranscriber(
 ): Promise<Transcriber> {
   if (cached && cached.model === model) return cached.transcriber;
 
-  const { pipeline } = await import('@huggingface/transformers');
+  const { pipeline, env } = await import('@huggingface/transformers');
+
+  // Fetch model weights through our same-origin /hf proxy so they cache reliably
+  // (Hugging Face redirects large files to a CDN the browser won't cache). Skip on
+  // localhost dev, where the Cloudflare Worker proxy isn't running.
+  try {
+    const origin = self.location?.origin ?? '';
+    if (origin && !/localhost|127\.0\.0\.1|\[::1\]/.test(origin)) {
+      env.remoteHost = `${origin}/hf`;
+    }
+  } catch { /* non-worker context — leave the default */ }
+
   const backend: SttBackend = (await webgpuAvailable()) ? 'webgpu' : 'wasm';
 
   const pipe = await pipeline('automatic-speech-recognition', model, {
