@@ -587,6 +587,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'optical-transfer',
+    name: 'Optical File Transfer',
+    category: 'Network',
+    route: '/tools/optical-transfer',
+    keywords: ['optical', 'qr', 'transfer', 'beam', 'camera', 'screen', 'offline', 'air-gap', 'no network', 'fountain', 'file'],
+    icon: ScanLine,
+    summary: 'Beam a file device-to-device with QR codes — no network at all',
+    load: () => import('@/islands/network/OpticalTransfer'),
+    status: 'beta'
+  },
+  {
     id: 'file-crypt',
     name: 'File Encrypt / Decrypt',
     category: 'Files',
