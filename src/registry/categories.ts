@@ -8,6 +8,7 @@ export const categories: Category[] = [
   'Draw',
   'Media',
   'Network',
+  'Maps',
   'Playground'
 ];
 
@@ -19,6 +20,7 @@ export const categoryColors: Record<Category, string> = {
   Draw: 'bg-purple-500',
   Media: 'bg-pink-500',
   Network: 'bg-cyan-500',
+  Maps: 'bg-emerald-500',
   Playground: 'bg-orange-500'
 };
 
