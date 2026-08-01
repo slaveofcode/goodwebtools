@@ -8,9 +8,10 @@
   },
   "scripts": {
     "copy:wasm": "node scripts/copy-wasm.mjs",
+    "og": "node scripts/generate-og.mjs",
     "predev": "npm run copy:wasm",
     "dev": "astro dev",
-    "prebuild": "npm run copy:wasm",
+    "prebuild": "npm run copy:wasm && npm run og",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 astro build",
     "preview": "astro preview",
     "test": "vitest",
@@ -103,7 +104,9 @@
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "@fontsource/space-grotesk": "^5.3.0",
     "@imgly/background-removal-data": "^1.4.5",
+    "@resvg/resvg-js": "^2.6.2",
     "@tauri-apps/cli": "^2.11.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
@@ -122,6 +125,7 @@
     "prettier": "^3.9.5",
     "prettier-plugin-astro": "^0.12.3",
     "prettier-plugin-tailwindcss": "^0.5.14",
+    "satori": "^0.29.0",
     "typescript": "^5.9.3",
     "vitest": "^1.6.1",
     "workbox-window": "^7.4.1",
