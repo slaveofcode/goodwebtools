@@ -27,4 +27,5 @@ models-r2/
 
 # Excalidraw fonts (copied by copy:wasm)
 public/excalidraw/
+public/og/
 public/sqlite/
