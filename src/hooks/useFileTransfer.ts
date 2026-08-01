@@ -24,6 +24,7 @@ export type TransferStatus =
 export type TransferMode = 'send' | 'receive';
 
 const HIGH_WATER = 8 * 1024 * 1024; // pause sending above this bufferedAmount
+const RECONNECT_MS = 1500;
 
 export function useFileTransfer() {
   const signalRef = useRef<SignalClient | null>(null);
@@ -38,13 +39,28 @@ export function useFileTransfer() {
     received: 0,
   });
 
+  // Auto-mode reconnection bookkeeping.
+  const reconnectRef = useRef<{ mode: TransferMode; roomId: string } | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stoppedRef = useRef(false); // set once the room is full or on reset/unmount
+  const connectedRef = useRef(false); // true once the P2P data channel is open
+  const openSignalingRef = useRef<() => void>(() => {});
+
   const [status, setStatus] = useState<TransferStatus>('idle');
   const [error, setError] = useState('');
   const [progress, setProgress] = useState(0);
   const [incoming, setIncoming] = useState<{ name: string; size: number } | null>(null);
   const [receivedBlob, setReceivedBlob] = useState<Blob | null>(null);
 
+  const clearReconnect = () => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+  };
+
   const cleanup = useCallback(() => {
+    clearReconnect();
     channelRef.current?.close();
     peerRef.current?.close();
     manualRef.current?.close();
@@ -57,9 +73,13 @@ export function useFileTransfer() {
   }, []);
 
   const handleState = useCallback((state: RTCPeerConnectionState) => {
+    if (state === 'connected') connectedRef.current = true;
     if (state === 'failed' || state === 'disconnected') {
-      setError('Could not connect — the network may be too restrictive (no relay server).');
-      setStatus('error');
+      // A P2P drop after we were connected is terminal; before, let signaling retry.
+      if (connectedRef.current) {
+        setError('The peer-to-peer connection dropped.');
+        setStatus('error');
+      }
     }
   }, []);
 
@@ -93,10 +113,14 @@ export function useFileTransfer() {
     if (modeRef.current === 'receive') {
       channel.onmessage = e => handleRecv(e.data as string | ArrayBuffer);
     }
-    channel.onopen = () => setStatus('connected');
+    const markOpen = () => {
+      connectedRef.current = true;
+      clearReconnect();
+      setStatus('connected');
+    };
+    channel.onopen = markOpen;
     channel.onclose = () => { /* transfer completion is driven by byte count */ };
-    // A channel arriving via ondatachannel can already be open, so onopen won't fire.
-    if (channel.readyState === 'open') setStatus('connected');
+    if (channel.readyState === 'open') markOpen();
   }, [handleRecv]);
 
   const setupPeer = useCallback((initiator: boolean) => {
@@ -111,18 +135,27 @@ export function useFileTransfer() {
     });
   }, [wireChannel, handleState]);
 
-  // --- Automatic signaling (via our server) ---
-  const connect = useCallback((mode: TransferMode, roomId: string, iceServers?: RTCIceServer[]) => {
-    cleanup();
-    modeRef.current = mode;
-    iceRef.current = iceServers;
-    setError('');
-    setProgress(0);
-    setReceivedBlob(null);
-    setIncoming(null);
-    setStatus('connecting');
+  const scheduleReconnect = useCallback(() => {
+    if (stoppedRef.current || connectedRef.current || !reconnectRef.current) return;
+    clearReconnect();
+    if (typeof document !== 'undefined' && document.hidden) return; // wait for foreground
+    reconnectTimerRef.current = setTimeout(() => {
+      if (stoppedRef.current || connectedRef.current) return;
+      openSignalingRef.current();
+    }, RECONNECT_MS);
+  }, []);
 
-    signalRef.current = connectSignal(roomId, {
+  // (Re)open the signaling socket for the current auto-mode room.
+  const openSignaling = useCallback(() => {
+    const info = reconnectRef.current;
+    if (!info || stoppedRef.current || connectedRef.current) return;
+    // Close only the stale socket/peer; keep transfer state.
+    peerRef.current?.close();
+    peerRef.current = null;
+    signalRef.current?.close();
+    signalRef.current = null;
+
+    signalRef.current = connectSignal(info.roomId, {
       onMessage: msg => {
         switch (msg.type) {
           case 'welcome':
@@ -133,11 +166,12 @@ export function useFileTransfer() {
             setupPeer(true);
             break;
           case 'peer-left':
-            setError('The other device disconnected.');
-            setStatus('error');
+            // Only meaningful before the P2P channel is up; after, ignore.
+            if (!connectedRef.current) { peerRef.current?.close(); peerRef.current = null; setStatus('waiting'); }
             break;
           case 'full':
-            setError('This transfer room is already full.');
+            stoppedRef.current = true;
+            setError('This transfer room is already full (two devices are connected).');
             setStatus('error');
             break;
           case 'offer':
@@ -147,13 +181,46 @@ export function useFileTransfer() {
             break;
         }
       },
-      onError: () => { setError('Signaling connection failed.'); setStatus('error'); },
+      onClose: () => { if (!connectedRef.current && !stoppedRef.current) scheduleReconnect(); },
+      onError: () => { if (!connectedRef.current && !stoppedRef.current) scheduleReconnect(); },
     });
-  }, [cleanup, setupPeer]);
+  }, [setupPeer, scheduleReconnect]);
+
+  useEffect(() => { openSignalingRef.current = openSignaling; }, [openSignaling]);
+
+  const connect = useCallback((mode: TransferMode, roomId: string, iceServers?: RTCIceServer[]) => {
+    cleanup();
+    modeRef.current = mode;
+    iceRef.current = iceServers;
+    reconnectRef.current = { mode, roomId };
+    stoppedRef.current = false;
+    connectedRef.current = false;
+    setError('');
+    setProgress(0);
+    setReceivedBlob(null);
+    setIncoming(null);
+    setStatus('connecting');
+    openSignaling();
+  }, [cleanup, openSignaling]);
+
+  // Reconnect signaling as soon as the tab returns to the foreground (e.g. after
+  // switching apps to share the link) — until the P2P channel is established.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && reconnectRef.current && !connectedRef.current && !stoppedRef.current) {
+        scheduleReconnect();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [scheduleReconnect]);
 
   // --- Manual signaling (serverless copy-paste) ---
   const manualCreateOffer = useCallback(async (iceServers?: RTCIceServer[]): Promise<string> => {
     cleanup();
+    stoppedRef.current = true; // no auto-reconnect in manual mode
+    reconnectRef.current = null;
+    connectedRef.current = false;
     modeRef.current = 'send';
     setError('');
     setProgress(0);
@@ -173,6 +240,9 @@ export function useFileTransfer() {
 
   const manualAcceptOffer = useCallback(async (offerCode: string, iceServers?: RTCIceServer[]): Promise<string> => {
     cleanup();
+    stoppedRef.current = true;
+    reconnectRef.current = null;
+    connectedRef.current = false;
     modeRef.current = 'receive';
     setError('');
     setProgress(0);
@@ -212,6 +282,9 @@ export function useFileTransfer() {
   }, []);
 
   const reset = useCallback(() => {
+    stoppedRef.current = true;
+    reconnectRef.current = null;
+    connectedRef.current = false;
     cleanup();
     setStatus('idle');
     setError('');
@@ -220,7 +293,7 @@ export function useFileTransfer() {
     setReceivedBlob(null);
   }, [cleanup]);
 
-  useEffect(() => () => cleanup(), [cleanup]);
+  useEffect(() => () => { stoppedRef.current = true; cleanup(); }, [cleanup]);
 
   return {
     status,
