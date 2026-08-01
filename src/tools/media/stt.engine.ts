@@ -5,11 +5,17 @@ export type SttBackend = 'webgpu' | 'wasm';
 export type SttModelId =
   | 'onnx-community/whisper-tiny.en'
   | 'onnx-community/whisper-base.en'
-  | 'onnx-community/whisper-base';
+  | 'onnx-community/whisper-base'
+  | 'onnx-community/whisper-small';
+
+export interface TranscribeOptions {
+  /** Whisper source language (full lowercase name, e.g. 'indonesian'); omit to auto-detect. */
+  language?: string;
+}
 
 export interface Transcriber {
   backend: SttBackend;
-  transcribe(audio: Float32Array): Promise<TranscriptSegment[]>;
+  transcribe(audio: Float32Array, opts?: TranscribeOptions): Promise<TranscriptSegment[]>;
 }
 
 interface AsrChunk {
@@ -72,11 +78,14 @@ export async function createTranscriber(
 
   const transcriber: Transcriber = {
     backend,
-    async transcribe(audio: Float32Array): Promise<TranscriptSegment[]> {
+    async transcribe(audio: Float32Array, opts?: TranscribeOptions): Promise<TranscriptSegment[]> {
       const out = (await pipe(audio, {
         return_timestamps: true,
         chunk_length_s: 30,
         stride_length_s: 5,
+        // Naming the source language avoids Whisper's auto-detect mis-guessing it
+        // (e.g. transcribing Indonesian as another language).
+        ...(opts?.language ? { language: opts.language, task: 'transcribe' } : {}),
       })) as { text: string; chunks?: AsrChunk[] };
 
       if (out.chunks && out.chunks.length > 0) {
