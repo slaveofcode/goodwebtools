@@ -6,10 +6,27 @@
  * to the static Astro build via the ASSETS binding. Cloudflare only invokes
  * this Worker for requests that don't match a prebuilt static asset, so static
  * pages are still served directly.
+ *
+ * It also hosts a tiny WebRTC signaling rendezvous at /api/signal/<roomId> (a
+ * Durable Object), used by the P2P tools to exchange the ~2KB SDP/ICE handshake.
+ * Media and file bytes travel peer-to-peer and never reach this Worker.
  */
+export { SignalRoom } from './signal-room.js';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname.startsWith('/api/signal/')) {
+      if (request.headers.get('Upgrade') !== 'websocket') {
+        return new Response('Expected WebSocket', { status: 426 });
+      }
+      const roomId = url.pathname.slice('/api/signal/'.length);
+      if (!/^[a-z0-9]{6,32}$/.test(roomId)) {
+        return new Response('Bad room id', { status: 400 });
+      }
+      return env.SIGNAL.getByName(roomId).fetch(request);
+    }
 
     if (url.pathname.startsWith('/models/')) {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
