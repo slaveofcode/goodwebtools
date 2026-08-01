@@ -1,15 +1,13 @@
 import type { SignalMessage } from './signal.lib';
-
-/** Public STUN only (no TURN). Connections may fail behind strict/symmetric NAT. */
-const ICE_SERVERS: RTCIceServer[] = [
-  { urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
-];
+import { DEFAULT_ICE_SERVERS } from './ice.lib';
 
 export interface CreatePeerOptions {
   initiator: boolean;
   sendSignal: (msg: SignalMessage) => void;
   onState?: (state: RTCPeerConnectionState) => void;
   onChannel?: (channel: RTCDataChannel) => void;
+  /** Custom ICE servers; defaults to the public STUN set. */
+  iceServers?: RTCIceServer[];
 }
 
 export interface PeerHandles {
@@ -24,7 +22,7 @@ export interface PeerHandles {
  * side answers. ICE candidates that arrive before the remote description are queued.
  */
 export function createPeer(opts: CreatePeerOptions): PeerHandles {
-  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+  const pc = new RTCPeerConnection({ iceServers: opts.iceServers ?? DEFAULT_ICE_SERVERS });
   const pendingIce: RTCIceCandidateInit[] = [];
 
   pc.onicecandidate = e => {
