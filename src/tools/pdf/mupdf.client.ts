@@ -39,6 +39,14 @@ export async function getPageCount(file: File): Promise<number> {
   return engine().countPages(await bytesOf(file));
 }
 
+export interface RepairResult { blob: Blob; pages: number }
+
+/** Repair a damaged PDF. `force` rebuilds it page-by-page from what's readable. */
+export async function repairPdf(file: File, force = false): Promise<RepairResult> {
+  const { bytes, pages } = await engine().repair(await bytesOf(file), force);
+  return { blob: toBlob(bytes), pages };
+}
+
 export async function extractPageList(file: File, pageNumbers: number[]): Promise<Blob> {
   return toBlob(await engine().extractPages(await bytesOf(file), pageNumbers));
 }
