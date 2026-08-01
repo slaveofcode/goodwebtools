@@ -17,10 +17,38 @@ import {
   type TranscriptSegment,
 } from '@/tools/media/stt.lib';
 
-const MODELS: { value: SttModelId; label: string; note: string }[] = [
+const MODELS: { value: SttModelId; label: string; note: string; multilingual?: boolean }[] = [
   { value: 'onnx-community/whisper-tiny.en', label: 'English · Fast', note: 'smallest download' },
   { value: 'onnx-community/whisper-base.en', label: 'English · Accurate', note: 'larger, more accurate' },
-  { value: 'onnx-community/whisper-base', label: 'Multilingual', note: 'auto-detects language' },
+  { value: 'onnx-community/whisper-base', label: 'Multilingual', note: 'auto-detects language', multilingual: true },
+  { value: 'onnx-community/whisper-small', label: 'Multilingual · Better', note: 'much better for non-English (e.g. Bahasa); larger download', multilingual: true },
+];
+
+// Whisper source-language options (value = the lowercase name Whisper expects).
+// Empty value = auto-detect. Region-relevant languages first.
+const LANGUAGES: { value: string; label: string }[] = [
+  { value: '', label: 'Auto-detect' },
+  { value: 'indonesian', label: 'Indonesian (Bahasa)' },
+  { value: 'malay', label: 'Malay' },
+  { value: 'javanese', label: 'Javanese' },
+  { value: 'sundanese', label: 'Sundanese' },
+  { value: 'english', label: 'English' },
+  { value: 'chinese', label: 'Chinese' },
+  { value: 'japanese', label: 'Japanese' },
+  { value: 'korean', label: 'Korean' },
+  { value: 'arabic', label: 'Arabic' },
+  { value: 'hindi', label: 'Hindi' },
+  { value: 'tagalog', label: 'Tagalog' },
+  { value: 'thai', label: 'Thai' },
+  { value: 'vietnamese', label: 'Vietnamese' },
+  { value: 'spanish', label: 'Spanish' },
+  { value: 'portuguese', label: 'Portuguese' },
+  { value: 'french', label: 'French' },
+  { value: 'german', label: 'German' },
+  { value: 'italian', label: 'Italian' },
+  { value: 'dutch', label: 'Dutch' },
+  { value: 'russian', label: 'Russian' },
+  { value: 'turkish', label: 'Turkish' },
 ];
 
 type Tab = 'text' | 'timestamped' | 'subtitles';
@@ -30,6 +58,7 @@ export default function VoiceToText() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [model, setModel] = useState<SttModelId>('onnx-community/whisper-tiny.en');
+  const [language, setLanguage] = useState('');
   const [modelProgress, setModelProgress] = useState<number | null>(null);
   const [transcribing, setTranscribing] = useState(false);
   const [segments, setSegments] = useState<TranscriptSegment[] | null>(null);
@@ -96,7 +125,8 @@ export default function VoiceToText() {
       const audio = await decodeToMono16k(audioBlob);
       const engine = await createTranscriber(model, r => setModelProgress(r));
       setModelProgress(null); // model ready (or cached) — now inference (indeterminate)
-      const segs = await engine.transcribe(audio);
+      const isMultilingual = MODELS.find(m => m.value === model)?.multilingual;
+      const segs = await engine.transcribe(audio, { language: isMultilingual ? language || undefined : undefined });
       setSegments(segs);
       setEditedText(segmentsToText(segs));
       setTab('text');
@@ -170,6 +200,21 @@ export default function VoiceToText() {
           ))}
         </div>
       </div>
+
+      {MODELS.find(m => m.value === model)?.multilingual && (
+        <label className="block space-y-1.5">
+          <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Language</span>
+          <select
+            value={language}
+            onChange={e => setLanguage(e.target.value)}
+            disabled={busy}
+            className="w-full border-2 border-border bg-muted px-3 py-2 text-sm outline-none focus:shadow-brutal-sm"
+          >
+            {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+          </select>
+          <span className="block text-xs text-muted-foreground">Pick the spoken language for best accuracy — auto-detect often mis-guesses shorter clips.</span>
+        </label>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={transcribe} disabled={!audioBlob || busy}>
