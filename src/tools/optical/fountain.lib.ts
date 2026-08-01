@@ -127,8 +127,20 @@ export class LtDecoder {
     return this.solvedCount >= this.k;
   }
 
+  /** Unique frames received so far. */
+  get framesSeen(): number {
+    return this.seenSeq.size;
+  }
+
+  /**
+   * Collection progress 0..1. LT codes solve almost nothing until they avalanche
+   * near the end, so reporting solved-blocks looks stuck at 0%. Report frames
+   * collected vs. the ~k×1.15 typically needed instead (capped below 1 until done).
+   */
   progress(): number {
-    return this.k === 0 ? 1 : this.solvedCount / this.k;
+    if (this.done) return 1;
+    if (this.k === 0) return 1;
+    return Math.min(0.99, this.framesSeen / (this.k * 1.15));
   }
 
   /** Feed one frame. Returns true once the whole file is solved. */
