@@ -128,7 +128,6 @@ function Receiver({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     if (!stream) return;
     if (!captureRef.current) captureRef.current = document.createElement('canvas');
-    let collected = 0;
 
     const scan = () => {
       const video = videoRef.current;
@@ -149,13 +148,9 @@ function Receiver({ onBack }: { onBack: () => void }) {
               decoderRef.current = new LtDecoder(frame.k, BLOCK_SIZE);
             }
             if (frame.session === metaRef.current.session && decoderRef.current) {
-              const before = decoderRef.current.solvedCount;
               const done = decoderRef.current.addFrame(frame.seq, frame.payload);
-              if (decoderRef.current.solvedCount !== before || decoderRef.current.progress() > 0) {
-                collected++;
-                setFrames(collected);
-                setProgress(decoderRef.current.progress());
-              }
+              setFrames(decoderRef.current.framesSeen);
+              setProgress(decoderRef.current.progress());
               if (done) finish();
             }
           }
