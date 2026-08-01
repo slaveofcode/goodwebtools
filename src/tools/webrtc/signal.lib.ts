@@ -27,9 +27,9 @@ export function makeRoomId(): string {
   return out;
 }
 
-/** Same-origin shareable link for a file-transfer room. */
-export function roomLink(origin: string, roomId: string): string {
-  return `${origin}/tools/file-transfer#${roomId}`;
+/** Same-origin shareable link for a P2P room (file transfer by default). */
+export function roomLink(origin: string, roomId: string, path = '/tools/file-transfer'): string {
+  return `${origin}${path}#${roomId}`;
 }
 
 /** Extract a valid room id from a URL hash (with or without the leading '#'). */

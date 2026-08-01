@@ -8,6 +8,10 @@ export interface CreatePeerOptions {
   onChannel?: (channel: RTCDataChannel) => void;
   /** Custom ICE servers; defaults to the public STUN set. */
   iceServers?: RTCIceServer[];
+  /** Local media whose tracks are added to the connection (video call). */
+  localStream?: MediaStream;
+  /** Called with the remote media stream (video call). */
+  onTrack?: (stream: MediaStream) => void;
 }
 
 export interface PeerHandles {
@@ -30,15 +34,30 @@ export function createPeer(opts: CreatePeerOptions): PeerHandles {
   };
   pc.onconnectionstatechange = () => opts.onState?.(pc.connectionState);
 
+  // Media (video call): deliver the remote stream and add our local tracks.
+  if (opts.onTrack) pc.ontrack = e => { if (e.streams[0]) opts.onTrack!(e.streams[0]); };
+  if (opts.localStream) {
+    for (const track of opts.localStream.getTracks()) pc.addTrack(track, opts.localStream);
+  }
+
   if (opts.initiator) {
-    const channel = pc.createDataChannel('data', { ordered: true });
-    opts.onChannel?.(channel);
+    if (opts.onChannel) {
+      const channel = pc.createDataChannel('data', { ordered: true });
+      opts.onChannel(channel);
+    }
+    let makingOffer = false;
+    // Adding a data channel AND media tracks can each fire negotiationneeded;
+    // the guard collapses them into a single offer and avoids glare.
     pc.onnegotiationneeded = async () => {
+      if (makingOffer || pc.signalingState !== 'stable') return;
+      makingOffer = true;
       try {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         opts.sendSignal({ type: 'offer', sdp: pc.localDescription });
-      } catch { /* surfaced via connection state */ }
+      } catch { /* surfaced via connection state */ } finally {
+        makingOffer = false;
+      }
     };
   } else {
     pc.ondatachannel = e => opts.onChannel?.(e.channel);
