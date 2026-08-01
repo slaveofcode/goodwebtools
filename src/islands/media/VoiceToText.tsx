@@ -7,8 +7,10 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { downloadService } from '@/services/download';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { useWakeLock } from '@/hooks/useWakeLock';
 import { decodeToMono16k } from '@/tools/media/stt-audio.lib';
 import { transcribeInWorker } from '@/tools/media/stt.client';
+import { saveRecording, loadRecording } from '@/tools/media/recording-store';
 import { type SttModelId } from '@/tools/media/stt.engine';
 import {
   segmentsToText,
@@ -56,6 +58,8 @@ type Tab = 'text' | 'timestamped' | 'subtitles';
 
 export default function VoiceToText() {
   const recorder = useAudioRecorder();
+  const wakeLock = useWakeLock();
+  const [restored, setRestored] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [model, setModel] = useState<SttModelId>('onnx-community/whisper-tiny.en');
@@ -94,7 +98,7 @@ export default function VoiceToText() {
     return () => clearInterval(id);
   }, [transcribing]);
 
-  const setAudio = (blob: Blob) => {
+  const setAudio = (blob: Blob, persist = true) => {
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     const url = URL.createObjectURL(blob);
     urlRef.current = url;
@@ -102,7 +106,17 @@ export default function VoiceToText() {
     setAudioBlob(blob);
     setSegments(null);
     setError('');
+    if (persist) { setRestored(false); void saveRecording(blob); }
   };
+
+  // Restore the last recording (survives a mobile tab discard / reload).
+  useEffect(() => {
+    let cancelled = false;
+    loadRecording().then(blob => {
+      if (!cancelled && blob) { setAudio(blob, false); setRestored(true); }
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const onDrop = (files: File[]) => {
     const f = files.find(x => x.type.startsWith('audio/') || x.type.startsWith('video/'));
@@ -138,6 +152,7 @@ export default function VoiceToText() {
     setSegments(null);
     setTranscribing(true);
     setModelProgress(null); // only shows once real download progress fires (first load)
+    void wakeLock.request(); // keep the screen on so the phone doesn't lock + discard the tab
     try {
       const audio = await decodeToMono16k(audioBlob);
       const isMultilingual = MODELS.find(m => m.value === model)?.multilingual;
@@ -156,6 +171,7 @@ export default function VoiceToText() {
     } finally {
       setTranscribing(false);
       setModelProgress(null);
+      wakeLock.release();
     }
   };
 
@@ -200,7 +216,10 @@ export default function VoiceToText() {
       {recorder.error && <Alert variant="error">{recorder.error.message}</Alert>}
 
       {audioUrl && (
-        <audio ref={audioRef} controls src={audioUrl} onLoadedMetadata={fixAudioDuration} className="w-full" />
+        <div className="space-y-1">
+          <audio ref={audioRef} controls src={audioUrl} onLoadedMetadata={fixAudioDuration} className="w-full" />
+          {restored && <p className="text-xs text-muted-foreground">Restored your last recording.</p>}
+        </div>
       )}
 
       {/* Model + run */}
