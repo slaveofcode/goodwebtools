@@ -38,6 +38,7 @@ export default function VoiceToText() {
   const [subFormat, setSubFormat] = useState<'srt' | 'vtt'>('srt');
   const [error, setError] = useState('');
   const urlRef = useRef('');
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Pick up a finished recording as the working audio.
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function VoiceToText() {
     if (recorder.recording) {
       recorder.stop();
     } else {
+      audioRef.current?.pause();
       setSegments(null);
       setError('');
       recorder.start();
@@ -74,14 +76,15 @@ export default function VoiceToText() {
 
   const transcribe = async () => {
     if (!audioBlob) return;
+    audioRef.current?.pause(); // don't leave the preview playing while inference blocks the thread
     setError('');
     setSegments(null);
     setTranscribing(true);
-    setModelProgress(0);
+    setModelProgress(null); // only shows once real download progress fires (first load)
     try {
       const audio = await decodeToMono16k(audioBlob);
       const engine = await createTranscriber(model, r => setModelProgress(r));
-      setModelProgress(null); // model ready — now inference (indeterminate)
+      setModelProgress(null); // model ready (or cached) — now inference (indeterminate)
       const segs = await engine.transcribe(audio);
       setSegments(segs);
       setEditedText(segmentsToText(segs));
@@ -135,7 +138,7 @@ export default function VoiceToText() {
       {recorder.error && <Alert variant="error">{recorder.error.message}</Alert>}
 
       {audioUrl && (
-        <audio controls src={audioUrl} className="w-full" />
+        <audio ref={audioRef} controls src={audioUrl} className="w-full" />
       )}
 
       {/* Model + run */}
