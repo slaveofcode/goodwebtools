@@ -7,18 +7,22 @@ import { tools, getToolById } from '@/registry/tools';
 import { getToolSeo } from '@/registry/tool-seo';
 import { categoryColors, categorySlug } from '@/registry/categories';
 import { SITE_URL, SITE_NAME } from '@/config';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+import { t } from '@/i18n/ui';
 
 export function getStaticPaths() {
-  return tools.map(tool => ({
-    params: { tool: tool.id },
-    props: { toolId: tool.id },
-  }));
+  return LOCALES.flatMap(lang =>
+    tools.map(tool => ({
+      params: { locale: localeParam(lang), tool: tool.id },
+      props: { toolId: tool.id, lang },
+    })),
+  );
 }
 
-const { toolId } = Astro.props;
+const { toolId, lang } = Astro.props as { toolId: string; lang: Lang };
 const tool = getToolById(toolId)!;
-const toolUrl = new URL(tool.route, SITE_URL).href;
-const seo = getToolSeo(tool.id);
+const toolUrl = new URL(localizePath(tool.route, lang), SITE_URL).href;
+const seo = getToolSeo(tool.id, lang);
 
 // Authored copy where present; otherwise fall back to the registry summary.
 const lead = seo?.intro ?? tool.summary;
@@ -26,10 +30,12 @@ const metaDescription =
   seo?.description ??
   `${tool.summary}. Free, on-device, and private — runs entirely in your browser with no uploads. Part of ${SITE_NAME}.`;
 
-// Category hub (breadcrumb + related links).
-const catPath = `/category/${categorySlug(tool.category)}`;
+// Localized links.
+const homePath = localizePath('/', lang);
+const catPath = localizePath(`/category/${categorySlug(tool.category)}`, lang);
+const catLabel = t(lang, 'category.heading', { category: tool.category });
 const relatedTools = tools
-  .filter(t => t.category === tool.category && t.id !== tool.id && !t.desktopOnly)
+  .filter(t2 => t2.category === tool.category && t2.id !== tool.id && !t2.desktopOnly)
   .slice(0, 6);
 
 const softwareJsonLd = {
@@ -49,8 +55,8 @@ const breadcrumbJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
-    { '@type': 'ListItem', position: 2, name: `${tool.category} Tools`, item: new URL(catPath, SITE_URL).href },
+    { '@type': 'ListItem', position: 1, name: t(lang, 'nav.home'), item: new URL(homePath, SITE_URL).href },
+    { '@type': 'ListItem', position: 2, name: catLabel, item: new URL(catPath, SITE_URL).href },
     { '@type': 'ListItem', position: 3, name: tool.name, item: toolUrl },
   ],
 };
@@ -59,7 +65,7 @@ if (seo?.howTo && seo.howTo.length > 0) {
   jsonLd.push({
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: `How to use ${tool.name}`,
+    name: t(lang, 'tool.howTo', { name: tool.name }),
     step: seo.howTo.map((text, i) => ({ '@type': 'HowToStep', position: i + 1, text })),
   });
 }
@@ -82,12 +88,14 @@ if (seo?.faqs && seo.faqs.length > 0) {
   keywords={tool.keywords}
   image={`/og/${tool.id}.png`}
   jsonLd={jsonLd}
+  lang={lang}
+  localized
 >
   <main class="page-container py-8">
-    <nav aria-label="Breadcrumb" class="mb-4">
+    <nav aria-label={t(lang, 'a11y.breadcrumb')} class="mb-4">
       <ol class="flex flex-wrap items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
         <li>
-          <a href="/" class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">Home</a>
+          <a href={homePath} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{t(lang, 'nav.home')}</a>
         </li>
         <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
         <li>
@@ -119,7 +127,7 @@ if (seo?.faqs && seo.faqs.length > 0) {
       <div class="mt-12 space-y-10 border-t-2 border-border pt-8">
         {seo?.howTo && seo.howTo.length > 0 && (
           <section aria-labelledby="howto-heading">
-            <h2 id="howto-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">How to use {tool.name}</h2>
+            <h2 id="howto-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">{t(lang, 'tool.howTo', { name: tool.name })}</h2>
             <ol class="max-w-3xl space-y-2">
               {seo.howTo.map((step, i) => (
                 <li class="flex gap-3">
@@ -133,7 +141,7 @@ if (seo?.faqs && seo.faqs.length > 0) {
 
         {seo?.faqs && seo.faqs.length > 0 && (
           <section aria-labelledby="faq-heading">
-            <h2 id="faq-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">Frequently asked questions</h2>
+            <h2 id="faq-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">{t(lang, 'tool.faq')}</h2>
             <div class="max-w-3xl space-y-3">
               {seo.faqs.map(f => (
                 <details class="border-2 border-border bg-muted p-4">
@@ -147,12 +155,12 @@ if (seo?.faqs && seo.faqs.length > 0) {
 
         {relatedTools.length > 0 && (
           <section aria-labelledby="related-heading">
-            <h2 id="related-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">Related {tool.category} tools</h2>
+            <h2 id="related-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">{t(lang, 'tool.related', { category: tool.category })}</h2>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {relatedTools.map(rt => {
                 const Icon = rt.icon;
                 return (
-                  <a href={rt.route} class="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal-sm press-brutal">
+                  <a href={localizePath(rt.route, lang)} class="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal-sm press-brutal">
                     <span class={`mt-0.5 border-2 border-border p-2 text-black ${categoryColors[rt.category]}`}>
                       <Icon className="h-4 w-4" />
                     </span>

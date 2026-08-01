@@ -4,9 +4,18 @@ import { ToolGrid } from '@/components/ToolGrid';
 import ShareButton from '@/islands/share/ShareButton';
 import { tools } from '@/registry/tools';
 import { SITE_URL, SITE_NAME, SITE_TAGLINE } from '@/config';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+import { t } from '@/i18n/ui';
 
-const homeTitle = `${SITE_NAME} — Free Privacy-First Browser Tools`;
-const homeDescription = `${tools.length} free online tools that run entirely in your browser — PDF, image, file, developer, and media utilities. No uploads, no sign-up, works offline. Your files never leave your device.`;
+export function getStaticPaths() {
+  return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const homeTitle = t(lang, 'home.title');
+const homeDescription = t(lang, 'home.metaDescription', { n: tools.length });
+const homeUrl = new URL(localizePath('/', lang), SITE_URL).href;
+const shareUrl = lang === 'en' ? SITE_URL : homeUrl;
 const homeKeywords = [
   'online tools', 'free tools', 'browser tools', 'privacy tools', 'no upload',
   'pdf tools', 'image tools', 'developer tools', 'json formatter', 'convert', 'client-side',
@@ -23,7 +32,7 @@ const toolList = {
     position: i + 1,
     name: tool.name,
     description: tool.summary,
-    url: new URL(tool.route, SITE_URL).href,
+    url: new URL(localizePath(tool.route, lang), SITE_URL).href,
   })),
 };
 ---
@@ -33,31 +42,31 @@ const toolList = {
   fullTitle={homeTitle}
   description={homeDescription}
   keywords={homeKeywords}
-  canonical={SITE_URL + '/'}
+  canonical={homeUrl}
   jsonLd={toolList}
+  lang={lang}
+  localized
 >
   <main class="page-container py-10">
     <header class="mb-10">
       {/* Brand lives in the top navbar; keep an accessible heading without duplicating it. */}
       <h1 class="sr-only">GoodWebTools</h1>
       <p class="max-w-2xl text-lg font-medium text-foreground">
-        Privacy-first client-side utilities. {tools.length} tools — everything runs in your browser.
+        {t(lang, 'home.lead', { n: tools.length })}
       </p>
       <button
         id="home-search"
         type="button"
         class="mt-3 inline-flex items-center gap-1.5 border-2 border-border bg-muted px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-muted-foreground shadow-brutal-sm press-brutal"
       >
-        Press
-        <kbd class="border-2 border-border bg-background px-1.5 py-0.5 font-mono text-xs">⌘K</kbd>
-        to search tools
+        <span set:html={t(lang, 'home.searchHint', { kbd: '<kbd class="border-2 border-border bg-background px-1.5 py-0.5 font-mono text-xs">⌘K</kbd>' })} />
       </button>
       <div class="mt-4">
-        <ShareButton client:idle url={SITE_URL} title={SITE_NAME} text={SITE_TAGLINE} />
+        <ShareButton client:idle url={shareUrl} title={SITE_NAME} text={SITE_TAGLINE} />
       </div>
     </header>
 
-    <ToolGrid />
+    <ToolGrid lang={lang} />
   </main>
 
   <script>
