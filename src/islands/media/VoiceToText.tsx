@@ -8,7 +8,8 @@ import { CopyButton } from '@/components/ui/CopyButton';
 import { downloadService } from '@/services/download';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { decodeToMono16k } from '@/tools/media/stt-audio.lib';
-import { createTranscriber, type SttModelId } from '@/tools/media/stt.engine';
+import { transcribeInWorker } from '@/tools/media/stt.client';
+import { type SttModelId } from '@/tools/media/stt.engine';
 import {
   segmentsToText,
   segmentsToSrt,
@@ -61,6 +62,7 @@ export default function VoiceToText() {
   const [language, setLanguage] = useState('');
   const [modelProgress, setModelProgress] = useState<number | null>(null);
   const [transcribing, setTranscribing] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const [segments, setSegments] = useState<TranscriptSegment[] | null>(null);
   const [editedText, setEditedText] = useState('');
   const [tab, setTab] = useState<Tab>('text');
@@ -76,6 +78,21 @@ export default function VoiceToText() {
 
   // Revoke the preview URL on unmount.
   useEffect(() => () => { if (urlRef.current) URL.revokeObjectURL(urlRef.current); }, []);
+
+  // Ask the browser to keep this origin's storage persistent, so the (potentially
+  // large) cached Whisper model isn't evicted between sessions and re-downloaded.
+  useEffect(() => {
+    navigator.storage?.persist?.().catch(() => {});
+  }, []);
+
+  // Tick an elapsed counter while transcribing (the worker keeps the UI responsive).
+  useEffect(() => {
+    if (!transcribing) return;
+    setElapsed(0);
+    const started = Date.now();
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [transcribing]);
 
   const setAudio = (blob: Blob) => {
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
@@ -123,10 +140,14 @@ export default function VoiceToText() {
     setModelProgress(null); // only shows once real download progress fires (first load)
     try {
       const audio = await decodeToMono16k(audioBlob);
-      const engine = await createTranscriber(model, r => setModelProgress(r));
-      setModelProgress(null); // model ready (or cached) — now inference (indeterminate)
       const isMultilingual = MODELS.find(m => m.value === model)?.multilingual;
-      const segs = await engine.transcribe(audio, { language: isMultilingual ? language || undefined : undefined });
+      const segs = await transcribeInWorker(
+        audio,
+        model,
+        isMultilingual ? language || undefined : undefined,
+        r => setModelProgress(r),
+      );
+      setModelProgress(null); // model ready (or cached) — now inference (indeterminate)
       setSegments(segs);
       setEditedText(segmentsToText(segs));
       setTab('text');
@@ -231,7 +252,12 @@ export default function VoiceToText() {
         <ProgressBar percent={modelProgress * 100} label="Downloading model (first time only)" />
       )}
       {busy && modelProgress === null && (
-        <p className="text-sm text-muted-foreground">Transcribing on your device… this can take a moment.</p>
+        <p className="text-sm text-muted-foreground">
+          Transcribing on your device… ({formatClock(elapsed)})
+          {MODELS.find(m => m.value === model)?.value === 'onnx-community/whisper-small'
+            ? ' — the “Better” model is much slower, especially on phones; a short clip can take a few minutes.'
+            : ' this can take a moment.'}
+        </p>
       )}
 
       {error && <Alert variant="error">{error}</Alert>}
