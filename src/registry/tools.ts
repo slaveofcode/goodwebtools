@@ -556,7 +556,7 @@ export const tools: ToolDef[] = [
   {
     id: 'file-transfer',
     name: 'P2P File Transfer',
-    category: 'Files',
+    category: 'Network',
     route: '/tools/file-transfer',
     keywords: ['file', 'transfer', 'send', 'share', 'p2p', 'peer to peer', 'webrtc', 'direct', 'device to device'],
     icon: Send,

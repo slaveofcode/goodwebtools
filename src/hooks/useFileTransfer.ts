@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { connectSignal, type SignalClient } from '@/tools/webrtc/signal-client';
 import { createPeer, type PeerHandles } from '@/tools/webrtc/peer';
+import { createManualConnection, type ManualConnection } from '@/tools/webrtc/manual';
 import {
   CHUNK_SIZE,
   chunkCount,
@@ -27,8 +28,10 @@ const HIGH_WATER = 8 * 1024 * 1024; // pause sending above this bufferedAmount
 export function useFileTransfer() {
   const signalRef = useRef<SignalClient | null>(null);
   const peerRef = useRef<PeerHandles | null>(null);
+  const manualRef = useRef<ManualConnection | null>(null);
   const channelRef = useRef<RTCDataChannel | null>(null);
   const modeRef = useRef<TransferMode>('send');
+  const iceRef = useRef<RTCIceServer[] | undefined>(undefined);
   const recvRef = useRef<{ meta: TransferMeta | null; chunks: ArrayBuffer[]; received: number }>({
     meta: null,
     chunks: [],
@@ -44,11 +47,20 @@ export function useFileTransfer() {
   const cleanup = useCallback(() => {
     channelRef.current?.close();
     peerRef.current?.close();
+    manualRef.current?.close();
     signalRef.current?.close();
     channelRef.current = null;
     peerRef.current = null;
+    manualRef.current = null;
     signalRef.current = null;
     recvRef.current = { meta: null, chunks: [], received: 0 };
+  }, []);
+
+  const handleState = useCallback((state: RTCPeerConnectionState) => {
+    if (state === 'failed' || state === 'disconnected') {
+      setError('Could not connect — the network may be too restrictive (no relay server).');
+      setStatus('error');
+    }
   }, []);
 
   const handleRecv = useCallback((data: string | ArrayBuffer) => {
@@ -92,20 +104,18 @@ export function useFileTransfer() {
     const signal = signalRef.current;
     peerRef.current = createPeer({
       initiator,
+      iceServers: iceRef.current,
       sendSignal: msg => signal.send(msg),
-      onState: state => {
-        if (state === 'failed' || state === 'disconnected') {
-          setError('Could not connect — the network may be too restrictive (no relay server).');
-          setStatus('error');
-        }
-      },
+      onState: handleState,
       onChannel: wireChannel,
     });
-  }, [wireChannel]);
+  }, [wireChannel, handleState]);
 
-  const connect = useCallback((mode: TransferMode, roomId: string) => {
+  // --- Automatic signaling (via our server) ---
+  const connect = useCallback((mode: TransferMode, roomId: string, iceServers?: RTCIceServer[]) => {
     cleanup();
     modeRef.current = mode;
+    iceRef.current = iceServers;
     setError('');
     setProgress(0);
     setReceivedBlob(null);
@@ -120,7 +130,7 @@ export function useFileTransfer() {
             else setStatus('waiting');
             break;
           case 'peer-joined':
-            setupPeer(true); // host starts the offer
+            setupPeer(true);
             break;
           case 'peer-left':
             setError('The other device disconnected.');
@@ -140,6 +150,41 @@ export function useFileTransfer() {
       onError: () => { setError('Signaling connection failed.'); setStatus('error'); },
     });
   }, [cleanup, setupPeer]);
+
+  // --- Manual signaling (serverless copy-paste) ---
+  const manualCreateOffer = useCallback(async (iceServers?: RTCIceServer[]): Promise<string> => {
+    cleanup();
+    modeRef.current = 'send';
+    setError('');
+    setProgress(0);
+    setReceivedBlob(null);
+    setIncoming(null);
+    setStatus('connecting');
+    const conn = createManualConnection({ initiator: true, iceServers, onState: handleState, onChannel: wireChannel });
+    manualRef.current = conn;
+    const code = await conn.createOfferCode();
+    setStatus('waiting');
+    return code;
+  }, [cleanup, wireChannel, handleState]);
+
+  const manualAcceptAnswer = useCallback(async (answerCode: string): Promise<void> => {
+    await manualRef.current?.acceptAnswer(answerCode);
+  }, []);
+
+  const manualAcceptOffer = useCallback(async (offerCode: string, iceServers?: RTCIceServer[]): Promise<string> => {
+    cleanup();
+    modeRef.current = 'receive';
+    setError('');
+    setProgress(0);
+    setReceivedBlob(null);
+    setIncoming(null);
+    setStatus('connecting');
+    const conn = createManualConnection({ initiator: false, iceServers, onState: handleState, onChannel: wireChannel });
+    manualRef.current = conn;
+    const answer = await conn.acceptOfferReturnAnswer(offerCode);
+    setStatus('waiting');
+    return answer;
+  }, [cleanup, wireChannel, handleState]);
 
   const sendFile = useCallback(async (file: File) => {
     const channel = channelRef.current;
@@ -177,5 +222,18 @@ export function useFileTransfer() {
 
   useEffect(() => () => cleanup(), [cleanup]);
 
-  return { status, error, progress, incoming, receivedBlob, connect, sendFile, reset, CHUNK_SIZE };
+  return {
+    status,
+    error,
+    progress,
+    incoming,
+    receivedBlob,
+    connect,
+    manualCreateOffer,
+    manualAcceptAnswer,
+    manualAcceptOffer,
+    sendFile,
+    reset,
+    CHUNK_SIZE,
+  };
 }

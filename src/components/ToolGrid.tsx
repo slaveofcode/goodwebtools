@@ -1,5 +1,5 @@
 import { tools } from '@/registry/tools';
-import { categories, categoryColors } from '@/registry/categories';
+import { categories, categoryColors, categoryNotes } from '@/registry/categories';
 
 /**
  * Static tool grid grouped by category. Rendered without a client directive so
@@ -25,6 +25,9 @@ export function ToolGrid() {
                 ({categoryTools.filter(tool => !tool.desktopOnly).length})
               </span>
             </div>
+            {categoryNotes[category] && (
+              <p className="mb-4 max-w-3xl text-sm text-muted-foreground">{categoryNotes[category]}</p>
+            )}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {categoryTools.map(tool => {
                 const Icon = tool.icon;
