@@ -63,6 +63,17 @@ export default function VoiceToText() {
     if (f) setAudio(f);
   };
 
+  // MediaRecorder blobs have no duration in their header, so the browser reports
+  // duration=Infinity and treats the clip like a live stream — which freezes the
+  // native pause/seek controls. Seek to the end once to force a real duration.
+  const fixAudioDuration = () => {
+    const el = audioRef.current;
+    if (!el || el.duration !== Infinity) return;
+    const onUpdate = () => { el.removeEventListener('timeupdate', onUpdate); el.currentTime = 0; };
+    el.addEventListener('timeupdate', onUpdate);
+    try { el.currentTime = 1e101; } catch { /* ignore */ }
+  };
+
   const toggleRecord = () => {
     if (recorder.recording) {
       recorder.stop();
@@ -138,7 +149,7 @@ export default function VoiceToText() {
       {recorder.error && <Alert variant="error">{recorder.error.message}</Alert>}
 
       {audioUrl && (
-        <audio ref={audioRef} controls src={audioUrl} className="w-full" />
+        <audio ref={audioRef} controls src={audioUrl} onLoadedMetadata={fixAudioDuration} className="w-full" />
       )}
 
       {/* Model + run */}
