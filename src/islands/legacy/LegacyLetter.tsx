@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Plus, Trash2, Lock, Users, Upload, Download, Eye, EyeOff, ShieldAlert, Printer, KeyRound } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { Plus, Trash2, Lock, Users, Upload, Download, Eye, EyeOff, ShieldAlert, Printer, KeyRound, ShieldCheck, Clock, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { downloadService } from '@/services/download';
+import type { Lang } from '@/i18n/config';
 import {
   createVault, openWithPassword, openWithShares, vaultCapabilities,
   VAULT_EXT, type Account, type LegacyContent,
@@ -14,20 +15,191 @@ type Mode = 'create' | 'open' | null;
 const input = 'w-full border-2 border-border bg-muted px-3 py-2 text-sm outline-none focus:shadow-brutal-sm';
 const emptyAccount = (): Account => ({ service: '', username: '', password: '', url: '', notes: '' });
 
-export default function LegacyLetter() {
+// Custom neo-brutalist SVG scenes: currentColor strokes (theme-aware) + accent/muted/
+// background fill tokens so they read in both light and dark mode. Decorative → aria-hidden.
+const svgProps = {
+  viewBox: '0 0 96 64', role: 'img', 'aria-hidden': true,
+  className: 'h-16 w-full text-foreground', fill: 'none', stroke: 'currentColor',
+  strokeWidth: 2.5, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const,
+};
+
+function SceneWrite() {
+  return (
+    <svg {...svgProps}>
+      <rect x="14" y="6" width="42" height="52" className="fill-background" />
+      <line x1="22" y1="18" x2="48" y2="18" /><line x1="22" y1="27" x2="48" y2="27" /><line x1="22" y1="36" x2="40" y2="36" />
+      <circle cx="26" cy="48" r="4" className="fill-accent" /><path d="M30 48 h9 M37 48 v4" />
+      <path d="M55 44 L74 25 l6 6 L61 50 l-8 2 z" className="fill-accent" />
+    </svg>
+  );
+}
+function SceneLock() {
+  return (
+    <svg {...svgProps}>
+      <rect x="20" y="8" width="44" height="48" className="fill-background" /><line x1="20" y1="18" x2="64" y2="18" />
+      <rect x="34" y="35" width="16" height="13" className="fill-accent" /><path d="M37 35 v-4 a5 5 0 0 1 10 0 v4" />
+      <path d="M70 22 a6 6 0 0 1 11 -2 a5 5 0 0 1 1 10 h-11 a4.5 4.5 0 0 1 -1 -8 z" className="fill-muted" />
+      <line x1="69" y1="15" x2="85" y2="31" />
+    </svg>
+  );
+}
+function SceneShares() {
+  return (
+    <svg {...svgProps}>
+      <circle cx="48" cy="12" r="6" className="fill-accent" /><line x1="48" y1="18" x2="48" y2="24" />
+      <path d="M16 24 H80 M16 24 v6 M32 24 v6 M48 24 v6 M64 24 v6 M80 24 v6" />
+      <rect x="9" y="38" width="14" height="18" className="fill-accent" /><rect x="25" y="38" width="14" height="18" className="fill-accent" />
+      <rect x="41" y="38" width="14" height="18" className="fill-accent" /><rect x="57" y="38" width="14" height="18" className="fill-background" />
+      <rect x="73" y="38" width="14" height="18" className="fill-background" />
+    </svg>
+  );
+}
+function SceneOpen() {
+  return (
+    <svg {...svgProps}>
+      <path d="M14 8 h16 M14 56 h16 M16 8 v6 l7 10 l-7 10 v6 M28 8 v6 l-7 10 l7 10 v6" />
+      <path d="M18 12 h8 l-4 6 z" className="fill-accent" stroke="none" />
+      <path d="M38 32 h9 M44 28 l4 4 l-4 4" />
+      <rect x="54" y="26" width="34" height="24" className="fill-background" /><path d="M54 26 l17 12 l17 -12" />
+      <path d="M71 45 c-3 -4 -8 -1 -8 2 c0 3 8 7 8 7 c0 0 8 -4 8 -7 c0 -3 -5 -6 -8 -2 z" className="fill-accent" stroke="none" />
+    </svg>
+  );
+}
+
+const SCENES = [SceneWrite, SceneLock, SceneShares, SceneOpen];
+
+// Landing + illustration copy, per language. The interactive Create/Open forms
+// stay English for now (a later phase); this is the explainer surface.
+const T: Record<Lang, {
+  intro: string; write: string; open: string; how: string;
+  steps: [string, string][];
+  sharesTitle: string; yourLetter: string; splitLabel: string; any3: string; spare: string; sharesBody: ReactNode;
+  privacyTitle: string; privacyBody: string; handoffTitle: string; handoffBody: string;
+}> = {
+  en: {
+    intro: 'Write a private letter — passwords, accounts, and final words — that your family can open only when the time comes. It is encrypted on your device; nothing is ever uploaded.',
+    write: 'Write a new letter', open: 'Open a letter', how: 'How it works',
+    steps: [
+      ['Write', 'Your final message + account logins and passwords.'],
+      ['Lock on your device', 'Encrypted with AES-256 right here. Nothing is uploaded to any server.'],
+      ['Choose the keys', 'Protect it with a password, family shares, or both.'],
+      ['Opened later', 'When the time comes, family unlocks it with the password or by combining shares.'],
+    ],
+    sharesTitle: 'The clever part: family shares',
+    yourLetter: 'Your encrypted letter',
+    splitLabel: 'split into 5 shares — give one to each relative',
+    any3: 'any 3 unlock it →', spare: '2 spare — can be lost',
+    sharesBody: <>All <strong>5</strong> shares go to 5 people. <strong>Any 3</strong> of them — it doesn’t matter which 3 — together open the letter, so no single person can open it alone and up to <strong>2</strong> shares can be lost. The solid vs. dashed boxes above just show one example trio; you pick the numbers (2-of-3, 3-of-5, 4-of-7…).</>,
+    privacyTitle: 'Private by design.',
+    privacyBody: 'Everything is encrypted and decrypted in your browser. Your passwords are never sent anywhere — not even to us.',
+    handoffTitle: 'You arrange the handoff.',
+    handoffBody: 'A private tool can’t detect when you’ve died, so it can’t auto-release. Share the password or the shares so they only come together when the time comes — tip: give one share to your lawyer or executor.',
+  },
+  id: {
+    intro: 'Tulis surat pribadi — kata sandi, akun, dan pesan terakhir — yang hanya bisa dibuka keluarga saat waktunya tiba. Dienkripsi di perangkat Anda; tidak ada yang pernah diunggah.',
+    write: 'Tulis surat baru', open: 'Buka surat', how: 'Cara kerjanya',
+    steps: [
+      ['Tulis', 'Pesan terakhir Anda + login dan kata sandi akun.'],
+      ['Kunci di perangkat Anda', 'Dienkripsi dengan AES-256 langsung di sini. Tidak ada yang diunggah ke server.'],
+      ['Pilih kuncinya', 'Lindungi dengan kata sandi, bagian keluarga, atau keduanya.'],
+      ['Dibuka nanti', 'Saat waktunya tiba, keluarga membukanya dengan kata sandi atau dengan menggabungkan bagian.'],
+    ],
+    sharesTitle: 'Bagian cerdasnya: bagian keluarga',
+    yourLetter: 'Surat terenkripsi Anda',
+    splitLabel: 'dibagi menjadi 5 bagian — berikan satu ke tiap kerabat',
+    any3: '3 mana pun membukanya →', spare: '2 cadangan — boleh hilang',
+    sharesBody: <>Kelima bagian diberikan kepada 5 orang. <strong>3 bagian mana pun</strong> — tidak masalah yang mana — bersama-sama membuka surat, jadi tidak ada satu orang pun yang bisa membukanya sendirian dan hingga <strong>2</strong> bagian boleh hilang. Kotak solid vs. garis putus-putus di atas hanya menunjukkan satu contoh trio; Anda memilih angkanya (2-dari-3, 3-dari-5, 4-dari-7…).</>,
+    privacyTitle: 'Privat secara desain.',
+    privacyBody: 'Semuanya dienkripsi dan didekripsi di browser Anda. Kata sandi Anda tidak pernah dikirim ke mana pun — bahkan tidak ke kami.',
+    handoffTitle: 'Anda mengatur penyerahannya.',
+    handoffBody: 'Tool privat tidak bisa mengetahui kapan Anda meninggal, jadi tidak bisa merilis otomatis. Bagikan kata sandi atau bagian-bagiannya agar hanya dapat disatukan saat waktunya tiba — tips: berikan satu bagian kepada notaris atau pelaksana wasiat Anda.',
+  },
+};
+
+/** Illustrated explainer shown on the landing screen. */
+function HowItWorks({ lang }: { lang: Lang }) {
+  const tr = T[lang] ?? T.en;
+  return (
+    <section aria-label={tr.how} className="space-y-5 border-2 border-border bg-muted/40 p-4">
+      <h2 className="text-lg font-bold uppercase tracking-tight">{tr.how}</h2>
+
+      {/* Four-step flow */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {SCENES.map((Scene, i) => (
+          <div key={i} className="relative border-2 border-border bg-background p-3 shadow-brutal-sm">
+            <span className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center border-2 border-border bg-accent text-sm font-bold text-accent-foreground">{i + 1}</span>
+            <div className="mb-2 border-2 border-border bg-muted/40">
+              <Scene />
+            </div>
+            <p className="font-bold">{tr.steps[i][0]}</p>
+            <p className="text-sm text-muted-foreground">{tr.steps[i][1]}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* The "family shares" concept, illustrated */}
+      <div className="space-y-3 border-2 border-border bg-background p-4">
+        <p className="flex items-center gap-2 font-bold uppercase tracking-wide"><Users className="h-4 w-4" /> {tr.sharesTitle}</p>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <div className="inline-flex items-center gap-2 border-2 border-border bg-accent px-3 py-1.5 font-bold text-accent-foreground">
+            <Lock className="h-4 w-4" /> {tr.yourLetter}
+          </div>
+          <ArrowDown className="h-5 w-5 text-muted-foreground" />
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{tr.splitLabel}</p>
+          <div className="flex flex-wrap items-start justify-center gap-x-5 gap-y-2">
+            <div className="text-center">
+              <div className="flex gap-2">
+                {[1, 2, 3].map(n => (
+                  <div key={n} className="flex h-12 w-12 flex-col items-center justify-center border-2 border-border bg-accent text-xs font-bold text-accent-foreground">
+                    <Users className="h-4 w-4" />{n}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs font-bold">{tr.any3}</p>
+            </div>
+            <div className="text-center">
+              <div className="flex gap-2">
+                {[4, 5].map(n => (
+                  <div key={n} className="flex h-12 w-12 flex-col items-center justify-center border-2 border-dashed border-border bg-muted text-xs font-bold text-muted-foreground">
+                    <Users className="h-4 w-4" />{n}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">{tr.spare}</p>
+            </div>
+          </div>
+          <p className="max-w-lg text-sm text-muted-foreground">{tr.sharesBody}</p>
+        </div>
+      </div>
+
+      {/* Privacy + the honest caveat */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex gap-2 border-2 border-border bg-background p-3 text-sm">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
+          <p><strong>{tr.privacyTitle}</strong> {tr.privacyBody}</p>
+        </div>
+        <div className="flex gap-2 border-2 border-border bg-background p-3 text-sm">
+          <Clock className="mt-0.5 h-5 w-5 shrink-0" />
+          <p><strong>{tr.handoffTitle}</strong> {tr.handoffBody}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function LegacyLetter({ lang = 'en' }: { lang?: Lang }) {
   const [mode, setMode] = useState<Mode>(null);
+  const tr = T[lang] ?? T.en;
   return (
     <div className="space-y-4">
       {mode === null && (
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Write a private letter — passwords, accounts, and final words — that your family can open only
-            when the time comes. It is encrypted <strong>on your device</strong>; nothing is ever uploaded.
-          </p>
+        <div className="space-y-6">
+          <p className="text-sm text-muted-foreground">{tr.intro}</p>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => setMode('create')}><Lock className="h-4 w-4" /> Write a new letter</Button>
-            <Button variant="secondary" onClick={() => setMode('open')}><Upload className="h-4 w-4" /> Open a letter</Button>
+            <Button onClick={() => setMode('create')}><Lock className="h-4 w-4" /> {tr.write}</Button>
+            <Button variant="secondary" onClick={() => setMode('open')}><Upload className="h-4 w-4" /> {tr.open}</Button>
           </div>
+          <HowItWorks lang={lang} />
         </div>
       )}
       {mode === 'create' && <CreateView onBack={() => setMode(null)} />}
