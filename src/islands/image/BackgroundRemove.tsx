@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
+import type { Lang } from '@/i18n/config';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
@@ -10,7 +11,52 @@ import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
 
-export default function BackgroundRemove() {
+const TR: Record<Lang, {
+  preparing: string;
+  downloadingModel: string;
+  removingBg: string;
+  removeFailed: string;
+  dropHere: string;
+  dropSub: string;
+  privacyNote: string;
+  working: string;
+  result: string;
+  transparentPng: string;
+  altRemoved: string;
+  downloadPng: string;
+}> = {
+  en: {
+    preparing: 'Preparing…',
+    downloadingModel: 'Downloading AI model…',
+    removingBg: 'Removing background…',
+    removeFailed: 'Background removal failed.',
+    dropHere: 'Drop an image or click to browse',
+    dropSub: 'Removes the background with an on-device AI model · or paste (⌘V)',
+    privacyNote: "Runs entirely in your browser — the image never leaves your device. The first run downloads the AI model (~40 MB), then it's cached for next time.",
+    working: 'Working…',
+    result: 'Result',
+    transparentPng: 'transparent PNG',
+    altRemoved: 'Background removed',
+    downloadPng: 'Download PNG',
+  },
+  id: {
+    preparing: 'Menyiapkan…',
+    downloadingModel: 'Mengunduh model AI…',
+    removingBg: 'Menghapus latar belakang…',
+    removeFailed: 'Gagal menghapus latar belakang.',
+    dropHere: 'Jatuhkan gambar atau klik untuk menjelajah',
+    dropSub: 'Menghapus latar belakang dengan model AI di perangkat · atau tempel (⌘V)',
+    privacyNote: 'Berjalan sepenuhnya di browser Anda — gambar tidak pernah meninggalkan perangkat Anda. Jalankan pertama kali mengunduh model AI (~40 MB), lalu disimpan di cache untuk berikutnya.',
+    working: 'Memproses…',
+    result: 'Hasil',
+    transparentPng: 'PNG transparan',
+    altRemoved: 'Latar belakang dihapus',
+    downloadPng: 'Unduh PNG',
+  },
+};
+
+export default function BackgroundRemove({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [srcName, setSrcName] = useState('');
   const [result, setResult] = useState<Blob | null>(null);
   const [resultUrl, setResultUrl] = useState('');
@@ -29,7 +75,7 @@ export default function BackgroundRemove() {
     setError('');
     setBusy(true);
     setPercent(0);
-    setStage('Preparing…');
+    setStage(t.preparing);
     try {
       // Loaded lazily: the library pulls in onnxruntime-web + lodash (CJS),
       // which isn't server-render-safe, and this keeps it out of the initial bundle.
@@ -41,7 +87,7 @@ export default function BackgroundRemove() {
         progress: (key, current, total) => {
           const pct = total > 0 ? Math.round((current / total) * 100) : 0;
           setPercent(pct);
-          setStage(key.startsWith('fetch') ? 'Downloading AI model…' : 'Removing background…');
+          setStage(key.startsWith('fetch') ? t.downloadingModel : t.removingBg);
         },
       });
       setResult(blob);
@@ -50,7 +96,7 @@ export default function BackgroundRemove() {
         return URL.createObjectURL(blob);
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Background removal failed.');
+      setError(e instanceof Error ? e.message : t.removeFailed);
     } finally {
       setBusy(false);
       setStage('');
@@ -69,21 +115,20 @@ export default function BackgroundRemove() {
     <div className="space-y-4">
       <Dropzone onDrop={run} accept="image/*" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an image or click to browse</p>
+          <p className="text-lg font-bold">{t.dropHere}</p>
           <p className="text-sm text-muted-foreground">
-            Removes the background with an on-device AI model · or paste (⌘V)
+            {t.dropSub}
           </p>
         </div>
       </Dropzone>
 
       <p className="text-xs text-muted-foreground">
-        Runs entirely in your browser — the image never leaves your device. The first run downloads
-        the AI model (~40&nbsp;MB), then it's cached for next time.
+        {t.privacyNote}
       </p>
 
       {busy && (
         <div className="space-y-2">
-          <ProgressBar percent={percent} label={stage || 'Working…'} />
+          <ProgressBar percent={percent} label={stage || t.working} />
         </div>
       )}
 
@@ -92,18 +137,18 @@ export default function BackgroundRemove() {
       {result && resultUrl && !busy && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-bold uppercase tracking-wide text-muted-foreground">Result</span>
+            <span className="font-bold uppercase tracking-wide text-muted-foreground">{t.result}</span>
             <span className="font-mono">{formatBytes(result.size)}</span>
-            <span className="text-muted-foreground">transparent PNG</span>
+            <span className="text-muted-foreground">{t.transparentPng}</span>
           </div>
           {/* Checkerboard makes the transparency obvious. */}
           <div className="gwt-checkerboard inline-block max-w-full border-2 border-border p-1">
-            <img src={resultUrl} alt="Background removed" className="block max-h-[70vh] w-auto max-w-full" />
+            <img src={resultUrl} alt={t.altRemoved} className="block max-h-[70vh] w-auto max-w-full" />
           </div>
           <div className="flex flex-wrap gap-2">
             <Button onClick={download}>
               <Download className="h-4 w-4" />
-              Download PNG
+              {t.downloadPng}
             </Button>
             <CopyImageButton blob={result} />
             <EditInAnnotatorButton blob={result} filename={(srcName.replace(/\.[^.]+$/, '') || 'image') + '-no-bg.png'} />
