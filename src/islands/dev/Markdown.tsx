@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import type { Lang } from '@/i18n/config';
 
 /**
  * The ESM default export can be either a ready sanitizer or a factory that
@@ -18,7 +19,7 @@ function resolvePurifier(): { sanitize: (html: string) => string } | null {
   return null;
 }
 
-const SAMPLE = `# Hello, Markdown
+const SAMPLE_EN = `# Hello, Markdown
 
 Type on the **left**, see the preview on the **right**.
 
@@ -29,8 +30,25 @@ Type on the **left**, see the preview on the **right**.
 > Everything renders locally — nothing is uploaded.
 `;
 
-export default function Markdown() {
-  const [input, setInput] = useState(SAMPLE);
+const SAMPLE_ID = `# Halo, Markdown
+
+Ketik di **kiri**, lihat pratinjau di **kanan**.
+
+- Daftar
+- [Tautan](https://example.com)
+- \`inline code\`
+
+> Semuanya dirender secara lokal — tidak ada yang diunggah.
+`;
+
+const TR: Record<Lang, { markdown: string; preview: string; sample: string }> = {
+  en: { markdown: 'Markdown', preview: 'Preview', sample: SAMPLE_EN },
+  id: { markdown: 'Markdown', preview: 'Pratinjau', sample: SAMPLE_ID },
+};
+
+export default function Markdown({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
+  const [input, setInput] = useState(t.sample);
   const [html, setHtml] = useState('');
 
   // marked + DOMPurify run browser-only (DOMPurify needs a DOM). Computing in
@@ -45,7 +63,7 @@ export default function Markdown() {
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <label className="block space-y-1.5">
         <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Markdown
+          {t.markdown}
         </span>
         <textarea
           value={input}
@@ -57,7 +75,7 @@ export default function Markdown() {
 
       <div className="space-y-1.5">
         <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Preview
+          {t.preview}
         </span>
         <div
           className="markdown-preview h-[32rem] overflow-auto border-2 border-border bg-muted p-4"

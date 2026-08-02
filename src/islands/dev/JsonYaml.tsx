@@ -1,9 +1,11 @@
 import { BiConverter } from '@/components/dev/BiConverter';
 import { jsonToYaml, yamlToJson } from '@/tools/dev/yaml.lib';
+import type { Lang } from '@/i18n/config';
 
-export default function JsonYaml() {
+export default function JsonYaml({ lang = 'en' }: { lang?: Lang }) {
   return (
     <BiConverter
+      lang={lang}
       leftLabel="JSON"
       rightLabel="YAML"
       toRight={jsonToYaml}

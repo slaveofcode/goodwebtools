@@ -10,8 +10,39 @@ import { Alert } from '@/components/ui/Alert';
 import { HASH_ALGORITHMS, type HashAlgorithm } from '@/tools/dev/hash.lib';
 import type { HashWorkerAPI } from '@/tools/dev/hash.worker';
 import HashWorker from '@/tools/dev/hash.worker?worker';
+import type { Lang } from '@/i18n/config';
 
-export default function HashFile() {
+const TR: Record<
+  Lang,
+  {
+    dropTitle: string;
+    readyHint: string;
+    loadingHint: string;
+    algorithm: string;
+    hashing: string;
+    hashFailed: (msg: string) => string;
+  }
+> = {
+  en: {
+    dropTitle: 'Drop file here or click to browse',
+    readyHint: 'Hashed in a worker, streamed in chunks — handles large files',
+    loadingHint: 'Loading engine…',
+    algorithm: 'Algorithm',
+    hashing: 'Hashing…',
+    hashFailed: msg => 'Hashing failed: ' + msg,
+  },
+  id: {
+    dropTitle: 'Letakkan file di sini atau klik untuk menjelajah',
+    readyHint: 'Di-hash dalam worker, dialirkan per potongan — menangani file besar',
+    loadingHint: 'Memuat engine…',
+    algorithm: 'Algorithm',
+    hashing: 'Melakukan hashing…',
+    hashFailed: msg => 'Hashing gagal: ' + msg,
+  },
+};
+
+export default function HashFile({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [algorithm, setAlgorithm] = useState<HashAlgorithm>('sha-256');
   const [hash, setHash] = useState('');
@@ -46,7 +77,7 @@ export default function HashFile() {
       const digest = await workerApi.hashFile(target, algo, proxy((p: number) => setProgress(p)));
       setHash(digest);
     } catch (e) {
-      setError('Hashing failed: ' + (e instanceof Error ? e.message : String(e)));
+      setError(t.hashFailed(e instanceof Error ? e.message : String(e)));
     } finally {
       setProcessing(false);
     }
@@ -71,15 +102,15 @@ export default function HashFile() {
     <div className="space-y-6">
       <Dropzone onDrop={onDrop} accept="*/*" multiple={false}>
         <div className="space-y-2">
-          <p className="text-lg font-bold">Drop file here or click to browse</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
           <p className="text-sm text-muted-foreground">
-            {ready ? 'Hashed in a worker, streamed in chunks — handles large files' : 'Loading engine…'}
+            {ready ? t.readyHint : t.loadingHint}
           </p>
         </div>
       </Dropzone>
 
       <div className="space-y-1.5">
-        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Algorithm</span>
+        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.algorithm}</span>
         <div className="flex flex-wrap gap-2">
           {HASH_ALGORITHMS.map(a => (
             <Button
@@ -95,7 +126,7 @@ export default function HashFile() {
         </div>
       </div>
 
-      {processing && <ProgressBar percent={progress} label="Hashing…" />}
+      {processing && <ProgressBar percent={progress} label={t.hashing} />}
 
       {error && <Alert variant="error">{error}</Alert>}
 

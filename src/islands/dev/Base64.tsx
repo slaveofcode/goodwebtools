@@ -4,10 +4,44 @@ import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
 import { encodeBase64, decodeBase64 } from '@/tools/dev/base64.lib';
+import type { Lang } from '@/i18n/config';
 
 type Mode = 'encode' | 'decode';
 
-export default function Base64() {
+const TR: Record<Lang, {
+  inputLabel: string;
+  placeholder: string;
+  encode: string;
+  decode: string;
+  clear: string;
+  invalidBase64: string;
+  encodingFailed: string;
+  result: string;
+}> = {
+  en: {
+    inputLabel: 'Input',
+    placeholder: 'Text to encode, or Base64 to decode',
+    encode: 'Encode →',
+    decode: '← Decode',
+    clear: 'Clear',
+    invalidBase64: 'Invalid Base64 input',
+    encodingFailed: 'Encoding failed',
+    result: 'Result',
+  },
+  id: {
+    inputLabel: 'Input',
+    placeholder: 'Teks untuk di-encode, atau Base64 untuk di-decode',
+    encode: 'Encode →',
+    decode: '← Decode',
+    clear: 'Bersihkan',
+    invalidBase64: 'Input Base64 tidak valid',
+    encodingFailed: 'Encoding gagal',
+    result: 'Hasil',
+  },
+};
+
+export default function Base64({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
@@ -24,7 +58,7 @@ export default function Base64() {
       setOutput(mode === 'encode' ? encodeBase64(source) : decodeBase64(source));
     } catch {
       setOutput('');
-      setError(mode === 'decode' ? 'Invalid Base64 input' : 'Encoding failed');
+      setError(mode === 'decode' ? t.invalidBase64 : t.encodingFailed);
     }
   };
 
@@ -43,10 +77,10 @@ export default function Base64() {
   return (
     <div className="space-y-4">
       <TextArea
-        label="Input"
+        label={t.inputLabel}
         value={input}
         onChange={e => handleInputChange(e.target.value)}
-        placeholder="Text to encode, or Base64 to decode"
+        placeholder={t.placeholder}
         monospace={false}
       />
 
@@ -56,17 +90,17 @@ export default function Base64() {
           aria-pressed={activeMode === 'encode'}
           onClick={() => run('encode')}
         >
-          Encode →
+          {t.encode}
         </Button>
         <Button
           variant={activeMode === 'decode' ? 'primary' : 'secondary'}
           aria-pressed={activeMode === 'decode'}
           onClick={() => run('decode')}
         >
-          ← Decode
+          {t.decode}
         </Button>
         <Button variant="ghost" onClick={clear}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
@@ -75,7 +109,7 @@ export default function Base64() {
       {output && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Result</span>
+            <span className="text-sm font-medium text-muted-foreground">{t.result}</span>
             <CopyButton value={output} />
           </div>
           <pre className="max-h-[20rem] overflow-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-muted/40 p-3 text-sm">
