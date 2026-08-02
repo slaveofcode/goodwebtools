@@ -6,8 +6,45 @@ import { ResultActions } from '@/components/ui/ResultActions';
 import { PdfPreview } from '@/components/ui/PdfPreview';
 import { Alert } from '@/components/ui/Alert';
 import { mergePdfs } from '@/tools/pdf/pdf.lib';
+import type { Lang } from '@/i18n/config';
 
-export default function PdfMerge() {
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropHint: string;
+  moveUp: string;
+  moveDown: string;
+  remove: string;
+  merging: string;
+  mergeBtn: (n: number | string) => string;
+  clear: string;
+  mergeFailed: string;
+}> = {
+  en: {
+    dropTitle: 'Drop PDFs here or click to browse',
+    dropHint: 'Add two or more files, then reorder',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+    remove: 'Remove',
+    merging: 'Merging…',
+    mergeBtn: (n) => `Merge ${n} PDFs`,
+    clear: 'Clear',
+    mergeFailed: 'Merge failed',
+  },
+  id: {
+    dropTitle: 'Letakkan PDF di sini atau klik untuk memilih',
+    dropHint: 'Tambahkan dua file atau lebih, lalu atur urutannya',
+    moveUp: 'Naikkan',
+    moveDown: 'Turunkan',
+    remove: 'Hapus',
+    merging: 'Menggabungkan…',
+    mergeBtn: (n) => `Gabungkan ${n} PDF`,
+    clear: 'Bersihkan',
+    mergeFailed: 'Gagal menggabungkan',
+  },
+};
+
+export default function PdfMerge({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
@@ -43,7 +80,7 @@ export default function PdfMerge() {
     try {
       setResult(await mergePdfs(files));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Merge failed');
+      setError(e instanceof Error ? e.message : t.mergeFailed);
     } finally {
       setBusy(false);
     }
@@ -53,8 +90,8 @@ export default function PdfMerge() {
     <div className="space-y-4">
       <Dropzone onDrop={addFiles} accept="application/pdf" multiple>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop PDFs here or click to browse</p>
-          <p className="text-sm text-muted-foreground">Add two or more files, then reorder</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropHint}</p>
         </div>
       </Dropzone>
 
@@ -69,7 +106,7 @@ export default function PdfMerge() {
                   onClick={() => move(index, -1)}
                   disabled={index === 0}
                   className="border-2 border-border p-1 disabled:opacity-30"
-                  aria-label="Move up"
+                  aria-label={t.moveUp}
                 >
                   <ArrowUp className="h-4 w-4" />
                 </button>
@@ -77,14 +114,14 @@ export default function PdfMerge() {
                   onClick={() => move(index, 1)}
                   disabled={index === files.length - 1}
                   className="border-2 border-border p-1 disabled:opacity-30"
-                  aria-label="Move down"
+                  aria-label={t.moveDown}
                 >
                   <ArrowDown className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => remove(index)}
                   className="border-2 border-border p-1"
-                  aria-label="Remove"
+                  aria-label={t.remove}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -96,10 +133,10 @@ export default function PdfMerge() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={merge} disabled={files.length < 2 || busy}>
-          {busy ? 'Merging…' : `Merge ${files.length || ''} PDFs`}
+          {busy ? t.merging : t.mergeBtn(files.length || '')}
         </Button>
         <Button variant="ghost" onClick={() => { setFiles([]); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 

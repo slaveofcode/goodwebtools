@@ -4,6 +4,45 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  noFiles: string;
+  couldNotRead: string;
+  couldNotExtract: (name: string) => string;
+  dropArchive: string;
+  dropHint: string;
+  footer: string;
+  reading: (name: string) => string;
+  archiveWord: string;
+  fileCount: (n: number) => string;
+  download: string;
+}> = {
+  en: {
+    noFiles: 'No files found in this archive.',
+    couldNotRead: 'Could not read this archive. It may be corrupt, password-protected, or an unsupported format.',
+    couldNotExtract: (name) => `Could not extract "${name}".`,
+    dropArchive: 'Drop an archive or click to browse',
+    dropHint: 'Extract RAR, 7z, TAR, GZ, ZIP and more — decoded in your browser',
+    footer: "Extract-only. Creating .rar/.7z isn't possible client-side (proprietary formats). The first open loads a ~1 MB decoder, then it's cached.",
+    reading: (name) => `Reading ${name}…`,
+    archiveWord: 'archive',
+    fileCount: (n) => `${n} file${n === 1 ? '' : 's'}`,
+    download: 'Download',
+  },
+  id: {
+    noFiles: 'Tidak ada file yang ditemukan dalam arsip ini.',
+    couldNotRead: 'Tidak dapat membaca arsip ini. Mungkin rusak, dilindungi kata sandi, atau format yang tidak didukung.',
+    couldNotExtract: (name) => `Tidak dapat mengekstrak "${name}".`,
+    dropArchive: 'Letakkan arsip atau klik untuk menjelajah',
+    dropHint: 'Ekstrak RAR, 7z, TAR, GZ, ZIP dan lainnya — didekode di browser Anda',
+    footer: "Hanya ekstrak. Membuat .rar/.7z tidak mungkin di sisi klien (format proprietari). Pembukaan pertama memuat dekoder ~1 MB, lalu di-cache.",
+    reading: (name) => `Membaca ${name}…`,
+    archiveWord: 'arsip',
+    fileCount: (n) => `${n} file`,
+    download: 'Unduh',
+  },
+};
 
 interface Entry {
   name: string;
@@ -27,7 +66,8 @@ async function loadArchive() {
 const ACCEPT =
   '.rar,.7z,.zip,.tar,.gz,.tgz,.bz2,.tbz2,.xz,.txz,.zst,.cab,.iso,.cpio,.ar,.lha';
 
-export default function ArchiveExtract() {
+export default function ArchiveExtract({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [archiveName, setArchiveName] = useState('');
   const [entries, setEntries] = useState<Entry[]>([]);
   const [busy, setBusy] = useState(false);
@@ -53,12 +93,12 @@ export default function ArchiveExtract() {
         // Hide macOS archive cruft (__MACOSX/, AppleDouble ._ files).
         .filter(e => !e.name.includes('__MACOSX/') && !(e.name.split('/').pop() || '').startsWith('._'));
       setEntries(mapped);
-      if (mapped.length === 0) setError('No files found in this archive.');
+      if (mapped.length === 0) setError(t.noFiles);
     } catch (e) {
       setError(
         e instanceof Error && e.message
           ? e.message
-          : 'Could not read this archive. It may be corrupt, password-protected, or an unsupported format.'
+          : t.couldNotRead
       );
     } finally {
       setBusy(false);
@@ -72,7 +112,7 @@ export default function ArchiveExtract() {
       const name = entry.name.split('/').pop() || extracted.name || 'file';
       await downloadService.download(extracted, name);
     } catch {
-      setError(`Could not extract "${entry.name}".`);
+      setError(t.couldNotExtract(entry.name));
     }
   };
 
@@ -80,24 +120,22 @@ export default function ArchiveExtract() {
     <div className="space-y-4">
       <Dropzone onDrop={open} accept={ACCEPT} multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an archive or click to browse</p>
+          <p className="text-lg font-bold">{t.dropArchive}</p>
           <p className="text-sm text-muted-foreground">
-            Extract RAR, 7z, TAR, GZ, ZIP and more — decoded in your browser
+            {t.dropHint}
           </p>
         </div>
       </Dropzone>
 
       <p className="text-xs text-muted-foreground">
-        Extract-only. Creating .rar/.7z isn't possible client-side (proprietary formats). The first
-        open loads a ~1&nbsp;MB decoder, then it's cached.
+        {t.footer}
       </p>
 
-      {busy && <p className="text-sm text-muted-foreground">Reading {archiveName || 'archive'}…</p>}
+      {busy && <p className="text-sm text-muted-foreground">{t.reading(archiveName || t.archiveWord)}</p>}
 
       {archiveName && !busy && !error && (
         <p className="text-sm text-muted-foreground">
-          <span className="font-bold text-foreground">{archiveName}</span> — {entries.length} file
-          {entries.length === 1 ? '' : 's'}
+          <span className="font-bold text-foreground">{archiveName}</span> — {t.fileCount(entries.length)}
         </p>
       )}
 
@@ -111,7 +149,7 @@ export default function ArchiveExtract() {
               )}
               <button
                 onClick={() => download(entry)}
-                title="Download"
+                title={t.download}
                 className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal"
               >
                 <Download className="h-4 w-4" />

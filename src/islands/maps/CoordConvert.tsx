@@ -3,6 +3,7 @@ import { LocateFixed } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { CopyButton } from '@/components/ui/CopyButton';
+import type { Lang } from '@/i18n/config';
 import {
   parseLatLng,
   formatDd,
@@ -24,7 +25,37 @@ const FORMATS: { value: Fmt; label: string }[] = [
   { value: 'utm', label: 'UTM' },
 ];
 
-export default function CoordConvert() {
+const TR: Record<Lang, {
+  inputFormat: string;
+  locating: string;
+  myLocation: string;
+  mapLink: string;
+  geoUnavailable: string;
+  geoDenied: string;
+  emptyHint: string;
+}> = {
+  en: {
+    inputFormat: 'Input format',
+    locating: 'Locating…',
+    myLocation: 'My location',
+    mapLink: 'Map link',
+    geoUnavailable: 'Geolocation isn’t available in this browser.',
+    geoDenied: 'Couldn’t get your location (permission denied or unavailable).',
+    emptyHint: 'Enter a valid coordinate to see every format.',
+  },
+  id: {
+    inputFormat: 'Format input',
+    locating: 'Melokasikan…',
+    myLocation: 'Lokasi saya',
+    mapLink: 'Tautan peta',
+    geoUnavailable: 'Geolocation tidak tersedia di browser ini.',
+    geoDenied: 'Tidak bisa mendapatkan lokasi Anda (izin ditolak atau tidak tersedia).',
+    emptyHint: 'Masukkan koordinat yang valid untuk melihat setiap format.',
+  },
+};
+
+export default function CoordConvert({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [fmt, setFmt] = useState<Fmt>('dd');
   const [dd, setDd] = useState('-6.2088, 106.8456');
   const [dmsLat, setDmsLat] = useState('');
@@ -52,12 +83,12 @@ export default function CoordConvert() {
   })();
 
   const useMyLocation = () => {
-    if (!navigator.geolocation) { setError('Geolocation isn’t available in this browser.'); return; }
+    if (!navigator.geolocation) { setError(t.geoUnavailable); return; }
     setLocating(true);
     setError('');
     navigator.geolocation.getCurrentPosition(
       pos => { setFmt('dd'); setDd(formatDd(pos.coords.latitude, pos.coords.longitude)); setLocating(false); },
-      () => { setError('Couldn’t get your location (permission denied or unavailable).'); setLocating(false); },
+      () => { setError(t.geoDenied); setLocating(false); },
       { enableHighAccuracy: true, timeout: 10000 },
     );
   };
@@ -71,7 +102,7 @@ export default function CoordConvert() {
           { label: 'DMS', value: `${dms.lat} ${dms.lng}` },
           { label: 'UTM', value: `${utm.zone}${utm.hemisphere} ${Math.round(utm.easting)}E ${Math.round(utm.northing)}N` },
           { label: 'Geohash', value: encodeGeohash(point.lat, point.lng, 10) },
-          { label: 'Map link', value: `https://www.openstreetmap.org/?mlat=${point.lat}&mlon=${point.lng}#map=15/${point.lat}/${point.lng}` },
+          { label: t.mapLink, value: `https://www.openstreetmap.org/?mlat=${point.lat}&mlon=${point.lng}#map=15/${point.lat}/${point.lng}` },
         ];
       })()
     : [];
@@ -81,7 +112,7 @@ export default function CoordConvert() {
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Input format</span>
+        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.inputFormat}</span>
         <div className="flex flex-wrap gap-2">
           {FORMATS.map(f => (
             <Button key={f.value} variant={fmt === f.value ? 'primary' : 'secondary'} aria-pressed={fmt === f.value} onClick={() => { setFmt(f.value); setError(''); }}>
@@ -89,7 +120,7 @@ export default function CoordConvert() {
             </Button>
           ))}
           <Button variant="secondary" onClick={useMyLocation} disabled={locating}>
-            <LocateFixed className="h-4 w-4" /> {locating ? 'Locating…' : 'My location'}
+            <LocateFixed className="h-4 w-4" /> {locating ? t.locating : t.myLocation}
           </Button>
         </div>
       </div>
@@ -155,7 +186,7 @@ export default function CoordConvert() {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Enter a valid coordinate to see every format.</p>
+        <p className="text-sm text-muted-foreground">{t.emptyHint}</p>
       )}
     </div>
   );

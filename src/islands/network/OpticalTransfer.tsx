@@ -9,6 +9,7 @@ import { useCamera } from '@/hooks/useCamera';
 import { renderQr, decodeQr } from '@/tools/optical/qr.lib';
 import { encodeFrame, decodeFrame, fnv1a, packFile, unpackFile } from '@/tools/optical/frame.lib';
 import { bytesToBlocks, blocksToBytes, LtEncoder, LtDecoder } from '@/tools/optical/fountain.lib';
+import type { Lang } from '@/i18n/config';
 
 type Role = 'send' | 'receive' | null;
 
@@ -17,35 +18,95 @@ const SEND_FPS = 8;
 const BIG_FILE = 256 * 1024; // warn beyond this — the optical channel is slow
 const CAPTURE_W = 720; // downscale camera frames for faster decoding
 
+const TR: Record<Lang, {
+  introA: string; introBold: string; introB: string;
+  send: string; receive: string; back: string;
+  dropBeam: string; dropHint: string;
+  blocks: (k: number) => string;
+  bigWarn: string; pointHere: string; chooseAnother: string;
+  pointCamera: string;
+  receiving: (k: number) => string;
+  framesCaptured: (n: number) => string;
+  checksumFail: string;
+  receivedPre: string; receivedPost: (bytes: string) => string;
+  downloadFile: string; receiveAnother: string;
+}> = {
+  en: {
+    introA: 'Transfer a file between two devices with ',
+    introBold: 'just a screen and a camera',
+    introB: ' — no network, no accounts, nothing sent to any server. One device shows animated QR codes; the other reads them.',
+    send: 'Send a file',
+    receive: 'Receive a file',
+    back: '← Back',
+    dropBeam: 'Drop a file to beam',
+    dropHint: 'Best for small files (text, keys, docs, small images) · stays on your device',
+    blocks: (k) => `${k} blocks`,
+    bigWarn: '⚠️ This file is on the large side for an optical transfer — it may take several minutes. Keep both devices steady.',
+    pointHere: 'Point the other device’s camera at this code. It loops until the file is received.',
+    chooseAnother: 'Choose another file',
+    pointCamera: 'Point your camera at the other device’s animated QR code and hold steady.',
+    receiving: (k) => `Receiving — ${k} blocks`,
+    framesCaptured: (n) => `${n} frames captured`,
+    checksumFail: 'Received the file but its checksum didn’t match — try again.',
+    receivedPre: 'Received ',
+    receivedPost: (bytes) => ` (${bytes} bytes).`,
+    downloadFile: 'Download file',
+    receiveAnother: 'Receive another',
+  },
+  id: {
+    introA: 'Transfer file antara dua perangkat dengan ',
+    introBold: 'hanya layar dan kamera',
+    introB: ' — tanpa jaringan, tanpa akun, tidak ada yang dikirim ke server mana pun. Satu perangkat menampilkan kode QR beranimasi; yang satunya membacanya.',
+    send: 'Kirim file',
+    receive: 'Terima file',
+    back: '← Kembali',
+    dropBeam: 'Jatuhkan file untuk dipancarkan',
+    dropHint: 'Paling cocok untuk file kecil (teks, kunci, dokumen, gambar kecil) · tetap di perangkat Anda',
+    blocks: (k) => `${k} blok`,
+    bigWarn: '⚠️ File ini tergolong besar untuk transfer optik — mungkin butuh beberapa menit. Jaga kedua perangkat tetap stabil.',
+    pointHere: 'Arahkan kamera perangkat lain ke kode ini. Kode akan terus berulang sampai file diterima.',
+    chooseAnother: 'Pilih file lain',
+    pointCamera: 'Arahkan kamera Anda ke kode QR beranimasi perangkat lain dan tahan dengan stabil.',
+    receiving: (k) => `Menerima — ${k} blok`,
+    framesCaptured: (n) => `${n} frame tertangkap`,
+    checksumFail: 'File diterima tetapi checksum-nya tidak cocok — coba lagi.',
+    receivedPre: 'Menerima ',
+    receivedPost: (bytes) => ` (${bytes} byte).`,
+    downloadFile: 'Unduh file',
+    receiveAnother: 'Terima lagi',
+  },
+};
+
 function randU16(): number {
   return Math.floor((crypto.getRandomValues(new Uint16Array(1))[0]));
 }
 
-export default function OpticalTransfer() {
+export default function OpticalTransfer({ lang = 'en' }: { lang?: Lang }) {
   const [role, setRole] = useState<Role>(null);
+  const tr = TR[lang] ?? TR.en;
 
   return (
     <div className="space-y-4">
       {role === null && (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Transfer a file between two devices with <strong>just a screen and a camera</strong> — no network, no
-            accounts, nothing sent to any server. One device shows animated QR codes; the other reads them.
+            {tr.introA}<strong>{tr.introBold}</strong>{tr.introB}
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => setRole('send')}><Upload className="h-4 w-4" /> Send a file</Button>
-            <Button variant="secondary" onClick={() => setRole('receive')}><Camera className="h-4 w-4" /> Receive a file</Button>
+            <Button onClick={() => setRole('send')}><Upload className="h-4 w-4" /> {tr.send}</Button>
+            <Button variant="secondary" onClick={() => setRole('receive')}><Camera className="h-4 w-4" /> {tr.receive}</Button>
           </div>
         </div>
       )}
 
-      {role === 'send' && <Sender onBack={() => setRole(null)} />}
-      {role === 'receive' && <Receiver onBack={() => setRole(null)} />}
+      {role === 'send' && <Sender onBack={() => setRole(null)} lang={lang} />}
+      {role === 'receive' && <Receiver onBack={() => setRole(null)} lang={lang} />}
     </div>
   );
 }
 
-function Sender({ onBack }: { onBack: () => void }) {
+function Sender({ onBack, lang }: { onBack: () => void; lang: Lang }) {
+  const tr = TR[lang] ?? TR.en;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const encoderRef = useRef<LtEncoder | null>(null);
   const metaRef = useRef<{ session: number; k: number; size: number; hash: number } | null>(null);
@@ -86,31 +147,32 @@ function Sender({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <Button variant="ghost" onClick={() => { stop(); onBack(); }}>← Back</Button>
+      <Button variant="ghost" onClick={() => { stop(); onBack(); }}>{tr.back}</Button>
       {!info && (
         <Dropzone onDrop={onDrop} multiple={false}>
           <div className="space-y-1">
-            <p className="text-lg font-bold">Drop a file to beam</p>
-            <p className="text-sm text-muted-foreground">Best for small files (text, keys, docs, small images) · stays on your device</p>
+            <p className="text-lg font-bold">{tr.dropBeam}</p>
+            <p className="text-sm text-muted-foreground">{tr.dropHint}</p>
           </div>
         </Dropzone>
       )}
       {info && (
         <div className="space-y-3">
-          <p className="text-sm font-bold">{info.name} · {info.k} blocks</p>
-          {big && <p className="border-2 border-border bg-muted px-3 py-2 text-sm">⚠️ This file is on the large side for an optical transfer — it may take several minutes. Keep both devices steady.</p>}
+          <p className="text-sm font-bold">{info.name} · {tr.blocks(info.k)}</p>
+          {big && <p className="border-2 border-border bg-muted px-3 py-2 text-sm">{tr.bigWarn}</p>}
           <div className="flex justify-center border-2 border-border bg-white p-2">
             <canvas ref={canvasRef} className="h-auto w-full max-w-md" style={{ imageRendering: 'pixelated' }} />
           </div>
-          <p className="text-center text-sm text-muted-foreground">Point the other device&apos;s camera at this code. It loops until the file is received.</p>
-          <Button variant="secondary" onClick={() => { stop(); setInfo(null); }}>Choose another file</Button>
+          <p className="text-center text-sm text-muted-foreground">{tr.pointHere}</p>
+          <Button variant="secondary" onClick={() => { stop(); setInfo(null); }}>{tr.chooseAnother}</Button>
         </div>
       )}
     </div>
   );
 }
 
-function Receiver({ onBack }: { onBack: () => void }) {
+function Receiver({ onBack, lang }: { onBack: () => void; lang: Lang }) {
+  const tr = TR[lang] ?? TR.en;
   const { videoRef, stream, error, start, stop } = useCamera();
   const captureRef = useRef<HTMLCanvasElement | null>(null);
   const decoderRef = useRef<LtDecoder | null>(null);
@@ -162,7 +224,7 @@ function Receiver({ onBack }: { onBack: () => void }) {
     const finish = () => {
       const meta = metaRef.current!;
       const container = blocksToBytes(decoderRef.current!.recover(), meta.size);
-      if (fnv1a(container) !== meta.hash) { setFailed('Received the file but its checksum didn’t match — try again.'); return; }
+      if (fnv1a(container) !== meta.hash) { setFailed(tr.checksumFail); return; }
       const { name, data } = unpackFile(container);
       setResult({ blob: new Blob([data]), name: name || 'received-file' });
       stop();
@@ -176,18 +238,18 @@ function Receiver({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <Button variant="ghost" onClick={() => { stop(); onBack(); }}>← Back</Button>
+      <Button variant="ghost" onClick={() => { stop(); onBack(); }}>{tr.back}</Button>
       {error && <Alert variant="error">{error.message}</Alert>}
       {failed && <Alert variant="error">{failed}</Alert>}
 
       {!result && (
         <>
           <video ref={videoRef} playsInline muted className="max-h-96 w-full border-2 border-border bg-black object-contain" />
-          <p className="text-sm text-muted-foreground">Point your camera at the other device&apos;s animated QR code and hold steady.</p>
+          <p className="text-sm text-muted-foreground">{tr.pointCamera}</p>
           {metaRef.current && (
             <div className="space-y-1">
-              <ProgressBar percent={progress * 100} label={`Receiving — ${metaRef.current.k} blocks`} />
-              <p className="text-xs text-muted-foreground">{frames} frames captured</p>
+              <ProgressBar percent={progress * 100} label={tr.receiving(metaRef.current.k)} />
+              <p className="text-xs text-muted-foreground">{tr.framesCaptured(frames)}</p>
             </div>
           )}
         </>
@@ -195,10 +257,10 @@ function Receiver({ onBack }: { onBack: () => void }) {
 
       {result && (
         <div className="space-y-2 border-2 border-border p-3">
-          <Alert variant="success">Received <strong>{result.name}</strong> ({result.blob.size.toLocaleString()} bytes).</Alert>
+          <Alert variant="success">{tr.receivedPre}<strong>{result.name}</strong>{tr.receivedPost(result.blob.size.toLocaleString())}</Alert>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={download}>Download file</Button>
-            <Button variant="secondary" onClick={() => location.reload()}><RefreshCw className="h-4 w-4" /> Receive another</Button>
+            <Button onClick={download}>{tr.downloadFile}</Button>
+            <Button variant="secondary" onClick={() => location.reload()}><RefreshCw className="h-4 w-4" /> {tr.receiveAnother}</Button>
           </div>
         </div>
       )}
