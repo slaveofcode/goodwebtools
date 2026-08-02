@@ -1,0 +1,99 @@
+---
+import { ChevronRight } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import { REPO_URL } from '@/config';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+
+export function getStaticPaths() {
+  return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const homePath = localizePath('/', lang);
+
+const P = {
+  en: {
+    title: 'Privacy', home: 'Home', crumb: 'Privacy',
+    metaDesc: 'How GoodWebTools protects your privacy: files never leave your browser, and analytics are optional, anonymized, and only load with your consent.',
+    h1: 'Privacy & Verifiability',
+    s1H: 'No data leaves your device',
+    s1P: 'All processing happens in your browser. No files, images, or documents are ever uploaded to a server.',
+    s2H: 'Analytics & cookies',
+    s2Pa: 'We use a single privacy-friendly analytics cookie (Google Analytics, with IP anonymization) to understand which tools people find useful. It ',
+    s2Strong: 'only loads after you click “Accept”',
+    s2Pb: ' in the cookie banner — decline and no analytics cookie is set. This never includes your files or their contents; your documents are always processed entirely on your device.',
+    s2P2: "You can change your mind anytime by clearing this site's data in your browser settings, which resets the banner.",
+    s3H: 'Verify it yourself',
+    s3: ['Open Developer Tools (F12)', 'Go to the Network tab', 'Use any tool and process a file', 'Watch: zero network requests to external servers'],
+    s4H: 'Works offline',
+    s4P: 'After first use, tools work with your network completely off. This is the strongest proof that nothing leaves your device.',
+    s5H: 'Open source',
+    s5Pa: 'The code is open source on GitHub — you can audit it yourself or run it locally: ',
+  },
+  id: {
+    title: 'Privasi', home: 'Beranda', crumb: 'Privasi',
+    metaDesc: 'Bagaimana GoodWebTools melindungi privasi Anda: berkas tidak pernah meninggalkan browser, dan analitik bersifat opsional, dianonimkan, serta hanya dimuat dengan persetujuan Anda.',
+    h1: 'Privasi & Keterverifikasian',
+    s1H: 'Tidak ada data yang meninggalkan perangkat Anda',
+    s1P: 'Semua pemrosesan terjadi di browser Anda. Tidak ada berkas, gambar, atau dokumen yang pernah diunggah ke server.',
+    s2H: 'Analitik & cookie',
+    s2Pa: 'Kami menggunakan satu cookie analitik yang ramah privasi (Google Analytics, dengan anonimisasi IP) untuk memahami tool mana yang bermanfaat bagi pengguna. Cookie ini ',
+    s2Strong: 'hanya dimuat setelah Anda mengeklik “Terima”',
+    s2Pb: ' pada banner cookie — jika menolak, tidak ada cookie analitik yang dipasang. Ini tidak pernah menyertakan berkas Anda atau isinya; dokumen Anda selalu diproses sepenuhnya di perangkat Anda.',
+    s2P2: 'Anda dapat berubah pikiran kapan saja dengan menghapus data situs ini di pengaturan browser, yang akan mengatur ulang banner.',
+    s3H: 'Verifikasi sendiri',
+    s3: ['Buka Developer Tools (F12)', 'Buka tab Network', 'Gunakan tool apa pun dan proses sebuah berkas', 'Perhatikan: nol permintaan jaringan ke server eksternal'],
+    s4H: 'Bekerja offline',
+    s4P: 'Setelah pemakaian pertama, tool bekerja dengan jaringan Anda dimatikan sepenuhnya. Ini adalah bukti terkuat bahwa tidak ada yang meninggalkan perangkat Anda.',
+    s5H: 'Sumber terbuka',
+    s5Pa: 'Kode bersifat sumber terbuka di GitHub — Anda dapat mengauditnya sendiri atau menjalankannya secara lokal: ',
+  },
+}[lang];
+---
+
+<Base title={P.title} description={P.metaDesc} lang={lang} localized>
+  <main class="page-container max-w-3xl py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li>
+          <a href={homePath} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{P.home}</a>
+        </li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{P.crumb}</li>
+      </ol>
+    </nav>
+
+    <h1 class="mb-6 text-4xl font-bold">{P.h1}</h1>
+
+    <section class="mb-8">
+      <h2 class="mb-4 text-2xl font-semibold">{P.s1H}</h2>
+      <p class="text-muted-foreground">{P.s1P}</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="mb-4 text-2xl font-semibold">{P.s2H}</h2>
+      <p class="mb-4 text-muted-foreground">{P.s2Pa}<strong>{P.s2Strong}</strong>{P.s2Pb}</p>
+      <p class="text-muted-foreground">{P.s2P2}</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="mb-4 text-2xl font-semibold">{P.s3H}</h2>
+      <ol class="list-inside list-decimal space-y-2 text-muted-foreground">
+        {P.s3.map(step => <li>{step}</li>)}
+      </ol>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="mb-4 text-2xl font-semibold">{P.s4H}</h2>
+      <p class="text-muted-foreground">{P.s4P}</p>
+    </section>
+
+    <section>
+      <h2 class="mb-4 text-2xl font-semibold">{P.s5H}</h2>
+      <p class="text-muted-foreground">
+        {P.s5Pa}
+        <a href={REPO_URL} target="_blank" rel="noopener noreferrer" class="font-bold underline decoration-2 underline-offset-2">slaveofcode/goodwebtools</a>.
+      </p>
+    </section>
+  </main>
+</Base>
