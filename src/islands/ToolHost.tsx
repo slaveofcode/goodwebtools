@@ -1,8 +1,11 @@
-import { Component, lazy, Suspense, useMemo, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useMemo, type ComponentType, type ReactNode } from 'react';
 import { getToolById } from '@/registry/tools';
+import type { Lang } from '@/i18n/config';
 
 interface ToolHostProps {
   toolId: string;
+  /** Current locale — forwarded to tools that localize their own UI. */
+  lang?: Lang;
 }
 
 interface BoundaryProps {
@@ -45,14 +48,15 @@ class ToolErrorBoundary extends Component<BoundaryProps, BoundaryState> {
  * registry and lazily imports its component via the registry `load()` fn, so
  * one route file serves every tool without hardcoding imports.
  */
-export default function ToolHost({ toolId }: ToolHostProps) {
+export default function ToolHost({ toolId, lang }: ToolHostProps) {
   const tool = getToolById(toolId);
 
   // `tool` is a stable registry reference derived from `toolId`, so keying on
   // both is equivalent to keying on `toolId` alone — and satisfies the linter.
   const LazyTool = useMemo(() => {
     if (!tool) return null;
-    return lazy(tool.load);
+    // Tools take no required props; a few read an optional `lang`.
+    return lazy(tool.load) as unknown as ComponentType<{ lang?: Lang }>;
   }, [toolId, tool]);
 
   if (!tool || !LazyTool) {
@@ -64,7 +68,7 @@ export default function ToolHost({ toolId }: ToolHostProps) {
       <Suspense
         fallback={<div className="py-12 text-center text-muted-foreground">Loading tool…</div>}
       >
-        <LazyTool />
+        <LazyTool lang={lang} />
       </Suspense>
     </ToolErrorBoundary>
   );
