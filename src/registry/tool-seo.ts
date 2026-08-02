@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'docx-viewer': {
+    title: 'Free DOCX Viewer — Open Word Files Online',
+    description: 'A free DOCX viewer to open and read Microsoft Word documents in your browser — full layout, tables and images. 100% private; nothing is uploaded.',
+    intro: 'This free DOCX viewer tool opens Microsoft Word documents right in your browser, rendering the full layout — headings, tables, lists and images — without Word, Google Docs or any account. The file is read on your device and never uploaded.',
+    howTo: [
+      'Drop a .docx file (or click to browse) — it is read entirely in your browser.',
+      'The document renders with its real layout, tables and images.',
+      'Scroll to read, or use Print / Save as PDF to keep a copy.',
+      'Nothing is uploaded — the file stays on your device.',
+    ],
+    faqs: [
+      { q: 'Is my document uploaded anywhere?', a: 'No. The .docx is parsed and rendered entirely in your browser with JavaScript. It never leaves your device, so it is safe for confidential documents.' },
+      { q: 'Does it support old .doc files?', a: 'No — only the modern .docx format. Open an old .doc in Word or Google Docs and save or export it as .docx first.' },
+      { q: 'Can I convert the document to PDF?', a: 'Yes, indirectly: open it here and use Print / Save as PDF in your browser to produce a PDF copy.' },
+      { q: 'Will complex formatting look right?', a: 'Most documents — headings, tables, lists, images and basic styling — render faithfully. Very complex layouts or unusual fonts may differ slightly, since it renders with the fonts available in your browser.' },
+    ],
+  },
   'ghost-backup': {
     title: 'Free Ghost Blog Backup Tool — Export to Markdown',
     description: 'A free tool to convert a Ghost blog export into Markdown or standalone HTML files — one per post, with frontmatter and tags. Runs in your browser; nothing is uploaded.',
@@ -1308,6 +1325,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'docx-viewer': {
+    title: 'Penampil DOCX Gratis — Buka Berkas Word Online',
+    description: 'Penampil DOCX gratis untuk membuka dan membaca dokumen Microsoft Word di browser — tata letak, tabel, dan gambar lengkap. 100% privat; tidak ada yang diunggah.',
+    intro: 'Tool penampil DOCX gratis ini membuka dokumen Microsoft Word langsung di browser Anda, menampilkan tata letak lengkap — judul, tabel, daftar, dan gambar — tanpa Word, Google Docs, atau akun apa pun. Berkas dibaca di perangkat Anda dan tidak pernah diunggah.',
+    howTo: [
+      'Letakkan berkas .docx (atau klik untuk menelusuri) — dibaca sepenuhnya di browser Anda.',
+      'Dokumen ditampilkan dengan tata letak, tabel, dan gambar aslinya.',
+      'Gulir untuk membaca, atau gunakan Cetak / Simpan PDF untuk menyimpan salinan.',
+      'Tidak ada yang diunggah — berkas tetap di perangkat Anda.',
+    ],
+    faqs: [
+      { q: 'Apakah dokumen saya diunggah ke suatu tempat?', a: 'Tidak. Berkas .docx diurai dan ditampilkan sepenuhnya di browser Anda dengan JavaScript. Berkas tidak pernah meninggalkan perangkat, jadi aman untuk dokumen rahasia.' },
+      { q: 'Apakah mendukung berkas .doc lama?', a: 'Tidak — hanya format .docx modern. Buka .doc lama di Word atau Google Docs lalu simpan atau ekspor sebagai .docx terlebih dahulu.' },
+      { q: 'Bisakah saya mengonversi dokumen ke PDF?', a: 'Ya, secara tidak langsung: buka di sini lalu gunakan Cetak / Simpan PDF di browser untuk membuat salinan PDF.' },
+      { q: 'Apakah pemformatan rumit akan tampil dengan benar?', a: 'Sebagian besar dokumen — judul, tabel, daftar, gambar, dan gaya dasar — tampil dengan setia. Tata letak yang sangat rumit atau font tidak biasa mungkin sedikit berbeda, karena ditampilkan dengan font yang tersedia di browser Anda.' },
+    ],
+  },
   'ghost-backup': {
     title: 'Tool Cadangan Blog Ghost Gratis — Ekspor ke Markdown',
     description: 'Tool gratis untuk mengubah ekspor blog Ghost menjadi berkas Markdown atau HTML mandiri — satu per pos, dengan frontmatter dan tag. Berjalan di browser; tidak ada yang diunggah.',
