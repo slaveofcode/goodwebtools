@@ -5,6 +5,48 @@ import { CopyButton } from '@/components/ui/CopyButton';
 import { LoadFileButton } from '@/components/ui/LoadFileButton';
 import { DownloadTextButton } from '@/components/ui/DownloadTextButton';
 import { diffLines, type DiffRow, type RowType } from '@/tools/dev/diff.lib';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  loadOriginal: string;
+  loadChanged: string;
+  original: string;
+  changed: string;
+  compare: string;
+  clear: string;
+  originalOnly: (n: number) => string;
+  changedOnly: (n: number) => string;
+  unchanged: string;
+  unified: string;
+  split: string;
+}> = {
+  en: {
+    loadOriginal: 'Load original file',
+    loadChanged: 'Load changed file',
+    original: 'Original',
+    changed: 'Changed',
+    compare: 'Compare',
+    clear: 'Clear',
+    originalOnly: (n) => `Original only (${n})`,
+    changedOnly: (n) => `Changed only (${n})`,
+    unchanged: 'unchanged (both)',
+    unified: 'Unified',
+    split: 'Split',
+  },
+  id: {
+    loadOriginal: 'Muat file asli',
+    loadChanged: 'Muat file yang diubah',
+    original: 'Asli',
+    changed: 'Diubah',
+    compare: 'Bandingkan',
+    clear: 'Bersihkan',
+    originalOnly: (n) => `Hanya di asli (${n})`,
+    changedOnly: (n) => `Hanya di yang diubah (${n})`,
+    unchanged: 'tidak berubah (keduanya)',
+    unified: 'Gabungan',
+    split: 'Terpisah',
+  },
+};
 
 const rowStyles: Record<RowType, string> = {
   equal: 'text-muted-foreground',
@@ -19,7 +61,8 @@ const TEXT_ACCEPT =
 
 type ViewMode = 'unified' | 'split';
 
-export default function TextDiff() {
+export default function TextDiff({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [left, setLeft] = useState('');
   const [right, setRight] = useState('');
   const [rows, setRows] = useState<DiffRow[] | null>(null);
@@ -55,10 +98,10 @@ export default function TextDiff() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <div className="flex justify-end">
-            <LoadFileButton onLoad={loadLeft} accept={TEXT_ACCEPT} label="Load original file" />
+            <LoadFileButton onLoad={loadLeft} accept={TEXT_ACCEPT} label={t.loadOriginal} />
           </div>
           <TextArea
-            label="Original"
+            label={t.original}
             value={left}
             onChange={e => setLeft(e.target.value)}
             rows={12}
@@ -67,10 +110,10 @@ export default function TextDiff() {
         </div>
         <div className="space-y-2">
           <div className="flex justify-end">
-            <LoadFileButton onLoad={loadRight} accept={TEXT_ACCEPT} label="Load changed file" />
+            <LoadFileButton onLoad={loadRight} accept={TEXT_ACCEPT} label={t.loadChanged} />
           </div>
           <TextArea
-            label="Changed"
+            label={t.changed}
             value={right}
             onChange={e => setRight(e.target.value)}
             rows={12}
@@ -80,9 +123,9 @@ export default function TextDiff() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => compareWith(left, right)}>Compare</Button>
+        <Button onClick={() => compareWith(left, right)}>{t.compare}</Button>
         <Button variant="ghost" onClick={() => { setLeft(''); setRight(''); setRows(null); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
@@ -92,13 +135,13 @@ export default function TextDiff() {
             {/* Spell out which side each color/prefix belongs to. */}
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
               <span className="rounded-sm bg-red-500/10 px-1.5 text-red-600 dark:text-red-400">
-                <span className="font-mono font-bold">−</span> Original only ({removed})
+                <span className="font-mono font-bold">−</span> {t.originalOnly(removed)}
               </span>
               <span className="rounded-sm bg-green-500/10 px-1.5 text-green-600 dark:text-green-400">
-                <span className="font-mono font-bold">+</span> Changed only ({added})
+                <span className="font-mono font-bold">+</span> {t.changedOnly(added)}
               </span>
               <span className="text-muted-foreground">
-                <span className="font-mono">·</span> unchanged (both)
+                <span className="font-mono">·</span> {t.unchanged}
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -112,7 +155,7 @@ export default function TextDiff() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Unified
+                  {t.unified}
                 </button>
                 <button
                   onClick={() => setViewMode('split')}
@@ -122,7 +165,7 @@ export default function TextDiff() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Split
+                  {t.split}
                 </button>
               </div>
               <div className="flex gap-2">
@@ -150,7 +193,7 @@ export default function TextDiff() {
               {/* Left side - Original */}
               <div className="max-h-[30rem] overflow-auto bg-background">
                 <div className="sticky top-0 bg-red-500/20 px-3 py-1 text-xs font-bold text-red-700 dark:text-red-300 border-b border-border">
-                  Original
+                  {t.original}
                 </div>
                 <pre className="text-sm leading-relaxed">
                   {rows.map((row, index) => (
@@ -172,7 +215,7 @@ export default function TextDiff() {
               {/* Right side - Changed */}
               <div className="max-h-[30rem] overflow-auto bg-background">
                 <div className="sticky top-0 bg-green-500/20 px-3 py-1 text-xs font-bold text-green-700 dark:text-green-300 border-b border-border">
-                  Changed
+                  {t.changed}
                 </div>
                 <pre className="text-sm leading-relaxed">
                   {rows.map((row, index) => (

@@ -4,6 +4,30 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  noQrFound: string;
+  cannotRead: string;
+  dropPrompt: string;
+  decodedLocally: string;
+  decodedContent: string;
+}> = {
+  en: {
+    noQrFound: 'No QR code found in this image.',
+    cannotRead: 'Could not read the image file.',
+    dropPrompt: 'Drop a QR image or click to browse',
+    decodedLocally: 'Decoded entirely in your browser · or paste (⌘V)',
+    decodedContent: 'Decoded content',
+  },
+  id: {
+    noQrFound: 'Tidak ada kode QR yang ditemukan pada gambar ini.',
+    cannotRead: 'Tidak dapat membaca file gambar.',
+    dropPrompt: 'Letakkan gambar QR atau klik untuk menelusuri',
+    decodedLocally: 'Didekode sepenuhnya di browser Anda · atau tempel (⌘V)',
+    decodedContent: 'Konten hasil dekode',
+  },
+};
 
 async function decodeImage(file: File): Promise<string | null> {
   const bitmap = await createImageBitmap(file);
@@ -18,7 +42,8 @@ async function decodeImage(file: File): Promise<string | null> {
   return result?.data ?? null;
 }
 
-export default function QrRead() {
+export default function QrRead({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
 
@@ -31,10 +56,10 @@ export default function QrRead() {
       if (decoded) {
         setValue(decoded);
       } else {
-        setError('No QR code found in this image.');
+        setError(t.noQrFound);
       }
     } catch {
-      setError('Could not read the image file.');
+      setError(t.cannotRead);
     }
   };
 
@@ -46,8 +71,8 @@ export default function QrRead() {
     <div className="space-y-4">
       <Dropzone onDrop={handleFile} accept="image/*" multiple={false}>
         <div className="space-y-2">
-          <p className="text-lg">Drop a QR image or click to browse</p>
-          <p className="text-sm text-muted-foreground">Decoded entirely in your browser · or paste (⌘V)</p>
+          <p className="text-lg">{t.dropPrompt}</p>
+          <p className="text-sm text-muted-foreground">{t.decodedLocally}</p>
         </div>
       </Dropzone>
 
@@ -56,7 +81,7 @@ export default function QrRead() {
       {value && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Decoded content</span>
+            <span className="text-sm font-medium text-muted-foreground">{t.decodedContent}</span>
             <CopyButton value={value} />
           </div>
           <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm break-all">

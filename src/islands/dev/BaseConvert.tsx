@@ -2,7 +2,28 @@ import { useState } from 'react';
 import { TextArea } from '@/components/ui/TextArea';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
+import type { Lang } from '@/i18n/config';
 import { parseInBase } from '@/tools/dev/base-convert.lib';
+
+const TR: Record<Lang, {
+  value: string;
+  placeholder: string;
+  inputBase: string;
+  invalid: (base: number) => string;
+}> = {
+  en: {
+    value: 'Value',
+    placeholder: 'Enter a number',
+    inputBase: 'Input base',
+    invalid: (base) => `Not a valid base-${base} number.`,
+  },
+  id: {
+    value: 'Nilai',
+    placeholder: 'Masukkan angka',
+    inputBase: 'Basis input',
+    invalid: (base) => `Bukan angka basis-${base} yang valid.`,
+  },
+};
 
 const INPUT_BASES = [
   { base: 2, label: 'Binary (2)' },
@@ -18,7 +39,8 @@ const OUTPUT_BASES = [
   { base: 16, label: 'Hex' },
 ];
 
-export default function BaseConvert() {
+export default function BaseConvert({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [input, setInput] = useState('255');
   const [inputBase, setInputBase] = useState(10);
 
@@ -30,16 +52,16 @@ export default function BaseConvert() {
       <div className="flex flex-wrap items-end gap-4">
         <div className="min-w-[12rem] flex-1">
           <TextArea
-            label="Value"
+            label={t.value}
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Enter a number"
+            placeholder={t.placeholder}
             rows={1}
           />
         </div>
         <label className="space-y-1.5 text-sm">
           <span className="block font-bold uppercase tracking-wide text-muted-foreground">
-            Input base
+            {t.inputBase}
           </span>
           <select
             value={inputBase}
@@ -55,7 +77,7 @@ export default function BaseConvert() {
         </label>
       </div>
 
-      {invalid && <Alert variant="error">Not a valid base-{inputBase} number.</Alert>}
+      {invalid && <Alert variant="error">{t.invalid(inputBase)}</Alert>}
 
       {parsed !== null && (
         <div className="divide-y-2 divide-border border-2 border-border">

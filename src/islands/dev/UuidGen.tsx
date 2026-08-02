@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
+import type { Lang } from '@/i18n/config';
 
-export default function UuidGen() {
+const TR: Record<Lang, { count: string; generate: string; copyAll: string }> = {
+  en: { count: 'Count', generate: 'Generate', copyAll: 'Copy all' },
+  id: { count: 'Jumlah', generate: 'Buat', copyAll: 'Salin semua' },
+};
+
+export default function UuidGen({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [count, setCount] = useState(5);
   const [uuids, setUuids] = useState<string[]>([]);
 
@@ -16,7 +23,7 @@ export default function UuidGen() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Count</span>
+          <span className="text-muted-foreground">{t.count}</span>
           <input
             type="number"
             min={1}
@@ -26,8 +33,8 @@ export default function UuidGen() {
             className="w-24 rounded-lg border border-border bg-muted/40 px-2 py-1.5 text-sm outline-none focus:border-accent"
           />
         </label>
-        <Button onClick={generate}>Generate</Button>
-        {uuids.length > 0 && <CopyButton value={uuids.join('\n')} label="Copy all" />}
+        <Button onClick={generate}>{t.generate}</Button>
+        {uuids.length > 0 && <CopyButton value={uuids.join('\n')} label={t.copyAll} />}
       </div>
 
       {uuids.length > 0 && (

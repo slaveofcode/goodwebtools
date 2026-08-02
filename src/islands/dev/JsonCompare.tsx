@@ -2,6 +2,48 @@ import { useState, useEffect } from 'react';
 import { TextArea } from '@/components/ui/TextArea';
 import { Alert } from '@/components/ui/Alert';
 import { CheckCircle2, XCircle } from 'lucide-react';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  intro: string;
+  ignoreOrder: string;
+  firstJson: string;
+  secondJson: string;
+  validJson: string;
+  invalidJson: string;
+  equal: string;
+  equalDesc: string;
+  notEqual: string;
+  found: (n: number) => string;
+  differences: string;
+}> = {
+  en: {
+    intro: "Deep compare two JSON objects. Property order doesn't matter — only structure and values.",
+    ignoreOrder: 'Ignore array order (treat arrays as sets)',
+    firstJson: 'First JSON',
+    secondJson: 'Second JSON',
+    validJson: '✓ Valid JSON',
+    invalidJson: 'Invalid JSON',
+    equal: 'Equal',
+    equalDesc: 'Both JSON objects are structurally identical',
+    notEqual: 'Not Equal',
+    found: (n) => `Found ${n} difference${n !== 1 ? 's' : ''}`,
+    differences: 'Differences',
+  },
+  id: {
+    intro: 'Bandingkan dua objek JSON secara mendalam. Urutan properti tidak berpengaruh — hanya struktur dan nilai.',
+    ignoreOrder: 'Abaikan urutan array (perlakukan array sebagai himpunan)',
+    firstJson: 'JSON Pertama',
+    secondJson: 'JSON Kedua',
+    validJson: '✓ JSON valid',
+    invalidJson: 'JSON tidak valid',
+    equal: 'Sama',
+    equalDesc: 'Kedua objek JSON identik secara struktural',
+    notEqual: 'Tidak Sama',
+    found: (n) => `Ditemukan ${n} perbedaan`,
+    differences: 'Perbedaan',
+  },
+};
 
 // Deep equality check ignoring object property order
 function deepEqual(a: any, b: any, ignoreArrayOrder: boolean = true): boolean {
@@ -126,7 +168,8 @@ function findDifferences(a: any, b: any, ignoreArrayOrder: boolean = true, path:
   return diffs;
 }
 
-export default function JsonCompare() {
+export default function JsonCompare({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [leftJson, setLeftJson] = useState('');
   const [rightJson, setRightJson] = useState('');
   const [leftParsed, setLeftParsed] = useState<any>(null);
@@ -158,7 +201,7 @@ export default function JsonCompare() {
         parsedLeft = JSON.parse(left);
         setLeftParsed(parsedLeft);
       } catch (e) {
-        setLeftError(e instanceof Error ? e.message : 'Invalid JSON');
+        setLeftError(e instanceof Error ? e.message : t.invalidJson);
         return;
       }
     }
@@ -169,7 +212,7 @@ export default function JsonCompare() {
         parsedRight = JSON.parse(right);
         setRightParsed(parsedRight);
       } catch (e) {
-        setRightError(e instanceof Error ? e.message : 'Invalid JSON');
+        setRightError(e instanceof Error ? e.message : t.invalidJson);
         return;
       }
     }
@@ -208,7 +251,7 @@ export default function JsonCompare() {
     <div className="space-y-4">
       <div className="border-2 border-border bg-muted p-4">
         <p className="text-sm text-muted-foreground">
-          Deep compare two JSON objects. Property order doesn't matter — only structure and values.
+          {t.intro}
         </p>
       </div>
 
@@ -221,14 +264,14 @@ export default function JsonCompare() {
           className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2"
         />
         <label htmlFor="ignore-array-order" className="text-sm text-foreground cursor-pointer">
-          Ignore array order (treat arrays as sets)
+          {t.ignoreOrder}
         </label>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <TextArea
-            label="First JSON"
+            label={t.firstJson}
             value={leftJson}
             onChange={e => handleLeftChange(e.target.value)}
             rows={12}
@@ -237,13 +280,13 @@ export default function JsonCompare() {
           />
           {leftError && <Alert variant="error">{leftError}</Alert>}
           {leftParsed !== null && !leftError && (
-            <div className="text-xs text-green-600 dark:text-green-400">✓ Valid JSON</div>
+            <div className="text-xs text-green-600 dark:text-green-400">{t.validJson}</div>
           )}
         </div>
 
         <div className="space-y-2">
           <TextArea
-            label="Second JSON"
+            label={t.secondJson}
             value={rightJson}
             onChange={e => handleRightChange(e.target.value)}
             rows={12}
@@ -252,7 +295,7 @@ export default function JsonCompare() {
           />
           {rightError && <Alert variant="error">{rightError}</Alert>}
           {rightParsed !== null && !rightError && (
-            <div className="text-xs text-green-600 dark:text-green-400">✓ Valid JSON</div>
+            <div className="text-xs text-green-600 dark:text-green-400">{t.validJson}</div>
           )}
         </div>
       </div>
@@ -264,9 +307,9 @@ export default function JsonCompare() {
             <div className="flex items-center gap-3 rounded-lg border-2 border-green-500 bg-green-500/10 p-4">
               <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
               <div>
-                <div className="font-bold text-green-600 dark:text-green-400">Equal</div>
+                <div className="font-bold text-green-600 dark:text-green-400">{t.equal}</div>
                 <div className="text-sm text-green-600/80 dark:text-green-400/80">
-                  Both JSON objects are structurally identical
+                  {t.equalDesc}
                 </div>
               </div>
             </div>
@@ -275,9 +318,9 @@ export default function JsonCompare() {
               <div className="flex items-center gap-3 rounded-lg border-2 border-red-500 bg-red-500/10 p-4">
                 <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
                 <div>
-                  <div className="font-bold text-red-600 dark:text-red-400">Not Equal</div>
+                  <div className="font-bold text-red-600 dark:text-red-400">{t.notEqual}</div>
                   <div className="text-sm text-red-600/80 dark:text-red-400/80">
-                    Found {differences.length} difference{differences.length !== 1 ? 's' : ''}
+                    {t.found(differences.length)}
                   </div>
                 </div>
               </div>
@@ -285,7 +328,7 @@ export default function JsonCompare() {
               {/* Differences List */}
               <div className="rounded-lg border border-border bg-muted/40 p-4">
                 <div className="mb-2 text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                  Differences
+                  {t.differences}
                 </div>
                 <ul className="space-y-1 text-sm">
                   {differences.map((diff, idx) => (

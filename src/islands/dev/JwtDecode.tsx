@@ -5,8 +5,48 @@ import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
 import { CodeBlock } from '@/components/ui/CodeBlock';
 import { decodeJwt } from '@/tools/dev/jwt.lib';
+import type { Lang } from '@/i18n/config';
 
-export default function JwtDecode() {
+const TR: Record<Lang, {
+  jwt: string;
+  decode: string;
+  clear: string;
+  errInvalid: string;
+  errDecode: string;
+  notePre: string;
+  noteNot: string;
+  notePost: string;
+  header: string;
+  payload: string;
+}> = {
+  en: {
+    jwt: 'JWT',
+    decode: 'Decode',
+    clear: 'Clear',
+    errInvalid: 'Not a valid JWT — expected at least two dot-separated segments.',
+    errDecode: 'Failed to decode token segments.',
+    notePre: 'Decoding only — the signature is ',
+    noteNot: 'not',
+    notePost: ' verified. Nothing leaves your browser.',
+    header: 'Header',
+    payload: 'Payload',
+  },
+  id: {
+    jwt: 'JWT',
+    decode: 'Dekode',
+    clear: 'Bersihkan',
+    errInvalid: 'Bukan JWT yang valid — diharapkan setidaknya dua segmen yang dipisahkan titik.',
+    errDecode: 'Gagal mendekode segmen token.',
+    notePre: 'Hanya mendekode — tanda tangan ',
+    noteNot: 'tidak',
+    notePost: ' diverifikasi. Tidak ada data yang meninggalkan browser Anda.',
+    header: 'Header',
+    payload: 'Payload',
+  },
+};
+
+export default function JwtDecode({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [input, setInput] = useState('');
   const [header, setHeader] = useState('');
   const [payload, setPayload] = useState('');
@@ -21,7 +61,7 @@ export default function JwtDecode() {
 
     const parts = token.split('.');
     if (parts.length < 2) {
-      setError('Not a valid JWT — expected at least two dot-separated segments.');
+      setError(t.errInvalid);
       return;
     }
     try {
@@ -29,14 +69,14 @@ export default function JwtDecode() {
       setHeader(header);
       setPayload(payload);
     } catch {
-      setError('Failed to decode token segments.');
+      setError(t.errDecode);
     }
   };
 
   return (
     <div className="space-y-4">
       <TextArea
-        label="JWT"
+        label={t.jwt}
         value={input}
         onChange={e => setInput(e.target.value)}
         placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0In0.signature"
@@ -44,14 +84,14 @@ export default function JwtDecode() {
       />
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={decode}>Decode</Button>
+        <Button onClick={decode}>{t.decode}</Button>
         <Button variant="ghost" onClick={() => { setInput(''); setHeader(''); setPayload(''); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Decoding only — the signature is <strong>not</strong> verified. Nothing leaves your browser.
+        {t.notePre}<strong>{t.noteNot}</strong>{t.notePost}
       </p>
 
       {error && <Alert variant="error">{error}</Alert>}
@@ -59,7 +99,7 @@ export default function JwtDecode() {
       {header && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Header</span>
+            <span className="text-sm font-medium text-muted-foreground">{t.header}</span>
             <CopyButton value={header} />
           </div>
           <CodeBlock code={header} language="json" />
@@ -69,7 +109,7 @@ export default function JwtDecode() {
       {payload && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Payload</span>
+            <span className="text-sm font-medium text-muted-foreground">{t.payload}</span>
             <CopyButton value={payload} />
           </div>
           <CodeBlock code={payload} language="json" />
