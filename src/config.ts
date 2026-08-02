@@ -8,12 +8,16 @@ export const SITE_NAME = 'GoodWebTools';
 export const SITE_TAGLINE = 'Privacy-first client-side utilities that run entirely in your browser';
 
 /**
- * Google Analytics measurement ID (e.g. "G-XXXXXXXXXX").
- * Set it via the PUBLIC_GA_ID environment variable (see .env.example).
- * Empty = analytics disabled. When set, GA still only loads after the visitor
- * accepts cookies in the consent banner (GDPR).
+ * Google Analytics 4 measurement ID. A GA4 ID is not secret — it's visible in
+ * every visitor's page source — so it lives in the repo for reliability (a
+ * Cloudflare build var kept getting dropped). Forks/staging/localhost never report
+ * to it: the loader in Base.astro only runs GA on the production host(s) below, and
+ * only after cookie consent (GDPR). PUBLIC_GA_ID (build var) still overrides if set.
  */
-export const GA_ID = import.meta.env.PUBLIC_GA_ID ?? '';
+export const GA_ID = import.meta.env.PUBLIC_GA_ID || 'G-4Q9F8CL7FW';
+
+/** Hostnames on which analytics may run (keeps forks/staging/localhost out). */
+export const GA_ALLOWED_HOSTS = ['goodwebtools.com', 'www.goodwebtools.com'];
 
 /**
  * When PUBLIC_NOINDEX is "1"/"true", every page emits robots noindex. Set it on
