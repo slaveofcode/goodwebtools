@@ -5,13 +5,47 @@ import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage, formatBytes } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import type { Lang } from '@/i18n/config';
 
 const FORMATS = [
-  { mime: 'image/webp', ext: 'webp', label: 'WebP (smaller)' },
-  { mime: 'image/jpeg', ext: 'jpg', label: 'JPEG' },
+  { mime: 'image/webp', ext: 'webp', label: { en: 'WebP (smaller)', id: 'WebP (lebih kecil)' } },
+  { mime: 'image/jpeg', ext: 'jpg', label: { en: 'JPEG', id: 'JPEG' } },
 ];
 
-export default function ImageCompress() {
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropHint: string;
+  format: string;
+  quality: string;
+  compressing: string;
+  compress: string;
+  clear: string;
+  failed: string;
+}> = {
+  en: {
+    dropTitle: 'Drop an image or click to browse',
+    dropHint: 'Shrink an image by re-encoding it · or paste (⌘V)',
+    format: 'Format',
+    quality: 'Quality',
+    compressing: 'Compressing…',
+    compress: 'Compress',
+    clear: 'Clear',
+    failed: 'Compression failed',
+  },
+  id: {
+    dropTitle: 'Jatuhkan gambar atau klik untuk menelusuri',
+    dropHint: 'Perkecil ukuran gambar dengan mengode ulang · atau tempel (⌘V)',
+    format: 'Format',
+    quality: 'Kualitas',
+    compressing: 'Mengompres…',
+    compress: 'Kompres',
+    clear: 'Bersihkan',
+    failed: 'Kompresi gagal',
+  },
+};
+
+export default function ImageCompress({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [mime, setMime] = useState('image/webp');
   const [quality, setQuality] = useState(75);
@@ -39,7 +73,7 @@ export default function ImageCompress() {
       const { blob } = await processImage(file, { mimeType: mime, quality: quality / 100 });
       setResult(blob);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Compression failed');
+      setError(e instanceof Error ? e.message : t.failed);
     } finally {
       setBusy(false);
     }
@@ -49,8 +83,8 @@ export default function ImageCompress() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an image or click to browse</p>
-          <p className="text-sm text-muted-foreground">Shrink an image by re-encoding it · or paste (⌘V)</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropHint}</p>
         </div>
       </Dropzone>
 
@@ -62,7 +96,7 @@ export default function ImageCompress() {
 
       <div className="space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Format
+          {t.format}
         </span>
         <div className="flex flex-wrap gap-2">
           {FORMATS.map(({ mime: value, label }) => (
@@ -72,7 +106,7 @@ export default function ImageCompress() {
               aria-pressed={mime === value}
               onClick={() => setMime(value)}
             >
-              {label}
+              {label[lang] ?? label.en}
             </Button>
           ))}
         </div>
@@ -80,7 +114,7 @@ export default function ImageCompress() {
 
       <label className="block space-y-1.5">
         <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          <span>Quality</span>
+          <span>{t.quality}</span>
           <span>{quality}%</span>
         </span>
         <input
@@ -95,10 +129,10 @@ export default function ImageCompress() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || busy}>
-          {busy ? 'Compressing…' : 'Compress'}
+          {busy ? t.compressing : t.compress}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
