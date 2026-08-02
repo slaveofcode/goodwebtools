@@ -20,7 +20,7 @@ const fonts = [
 
 const CAT_COLOR = {
   Dev: '#3b82f6', PDF: '#ef4444', Image: '#22c55e', Files: '#eab308', Draw: '#a855f7',
-  Media: '#ec4899', Network: '#06b6d4', Maps: '#10b981', Playground: '#f97316',
+  Media: '#ec4899', Network: '#06b6d4', Maps: '#10b981', Legacy: '#6366f1', Playground: '#f97316',
 };
 
 // Parse the registry without importing TS (aliases + lucide). id, name, category, summary.
