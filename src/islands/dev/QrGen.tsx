@@ -7,8 +7,44 @@ import { CopyImageButton } from '@/components/ui/CopyImageButton';
 import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { downloadService } from '@/services/download';
 import { canvasSupportsType } from '@/tools/image/encode.lib';
+import type { Lang } from '@/i18n/config';
 
 type ErrorLevel = 'L' | 'M' | 'Q' | 'H';
+
+const TR: Record<Lang, {
+  textOrUrl: string;
+  errorCorrection: string;
+  levelLow: string;
+  levelMedium: string;
+  levelQuartile: string;
+  levelHigh: string;
+  download: string;
+  tooLong: string;
+  noQr: string;
+}> = {
+  en: {
+    textOrUrl: 'Text or URL',
+    errorCorrection: 'Error correction',
+    levelLow: 'Low (~7%)',
+    levelMedium: 'Medium (~15%)',
+    levelQuartile: 'Quartile (~25%)',
+    levelHigh: 'High (~30%)',
+    download: 'Download',
+    tooLong: 'Text too long for a QR code',
+    noQr: 'No QR code yet.',
+  },
+  id: {
+    textOrUrl: 'Teks atau URL',
+    errorCorrection: 'Koreksi kesalahan',
+    levelLow: 'Rendah (~7%)',
+    levelMedium: 'Sedang (~15%)',
+    levelQuartile: 'Kuartil (~25%)',
+    levelHigh: 'Tinggi (~30%)',
+    download: 'Unduh',
+    tooLong: 'Teks terlalu panjang untuk kode QR',
+    noQr: 'Belum ada kode QR.',
+  },
+};
 
 interface Format {
   key: string;
@@ -29,7 +65,8 @@ const FORMATS: Format[] = [
 
 const QR_WIDTH = 320;
 
-export default function QrGen() {
+export default function QrGen({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [text, setText] = useState('https://goodwebtools.com');
   const [level, setLevel] = useState<ErrorLevel>('M');
   const [avifOk, setAvifOk] = useState(false);
@@ -54,7 +91,7 @@ export default function QrGen() {
       canvas,
       text,
       { errorCorrectionLevel: level, width: QR_WIDTH, margin: 2 },
-      err => setError(err ? 'Text too long for a QR code' : '')
+      err => setError(err ? t.tooLong : '')
     );
   }, [text, level]);
 
@@ -95,7 +132,7 @@ export default function QrGen() {
   const toPngBlob = () =>
     new Promise<Blob>((resolve, reject) => {
       const canvas = canvasRef.current;
-      if (!canvas) return reject(new Error('No QR code yet.'));
+      if (!canvas) return reject(new Error(t.noQr));
       canvas.toBlob(b => (b ? resolve(b) : reject(new Error('encode'))), 'image/png');
     });
 
@@ -103,7 +140,7 @@ export default function QrGen() {
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       <div className="space-y-4">
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-muted-foreground">Text or URL</span>
+          <span className="text-sm font-medium text-muted-foreground">{t.textOrUrl}</span>
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
@@ -113,16 +150,16 @@ export default function QrGen() {
         </label>
 
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-muted-foreground">Error correction</span>
+          <span className="text-sm font-medium text-muted-foreground">{t.errorCorrection}</span>
           <select
             value={level}
             onChange={e => setLevel(e.target.value as ErrorLevel)}
             className="w-full rounded-lg border border-border bg-muted/40 p-2 text-sm outline-none focus:border-accent"
           >
-            <option value="L">Low (~7%)</option>
-            <option value="M">Medium (~15%)</option>
-            <option value="Q">Quartile (~25%)</option>
-            <option value="H">High (~30%)</option>
+            <option value="L">{t.levelLow}</option>
+            <option value="M">{t.levelMedium}</option>
+            <option value="Q">{t.levelQuartile}</option>
+            <option value="H">{t.levelHigh}</option>
           </select>
         </label>
 
@@ -144,7 +181,7 @@ export default function QrGen() {
               aria-expanded={menuOpen}
             >
               <Download className="h-4 w-4" />
-              Download
+              {t.download}
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
             </Button>
 
