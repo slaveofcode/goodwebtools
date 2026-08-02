@@ -14,6 +14,57 @@ import {
   getRecordingStartedAt,
   saveRecorderSettings,
 } from '@/services/global-recording';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  introPart1: string;
+  introLocal: string;
+  introPart2: string;
+  notSupported: string;
+  micLabel: string;
+  startRecording: string;
+  saving: string;
+  stop: string;
+  processing: string;
+  recordingLabel: string;
+  download: string;
+  errCancelled: string;
+  errCouldNotStart: string;
+  errStopFailed: string;
+}> = {
+  en: {
+    introPart1: 'Record a tab, window, or your whole screen. The browser asks what to share, and everything is captured and encoded ',
+    introLocal: 'locally',
+    introPart2: ' — nothing is uploaded. System/tab audio is included when the browser allows it.',
+    notSupported: "Your browser doesn't support screen recording (getDisplayMedia / MediaRecorder).",
+    micLabel: 'Also record microphone',
+    startRecording: 'Start recording',
+    saving: 'Saving...',
+    stop: 'Stop',
+    processing: 'Processing...',
+    recordingLabel: 'Recording',
+    download: 'Download',
+    errCancelled: 'Screen sharing was cancelled.',
+    errCouldNotStart: 'Could not start screen recording.',
+    errStopFailed: 'Failed to stop recording.',
+  },
+  id: {
+    introPart1: 'Rekam sebuah tab, jendela, atau seluruh layar Anda. Browser akan menanyakan apa yang ingin dibagikan, dan semuanya ditangkap serta dikodekan ',
+    introLocal: 'secara lokal',
+    introPart2: ' — tidak ada yang diunggah. Audio sistem/tab disertakan bila browser mengizinkannya.',
+    notSupported: 'Browser Anda tidak mendukung perekaman layar (getDisplayMedia / MediaRecorder).',
+    micLabel: 'Rekam juga mikrofon',
+    startRecording: 'Mulai merekam',
+    saving: 'Menyimpan...',
+    stop: 'Hentikan',
+    processing: 'Memproses...',
+    recordingLabel: 'Rekaman',
+    download: 'Unduh',
+    errCancelled: 'Berbagi layar dibatalkan.',
+    errCouldNotStart: 'Tidak dapat memulai perekaman layar.',
+    errStopFailed: 'Gagal menghentikan perekaman.',
+  },
+};
 
 async function blobToDataUrl(blob: Blob): Promise<string> {
   const buf = await blob.arrayBuffer();
@@ -39,7 +90,8 @@ function pickMime(): { mime: string; ext: string } {
   return { mime: '', ext: 'webm' };
 }
 
-export default function ScreenRecorder() {
+export default function ScreenRecorder({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   // Start as false for SSR, then check in useEffect
   const [supported, setSupported] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -207,8 +259,8 @@ export default function ScreenRecorder() {
         countdown: inTauriApp,
       });
     } catch (e) {
-      if (e instanceof DOMException && e.name === 'NotAllowedError') setError('Screen sharing was cancelled.');
-      else setError(e instanceof Error ? e.message : 'Could not start screen recording.');
+      if (e instanceof DOMException && e.name === 'NotAllowedError') setError(t.errCancelled);
+      else setError(e instanceof Error ? e.message : t.errCouldNotStart);
     }
   };
 
@@ -219,7 +271,7 @@ export default function ScreenRecorder() {
       // Result + recording=false arrive via the gwt:recording-* events.
       await stopManaged();
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'Failed to stop recording.';
+      const message = e instanceof Error ? e.message : t.errStopFailed;
       // A "Captured N frames" message is informational, not a hard error.
       if (message.includes('Captured') && message.includes('frames')) setError(`✅ ${message}`);
       else setError(message);
@@ -285,16 +337,15 @@ export default function ScreenRecorder() {
   const mmss = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
 
   if (!supported) {
-    return <Alert variant="error">Your browser doesn&apos;t support screen recording (getDisplayMedia / MediaRecorder).</Alert>;
+    return <Alert variant="error">{t.notSupported}</Alert>;
   }
 
   return (
     <div className="space-y-4">
       <div className="border-2 border-border bg-muted p-4">
         <p className="text-sm text-muted-foreground">
-          Record a tab, window, or your whole screen. The browser asks what to share, and everything is
-          captured and encoded <span className="font-bold text-foreground">locally</span> — nothing is uploaded.
-          System/tab audio is included when the browser allows it.
+          {t.introPart1}
+          <span className="font-bold text-foreground">{t.introLocal}</span>{t.introPart2}
         </p>
       </div>
 
@@ -393,7 +444,7 @@ export default function ScreenRecorder() {
 
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={withMic} disabled={recording || stopping} onChange={e => setWithMic(e.target.checked)} className="h-4 w-4 accent-violet-600" />
-        <span className="font-bold uppercase tracking-wide text-muted-foreground">Also record microphone</span>
+        <span className="font-bold uppercase tracking-wide text-muted-foreground">{t.micLabel}</span>
       </label>
 
       {inTauriApp && (
@@ -407,23 +458,23 @@ export default function ScreenRecorder() {
         {!recording ? (
           <Button onClick={start}>
             <Circle className="h-4 w-4 fill-red-500 text-red-500" />
-            Start recording
+            {t.startRecording}
           </Button>
         ) : stopping ? (
           <Button disabled variant="secondary" className="border-yellow-600 bg-yellow-600 text-white">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Saving...
+            {t.saving}
           </Button>
         ) : (
           <Button onClick={stop} variant="secondary" className="border-red-600 bg-red-600 text-white hover:bg-red-700">
             <Square className="h-4 w-4 fill-current" />
-            Stop
+            {t.stop}
           </Button>
         )}
         {(recording || stopping) && (
           <span className="flex items-center gap-2 font-mono text-sm font-bold">
             {stopping ? (
-              <span className="text-yellow-600">Processing...</span>
+              <span className="text-yellow-600">{t.processing}</span>
             ) : (
               <>
                 <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
@@ -439,13 +490,13 @@ export default function ScreenRecorder() {
       {result && resultUrl && !recording && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-bold uppercase tracking-wide text-muted-foreground">Recording</span>
+            <span className="font-bold uppercase tracking-wide text-muted-foreground">{t.recordingLabel}</span>
             <span className="font-mono text-muted-foreground">{formatBytes(result.size)}</span>
           </div>
           <video src={resultUrl} controls className="block max-h-[70vh] w-auto max-w-full border-2 border-border" />
           <Button onClick={download}>
             <Download className="h-4 w-4" />
-            Download {extRef.current.toUpperCase()}
+            {t.download} {extRef.current.toUpperCase()}
           </Button>
         </div>
       )}

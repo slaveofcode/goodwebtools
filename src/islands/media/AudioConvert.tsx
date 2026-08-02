@@ -7,6 +7,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { loadFFmpeg, fileToU8 } from '@/services/ffmpeg.service';
+import type { Lang } from '@/i18n/config';
 
 type Fmt = 'mp3' | 'm4a' | 'wav' | 'opus' | 'flac';
 const FORMATS: { id: Fmt; label: string; mime: string; codec: string[]; ext: string; lossless?: boolean }[] = [
@@ -18,7 +19,64 @@ const FORMATS: { id: Fmt; label: string; mime: string; codec: string[]; ext: str
 ];
 const BITRATES = [96, 128, 160, 192, 256, 320];
 
-export default function AudioConvert() {
+const TR: Record<Lang, {
+  loadEngine: string;
+  converting: string;
+  convertError: string;
+  dropTitle: string;
+  dropSubtitle: string;
+  format: string;
+  bitrate: string;
+  start: string;
+  length: string;
+  privacy: string;
+  convertingBtn: string;
+  convert: string;
+  clear: string;
+  working: string;
+  result: string;
+  download: (fmt: string) => string;
+}> = {
+  en: {
+    loadEngine: 'Loading audio engine (first run downloads ~31 MB)…',
+    converting: 'Converting audio…',
+    convertError: 'Could not convert this audio.',
+    dropTitle: 'Drop an audio file or click to browse',
+    dropSubtitle: 'Convert between formats, re-encode bitrate, or trim — all in your browser',
+    format: 'Format',
+    bitrate: 'Bitrate',
+    start: 'Start (s)',
+    length: 'Length (s)',
+    privacy: 'Runs entirely in your browser via ffmpeg.wasm — the file never leaves your device.',
+    convertingBtn: 'Converting…',
+    convert: 'Convert',
+    clear: 'Clear',
+    working: 'Working…',
+    result: 'Result',
+    download: (fmt) => `Download ${fmt}`,
+  },
+  id: {
+    loadEngine: 'Memuat mesin audio (unduhan pertama ~31 MB)…',
+    converting: 'Mengonversi audio…',
+    convertError: 'Tidak dapat mengonversi audio ini.',
+    dropTitle: 'Letakkan file audio atau klik untuk memilih',
+    dropSubtitle: 'Konversi antar format, encode ulang bitrate, atau potong — semua di browser Anda',
+    format: 'Format',
+    bitrate: 'Bitrate',
+    start: 'Mulai (dtk)',
+    length: 'Durasi (dtk)',
+    privacy: 'Berjalan sepenuhnya di browser Anda via ffmpeg.wasm — file tidak pernah keluar dari perangkat Anda.',
+    convertingBtn: 'Mengonversi…',
+    convert: 'Konversi',
+    clear: 'Bersihkan',
+    working: 'Memproses…',
+    result: 'Hasil',
+    download: (fmt) => `Unduh ${fmt}`,
+  },
+};
+
+export default function AudioConvert({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [fmt, setFmt] = useState<Fmt>('mp3');
   const [bitrate, setBitrate] = useState(192);
@@ -50,7 +108,7 @@ export default function AudioConvert() {
     setResult(null);
     setPercent(0);
     try {
-      setStage('Loading audio engine (first run downloads ~31 MB)…');
+      setStage(t.loadEngine);
       const ffmpeg = await loadFFmpeg();
       const onProgress = ({ progress }: { progress: number }) =>
         setPercent(Math.min(100, Math.round(progress * 100)));
@@ -67,7 +125,7 @@ export default function AudioConvert() {
       const out = `out.${spec.ext}`;
       args.push(out);
 
-      setStage('Converting audio…');
+      setStage(t.converting);
       await ffmpeg.exec(args);
 
       const data = await ffmpeg.readFile(out);
@@ -79,7 +137,7 @@ export default function AudioConvert() {
         return URL.createObjectURL(blob);
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not convert this audio.');
+      setError(e instanceof Error ? e.message : t.convertError);
     } finally {
       setBusy(false);
       setStage('');
@@ -95,8 +153,8 @@ export default function AudioConvert() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="audio/*,video/*" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an audio file or click to browse</p>
-          <p className="text-sm text-muted-foreground">Convert between formats, re-encode bitrate, or trim — all in your browser</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropSubtitle}</p>
         </div>
       </Dropzone>
 
@@ -108,51 +166,51 @@ export default function AudioConvert() {
 
       <div className="flex flex-wrap items-end gap-4">
         <label className="space-y-1 text-sm">
-          <span className="block font-bold uppercase tracking-wide text-muted-foreground">Format</span>
+          <span className="block font-bold uppercase tracking-wide text-muted-foreground">{t.format}</span>
           <select value={fmt} onChange={e => setFmt(e.target.value as Fmt)} className="border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm">
             {FORMATS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
         </label>
         {!spec.lossless && (
           <label className="space-y-1 text-sm">
-            <span className="block font-bold uppercase tracking-wide text-muted-foreground">Bitrate</span>
+            <span className="block font-bold uppercase tracking-wide text-muted-foreground">{t.bitrate}</span>
             <select value={bitrate} onChange={e => setBitrate(Number(e.target.value))} className="border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm">
               {BITRATES.map(b => <option key={b} value={b}>{b} kbps</option>)}
             </select>
           </label>
         )}
         <label className="space-y-1 text-sm">
-          <span className="block font-bold uppercase tracking-wide text-muted-foreground">Start (s)</span>
+          <span className="block font-bold uppercase tracking-wide text-muted-foreground">{t.start}</span>
           <input type="number" min={0} step={0.5} value={start} onChange={e => setStart(e.target.value)} placeholder="0" className="w-20 border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm" />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="block font-bold uppercase tracking-wide text-muted-foreground">Length (s)</span>
+          <span className="block font-bold uppercase tracking-wide text-muted-foreground">{t.length}</span>
           <input type="number" min={0} step={0.5} value={duration} onChange={e => setDuration(e.target.value)} placeholder="all" className="w-20 border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm" />
         </label>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Runs entirely in your browser via ffmpeg.wasm — the file never leaves your device.
+        {t.privacy}
       </p>
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={run} disabled={!file || busy}>{busy ? 'Converting…' : 'Convert'}</Button>
-        <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>Clear</Button>
+        <Button onClick={run} disabled={!file || busy}>{busy ? t.convertingBtn : t.convert}</Button>
+        <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>{t.clear}</Button>
       </div>
 
-      {busy && <ProgressBar percent={percent} label={stage || 'Working…'} />}
+      {busy && <ProgressBar percent={percent} label={stage || t.working} />}
       {error && <Alert variant="error">{error}</Alert>}
 
       {result && resultUrl && !busy && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-bold uppercase tracking-wide text-muted-foreground">Result</span>
+            <span className="font-bold uppercase tracking-wide text-muted-foreground">{t.result}</span>
             <span className="font-mono text-muted-foreground">{formatBytes(result.size)}</span>
           </div>
           <audio src={resultUrl} controls className="block w-full max-w-md" />
           <Button onClick={download}>
             <Download className="h-4 w-4" />
-            Download {fmt.toUpperCase()}
+            {t.download(fmt.toUpperCase())}
           </Button>
         </div>
       )}

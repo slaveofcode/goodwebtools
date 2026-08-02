@@ -19,6 +19,85 @@ import {
   formatClock,
   type TranscriptSegment,
 } from '@/tools/media/stt.lib';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  models: Record<string, { label: string; note: string }>;
+  languages: Record<string, string>;
+  stop: (clock: string) => string; record: string; or: string;
+  dropTitle: string; dropDesc: string; restored: string;
+  model: string; language: string; languageHint: string;
+  transcribing: string; transcribe: string;
+  pressStop: string; recordOrDrop: string;
+  loadingCache: string; downloading: string;
+  onDevice: (clock: string) => string; slowSmall: string; takesMoment: string;
+  errTranscribe: string;
+  text: string; timestamped: string; subtitles: string;
+  downloadTxt: string; downloadSrt: string; downloadVtt: string;
+}> = {
+  en: {
+    models: {
+      'onnx-community/whisper-tiny.en': { label: 'English · Fast', note: 'smallest download' },
+      'onnx-community/whisper-base.en': { label: 'English · Accurate', note: 'larger, more accurate' },
+      'onnx-community/whisper-base': { label: 'Multilingual', note: 'auto-detects language' },
+      'onnx-community/whisper-small': { label: 'Multilingual · Better', note: 'much better for non-English (e.g. Bahasa); larger download' },
+    },
+    languages: {
+      '': 'Auto-detect', indonesian: 'Indonesian (Bahasa)', malay: 'Malay', javanese: 'Javanese',
+      sundanese: 'Sundanese', english: 'English', chinese: 'Chinese', japanese: 'Japanese',
+      korean: 'Korean', arabic: 'Arabic', hindi: 'Hindi', tagalog: 'Tagalog', thai: 'Thai',
+      vietnamese: 'Vietnamese', spanish: 'Spanish', portuguese: 'Portuguese', french: 'French',
+      german: 'German', italian: 'Italian', dutch: 'Dutch', russian: 'Russian', turkish: 'Turkish',
+    },
+    stop: c => `Stop (${c})`, record: 'Record', or: 'or',
+    dropTitle: 'Drop an audio or video file',
+    dropDesc: 'mp3, wav, m4a, mp4… · transcribed on your device',
+    restored: 'Restored your last recording.',
+    model: 'Model', language: 'Language',
+    languageHint: 'Pick the spoken language for best accuracy — auto-detect often mis-guesses shorter clips.',
+    transcribing: 'Transcribing…', transcribe: 'Transcribe',
+    pressStop: 'Press Stop to finish the recording first.',
+    recordOrDrop: 'Record or drop a file to enable this.',
+    loadingCache: 'Loading model from cache…', downloading: 'Downloading model (first time only)…',
+    onDevice: c => `Transcribing on your device… (${c})`,
+    slowSmall: ' — the “Better” model is much slower, especially on phones; a short clip can take a few minutes.',
+    takesMoment: ' this can take a moment.',
+    errTranscribe: 'Transcription failed',
+    text: 'Text', timestamped: 'Timestamped', subtitles: 'Subtitles',
+    downloadTxt: 'Download .txt', downloadSrt: 'Download .srt', downloadVtt: 'Download .vtt',
+  },
+  id: {
+    models: {
+      'onnx-community/whisper-tiny.en': { label: 'Inggris · Cepat', note: 'unduhan terkecil' },
+      'onnx-community/whisper-base.en': { label: 'Inggris · Akurat', note: 'lebih besar, lebih akurat' },
+      'onnx-community/whisper-base': { label: 'Multibahasa', note: 'mendeteksi bahasa otomatis' },
+      'onnx-community/whisper-small': { label: 'Multibahasa · Lebih Baik', note: 'jauh lebih baik untuk non-Inggris (mis. Bahasa Indonesia); unduhan lebih besar' },
+    },
+    languages: {
+      '': 'Deteksi otomatis', indonesian: 'Indonesia (Bahasa)', malay: 'Melayu', javanese: 'Jawa',
+      sundanese: 'Sunda', english: 'Inggris', chinese: 'Mandarin', japanese: 'Jepang',
+      korean: 'Korea', arabic: 'Arab', hindi: 'Hindi', tagalog: 'Tagalog', thai: 'Thai',
+      vietnamese: 'Vietnam', spanish: 'Spanyol', portuguese: 'Portugis', french: 'Prancis',
+      german: 'Jerman', italian: 'Italia', dutch: 'Belanda', russian: 'Rusia', turkish: 'Turki',
+    },
+    stop: c => `Berhenti (${c})`, record: 'Rekam', or: 'atau',
+    dropTitle: 'Letakkan berkas audio atau video',
+    dropDesc: 'mp3, wav, m4a, mp4… · ditranskripsi di perangkat Anda',
+    restored: 'Rekaman terakhir Anda dipulihkan.',
+    model: 'Model', language: 'Bahasa',
+    languageHint: 'Pilih bahasa yang diucapkan untuk akurasi terbaik — deteksi otomatis sering salah menebak klip yang pendek.',
+    transcribing: 'Mentranskripsi…', transcribe: 'Transkripsi',
+    pressStop: 'Tekan Berhenti untuk menyelesaikan rekaman dulu.',
+    recordOrDrop: 'Rekam atau letakkan berkas untuk mengaktifkan ini.',
+    loadingCache: 'Memuat model dari cache…', downloading: 'Mengunduh model (hanya pertama kali)…',
+    onDevice: c => `Mentranskripsi di perangkat Anda… (${c})`,
+    slowSmall: ' — model “Lebih Baik” jauh lebih lambat, terutama di ponsel; klip pendek bisa memakan beberapa menit.',
+    takesMoment: ' ini bisa memakan waktu sejenak.',
+    errTranscribe: 'Transkripsi gagal',
+    text: 'Teks', timestamped: 'Berstempel waktu', subtitles: 'Subtitel',
+    downloadTxt: 'Unduh .txt', downloadSrt: 'Unduh .srt', downloadVtt: 'Unduh .vtt',
+  },
+};
 
 const MODELS: { value: SttModelId; label: string; note: string; multilingual?: boolean }[] = [
   { value: 'onnx-community/whisper-tiny.en', label: 'English · Fast', note: 'smallest download' },
@@ -56,7 +135,8 @@ const LANGUAGES: { value: string; label: string }[] = [
 
 type Tab = 'text' | 'timestamped' | 'subtitles';
 
-export default function VoiceToText() {
+export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const recorder = useAudioRecorder();
   const wakeLock = useWakeLock();
   const [restored, setRestored] = useState(false);
@@ -183,7 +263,7 @@ export default function VoiceToText() {
       setEditedText(segmentsToText(segs));
       setTab('text');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Transcription failed');
+      setError(e instanceof Error ? e.message : t.errTranscribe);
     } finally {
       setTranscribing(false);
       setModelProgress(null);
@@ -215,17 +295,17 @@ export default function VoiceToText() {
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={toggleRecord} disabled={busy}>
           {recorder.recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          {recorder.recording ? `Stop (${formatClock(recorder.seconds)})` : 'Record'}
+          {recorder.recording ? t.stop(formatClock(recorder.seconds)) : t.record}
         </Button>
-        <span className="text-sm text-muted-foreground">or</span>
+        <span className="text-sm text-muted-foreground">{t.or}</span>
       </div>
 
       <Dropzone onDrop={onDrop} accept="audio/*,video/*" multiple={false}>
         <div className="space-y-1">
           <p className="flex items-center justify-center gap-2 text-lg font-bold">
-            <Upload className="h-5 w-5" /> Drop an audio or video file
+            <Upload className="h-5 w-5" /> {t.dropTitle}
           </p>
-          <p className="text-sm text-muted-foreground">mp3, wav, m4a, mp4… · transcribed on your device</p>
+          <p className="text-sm text-muted-foreground">{t.dropDesc}</p>
         </div>
       </Dropzone>
 
@@ -234,13 +314,13 @@ export default function VoiceToText() {
       {audioUrl && (
         <div className="space-y-1">
           <audio ref={audioRef} controls src={audioUrl} onLoadedMetadata={fixAudioDuration} className="w-full" />
-          {restored && <p className="text-xs text-muted-foreground">Restored your last recording.</p>}
+          {restored && <p className="text-xs text-muted-foreground">{t.restored}</p>}
         </div>
       )}
 
       {/* Model + run */}
       <div className="space-y-1.5">
-        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Model</span>
+        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.model}</span>
         <div className="flex flex-wrap gap-2">
           {MODELS.map(m => (
             <Button
@@ -249,9 +329,9 @@ export default function VoiceToText() {
               aria-pressed={model === m.value}
               onClick={() => setModel(m.value)}
               disabled={busy}
-              title={m.note}
+              title={t.models[m.value]?.note ?? m.note}
             >
-              {m.label}
+              {t.models[m.value]?.label ?? m.label}
             </Button>
           ))}
         </div>
@@ -259,39 +339,39 @@ export default function VoiceToText() {
 
       {MODELS.find(m => m.value === model)?.multilingual && (
         <label className="block space-y-1.5">
-          <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Language</span>
+          <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.language}</span>
           <select
             value={language}
             onChange={e => setLanguage(e.target.value)}
             disabled={busy}
             className="w-full border-2 border-border bg-muted px-3 py-2 text-sm outline-none focus:shadow-brutal-sm"
           >
-            {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+            {LANGUAGES.map(l => <option key={l.value} value={l.value}>{t.languages[l.value] ?? l.label}</option>)}
           </select>
-          <span className="block text-xs text-muted-foreground">Pick the spoken language for best accuracy — auto-detect often mis-guesses shorter clips.</span>
+          <span className="block text-xs text-muted-foreground">{t.languageHint}</span>
         </label>
       )}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={transcribe} disabled={!audioBlob || busy}>
-          {busy ? 'Transcribing…' : 'Transcribe'}
+          {busy ? t.transcribing : t.transcribe}
         </Button>
         {!audioBlob && !busy && (
           <span className="text-sm text-muted-foreground">
-            {recorder.recording ? 'Press Stop to finish the recording first.' : 'Record or drop a file to enable this.'}
+            {recorder.recording ? t.pressStop : t.recordOrDrop}
           </span>
         )}
       </div>
 
       {modelProgress !== null && (
-        <ProgressBar percent={modelProgress * 100} label={modelCached ? 'Loading model from cache…' : 'Downloading model (first time only)…'} />
+        <ProgressBar percent={modelProgress * 100} label={modelCached ? t.loadingCache : t.downloading} />
       )}
       {busy && modelProgress === null && (
         <p className="text-sm text-muted-foreground">
-          Transcribing on your device… ({formatClock(elapsed)})
+          {t.onDevice(formatClock(elapsed))}
           {MODELS.find(m => m.value === model)?.value === 'onnx-community/whisper-small'
-            ? ' — the “Better” model is much slower, especially on phones; a short clip can take a few minutes.'
-            : ' this can take a moment.'}
+            ? t.slowSmall
+            : t.takesMoment}
         </p>
       )}
 
@@ -301,9 +381,9 @@ export default function VoiceToText() {
       {segments && (
         <div className="space-y-3 border-2 border-border p-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant={tab === 'text' ? 'primary' : 'secondary'} onClick={() => setTab('text')}>Text</Button>
-            <Button variant={tab === 'timestamped' ? 'primary' : 'secondary'} onClick={() => setTab('timestamped')}>Timestamped</Button>
-            <Button variant={tab === 'subtitles' ? 'primary' : 'secondary'} onClick={() => setTab('subtitles')}>Subtitles</Button>
+            <Button variant={tab === 'text' ? 'primary' : 'secondary'} onClick={() => setTab('text')}>{t.text}</Button>
+            <Button variant={tab === 'timestamped' ? 'primary' : 'secondary'} onClick={() => setTab('timestamped')}>{t.timestamped}</Button>
+            <Button variant={tab === 'subtitles' ? 'primary' : 'secondary'} onClick={() => setTab('subtitles')}>{t.subtitles}</Button>
             <div className="ml-auto">
               <CopyButton value={copyValue} />
             </div>
@@ -333,9 +413,9 @@ export default function VoiceToText() {
           )}
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={() => download('txt')}>Download .txt</Button>
-            <Button variant="secondary" onClick={() => download('srt')}>Download .srt</Button>
-            <Button variant="secondary" onClick={() => download('vtt')}>Download .vtt</Button>
+            <Button variant="secondary" onClick={() => download('txt')}>{t.downloadTxt}</Button>
+            <Button variant="secondary" onClick={() => download('srt')}>{t.downloadSrt}</Button>
+            <Button variant="secondary" onClick={() => download('vtt')}>{t.downloadVtt}</Button>
           </div>
         </div>
       )}
