@@ -121,7 +121,7 @@ if (seo?.faqs && seo.faqs.length > 0) {
       <p class="max-w-3xl text-muted-foreground">{lead}</p>
     </div>
 
-    <ToolHost client:load toolId={toolId} />
+    <ToolHost client:load toolId={toolId} lang={lang} />
 
     {(seo?.howTo?.length || seo?.faqs?.length || relatedTools.length > 0) && (
       <div class="mt-12 space-y-10 border-t-2 border-border pt-8">
