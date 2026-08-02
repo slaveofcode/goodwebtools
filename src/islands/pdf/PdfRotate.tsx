@@ -5,6 +5,7 @@ import { ResultActions } from '@/components/ui/ResultActions';
 import { PdfPreview } from '@/components/ui/PdfPreview';
 import { Alert } from '@/components/ui/Alert';
 import { rotatePdf } from '@/tools/pdf/pdf.lib';
+import type { Lang } from '@/i18n/config';
 
 const TURNS = [
   { deg: 90, label: '90° ↻' },
@@ -12,7 +13,34 @@ const TURNS = [
   { deg: 270, label: '270° ↺' },
 ];
 
-export default function PdfRotate() {
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropHint: string;
+  rotating: string;
+  rotateBtn: string;
+  clear: string;
+  rotateFailed: string;
+}> = {
+  en: {
+    dropTitle: 'Drop a PDF here or click to browse',
+    dropHint: 'Rotate every page clockwise',
+    rotating: 'Rotating…',
+    rotateBtn: 'Rotate PDF',
+    clear: 'Clear',
+    rotateFailed: 'Rotate failed',
+  },
+  id: {
+    dropTitle: 'Letakkan PDF di sini atau klik untuk memilih',
+    dropHint: 'Putar setiap halaman searah jarum jam',
+    rotating: 'Memutar…',
+    rotateBtn: 'Putar PDF',
+    clear: 'Bersihkan',
+    rotateFailed: 'Gagal memutar',
+  },
+};
+
+export default function PdfRotate({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [turn, setTurn] = useState(90);
   const [result, setResult] = useState<Blob | null>(null);
@@ -33,7 +61,7 @@ export default function PdfRotate() {
     try {
       setResult(await rotatePdf(file, turn));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Rotate failed');
+      setError(e instanceof Error ? e.message : t.rotateFailed);
     } finally {
       setBusy(false);
     }
@@ -43,8 +71,8 @@ export default function PdfRotate() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="application/pdf" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop a PDF here or click to browse</p>
-          <p className="text-sm text-muted-foreground">Rotate every page clockwise</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropHint}</p>
         </div>
       </Dropzone>
 
@@ -67,10 +95,10 @@ export default function PdfRotate() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={rotate} disabled={!file || busy}>
-          {busy ? 'Rotating…' : 'Rotate PDF'}
+          {busy ? t.rotating : t.rotateBtn}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 

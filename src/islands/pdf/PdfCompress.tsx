@@ -6,8 +6,50 @@ import { PdfPreview } from '@/components/ui/PdfPreview';
 import { Alert } from '@/components/ui/Alert';
 import { compressPdf } from '@/tools/pdf/pdf.lib';
 import { formatBytes } from '@/tools/image/canvas.lib';
+import type { Lang } from '@/i18n/config';
 
-export default function PdfCompress() {
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropSubtitle: string;
+  compressing: string;
+  compressPdf: string;
+  clear: string;
+  result: string;
+  smaller: (n: number) => string;
+  alreadyOptimal: string;
+  alreadyCompressed: string;
+  compressionFailed: string;
+}> = {
+  en: {
+    dropTitle: 'Drop a PDF here or click to browse',
+    dropSubtitle: 'Recompress streams, images, and fonts; drop unused objects',
+    compressing: 'Compressing…',
+    compressPdf: 'Compress PDF',
+    clear: 'Clear',
+    result: 'Result',
+    smaller: (n) => `−${n}% smaller`,
+    alreadyOptimal: 'already optimal',
+    alreadyCompressed:
+      'This PDF is already well-compressed (mostly text/vector). Compression helps most on image-heavy PDFs.',
+    compressionFailed: 'Compression failed',
+  },
+  id: {
+    dropTitle: 'Letakkan PDF di sini atau klik untuk memilih',
+    dropSubtitle: 'Kompres ulang stream, gambar, dan font; buang objek yang tidak terpakai',
+    compressing: 'Mengompres…',
+    compressPdf: 'Kompres PDF',
+    clear: 'Bersihkan',
+    result: 'Hasil',
+    smaller: (n) => `−${n}% lebih kecil`,
+    alreadyOptimal: 'sudah optimal',
+    alreadyCompressed:
+      'PDF ini sudah terkompres dengan baik (sebagian besar teks/vektor). Kompresi paling efektif pada PDF yang banyak gambar.',
+    compressionFailed: 'Kompresi gagal',
+  },
+};
+
+export default function PdfCompress({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
@@ -27,7 +69,7 @@ export default function PdfCompress() {
     try {
       setResult(await compressPdf(file));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Compression failed');
+      setError(e instanceof Error ? e.message : t.compressionFailed);
     } finally {
       setBusy(false);
     }
@@ -40,9 +82,9 @@ export default function PdfCompress() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="application/pdf" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop a PDF here or click to browse</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
           <p className="text-sm text-muted-foreground">
-            Recompress streams, images, and fonts; drop unused objects
+            {t.dropSubtitle}
           </p>
         </div>
       </Dropzone>
@@ -55,10 +97,10 @@ export default function PdfCompress() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || busy}>
-          {busy ? 'Compressing…' : 'Compress PDF'}
+          {busy ? t.compressing : t.compressPdf}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
@@ -67,7 +109,7 @@ export default function PdfCompress() {
       {result && (
         <>
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-bold uppercase tracking-wide text-muted-foreground">Result</span>
+            <span className="font-bold uppercase tracking-wide text-muted-foreground">{t.result}</span>
             <span className="font-mono">{formatBytes(result.size)}</span>
             {reduction !== null && (
               <span
@@ -77,14 +119,13 @@ export default function PdfCompress() {
                     : 'font-bold text-muted-foreground'
                 }
               >
-                {reduction > 0 ? `−${reduction}% smaller` : 'already optimal'}
+                {reduction > 0 ? t.smaller(reduction) : t.alreadyOptimal}
               </span>
             )}
           </div>
           {reduction !== null && reduction <= 0 && (
             <Alert variant="success">
-              This PDF is already well-compressed (mostly text/vector). Compression helps most on
-              image-heavy PDFs.
+              {t.alreadyCompressed}
             </Alert>
           )}
           <PdfPreview source={result} />

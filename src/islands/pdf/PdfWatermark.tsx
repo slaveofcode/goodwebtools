@@ -6,17 +6,80 @@ import { ResultActions } from '@/components/ui/ResultActions';
 import { PdfPreview } from '@/components/ui/PdfPreview';
 import { Alert } from '@/components/ui/Alert';
 import { addWatermark, buildWatermarkPreview, type WatermarkLayout } from '@/tools/pdf/pdf.lib';
+import type { Lang } from '@/i18n/config';
 
-const LAYOUTS: { value: WatermarkLayout; label: string }[] = [
-  { value: 'diagonal', label: 'Diagonal' },
-  { value: 'tiled', label: 'Tiled' },
-  { value: 'horizontal', label: 'Horizontal' },
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropSubtitle: string;
+  watermarkText: string;
+  layout: string;
+  size: string;
+  small: string;
+  medium: string;
+  large: string;
+  opacity: string;
+  color: string;
+  livePreview: string;
+  stamping: string;
+  addWatermark: string;
+  clear: string;
+  watermarkFailed: string;
+  diagonal: string;
+  tiled: string;
+  horizontal: string;
+}> = {
+  en: {
+    dropTitle: 'Drop a PDF here or click to browse',
+    dropSubtitle: 'Stamp a text watermark on every page',
+    watermarkText: 'Watermark text',
+    layout: 'Layout',
+    size: 'Size',
+    small: 'Small',
+    medium: 'Medium',
+    large: 'Large',
+    opacity: 'Opacity',
+    color: 'Color',
+    livePreview: 'Live preview',
+    stamping: 'Stamping…',
+    addWatermark: 'Add watermark',
+    clear: 'Clear',
+    watermarkFailed: 'Watermark failed',
+    diagonal: 'Diagonal',
+    tiled: 'Tiled',
+    horizontal: 'Horizontal',
+  },
+  id: {
+    dropTitle: 'Letakkan PDF di sini atau klik untuk memilih',
+    dropSubtitle: 'Bubuhkan watermark teks pada setiap halaman',
+    watermarkText: 'Teks watermark',
+    layout: 'Tata letak',
+    size: 'Ukuran',
+    small: 'Kecil',
+    medium: 'Sedang',
+    large: 'Besar',
+    opacity: 'Opasitas',
+    color: 'Warna',
+    livePreview: 'Pratinjau langsung',
+    stamping: 'Membubuhkan…',
+    addWatermark: 'Tambah watermark',
+    clear: 'Bersihkan',
+    watermarkFailed: 'Gagal menambahkan watermark',
+    diagonal: 'Diagonal',
+    tiled: 'Berjajar',
+    horizontal: 'Horizontal',
+  },
+};
+
+const LAYOUTS: { value: WatermarkLayout; labelKey: 'diagonal' | 'tiled' | 'horizontal' }[] = [
+  { value: 'diagonal', labelKey: 'diagonal' },
+  { value: 'tiled', labelKey: 'tiled' },
+  { value: 'horizontal', labelKey: 'horizontal' },
 ];
 
-const SIZES = [
-  { value: 1 / 20, label: 'Small' },
-  { value: 1 / 14, label: 'Medium' },
-  { value: 1 / 9, label: 'Large' },
+const SIZES: { value: number; labelKey: 'small' | 'medium' | 'large' }[] = [
+  { value: 1 / 20, labelKey: 'small' },
+  { value: 1 / 14, labelKey: 'medium' },
+  { value: 1 / 9, labelKey: 'large' },
 ];
 
 function hexToRgb01(hex: string): { r: number; g: number; b: number } {
@@ -28,7 +91,8 @@ function hexToRgb01(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-export default function PdfWatermark() {
+export default function PdfWatermark({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState('CONFIDENTIAL');
   const [layout, setLayout] = useState<WatermarkLayout>('diagonal');
@@ -87,7 +151,7 @@ export default function PdfWatermark() {
         })
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Watermark failed');
+      setError(e instanceof Error ? e.message : t.watermarkFailed);
     } finally {
       setBusy(false);
     }
@@ -97,15 +161,15 @@ export default function PdfWatermark() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="application/pdf" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop a PDF here or click to browse</p>
-          <p className="text-sm text-muted-foreground">Stamp a text watermark on every page</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropSubtitle}</p>
         </div>
       </Dropzone>
 
       {file && <p className="text-sm font-bold text-foreground">{file.name}</p>}
 
       <TextArea
-        label="Watermark text"
+        label={t.watermarkText}
         value={text}
         onChange={e => setText(e.target.value)}
         placeholder="CONFIDENTIAL"
@@ -114,17 +178,17 @@ export default function PdfWatermark() {
 
       <div className="space-y-1.5">
         <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Layout
+          {t.layout}
         </span>
         <div className="flex flex-wrap gap-2">
-          {LAYOUTS.map(({ value, label }) => (
+          {LAYOUTS.map(({ value, labelKey }) => (
             <Button
               key={value}
               variant={layout === value ? 'primary' : 'secondary'}
               aria-pressed={layout === value}
               onClick={() => setLayout(value)}
             >
-              {label}
+              {t[labelKey]}
             </Button>
           ))}
         </div>
@@ -132,17 +196,17 @@ export default function PdfWatermark() {
 
       <div className="space-y-1.5">
         <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Size
+          {t.size}
         </span>
         <div className="flex flex-wrap gap-2">
-          {SIZES.map(({ value, label }) => (
+          {SIZES.map(({ value, labelKey }) => (
             <Button
-              key={label}
+              key={labelKey}
               variant={fontScale === value ? 'primary' : 'secondary'}
               aria-pressed={fontScale === value}
               onClick={() => setFontScale(value)}
             >
-              {label}
+              {t[labelKey]}
             </Button>
           ))}
         </div>
@@ -151,7 +215,7 @@ export default function PdfWatermark() {
       <div className="flex flex-wrap items-end gap-6">
         <label className="flex-1 space-y-1.5">
           <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            <span>Opacity</span>
+            <span>{t.opacity}</span>
             <span>{opacity}%</span>
           </span>
           <input
@@ -165,7 +229,7 @@ export default function PdfWatermark() {
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Color
+            {t.color}
           </span>
           <input
             type="color"
@@ -176,14 +240,14 @@ export default function PdfWatermark() {
         </label>
       </div>
 
-      {preview && <PdfPreview source={preview} label="Live preview" />}
+      {preview && <PdfPreview source={preview} label={t.livePreview} />}
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || !text.trim() || busy}>
-          {busy ? 'Stamping…' : 'Add watermark'}
+          {busy ? t.stamping : t.addWatermark}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setPreview(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 

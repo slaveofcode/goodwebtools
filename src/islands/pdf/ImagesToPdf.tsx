@@ -6,8 +6,45 @@ import { ResultActions } from '@/components/ui/ResultActions';
 import { PdfPreview } from '@/components/ui/PdfPreview';
 import { Alert } from '@/components/ui/Alert';
 import { imagesToPdf } from '@/tools/pdf/pdf.lib';
+import type { Lang } from '@/i18n/config';
 
-export default function ImagesToPdf() {
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropSubtitle: string;
+  moveUp: string;
+  moveDown: string;
+  remove: string;
+  building: string;
+  createPdf: string;
+  clear: string;
+  errConversion: string;
+}> = {
+  en: {
+    dropTitle: 'Drop PNG/JPG images or click to browse',
+    dropSubtitle: 'One image per page, in the order below',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+    remove: 'Remove',
+    building: 'Building…',
+    createPdf: 'Create PDF',
+    clear: 'Clear',
+    errConversion: 'Conversion failed',
+  },
+  id: {
+    dropTitle: 'Letakkan gambar PNG/JPG atau klik untuk menjelajah',
+    dropSubtitle: 'Satu gambar per halaman, dengan urutan di bawah',
+    moveUp: 'Pindah ke atas',
+    moveDown: 'Pindah ke bawah',
+    remove: 'Hapus',
+    building: 'Membuat…',
+    createPdf: 'Buat PDF',
+    clear: 'Bersihkan',
+    errConversion: 'Konversi gagal',
+  },
+};
+
+export default function ImagesToPdf({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
@@ -43,7 +80,7 @@ export default function ImagesToPdf() {
     try {
       setResult(await imagesToPdf(files));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Conversion failed');
+      setError(e instanceof Error ? e.message : t.errConversion);
     } finally {
       setBusy(false);
     }
@@ -53,8 +90,8 @@ export default function ImagesToPdf() {
     <div className="space-y-4">
       <Dropzone onDrop={addFiles} accept="image/png,image/jpeg" multiple>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop PNG/JPG images or click to browse</p>
-          <p className="text-sm text-muted-foreground">One image per page, in the order below</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropSubtitle}</p>
         </div>
       </Dropzone>
 
@@ -69,7 +106,7 @@ export default function ImagesToPdf() {
                   onClick={() => move(index, -1)}
                   disabled={index === 0}
                   className="border-2 border-border p-1 disabled:opacity-30"
-                  aria-label="Move up"
+                  aria-label={t.moveUp}
                 >
                   <ArrowUp className="h-4 w-4" />
                 </button>
@@ -77,14 +114,14 @@ export default function ImagesToPdf() {
                   onClick={() => move(index, 1)}
                   disabled={index === files.length - 1}
                   className="border-2 border-border p-1 disabled:opacity-30"
-                  aria-label="Move down"
+                  aria-label={t.moveDown}
                 >
                   <ArrowDown className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => remove(index)}
                   className="border-2 border-border p-1"
-                  aria-label="Remove"
+                  aria-label={t.remove}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -96,10 +133,10 @@ export default function ImagesToPdf() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={build} disabled={files.length === 0 || busy}>
-          {busy ? 'Building…' : 'Create PDF'}
+          {busy ? t.building : t.createPdf}
         </Button>
         <Button variant="ghost" onClick={() => { setFiles([]); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 

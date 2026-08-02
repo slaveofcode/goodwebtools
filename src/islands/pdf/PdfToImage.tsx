@@ -7,6 +7,66 @@ import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
 import { EditInAnnotatorButton } from '@/components/ui/EditInAnnotatorButton';
 import { openPdfRenderer, type PdfRenderer } from '@/tools/pdf/render.lib';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropSubtitle: string;
+  opening: string;
+  scale: string;
+  format: string;
+  prevPages: string;
+  nextPages: string;
+  zipping: string;
+  downloadAll: string;
+  rendering: string;
+  errOpen: string;
+  errRender: string;
+  errZip: string;
+  pagesCount: (n: number) => string;
+  pagesRange: (a: number, b: number, c: number) => string;
+  renderingAll: (n: number) => string;
+  pageAlt: (n: number) => string;
+}> = {
+  en: {
+    dropTitle: 'Drop a PDF here or click to browse',
+    dropSubtitle: 'Render each page to a PNG or JPG image',
+    opening: 'Opening PDF… (first use loads the render engine)',
+    scale: 'Scale',
+    format: 'Format',
+    prevPages: 'Previous pages',
+    nextPages: 'Next pages',
+    zipping: 'Zipping…',
+    downloadAll: 'Download all (ZIP)',
+    rendering: 'Rendering…',
+    errOpen: 'Could not open this PDF',
+    errRender: 'Could not render pages',
+    errZip: 'Could not create ZIP',
+    pagesCount: (n) => `${n} pages`,
+    pagesRange: (a, b, c) => `Pages ${a}–${b} of ${c}`,
+    renderingAll: (n) => `Rendering all ${n} pages`,
+    pageAlt: (n) => `Page ${n}`,
+  },
+  id: {
+    dropTitle: 'Letakkan PDF di sini atau klik untuk menjelajah',
+    dropSubtitle: 'Render setiap halaman ke gambar PNG atau JPG',
+    opening: 'Membuka PDF… (penggunaan pertama memuat mesin render)',
+    scale: 'Skala',
+    format: 'Format',
+    prevPages: 'Halaman sebelumnya',
+    nextPages: 'Halaman berikutnya',
+    zipping: 'Mengompres…',
+    downloadAll: 'Unduh semua (ZIP)',
+    rendering: 'Merender…',
+    errOpen: 'Tidak dapat membuka PDF ini',
+    errRender: 'Tidak dapat merender halaman',
+    errZip: 'Tidak dapat membuat ZIP',
+    pagesCount: (n) => `${n} halaman`,
+    pagesRange: (a, b, c) => `Halaman ${a}–${b} dari ${c}`,
+    renderingAll: (n) => `Merender semua ${n} halaman`,
+    pageAlt: (n) => `Halaman ${n}`,
+  },
+};
 
 const WINDOW = 5;
 
@@ -29,7 +89,8 @@ interface Thumb {
   height: number;
 }
 
-export default function PdfToImage() {
+export default function PdfToImage({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const rendererRef = useRef<PdfRenderer | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [scale, setScale] = useState(2);
@@ -62,7 +123,7 @@ export default function PdfToImage() {
       rendererRef.current = renderer;
       setPageCount(renderer.pageCount);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not open this PDF');
+      setError(e instanceof Error ? e.message : t.errOpen);
       setFile(null);
     } finally {
       setOpening(false);
@@ -91,7 +152,7 @@ export default function PdfToImage() {
         }
         setThumbs(rendered);
       } catch {
-        if (!cancelled) setError('Could not render pages');
+        if (!cancelled) setError(t.errRender);
       } finally {
         if (!cancelled) setRendering(false);
       }
@@ -118,7 +179,7 @@ export default function PdfToImage() {
       }
       await downloadService.downloadZip(files, `${baseName}-images.zip`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not create ZIP');
+      setError(e instanceof Error ? e.message : t.errZip);
     } finally {
       setZipProgress(null);
     }
@@ -131,27 +192,27 @@ export default function PdfToImage() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="application/pdf" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop a PDF here or click to browse</p>
-          <p className="text-sm text-muted-foreground">Render each page to a PNG or JPG image</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropSubtitle}</p>
         </div>
       </Dropzone>
 
       {opening && (
         <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Opening PDF… (first use loads the render engine)
+          {t.opening}
         </p>
       )}
 
       {file && pageCount > 0 && (
         <>
           <p className="text-sm font-bold text-foreground">
-            {file.name} — {pageCount} pages
+            {file.name} — {t.pagesCount(pageCount)}
           </p>
 
           <div className="flex flex-wrap gap-4">
             <div className="space-y-1.5">
               <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                Scale
+                {t.scale}
               </span>
               <div className="flex gap-2">
                 {SCALES.map(({ scale: value, label }) => (
@@ -168,7 +229,7 @@ export default function PdfToImage() {
             </div>
             <div className="space-y-1.5">
               <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                Format
+                {t.format}
               </span>
               <div className="flex gap-2">
                 {FORMATS.map(({ value, label }) => (
@@ -187,14 +248,14 @@ export default function PdfToImage() {
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-              Pages {windowStart}–{windowEnd} of {pageCount}
+              {t.pagesRange(windowStart, windowEnd, pageCount)}
               {pageCount > WINDOW && (
                 <span className="ml-2 inline-flex gap-1 align-middle">
                   <button
                     onClick={() => setWindowStart(s => Math.max(1, s - WINDOW))}
                     disabled={windowStart <= 1}
                     className="border-2 border-border bg-muted p-1 shadow-brutal-sm press-brutal disabled:opacity-30"
-                    aria-label="Previous pages"
+                    aria-label={t.prevPages}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -202,7 +263,7 @@ export default function PdfToImage() {
                     onClick={() => setWindowStart(s => Math.min(s + WINDOW, pageCount))}
                     disabled={windowEnd >= pageCount}
                     className="border-2 border-border bg-muted p-1 shadow-brutal-sm press-brutal disabled:opacity-30"
-                    aria-label="Next pages"
+                    aria-label={t.nextPages}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -211,12 +272,12 @@ export default function PdfToImage() {
             </span>
             <Button onClick={downloadAllZip} disabled={busy}>
               <FileArchive className="h-4 w-4" />
-              {zipProgress !== null ? 'Zipping…' : `Download all (ZIP)`}
+              {zipProgress !== null ? t.zipping : t.downloadAll}
             </Button>
           </div>
 
           {zipProgress !== null && (
-            <ProgressBar percent={zipProgress} label={`Rendering all ${pageCount} pages`} />
+            <ProgressBar percent={zipProgress} label={t.renderingAll(pageCount)} />
           )}
         </>
       )}
@@ -230,10 +291,10 @@ export default function PdfToImage() {
               key={page.pageNumber}
               className="space-y-2 border-2 border-border bg-muted p-2 shadow-brutal-sm"
             >
-              <img src={page.url} alt={`Page ${page.pageNumber}`} className="w-full border-2 border-border" />
+              <img src={page.url} alt={t.pageAlt(page.pageNumber)} className="w-full border-2 border-border" />
               <div className="flex items-center justify-between gap-2">
                 <span className="min-w-0 text-xs font-bold uppercase text-muted-foreground">
-                  <span className="block">Page {page.pageNumber}</span>
+                  <span className="block">{t.pageAlt(page.pageNumber)}</span>
                   <span className="block font-mono normal-case">
                     {page.width}×{page.height}
                   </span>
@@ -251,7 +312,7 @@ export default function PdfToImage() {
             </div>
           ))}
           {rendering && thumbs.length === 0 && (
-            <p className="py-6 text-sm text-muted-foreground">Rendering…</p>
+            <p className="py-6 text-sm text-muted-foreground">{t.rendering}</p>
           )}
         </div>
       )}

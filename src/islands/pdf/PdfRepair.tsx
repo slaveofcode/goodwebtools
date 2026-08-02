@@ -5,8 +5,60 @@ import { Alert } from '@/components/ui/Alert';
 import { PdfPreview } from '@/components/ui/PdfPreview';
 import { ResultActions } from '@/components/ui/ResultActions';
 import { repairPdf } from '@/tools/pdf/pdf.lib';
+import type { Lang } from '@/i18n/config';
 
-export default function PdfRepair() {
+const TR: Record<Lang, {
+  couldNotRepair: string;
+  dropTitle: string;
+  dropHint: string;
+  repairing: string;
+  repairPdf: string;
+  forceRebuildTitle: string;
+  forceRebuild: string;
+  clear: string;
+  helperPre: string;
+  helperMid: string;
+  helperPost: string;
+  errorPre: string;
+  errorPost: string;
+  success: (forced: boolean, pages: number) => string;
+}> = {
+  en: {
+    couldNotRepair: 'Could not repair this PDF.',
+    dropTitle: 'Drop a damaged PDF here or click to browse',
+    dropHint: 'Rebuilds a broken PDF so it opens again · 100% on your device, no upload',
+    repairing: 'Repairing…',
+    repairPdf: 'Repair PDF',
+    forceRebuildTitle: 'Rebuild the document page-by-page — for badly damaged files',
+    forceRebuild: 'Force rebuild',
+    clear: 'Clear',
+    helperPre: 'Repair fixes structural damage (a broken cross-reference table, damaged trailer, junk after the end of the file). If a normal repair doesn’t open, try ',
+    helperMid: 'Force rebuild',
+    helperPost: ', which reconstructs the file from whatever pages are still readable. Content that’s physically missing can’t be recovered.',
+    errorPre: ' You can try ',
+    errorPost: ' for a more aggressive recovery.',
+    success: (forced, pages) => `${forced ? 'Rebuilt' : 'Repaired'} — ${pages} page${pages === 1 ? '' : 's'} recovered. Check the preview before saving.`,
+  },
+  id: {
+    couldNotRepair: 'Tidak dapat memperbaiki PDF ini.',
+    dropTitle: 'Letakkan PDF yang rusak di sini atau klik untuk memilih',
+    dropHint: 'Membangun ulang PDF yang rusak agar bisa dibuka lagi · 100% di perangkat Anda, tanpa unggah',
+    repairing: 'Memperbaiki…',
+    repairPdf: 'Perbaiki PDF',
+    forceRebuildTitle: 'Bangun ulang dokumen halaman demi halaman — untuk file yang rusak parah',
+    forceRebuild: 'Bangun ulang paksa',
+    clear: 'Bersihkan',
+    helperPre: 'Perbaikan mengatasi kerusakan struktural (tabel referensi silang yang rusak, trailer rusak, data sampah setelah akhir file). Jika perbaikan biasa tidak dapat membuka file, coba ',
+    helperMid: 'Bangun ulang paksa',
+    helperPost: ', yang merekonstruksi file dari halaman apa pun yang masih dapat dibaca. Konten yang benar-benar hilang tidak dapat dipulihkan.',
+    errorPre: ' Anda dapat mencoba ',
+    errorPost: ' untuk pemulihan yang lebih agresif.',
+    success: (forced, pages) => `${forced ? 'Dibangun ulang' : 'Diperbaiki'} — ${pages} halaman dipulihkan. Periksa pratinjau sebelum menyimpan.`,
+  },
+};
+
+export default function PdfRepair({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<Blob | null>(null);
   const [pages, setPages] = useState(0);
@@ -35,7 +87,7 @@ export default function PdfRepair() {
       setPages(recovered);
       setForced(force);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not repair this PDF.');
+      setError(e instanceof Error ? e.message : t.couldNotRepair);
     } finally {
       setBusy(false);
     }
@@ -45,8 +97,8 @@ export default function PdfRepair() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="application/pdf" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop a damaged PDF here or click to browse</p>
-          <p className="text-sm text-muted-foreground">Rebuilds a broken PDF so it opens again · 100% on your device, no upload</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropHint}</p>
         </div>
       </Dropzone>
 
@@ -54,32 +106,30 @@ export default function PdfRepair() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => run(false)} disabled={!file || busy}>
-          {busy ? 'Repairing…' : 'Repair PDF'}
+          {busy ? t.repairing : t.repairPdf}
         </Button>
-        <Button variant="secondary" onClick={() => run(true)} disabled={!file || busy} title="Rebuild the document page-by-page — for badly damaged files">
-          Force rebuild
+        <Button variant="secondary" onClick={() => run(true)} disabled={!file || busy} title={t.forceRebuildTitle}>
+          {t.forceRebuild}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Repair fixes structural damage (a broken cross-reference table, damaged trailer, junk after the end of the file).
-        If a normal repair doesn&apos;t open, try <strong>Force rebuild</strong>, which reconstructs the file from whatever
-        pages are still readable. Content that&apos;s physically missing can&apos;t be recovered.
+        {t.helperPre}<strong>{t.helperMid}</strong>{t.helperPost}
       </p>
 
       {error && (
         <Alert variant="error">
-          {error} You can try <strong>Force rebuild</strong> for a more aggressive recovery.
+          {error}{t.errorPre}<strong>{t.forceRebuild}</strong>{t.errorPost}
         </Alert>
       )}
 
       {result && (
         <>
           <Alert variant="success">
-            {forced ? 'Rebuilt' : 'Repaired'} — {pages} page{pages === 1 ? '' : 's'} recovered. Check the preview before saving.
+            {t.success(forced, pages)}
           </Alert>
           <PdfPreview source={result} />
           <ResultActions blob={result} filename={outName} disabled={busy} />
