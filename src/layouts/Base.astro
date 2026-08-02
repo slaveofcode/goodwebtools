@@ -141,6 +141,20 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
         var el = e.target && e.target.closest && e.target.closest('#home-search');
         if (el) window.dispatchEvent(new CustomEvent('gwt:open-search'));
       });
+
+      // Assemble contact emails from parts so the address never appears in the
+      // static HTML — deters scrapers/spammers. Real address shown only to JS.
+      function revealEmails() {
+        document.querySelectorAll('a[data-email-user]').forEach(function (el) {
+          if (el.dataset.emailDone) return;
+          var addr = el.getAttribute('data-email-user') + '@' + el.getAttribute('data-email-domain');
+          el.setAttribute('href', 'mailto:' + addr);
+          el.textContent = addr;
+          el.dataset.emailDone = '1';
+        });
+      }
+      revealEmails();
+      document.addEventListener('astro:page-load', revealEmails);
     </script>
 
     <!-- Google Analytics (GDPR): loads only when configured AND consent granted. -->
