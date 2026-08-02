@@ -3,7 +3,7 @@ import { ViewTransitions } from 'astro:transitions';
 import { ShellIsland } from '@/components/shell/ShellIsland';
 import { GlobalHotkeyInit } from '@/components/shell/GlobalHotkeyInit';
 import { ConsentRibbon } from '@/components/shell/ConsentRibbon';
-import { SITE_NAME, SITE_TAGLINE, SITE_URL, GA_ID, NOINDEX } from '@/config';
+import { SITE_NAME, SITE_TAGLINE, SITE_URL, GA_ID, GA_ALLOWED_HOSTS, NOINDEX } from '@/config';
 import { LOCALES, DEFAULT_LOCALE, localizePath, stripLocale, type Lang } from '@/i18n/config';
 import '../styles/global.css';
 
@@ -141,12 +141,29 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
         var el = e.target && e.target.closest && e.target.closest('#home-search');
         if (el) window.dispatchEvent(new CustomEvent('gwt:open-search'));
       });
+
+      // Assemble contact emails from parts so the address never appears in the
+      // static HTML — deters scrapers/spammers. Real address shown only to JS.
+      function revealEmails() {
+        document.querySelectorAll('a[data-email-user]').forEach(function (el) {
+          if (el.dataset.emailDone) return;
+          var addr = el.getAttribute('data-email-user') + '@' + el.getAttribute('data-email-domain');
+          el.setAttribute('href', 'mailto:' + addr);
+          el.textContent = addr;
+          el.dataset.emailDone = '1';
+        });
+      }
+      revealEmails();
+      document.addEventListener('astro:page-load', revealEmails);
     </script>
 
     <!-- Google Analytics (GDPR): loads only when configured AND consent granted. -->
-    <script is:inline define:vars={{ gaId: GA_ID }}>
+    <script is:inline define:vars={{ gaId: GA_ID, gaHosts: GA_ALLOWED_HOSTS }}>
       (function () {
         if (!gaId) return;
+        // Only report from the production host(s) — forks, staging, previews and
+        // localhost carry the same ID in their HTML but must never pollute the data.
+        if (gaHosts.indexOf(location.hostname) === -1) return;
         function loadGA() {
           if (window.__gaLoaded) return;
           window.__gaLoaded = true;
