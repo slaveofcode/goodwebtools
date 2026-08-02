@@ -1,0 +1,123 @@
+---
+import { ChevronRight, Github, ExternalLink, Bookmark, Mail } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import { REPO_URL } from '@/config';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+
+export function getStaticPaths() {
+  return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const homePath = localizePath('/', lang);
+
+const A = {
+  en: {
+    title: 'About', metaDesc: 'Why GoodWebTools exists — modern web capability, privacy-first, and your files never leave your browser.',
+    crumb: 'About', home: 'Home', h1: 'About GoodWebTools',
+    whyH: 'Why this exists',
+    whyP: "Modern browsers are incredibly capable. With WebAssembly and today's web APIs, things that used to need a desktop app or a server — parsing PDFs, encrypting files, hashing gigabytes, extracting archives, editing images — can run right inside a browser tab. I built GoodWebTools to put that power behind simple, focused pages: open a tool, get your result, done.",
+    privH: 'Privacy first',
+    privP1: "Everything runs on your device. Your files, text, and passwords never leave your browser — there's no upload and no account. The only data collected is anonymous, consent-based usage analytics (which loads only if you accept the cookie banner) so I can see which tools are worth improving. Your files are never part of it.",
+    privP2: "To help cover the costs of running the site, I may show a few unobtrusive ads. That's the extent of the monetization — your data is never part of the deal.",
+    contactH: 'Contact & tool requests',
+    contactPre: 'Questions, feedback, or a bug to report? Email us at',
+    contactReq: "Want a tool that doesn't exist yet? Email the same address and tell us what you need — if it can run fully in the browser, it's a great candidate to build.",
+    foundH: 'Found it useful?',
+    foundPre: "If a tool saved you time, bookmark GoodWebTools so it's here next time you need it — press",
+    foundMac: 'on a Mac or', foundEnd: 'elsewhere.',
+    osH: 'Open source',
+    osP: 'GoodWebTools is open source. If you have an idea for a tool that could work fully in the browser, or you want to fix or improve something, open an issue or send a pull request — contributions and requests are very welcome.',
+  },
+  id: {
+    title: 'Tentang', metaDesc: 'Mengapa GoodWebTools ada — kemampuan web modern, mengutamakan privasi, dan berkas Anda tidak pernah meninggalkan browser.',
+    crumb: 'Tentang', home: 'Beranda', h1: 'Tentang GoodWebTools',
+    whyH: 'Mengapa ini ada',
+    whyP: 'Browser modern sangat mumpuni. Dengan WebAssembly dan API web masa kini, hal-hal yang dulu memerlukan aplikasi desktop atau server — mengurai PDF, mengenkripsi berkas, meng-hash gigabita data, mengekstrak arsip, mengedit gambar — kini bisa berjalan langsung di dalam tab browser. Saya membuat GoodWebTools untuk menghadirkan kemampuan itu lewat halaman yang sederhana dan fokus: buka tool, dapatkan hasilnya, selesai.',
+    privH: 'Privasi yang utama',
+    privP1: 'Semuanya berjalan di perangkat Anda. Berkas, teks, dan kata sandi Anda tidak pernah meninggalkan browser — tidak ada unggahan dan tidak ada akun. Satu-satunya data yang dikumpulkan adalah analitik penggunaan anonim berbasis persetujuan (yang hanya dimuat jika Anda menerima banner cookie) agar saya tahu tool mana yang layak ditingkatkan. Berkas Anda tidak pernah menjadi bagiannya.',
+    privP2: 'Untuk membantu menutup biaya menjalankan situs, saya mungkin menampilkan sedikit iklan yang tidak mengganggu. Hanya sebatas itu monetisasinya — data Anda tidak pernah menjadi bagian dari kesepakatan.',
+    contactH: 'Kontak & permintaan tool',
+    contactPre: 'Ada pertanyaan, masukan, atau bug untuk dilaporkan? Kirim email ke kami di',
+    contactReq: 'Ingin tool yang belum ada? Kirim email ke alamat yang sama dan beri tahu kami kebutuhan Anda — jika bisa berjalan sepenuhnya di browser, itu kandidat yang bagus untuk dibuat.',
+    foundH: 'Merasa terbantu?',
+    foundPre: 'Jika sebuah tool menghemat waktu Anda, tandai GoodWebTools (bookmark) agar mudah ditemukan lagi — tekan',
+    foundMac: 'di Mac atau', foundEnd: 'di tempat lain.',
+    osH: 'Sumber terbuka',
+    osP: 'GoodWebTools bersifat sumber terbuka. Jika Anda punya ide tool yang bisa berjalan sepenuhnya di browser, atau ingin memperbaiki atau meningkatkan sesuatu, buka issue atau kirim pull request — kontribusi dan permintaan sangat kami hargai.',
+  },
+}[lang];
+---
+
+<Base title={A.title} description={A.metaDesc} lang={lang} localized>
+  <main class="page-container py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li>
+          <a href={homePath} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{A.home}</a>
+        </li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{A.crumb}</li>
+      </ol>
+    </nav>
+
+    <h1 class="mb-6 text-3xl font-bold uppercase tracking-tight">{A.h1}</h1>
+
+    <div class="max-w-2xl space-y-6 text-base leading-relaxed">
+      <section class="space-y-3">
+        <h2 class="text-xl font-bold uppercase tracking-tight">{A.whyH}</h2>
+        <p>{A.whyP}</p>
+      </section>
+
+      <section class="space-y-3 border-2 border-border bg-muted p-4 shadow-brutal-sm">
+        <h2 class="text-xl font-bold uppercase tracking-tight">{A.privH}</h2>
+        <p>{A.privP1}</p>
+        <p class="text-muted-foreground">{A.privP2}</p>
+      </section>
+
+      <section class="space-y-3 border-2 border-border bg-accent/10 p-4 shadow-brutal-sm">
+        <h2 class="flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
+          <Mail className="h-5 w-5" /> {A.contactH}
+        </h2>
+        <p>
+          {A.contactPre}{' '}
+          <a
+            data-email-user="contact"
+            data-email-domain="goodwebtools.com"
+            href="#"
+            class="font-bold underline decoration-2 underline-offset-2"
+          >contact [at] goodwebtools [dot] com</a>.
+        </p>
+        <p>{A.contactReq}</p>
+      </section>
+
+      <section class="space-y-3">
+        <h2 class="flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
+          <Bookmark className="h-5 w-5" /> {A.foundH}
+        </h2>
+        <p>
+          {A.foundPre}
+          <kbd class="mx-0.5 border-2 border-border bg-muted px-1.5 py-0.5 font-mono text-sm">⌘ D</kbd>
+          {A.foundMac}
+          <kbd class="mx-0.5 border-2 border-border bg-muted px-1.5 py-0.5 font-mono text-sm">Ctrl + D</kbd>
+          {A.foundEnd}
+        </p>
+      </section>
+
+      <section class="space-y-3">
+        <h2 class="text-xl font-bold uppercase tracking-tight">{A.osH}</h2>
+        <p>{A.osP}</p>
+        <a
+          href={REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 border-2 border-border bg-accent px-4 py-2 font-bold uppercase tracking-wide text-accent-foreground shadow-brutal press-brutal"
+        >
+          <Github className="h-4 w-4" />
+          slaveofcode/goodwebtools
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      </section>
+    </div>
+  </main>
+</Base>
