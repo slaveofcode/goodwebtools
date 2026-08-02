@@ -2,9 +2,57 @@ import { useEffect, useRef, useState, type ComponentType } from 'react';
 import { Maximize2, Minimize2, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { loadScene, saveScene, type WhiteboardScene } from '@/tools/draw/whiteboard.store';
+import type { Lang } from '@/i18n/config';
 import '@excalidraw/excalidraw/index.css';
 
 const SAVE_INTERVAL = 30; // seconds between autosaves
+
+const TR: Record<Lang, {
+  saveNow: string;
+  unsavedSaveNow: (n: number) => string;
+  saved: string;
+  loadError: string;
+  loading: string;
+  descPre: string;
+  descMid: string;
+  descPost: string;
+  expand: string;
+  showNavbar: string;
+  hideNavbarSpace: string;
+  hideNavbar: string;
+  exit: string;
+}> = {
+  en: {
+    saveNow: 'Save now',
+    unsavedSaveNow: (n) => `Unsaved · save now (${n}s)`,
+    saved: 'Saved',
+    loadError: "Couldn't load the whiteboard. Please refresh the page.",
+    loading: 'Loading whiteboard…',
+    descPre: 'A full whiteboard for sketches, diagrams, flowcharts, and mind maps. Everything stays in your browser — export as PNG/SVG or a reusable ',
+    descMid: ' file from the menu. Powered by ',
+    descPost: ' — you can also use it at excalidraw.com.',
+    expand: 'Expand',
+    showNavbar: 'Show navbar',
+    hideNavbarSpace: 'Hide navbar for more space',
+    hideNavbar: 'Hide navbar',
+    exit: 'Exit',
+  },
+  id: {
+    saveNow: 'Simpan sekarang',
+    unsavedSaveNow: (n) => `Belum tersimpan · simpan sekarang (${n}s)`,
+    saved: 'Tersimpan',
+    loadError: 'Tidak dapat memuat whiteboard. Silakan muat ulang halaman.',
+    loading: 'Memuat whiteboard…',
+    descPre: 'Whiteboard lengkap untuk sketsa, diagram, flowchart, dan mind map. Semuanya tetap di browser Anda — ekspor sebagai PNG/SVG atau file ',
+    descMid: ' yang dapat digunakan ulang dari menu. Didukung oleh ',
+    descPost: ' — Anda juga dapat menggunakannya di excalidraw.com.',
+    expand: 'Perbesar',
+    showNavbar: 'Tampilkan navbar',
+    hideNavbarSpace: 'Sembunyikan navbar untuk ruang lebih',
+    hideNavbar: 'Sembunyikan navbar',
+    exit: 'Keluar',
+  },
+};
 
 // Serve Excalidraw's fonts from our own origin (copied to public/excalidraw)
 // instead of its default esm.sh CDN — keeps the zero-external-request promise.
@@ -12,7 +60,8 @@ if (typeof window !== 'undefined') {
   (window as unknown as { EXCALIDRAW_ASSET_PATH: string }).EXCALIDRAW_ASSET_PATH = '/excalidraw/';
 }
 
-export default function Whiteboard() {
+export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   // Excalidraw is a large, browser-only React component — load it after mount
   // so it never runs during SSR.
   const [Excalidraw, setExcalidraw] = useState<ComponentType<Record<string, unknown>> | null>(null);
@@ -154,27 +203,27 @@ export default function Whiteboard() {
   const statusIndicator = countdown > 0 ? (
     <button
       onClick={flushSave}
-      title="Save now"
+      title={t.saveNow}
       className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-600 underline underline-offset-2 hover:text-amber-700"
     >
       <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
-      Unsaved · save now ({countdown}s)
+      {t.unsavedSaveNow(countdown)}
     </button>
   ) : (
     <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-      <Check className="h-3.5 w-3.5" /> Saved
+      <Check className="h-3.5 w-3.5" /> {t.saved}
     </span>
   );
 
   const canvas = failed ? (
     <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
-      Couldn&apos;t load the whiteboard. Please refresh the page.
+      {t.loadError}
     </div>
   ) : Excalidraw ? (
     <Excalidraw initialData={initialDataRef.current} onChange={onChange} />
   ) : (
     <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
-      Loading whiteboard…
+      {t.loading}
     </div>
   );
 
@@ -185,8 +234,7 @@ export default function Whiteboard() {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-3xl text-sm text-muted-foreground">
-          A full whiteboard for sketches, diagrams, flowcharts, and mind maps. Everything stays in your
-          browser — export as PNG/SVG or a reusable <code>.excalidraw</code> file from the menu. Powered by{' '}
+          {t.descPre}<code>.excalidraw</code>{t.descMid}
           <a
             href="https://excalidraw.com"
             target="_blank"
@@ -194,15 +242,15 @@ export default function Whiteboard() {
             className="font-bold text-foreground underline underline-offset-2 hover:text-accent"
           >
             Excalidraw
-          </a>{' '}
-          — you can also use it at excalidraw.com.
+          </a>
+          {t.descPost}
         </p>
         <div className="flex items-center gap-3">
           {statusIndicator}
           {!expanded && (
             <Button variant="secondary" onClick={() => setExpandedPersist(true)}>
               <Maximize2 className="h-4 w-4" />
-              Expand
+              {t.expand}
             </Button>
           )}
         </div>
@@ -227,8 +275,8 @@ export default function Whiteboard() {
       {expanded && (
         <button
           onClick={() => setNavHiddenPersist(!navHidden)}
-          title={navHidden ? 'Show navbar' : 'Hide navbar for more space'}
-          aria-label={navHidden ? 'Show navbar' : 'Hide navbar'}
+          title={navHidden ? t.showNavbar : t.hideNavbarSpace}
+          aria-label={navHidden ? t.showNavbar : t.hideNavbar}
           className={`fixed left-1/2 z-50 !mt-0 -translate-x-1/2 rounded-b-md border-2 border-t-0 border-border bg-background px-5 py-0.5 shadow-brutal-sm hover:bg-muted ${navHidden ? '' : '-translate-y-full'}`}
           style={{ top: topOffset }}
         >
@@ -243,7 +291,7 @@ export default function Whiteboard() {
           </div>
           <Button variant="secondary" onClick={() => setExpandedPersist(false)} className="shadow-brutal">
             <Minimize2 className="h-4 w-4" />
-            Exit
+            {t.exit}
           </Button>
         </div>
       )}

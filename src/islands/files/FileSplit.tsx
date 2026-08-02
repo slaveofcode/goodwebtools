@@ -6,8 +6,65 @@ import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { splitRanges, partName, joinedName, naturalCompare } from '@/tools/files/split.lib';
+import type { Lang } from '@/i18n/config';
 
 type Mode = 'split' | 'join';
+
+const TR: Record<Lang, {
+  split: string;
+  join: string;
+  partTooLarge: string;
+  couldNotSplit: string;
+  addTwoParts: string;
+  dropFile: string;
+  splitHint: string;
+  partSize: string;
+  splitInto: (n: number) => string;
+  dropParts: string;
+  joinHint: string;
+  download: string;
+  moveUp: string;
+  moveDown: string;
+  remove: string;
+  joinLabel: (n: number) => string;
+}> = {
+  en: {
+    split: 'Split',
+    join: 'Join',
+    partTooLarge: 'The part size is larger than the file — nothing to split.',
+    couldNotSplit: 'Could not split the file.',
+    addTwoParts: 'Add at least two parts to join.',
+    dropFile: 'Drop a file or click to browse',
+    splitHint: 'Cut a large file into fixed-size parts — all in your browser',
+    partSize: 'Part size (MB)',
+    splitInto: (n) => `Split into ${n} part${n === 1 ? '' : 's'}`,
+    dropParts: 'Drop the parts or click to browse',
+    joinHint: "They're ordered by name automatically — reorder below if needed",
+    download: 'Download',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+    remove: 'Remove',
+    joinLabel: (n) => `Join ${n || ''} part${n === 1 ? '' : 's'}`,
+  },
+  id: {
+    split: 'Pisah',
+    join: 'Gabung',
+    partTooLarge: 'Ukuran bagian lebih besar dari file — tidak ada yang bisa dipisah.',
+    couldNotSplit: 'Tidak dapat memisah file.',
+    addTwoParts: 'Tambahkan minimal dua bagian untuk digabung.',
+    dropFile: 'Letakkan file atau klik untuk menjelajah',
+    splitHint: 'Potong file besar menjadi beberapa bagian berukuran tetap — semua di browser Anda',
+    partSize: 'Ukuran bagian (MB)',
+    splitInto: (n) => `Pisah menjadi ${n} bagian`,
+    dropParts: 'Letakkan bagian-bagiannya atau klik untuk menjelajah',
+    joinHint: 'Bagian diurutkan berdasarkan nama secara otomatis — susun ulang di bawah jika perlu',
+    download: 'Unduh',
+    moveUp: 'Naikkan',
+    moveDown: 'Turunkan',
+    remove: 'Hapus',
+    joinLabel: (n) => `Gabung ${n || ''} bagian`,
+  },
+};
 
 interface Part {
   name: string;
@@ -16,7 +73,8 @@ interface Part {
 
 let counter = 0;
 
-export default function FileSplit() {
+export default function FileSplit({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [mode, setMode] = useState<Mode>('split');
   const [error, setError] = useState('');
 
@@ -52,7 +110,7 @@ export default function FileSplit() {
     try {
       const ranges = splitRanges(file.size, chunkBytes);
       if (ranges.length <= 1) {
-        setError('The part size is larger than the file — nothing to split.');
+        setError(t.partTooLarge);
         return;
       }
       setParts(
@@ -62,7 +120,7 @@ export default function FileSplit() {
         }))
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not split the file.');
+      setError(e instanceof Error ? e.message : t.couldNotSplit);
     }
   };
 
@@ -87,7 +145,7 @@ export default function FileSplit() {
 
   const doJoin = async () => {
     if (pieces.length < 2) {
-      setError('Add at least two parts to join.');
+      setError(t.addTwoParts);
       return;
     }
     setError('');
@@ -100,11 +158,11 @@ export default function FileSplit() {
       <div className="flex gap-2">
         <Button variant={mode === 'split' ? 'primary' : 'secondary'} aria-pressed={mode === 'split'} onClick={() => switchMode('split')}>
           <Scissors className="h-4 w-4" />
-          Split
+          {t.split}
         </Button>
         <Button variant={mode === 'join' ? 'primary' : 'secondary'} aria-pressed={mode === 'join'} onClick={() => switchMode('join')}>
           <Combine className="h-4 w-4" />
-          Join
+          {t.join}
         </Button>
       </div>
 
@@ -112,8 +170,8 @@ export default function FileSplit() {
         <>
           <Dropzone onDrop={onDropSplit} multiple={false}>
             <div className="space-y-1">
-              <p className="text-lg font-bold">Drop a file or click to browse</p>
-              <p className="text-sm text-muted-foreground">Cut a large file into fixed-size parts — all in your browser</p>
+              <p className="text-lg font-bold">{t.dropFile}</p>
+              <p className="text-sm text-muted-foreground">{t.splitHint}</p>
             </div>
           </Dropzone>
 
@@ -124,7 +182,7 @@ export default function FileSplit() {
               </p>
               <div className="flex flex-wrap items-end gap-4">
                 <label className="space-y-1.5 text-sm">
-                  <span className="block font-bold uppercase tracking-wide text-muted-foreground">Part size (MB)</span>
+                  <span className="block font-bold uppercase tracking-wide text-muted-foreground">{t.partSize}</span>
                   <input
                     type="number"
                     min={1}
@@ -134,7 +192,7 @@ export default function FileSplit() {
                   />
                 </label>
                 <Button onClick={doSplit} disabled={partCount <= 1}>
-                  Split into {partCount} part{partCount === 1 ? '' : 's'}
+                  {t.splitInto(partCount)}
                 </Button>
               </div>
             </>
@@ -146,7 +204,7 @@ export default function FileSplit() {
                 <li key={i} className="flex items-center gap-3 border-2 border-border bg-muted p-2">
                   <span className="min-w-0 flex-1 truncate text-sm">{part.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(part.blob.size)}</span>
-                  <button onClick={() => downloadService.download(part.blob, part.name)} title="Download" className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal">
+                  <button onClick={() => downloadService.download(part.blob, part.name)} title={t.download} className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal">
                     <Download className="h-4 w-4" />
                   </button>
                 </li>
@@ -158,8 +216,8 @@ export default function FileSplit() {
         <>
           <Dropzone onDrop={onDropJoin} multiple>
             <div className="space-y-1">
-              <p className="text-lg font-bold">Drop the parts or click to browse</p>
-              <p className="text-sm text-muted-foreground">They're ordered by name automatically — reorder below if needed</p>
+              <p className="text-lg font-bold">{t.dropParts}</p>
+              <p className="text-sm text-muted-foreground">{t.joinHint}</p>
             </div>
           </Dropzone>
 
@@ -170,13 +228,13 @@ export default function FileSplit() {
                   <span className="w-6 text-center text-sm font-bold text-muted-foreground">{i + 1}</span>
                   <span className="min-w-0 flex-1 truncate text-sm">{p.file.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(p.file.size)}</span>
-                  <button onClick={() => move(i, -1)} disabled={i === 0} title="Move up" className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal disabled:opacity-30">
+                  <button onClick={() => move(i, -1)} disabled={i === 0} title={t.moveUp} className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal disabled:opacity-30">
                     <ArrowUp className="h-4 w-4" />
                   </button>
-                  <button onClick={() => move(i, 1)} disabled={i === pieces.length - 1} title="Move down" className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal disabled:opacity-30">
+                  <button onClick={() => move(i, 1)} disabled={i === pieces.length - 1} title={t.moveDown} className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal disabled:opacity-30">
                     <ArrowDown className="h-4 w-4" />
                   </button>
-                  <button onClick={() => removePiece(p.id)} title="Remove" className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal">
+                  <button onClick={() => removePiece(p.id)} title={t.remove} className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal">
                     <X className="h-4 w-4" />
                   </button>
                 </li>
@@ -185,7 +243,7 @@ export default function FileSplit() {
           )}
 
           <Button onClick={doJoin} disabled={pieces.length < 2}>
-            Join {pieces.length || ''} part{pieces.length === 1 ? '' : 's'}
+            {t.joinLabel(pieces.length)}
           </Button>
         </>
       )}

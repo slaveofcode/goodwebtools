@@ -6,6 +6,60 @@ import { ResultActions } from '@/components/ui/ResultActions';
 import { Alert } from '@/components/ui/Alert';
 import { protectPdf } from '@/tools/pdf/pdf.lib';
 import { generatePassword } from '@/tools/dev/password.lib';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropSubtitle: string;
+  password: string;
+  confirm: string;
+  show: string;
+  generatePassword: string;
+  length: string;
+  encrypting: string;
+  protectPdf: string;
+  clear: string;
+  enterPassword: string;
+  invalidChars: string;
+  passwordsMismatch: string;
+  protectFailed: string;
+  encryptedSuccess: string;
+}> = {
+  en: {
+    dropTitle: 'Drop a PDF here or click to browse',
+    dropSubtitle: 'Encrypt with a password (AES-256)',
+    password: 'Password',
+    confirm: 'Confirm',
+    show: 'Show',
+    generatePassword: 'Generate password',
+    length: 'Length',
+    encrypting: 'Encrypting…',
+    protectPdf: 'Protect PDF',
+    clear: 'Clear',
+    enterPassword: 'Enter a password.',
+    invalidChars: 'Password cannot contain commas or equals signs.',
+    passwordsMismatch: 'Passwords do not match.',
+    protectFailed: 'Could not protect this PDF',
+    encryptedSuccess: 'Encrypted — the downloaded PDF now requires this password to open.',
+  },
+  id: {
+    dropTitle: 'Letakkan PDF di sini atau klik untuk memilih',
+    dropSubtitle: 'Enkripsi dengan kata sandi (AES-256)',
+    password: 'Kata sandi',
+    confirm: 'Konfirmasi',
+    show: 'Tampilkan',
+    generatePassword: 'Buat kata sandi',
+    length: 'Panjang',
+    encrypting: 'Mengenkripsi…',
+    protectPdf: 'Lindungi PDF',
+    clear: 'Bersihkan',
+    enterPassword: 'Masukkan kata sandi.',
+    invalidChars: 'Kata sandi tidak boleh mengandung koma atau tanda sama dengan.',
+    passwordsMismatch: 'Kata sandi tidak cocok.',
+    protectFailed: 'Tidak dapat melindungi PDF ini',
+    encryptedSuccess: 'Terenkripsi — PDF yang diunduh kini memerlukan kata sandi ini untuk dibuka.',
+  },
+};
 
 // mupdf's save options are comma/equals separated, so a password containing
 // those characters would corrupt the option string.
@@ -32,7 +86,8 @@ function generateSafePassword(length: number): string {
   return generatePassword({ ...base, enabled: { ...base.enabled, symbols: false }, minSpecial: 0 });
 }
 
-export default function PdfProtect() {
+export default function PdfProtect({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -58,16 +113,16 @@ export default function PdfProtect() {
 
   const run = async () => {
     if (!file) return;
-    if (!password) return setError('Enter a password.');
-    if (INVALID.test(password)) return setError('Password cannot contain commas or equals signs.');
-    if (password !== confirm) return setError('Passwords do not match.');
+    if (!password) return setError(t.enterPassword);
+    if (INVALID.test(password)) return setError(t.invalidChars);
+    if (password !== confirm) return setError(t.passwordsMismatch);
     setBusy(true);
     setError('');
     setResult(null);
     try {
       setResult(await protectPdf(file, password));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not protect this PDF');
+      setError(e instanceof Error ? e.message : t.protectFailed);
     } finally {
       setBusy(false);
     }
@@ -77,8 +132,8 @@ export default function PdfProtect() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="application/pdf" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop a PDF here or click to browse</p>
-          <p className="text-sm text-muted-foreground">Encrypt with a password (AES-256)</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropSubtitle}</p>
         </div>
       </Dropzone>
 
@@ -87,7 +142,7 @@ export default function PdfProtect() {
       <div className="flex flex-wrap items-end gap-4">
         <label className="min-w-[14rem] flex-1 space-y-1 text-sm">
           <span className="block font-bold uppercase tracking-wide text-muted-foreground">
-            Password
+            {t.password}
           </span>
           <input
             type={show ? 'text' : 'password'}
@@ -99,7 +154,7 @@ export default function PdfProtect() {
         </label>
         <label className="min-w-[14rem] flex-1 space-y-1 text-sm">
           <span className="block font-bold uppercase tracking-wide text-muted-foreground">
-            Confirm
+            {t.confirm}
           </span>
           <input
             type={show ? 'text' : 'password'}
@@ -111,17 +166,17 @@ export default function PdfProtect() {
         </label>
         <label className="flex cursor-pointer items-center gap-2 border-2 border-border bg-muted px-3 py-2 text-sm">
           <input type="checkbox" checked={show} onChange={() => setShow(s => !s)} className="accent-accent" />
-          Show
+          {t.show}
         </label>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="secondary" onClick={generate}>
           <Wand2 className="h-4 w-4" />
-          Generate password
+          {t.generatePassword}
         </Button>
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          Length
+          {t.length}
           <select
             value={genLength}
             onChange={e => setGenLength(Number(e.target.value))}
@@ -138,10 +193,10 @@ export default function PdfProtect() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || busy}>
-          {busy ? 'Encrypting…' : 'Protect PDF'}
+          {busy ? t.encrypting : t.protectPdf}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); setPassword(''); setConfirm(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
@@ -150,7 +205,7 @@ export default function PdfProtect() {
       {result && (
         <>
           <Alert variant="success">
-            Encrypted — the downloaded PDF now requires this password to open.
+            {t.encryptedSuccess}
           </Alert>
           <ResultActions blob={result} filename="protected.pdf" disabled={busy} />
         </>

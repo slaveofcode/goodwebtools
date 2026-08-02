@@ -9,11 +9,51 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { resolveStyle, MAP_STYLES, type StyleChoice } from '@/tools/geo/map-styles.lib';
 import { parseGeoFile, computeBbox } from '@/tools/geo/geo-parse.lib';
+import type { Lang } from '@/i18n/config';
 
 const STYLE_KEY = 'gwt.map.style';
 const EMPTY: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
-export default function GeoViewer() {
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropSub: string;
+  style: string;
+  fitToData: string;
+  noFeatures: string;
+  readError: string;
+  attribution: string;
+  featureProps: string;
+  noProps: string;
+  countHint: (n: number) => string;
+}> = {
+  en: {
+    dropTitle: 'Drop a GeoJSON, GPX or KML file',
+    dropSub: 'View tracks & features on a map · the file stays on your device',
+    style: 'Style',
+    fitToData: 'Fit to data',
+    noFeatures: 'No map features found in this file (expected GeoJSON, GPX or KML).',
+    readError: 'Could not read this file.',
+    attribution: 'Maps © OpenFreeMap / OpenStreetMap contributors.',
+    featureProps: 'Feature properties',
+    noProps: '(no properties)',
+    countHint: n => `${n} feature${n === 1 ? '' : 's'} · click one to see its properties. `,
+  },
+  id: {
+    dropTitle: 'Letakkan file GeoJSON, GPX atau KML',
+    dropSub: 'Lihat jalur & fitur di peta · file tetap di perangkat Anda',
+    style: 'Gaya',
+    fitToData: 'Paskan ke data',
+    noFeatures: 'Tidak ada fitur peta yang ditemukan di file ini (diharapkan GeoJSON, GPX atau KML).',
+    readError: 'Tidak bisa membaca file ini.',
+    attribution: 'Peta © OpenFreeMap / OpenStreetMap contributors.',
+    featureProps: 'Properti fitur',
+    noProps: '(tidak ada properti)',
+    countHint: n => `${n} fitur · klik salah satu untuk melihat propertinya. `,
+  },
+};
+
+export default function GeoViewer({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const theme = useStore(themeAtom);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -77,13 +117,13 @@ export default function GeoViewer() {
     setSelected(null);
     try {
       const fc = await parseGeoFile(await file.text(), file.name);
-      if (!fc || fc.features.length === 0) { setError('No map features found in this file (expected GeoJSON, GPX or KML).'); return; }
+      if (!fc || fc.features.length === 0) { setError(t.noFeatures); return; }
       fcRef.current = fc;
       setCount(fc.features.length);
       renderGeo();
       fit();
     } catch {
-      setError('Could not read this file.');
+      setError(t.readError);
     }
   };
 
@@ -91,17 +131,17 @@ export default function GeoViewer() {
     <div className="space-y-3">
       <Dropzone onDrop={onDrop} accept=".geojson,.json,.gpx,.kml,application/geo+json,application/gpx+xml,application/vnd.google-earth.kml+xml" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop a GeoJSON, GPX or KML file</p>
-          <p className="text-sm text-muted-foreground">View tracks &amp; features on a map · the file stays on your device</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropSub}</p>
         </div>
       </Dropzone>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Style</span>
+        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.style}</span>
         {MAP_STYLES.map(s => (
           <Button key={s.id} variant={style === s.id ? 'primary' : 'secondary'} aria-pressed={style === s.id} onClick={() => pickStyle(s.id)}>{s.label}</Button>
         ))}
-        {count > 0 && <Button variant="ghost" onClick={fit}>Fit to data</Button>}
+        {count > 0 && <Button variant="ghost" onClick={fit}>{t.fitToData}</Button>}
       </div>
 
       {error && <Alert variant="error">{error}</Alert>}
@@ -109,14 +149,14 @@ export default function GeoViewer() {
       <div ref={containerRef} className="h-[60vh] w-full border-2 border-border" />
 
       <p className="text-xs text-muted-foreground">
-        {count > 0 ? `${count} feature${count === 1 ? '' : 's'} · click one to see its properties. ` : ''}
-        Maps © OpenFreeMap / OpenStreetMap contributors.
+        {count > 0 ? t.countHint(count) : ''}
+        {t.attribution}
       </p>
 
       {selected && (
         <div className="space-y-1 border-2 border-border p-3">
-          <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Feature properties</p>
-          {Object.keys(selected).length === 0 && <p className="text-sm text-muted-foreground">(no properties)</p>}
+          <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.featureProps}</p>
+          {Object.keys(selected).length === 0 && <p className="text-sm text-muted-foreground">{t.noProps}</p>}
           {Object.entries(selected).map(([k, v]) => (
             <div key={k} className="flex flex-wrap gap-2 text-sm">
               <span className="font-bold">{k}</span>
