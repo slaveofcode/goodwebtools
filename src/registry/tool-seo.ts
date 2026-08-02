@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'spreadsheet-viewer': {
+    title: 'Free Spreadsheet Viewer — Open XLSX, ODS & CSV',
+    description: 'A free spreadsheet viewer to open Excel (.xlsx/.xls), OpenDocument (.ods) and CSV files in your browser — every sheet as a table. 100% private; nothing is uploaded.',
+    intro: 'This free spreadsheet viewer opens Excel, OpenDocument and CSV files right in your browser and shows every sheet as a clean, scrollable table — no Excel, Google Sheets or account needed. The file is read on your device and never uploaded.',
+    howTo: [
+      'Drop a spreadsheet (.xlsx, .xls, .ods or .csv) — or click to browse.',
+      'It is parsed entirely in your browser; nothing is uploaded.',
+      'Switch between sheets with the tabs and scroll the grid to read your data.',
+      'Column letters and row numbers help you find any cell, just like a spreadsheet app.',
+    ],
+    faqs: [
+      { q: 'Is my spreadsheet uploaded anywhere?', a: 'No. The file is parsed and rendered entirely in your browser with JavaScript. It never leaves your device, so it is safe for confidential data.' },
+      { q: 'Which formats are supported?', a: 'Modern Excel (.xlsx, .xlsm), older Excel (.xls), OpenDocument spreadsheets (.ods) and CSV files. Multi-sheet workbooks show a tab per sheet.' },
+      { q: 'Are formulas calculated?', a: 'Formulas are displayed as their last-saved values (the result stored in the file), not recalculated. This is a fast, read-only viewer, not a spreadsheet editor.' },
+      { q: 'What about very large spreadsheets?', a: 'The whole file is read, but to stay fast the grid shows the first 500 rows and 60 columns of each sheet, with a notice when a sheet is larger.' },
+    ],
+  },
   'docx-viewer': {
     title: 'Free DOCX Viewer — Open Word Files Online',
     description: 'A free DOCX viewer to open and read Microsoft Word documents in your browser — full layout, tables and images. 100% private; nothing is uploaded.',
@@ -1325,6 +1342,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'spreadsheet-viewer': {
+    title: 'Penampil Spreadsheet Gratis — Buka XLSX, ODS & CSV',
+    description: 'Penampil spreadsheet gratis untuk membuka berkas Excel (.xlsx/.xls), OpenDocument (.ods), dan CSV di browser — setiap lembar sebagai tabel. 100% privat; tidak ada yang diunggah.',
+    intro: 'Penampil spreadsheet gratis ini membuka berkas Excel, OpenDocument, dan CSV langsung di browser Anda serta menampilkan setiap lembar sebagai tabel yang rapi dan dapat digulir — tanpa Excel, Google Sheets, atau akun. Berkas dibaca di perangkat Anda dan tidak pernah diunggah.',
+    howTo: [
+      'Letakkan spreadsheet (.xlsx, .xls, .ods, atau .csv) — atau klik untuk menelusuri.',
+      'Berkas diurai sepenuhnya di browser Anda; tidak ada yang diunggah.',
+      'Berpindah antar lembar dengan tab dan gulir grid untuk membaca data Anda.',
+      'Huruf kolom dan nomor baris membantu Anda menemukan sel mana pun, seperti aplikasi spreadsheet.',
+    ],
+    faqs: [
+      { q: 'Apakah spreadsheet saya diunggah ke suatu tempat?', a: 'Tidak. Berkas diurai dan ditampilkan sepenuhnya di browser Anda dengan JavaScript. Berkas tidak pernah meninggalkan perangkat, jadi aman untuk data rahasia.' },
+      { q: 'Format apa saja yang didukung?', a: 'Excel modern (.xlsx, .xlsm), Excel lama (.xls), spreadsheet OpenDocument (.ods), dan berkas CSV. Workbook multi-lembar menampilkan satu tab per lembar.' },
+      { q: 'Apakah rumus dihitung?', a: 'Rumus ditampilkan sebagai nilai terakhir yang disimpan (hasil yang tersimpan di berkas), bukan dihitung ulang. Ini penampil baca-saja yang cepat, bukan editor spreadsheet.' },
+      { q: 'Bagaimana dengan spreadsheet yang sangat besar?', a: 'Seluruh berkas dibaca, tetapi agar tetap cepat, grid menampilkan 500 baris dan 60 kolom pertama dari setiap lembar, dengan pemberitahuan saat sebuah lembar lebih besar.' },
+    ],
+  },
   'docx-viewer': {
     title: 'Penampil DOCX Gratis — Buka Berkas Word Online',
     description: 'Penampil DOCX gratis untuk membuka dan membaca dokumen Microsoft Word di browser — tata letak, tabel, dan gambar lengkap. 100% privat; tidak ada yang diunggah.',
