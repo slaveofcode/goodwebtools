@@ -117,6 +117,7 @@ export default defineConfig({
           '**/transformers*.js',
           '**/*huggingface*.js',
           '**/maplibre-gl*.js',
+          '**/xlsx*.js',
           'og/*.png',
         ],
         runtimeCaching: [
