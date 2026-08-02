@@ -1,23 +1,40 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import { LOCALES, LOCALE_LABEL, LOCALE_NAME, localizePath, stripLocale, type Lang } from '@/i18n/config';
 
 // Public sections that exist in every locale. Other paths (about, settings…) fall
 // back to the locale home when switching, so the switcher never lands on a 404.
 const LOCALIZED_PREFIXES = ['/tools/', '/category/'];
 
+/** The URL for the current page in `lang` — computed fresh from the live location. */
+function targetFor(lang: Lang): string {
+  const base = stripLocale(location.pathname);
+  const usable = base === '/' || LOCALIZED_PREFIXES.some(p => base.startsWith(p)) ? base : '/';
+  return localizePath(usable, lang);
+}
+
 export function LangSwitcher() {
   const [current, setCurrent] = useState<Lang>('en');
-  const [base, setBase] = useState('/');
+  // Real hrefs (for right-click / open-in-new-tab / no-JS). Recomputed on every
+  // navigation — the header persists across view transitions, so a one-time
+  // computation would go stale and send you to a previously-visited page.
+  const [hrefs, setHrefs] = useState<Record<Lang, string>>({ en: '/', id: '/id/' });
 
   useEffect(() => {
-    const path = location.pathname;
-    setCurrent(/^\/id(\/|$)/.test(path) ? 'id' : 'en');
-    const b = stripLocale(path);
-    setBase(b === '/' || LOCALIZED_PREFIXES.some(p => b.startsWith(p)) ? b : '/');
+    const update = () => {
+      setCurrent(/^\/id(\/|$)/.test(location.pathname) ? 'id' : 'en');
+      setHrefs({ en: targetFor('en'), id: targetFor('id') });
+    };
+    update();
+    document.addEventListener('astro:page-load', update);
+    return () => document.removeEventListener('astro:page-load', update);
   }, []);
 
-  const remember = (l: Lang) => {
+  const pick = (l: Lang) => (e: MouseEvent) => {
+    // Remember the choice, then navigate to the freshly-computed target for the
+    // page the user is actually on (belt-and-suspenders against any stale href).
     document.cookie = `gwt.lang=${l};path=/;max-age=31536000;samesite=lax`;
+    e.preventDefault();
+    location.href = targetFor(l);
   };
 
   return (
@@ -25,8 +42,8 @@ export function LangSwitcher() {
       {LOCALES.map(l => (
         <a
           key={l}
-          href={localizePath(base, l)}
-          onClick={() => remember(l)}
+          href={hrefs[l]}
+          onClick={pick(l)}
           aria-current={current === l ? 'true' : undefined}
           aria-label={LOCALE_NAME[l]}
           title={LOCALE_NAME[l]}
