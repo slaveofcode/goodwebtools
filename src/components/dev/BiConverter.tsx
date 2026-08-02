@@ -6,6 +6,30 @@ import { Alert } from '@/components/ui/Alert';
 import { LoadFileButton, fileExt } from '@/components/ui/LoadFileButton';
 import { CodeBlock, type CodeLanguage } from '@/components/ui/CodeBlock';
 import { DownloadTextButton } from '@/components/ui/DownloadTextButton';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  loadFile: (left: string, right: string) => string;
+  input: string;
+  clear: string;
+  result: string;
+  conversionFailed: string;
+}> = {
+  en: {
+    loadFile: (left, right) => `Load ${left} / ${right} file`,
+    input: 'Input',
+    clear: 'Clear',
+    result: 'Result',
+    conversionFailed: 'Conversion failed',
+  },
+  id: {
+    loadFile: (left, right) => `Muat file ${left} / ${right}`,
+    input: 'Input',
+    clear: 'Bersihkan',
+    result: 'Hasil',
+    conversionFailed: 'Konversi gagal',
+  },
+};
 
 const MIME_BY_EXT: Record<string, string> = {
   json: 'application/json',
@@ -31,12 +55,15 @@ export interface BiConverterProps {
   rightExts?: string[];
   /** highlight.js language for the right-hand format's output (left is JSON). */
   rightLang?: CodeLanguage;
+  /** UI language; defaults to English. */
+  lang?: Lang;
 }
 
 type Mode = 'toRight' | 'toLeft';
 
 /** A two-way text converter: paste input, pick a direction, copy the result. */
-export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholder, fileAccept, rightExts = [], rightLang = 'plaintext' }: BiConverterProps) {
+export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholder, fileAccept, rightExts = [], rightLang = 'plaintext', lang = 'en' }: BiConverterProps) {
+  const t = TR[lang] ?? TR.en;
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
@@ -53,7 +80,7 @@ export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholde
       setOutput(next === 'toRight' ? toRight(source) : toLeft(source));
     } catch (e) {
       setOutput('');
-      setError(e instanceof Error ? e.message : 'Conversion failed');
+      setError(e instanceof Error ? e.message : t.conversionFailed);
     }
   };
 
@@ -80,11 +107,11 @@ export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholde
     <div className="space-y-4">
       {fileAccept && (
         <div className="flex justify-end">
-          <LoadFileButton onLoad={loadFile} accept={fileAccept} label={`Load ${leftLabel} / ${rightLabel} file`} />
+          <LoadFileButton onLoad={loadFile} accept={fileAccept} label={t.loadFile(leftLabel, rightLabel)} />
         </div>
       )}
       <TextArea
-        label="Input"
+        label={t.input}
         value={input}
         onChange={e => onInput(e.target.value)}
         placeholder={placeholder}
@@ -99,7 +126,7 @@ export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholde
           {rightLabel} → {leftLabel}
         </Button>
         <Button variant="ghost" onClick={clear}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
@@ -108,7 +135,7 @@ export function BiConverter({ leftLabel, rightLabel, toRight, toLeft, placeholde
       {output && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Result</span>
+            <span className="text-sm font-medium text-muted-foreground">{t.result}</span>
             <div className="flex gap-2">
               <DownloadTextButton
                 text={output}

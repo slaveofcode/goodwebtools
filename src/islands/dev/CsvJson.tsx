@@ -7,6 +7,42 @@ import { LoadFileButton, fileExt } from '@/components/ui/LoadFileButton';
 import { CodeBlock } from '@/components/ui/CodeBlock';
 import { DownloadTextButton } from '@/components/ui/DownloadTextButton';
 import { csvToJson, jsonToCsv, parseCsv } from '@/tools/dev/csv.lib';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  loadFile: string;
+  input: string;
+  delimiter: string;
+  delimiters: Record<string, string>;
+  clear: string;
+  conversionFailed: string;
+  result: string;
+  tablePreview: string;
+  previewNote: (shown: number, total: number) => string;
+}> = {
+  en: {
+    loadFile: 'Load .csv / .json file',
+    input: 'Input',
+    delimiter: 'Delimiter',
+    delimiters: { ',': 'Comma ,', ';': 'Semicolon ;', '\t': 'Tab ⇥', '|': 'Pipe |' },
+    clear: 'Clear',
+    conversionFailed: 'Conversion failed',
+    result: 'Result',
+    tablePreview: 'Table preview',
+    previewNote: (shown, total) => ` (first ${shown} of ${total} rows)`,
+  },
+  id: {
+    loadFile: 'Muat file .csv / .json',
+    input: 'Input',
+    delimiter: 'Delimiter',
+    delimiters: { ',': 'Koma ,', ';': 'Titik koma ;', '\t': 'Tab ⇥', '|': 'Pipe |' },
+    clear: 'Bersihkan',
+    conversionFailed: 'Konversi gagal',
+    result: 'Hasil',
+    tablePreview: 'Pratinjau tabel',
+    previewNote: (shown, total) => ` (${shown} baris pertama dari ${total} baris)`,
+  },
+};
 
 const PREVIEW_ROWS = 100;
 
@@ -19,7 +55,8 @@ const DELIMITERS: { label: string; value: string }[] = [
   { label: 'Pipe |', value: '|' },
 ];
 
-export default function CsvJson() {
+export default function CsvJson({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
@@ -37,7 +74,7 @@ export default function CsvJson() {
       setOutput(mode === 'toJson' ? csvToJson(source, delim) : jsonToCsv(source, delim));
     } catch (e) {
       setOutput('');
-      setError(e instanceof Error ? e.message : 'Conversion failed');
+      setError(e instanceof Error ? e.message : t.conversionFailed);
     }
   };
 
@@ -84,11 +121,11 @@ export default function CsvJson() {
         <LoadFileButton
           onLoad={loadFile}
           accept=".csv,.tsv,.json,.txt,text/csv,application/json,text/plain"
-          label="Load .csv / .json file"
+          label={t.loadFile}
         />
       </div>
       <TextArea
-        label="Input"
+        label={t.input}
         value={input}
         onChange={e => handleInputChange(e.target.value)}
         placeholder={'name,age\nAlice,30\nBob,25'}
@@ -97,7 +134,7 @@ export default function CsvJson() {
 
       <div className="space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Delimiter
+          {t.delimiter}
         </span>
         <div className="flex flex-wrap gap-2">
           {DELIMITERS.map(d => (
@@ -107,7 +144,7 @@ export default function CsvJson() {
               aria-pressed={delimiter === d.value}
               onClick={() => changeDelimiter(d.value)}
             >
-              {d.label}
+              {t.delimiters[d.value] ?? d.label}
             </Button>
           ))}
         </div>
@@ -129,7 +166,7 @@ export default function CsvJson() {
           JSON → CSV
         </Button>
         <Button variant="ghost" onClick={clear}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
@@ -138,7 +175,7 @@ export default function CsvJson() {
       {output && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Result</span>
+            <span className="text-sm font-medium text-muted-foreground">{t.result}</span>
             <div className="flex gap-2">
               <DownloadTextButton
                 text={output}
@@ -155,8 +192,8 @@ export default function CsvJson() {
       {previewHeader.length > 0 && (
         <div className="space-y-2">
           <span className="text-sm font-medium text-muted-foreground">
-            Table preview
-            {previewBody.length > PREVIEW_ROWS && ` (first ${PREVIEW_ROWS} of ${previewBody.length} rows)`}
+            {t.tablePreview}
+            {previewBody.length > PREVIEW_ROWS && t.previewNote(PREVIEW_ROWS, previewBody.length)}
           </span>
           <div className="max-h-[30rem] overflow-auto border-2 border-border">
             <table className="w-full border-collapse text-sm">
