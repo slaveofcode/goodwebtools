@@ -3,8 +3,11 @@ import { Command } from 'cmdk';
 import { searchTools } from '@/registry/tools';
 import { categories } from '@/registry/categories';
 import { isTauri } from '@/services/platform';
+import { localizePath } from '@/i18n/config';
+import { useLang } from '@/i18n/shared';
 
 export function CommandPalette() {
+  const lang = useLang();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [isDesktop, setIsDesktop] = useState(false);
@@ -75,7 +78,7 @@ export function CommandPalette() {
                       key={tool.id}
                       value={tool.name}
                       onSelect={() => {
-                        window.location.href = tool.route;
+                        window.location.href = localizePath(tool.route, lang);
                       }}
                       className="flex cursor-pointer items-center gap-3 border-2 border-transparent px-3 py-2 data-[selected=true]:border-border data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
                     >
