@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'odt-viewer': {
+    title: 'Free ODT Viewer — Open OpenDocument Files Online',
+    description: 'A free ODT viewer to open and read OpenDocument Text (.odt) files in your browser — headings, lists, tables and images. 100% private; nothing is uploaded.',
+    intro: 'This free ODT viewer opens OpenDocument Text files — the format used by LibreOffice, OpenOffice and Google Docs — right in your browser, with headings, lists, tables and images intact. No office suite and no account needed, and the file is read on your device and never uploaded.',
+    howTo: [
+      'Drop an .odt file (or click to browse) — it is read entirely in your browser.',
+      'The document renders with its formatting: headings, lists, tables and pictures.',
+      'Scroll to read, or use Print / Save as PDF to keep a copy.',
+      'Nothing is uploaded — the file stays on your device.',
+    ],
+    faqs: [
+      { q: 'Is my document uploaded anywhere?', a: 'No. The .odt is unzipped and rendered entirely in your browser with JavaScript. It never leaves your device, so it is safe for confidential documents.' },
+      { q: 'What is an .odt file?', a: 'ODT (OpenDocument Text) is the open, standardised word-processor format used by LibreOffice and OpenOffice Writer, and available as an export from Google Docs and Microsoft Word.' },
+      { q: 'Can I turn it into a PDF?', a: 'Yes, indirectly: open it here and use Print / Save as PDF in your browser to produce a PDF copy.' },
+      { q: 'Will it look exactly like LibreOffice?', a: 'Common formatting — headings, bold and italic, lists, tables, links and images — is preserved. This is a lightweight viewer, so very complex page layouts or unusual fonts may render slightly differently.' },
+    ],
+  },
   'epub-reader': {
     title: 'Free EPUB Reader — Read E-Books in Your Browser',
     description: 'A free online EPUB reader to open and read .epub e-books in your browser — chapters, table of contents and adjustable text size. 100% private; nothing is uploaded.',
@@ -1359,6 +1376,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'odt-viewer': {
+    title: 'Penampil ODT Gratis — Buka Berkas OpenDocument Online',
+    description: 'Penampil ODT gratis untuk membuka dan membaca berkas OpenDocument Text (.odt) di browser Anda — judul, daftar, tabel, dan gambar. 100% privat; tidak ada yang diunggah.',
+    intro: 'Penampil ODT gratis ini membuka berkas OpenDocument Text — format yang digunakan oleh LibreOffice, OpenOffice, dan Google Docs — langsung di browser Anda, lengkap dengan judul, daftar, tabel, dan gambar. Tanpa aplikasi kantor atau akun, dan berkas dibaca di perangkat Anda serta tidak pernah diunggah.',
+    howTo: [
+      'Letakkan berkas .odt (atau klik untuk menelusuri) — dibaca sepenuhnya di browser Anda.',
+      'Dokumen ditampilkan dengan pemformatannya: judul, daftar, tabel, dan gambar.',
+      'Gulir untuk membaca, atau gunakan Cetak / Simpan PDF untuk menyimpan salinan.',
+      'Tidak ada yang diunggah — berkas tetap di perangkat Anda.',
+    ],
+    faqs: [
+      { q: 'Apakah dokumen saya diunggah ke suatu tempat?', a: 'Tidak. Berkas .odt diekstrak dan ditampilkan sepenuhnya di browser Anda dengan JavaScript. Berkas tidak pernah meninggalkan perangkat, jadi aman untuk dokumen rahasia.' },
+      { q: 'Apa itu berkas .odt?', a: 'ODT (OpenDocument Text) adalah format pengolah kata terbuka dan terstandarisasi yang digunakan oleh LibreOffice dan OpenOffice Writer, serta tersedia sebagai ekspor dari Google Docs dan Microsoft Word.' },
+      { q: 'Bisakah saya mengubahnya menjadi PDF?', a: 'Ya, secara tidak langsung: buka di sini lalu gunakan Cetak / Simpan PDF di browser untuk membuat salinan PDF.' },
+      { q: 'Apakah akan tampak persis seperti LibreOffice?', a: 'Pemformatan umum — judul, tebal dan miring, daftar, tabel, tautan, dan gambar — dipertahankan. Ini penampil ringan, jadi tata letak halaman yang sangat rumit atau font tidak biasa mungkin tampil sedikit berbeda.' },
+    ],
+  },
   'epub-reader': {
     title: 'Pembaca EPUB Gratis — Baca E-Book di Browser',
     description: 'Pembaca EPUB gratis untuk membuka dan membaca e-book .epub di browser Anda — bab, daftar isi, dan ukuran teks yang dapat disesuaikan. 100% privat; tidak ada yang diunggah.',
