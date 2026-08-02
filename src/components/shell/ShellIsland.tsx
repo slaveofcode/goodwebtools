@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Search, Github, Bookmark, Info, ExternalLink, Settings } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Search, Github, Info, ExternalLink, Settings, MoreVertical } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LangSwitcher } from './LangSwitcher';
 import { CommandPalette } from './CommandPalette';
@@ -14,23 +14,39 @@ export function openSearch() {
 }
 
 const iconBtn =
-  'border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal text-muted-foreground';
+  'flex h-9 w-9 items-center justify-center border-2 border-border bg-muted shadow-brutal-sm press-brutal text-muted-foreground';
+const menuItem =
+  'flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-bold hover:bg-accent hover:text-accent-foreground';
 
 export function ShellIsland() {
-  const [modal, setModal] = useState<null | 'github' | 'bookmark'>(null);
-  const [isMac, setIsMac] = useState(true);
+  const [modal, setModal] = useState<null | 'github'>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   // Settings only apply to the desktop app; hide the nav link on the web.
   // Starts false so SSR and the first client render match, then reveals on
   // desktop after mount (avoids a hydration mismatch).
   const [isDesktop, setIsDesktop] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     initTheme();
-    setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent));
     setIsDesktop(isTauri());
   }, []);
 
-  const bookmarkKey = isMac ? '⌘ D' : 'Ctrl + D';
+  // Close the mobile overflow menu on outside click, Escape, or navigation.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    const onNav = () => setMenuOpen(false);
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('astro:page-load', onNav);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('astro:page-load', onNav);
+    };
+  }, [menuOpen]);
 
   return (
     <>
@@ -47,7 +63,7 @@ export function ShellIsland() {
               <button
                 onClick={openSearch}
                 aria-label="Search tools"
-                className="flex items-center gap-1.5 border-2 border-border bg-muted px-2 py-1.5 text-sm font-bold uppercase tracking-wide text-muted-foreground shadow-brutal-sm press-brutal"
+                className="flex h-9 items-center gap-1.5 border-2 border-border bg-muted px-2.5 text-sm font-bold uppercase tracking-wide text-muted-foreground shadow-brutal-sm press-brutal"
               >
                 <Search className="h-4 w-4" />
                 <span className="hidden md:inline">
@@ -55,20 +71,39 @@ export function ShellIsland() {
                   <kbd className="border-2 border-border bg-background px-1.5 py-0.5 text-xs">⌘K</kbd> to search
                 </span>
               </button>
-              {isDesktop && (
-                <a href="/settings" aria-label="Settings" title="Settings" className={iconBtn}>
-                  <Settings className="h-4 w-4" />
+
+              {/* Secondary actions — inline on ≥sm, in an overflow menu on mobile. */}
+              <div className="hidden items-center gap-2 sm:flex sm:gap-3">
+                {isDesktop && (
+                  <a href="/settings" aria-label="Settings" title="Settings" className={iconBtn}>
+                    <Settings className="h-4 w-4" />
+                  </a>
+                )}
+                <a href="/about" aria-label="About" title="About" className={iconBtn}>
+                  <Info className="h-4 w-4" />
                 </a>
-              )}
-              <a href="/about" aria-label="About" title="About" className={iconBtn}>
-                <Info className="h-4 w-4" />
-              </a>
-              <button onClick={() => setModal('github')} aria-label="Contribute on GitHub" title="Contribute on GitHub" className={iconBtn}>
-                <Github className="h-4 w-4" />
-              </button>
-              <button onClick={() => setModal('bookmark')} aria-label="Bookmark this site" title="Bookmark this site" className={iconBtn}>
-                <Bookmark className="h-4 w-4" />
-              </button>
+                <button onClick={() => setModal('github')} aria-label="Contribute on GitHub" title="Contribute on GitHub" className={iconBtn}>
+                  <Github className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="relative sm:hidden" ref={menuRef}>
+                <button onClick={() => setMenuOpen(o => !o)} aria-label="More" aria-haspopup="menu" aria-expanded={menuOpen} className={iconBtn}>
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+                {menuOpen && (
+                  <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-48 border-2 border-border bg-background shadow-brutal">
+                    {isDesktop && (
+                      <a href="/settings" role="menuitem" className={menuItem}><Settings className="h-4 w-4" /> Settings</a>
+                    )}
+                    <a href="/about" role="menuitem" className={menuItem}><Info className="h-4 w-4" /> About</a>
+                    <button role="menuitem" onClick={() => { setMenuOpen(false); setModal('github'); }} className={menuItem}>
+                      <Github className="h-4 w-4" /> Contribute
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <LangSwitcher />
               <ThemeToggle />
             </div>
@@ -100,22 +135,6 @@ export function ShellIsland() {
               slaveofcode/goodwebtools
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
-          </div>
-        </Modal>
-      )}
-
-      {modal === 'bookmark' && (
-        <Modal title="Bookmark this site" onClose={() => setModal(null)}>
-          <div className="space-y-3 text-sm">
-            <p>Keep GoodWebTools one click away — add it to your bookmarks:</p>
-            <p className="flex items-center justify-center gap-2 border-2 border-border bg-muted px-3 py-4 text-center">
-              <span>Press</span>
-              <kbd className="border-2 border-border bg-background px-2 py-1 font-bold">{bookmarkKey}</kbd>
-            </p>
-            <p className="text-muted-foreground">
-              Browsers don't allow a button to add bookmarks (for your security), so the keyboard
-              shortcut is the quickest way. You can also drag the address bar into your bookmarks.
-            </p>
           </div>
         </Modal>
       )}

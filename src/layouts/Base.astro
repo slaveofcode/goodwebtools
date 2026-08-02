@@ -134,6 +134,13 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
       }
       applyEnvClasses();
       document.addEventListener('astro:after-swap', applyEnvClasses);
+
+      // Delegated on document (persists across view transitions) so the in-page
+      // "search tools" hint keeps working after client-side navigations.
+      document.addEventListener('click', function (e) {
+        var el = e.target && e.target.closest && e.target.closest('#home-search');
+        if (el) window.dispatchEvent(new CustomEvent('gwt:open-search'));
+      });
     </script>
 
     <!-- Google Analytics (GDPR): loads only when configured AND consent granted. -->
