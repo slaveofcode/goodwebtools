@@ -158,6 +158,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'docx-viewer',
+    name: 'Word (DOCX) Viewer',
+    category: 'Documents',
+    route: '/tools/docx-viewer',
+    keywords: ['docx', 'word', 'viewer', 'open', 'read', 'document', 'office', 'preview', 'doc'],
+    icon: FileText,
+    summary: 'Open and read Word .docx files in your browser',
+    load: () => import('@/islands/documents/DocxViewer'),
+    status: 'beta'
+  },
+  {
     id: 'markdown',
     name: 'Markdown Preview',
     category: 'Dev',
