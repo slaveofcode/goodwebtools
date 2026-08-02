@@ -11,10 +11,86 @@ import {
   encryptedName,
   decryptedName,
 } from '@/tools/files/crypto.lib';
+import type { Lang } from '@/i18n/config';
 
 type Mode = 'encrypt' | 'decrypt';
 
-export default function FileCrypt() {
+const TR: Record<Lang, {
+  encrypt: string;
+  decrypt: string;
+  chooseFileFirst: string;
+  enterPassword: string;
+  operationFailed: string;
+  dropFile: string;
+  encryptHint: string;
+  decryptHint: string;
+  passwordLabel: string;
+  placeholderEncrypt: string;
+  placeholderDecrypt: string;
+  hidePassword: string;
+  showPassword: string;
+  weakWarning: string;
+  encrypting: string;
+  decrypting: string;
+  encryptFile: string;
+  decryptFile: string;
+  clear: string;
+  encrypted: string;
+  decrypted: string;
+  footer: string;
+}> = {
+  en: {
+    encrypt: 'Encrypt',
+    decrypt: 'Decrypt',
+    chooseFileFirst: 'Choose a file first.',
+    enterPassword: 'Enter a password.',
+    operationFailed: 'Operation failed.',
+    dropFile: 'Drop a file or click to browse',
+    encryptHint: 'Any file — locked with AES-256, never leaves your device',
+    decryptHint: 'Choose a .gwtenc file to unlock',
+    passwordLabel: 'Password',
+    placeholderEncrypt: 'Choose a strong password',
+    placeholderDecrypt: 'Enter the password',
+    hidePassword: 'Hide password',
+    showPassword: 'Show password',
+    weakWarning: 'Short passwords are easy to guess — use 8+ characters (a passphrase is best).',
+    encrypting: 'Encrypting…',
+    decrypting: 'Decrypting…',
+    encryptFile: 'Encrypt file',
+    decryptFile: 'Decrypt file',
+    clear: 'Clear',
+    encrypted: 'Encrypted',
+    decrypted: 'Decrypted',
+    footer: 'AES-256-GCM with a PBKDF2 key (250,000 iterations, SHA-256). Everything runs in your browser — the file and password never leave your device. There is no password recovery: lose the password and the file is unrecoverable.',
+  },
+  id: {
+    encrypt: 'Enkripsi',
+    decrypt: 'Dekripsi',
+    chooseFileFirst: 'Pilih file terlebih dahulu.',
+    enterPassword: 'Masukkan kata sandi.',
+    operationFailed: 'Operasi gagal.',
+    dropFile: 'Letakkan file atau klik untuk menjelajah',
+    encryptHint: 'File apa pun — dikunci dengan AES-256, tidak pernah meninggalkan perangkat Anda',
+    decryptHint: 'Pilih file .gwtenc untuk membuka kunci',
+    passwordLabel: 'Kata Sandi',
+    placeholderEncrypt: 'Pilih kata sandi yang kuat',
+    placeholderDecrypt: 'Masukkan kata sandi',
+    hidePassword: 'Sembunyikan kata sandi',
+    showPassword: 'Tampilkan kata sandi',
+    weakWarning: 'Kata sandi pendek mudah ditebak — gunakan 8+ karakter (frasa sandi lebih baik).',
+    encrypting: 'Mengenkripsi…',
+    decrypting: 'Mendekripsi…',
+    encryptFile: 'Enkripsi file',
+    decryptFile: 'Dekripsi file',
+    clear: 'Bersihkan',
+    encrypted: 'Terenkripsi',
+    decrypted: 'Terdekripsi',
+    footer: 'AES-256-GCM dengan kunci PBKDF2 (250.000 iterasi, SHA-256). Semuanya berjalan di browser Anda — file dan kata sandi tidak pernah meninggalkan perangkat Anda. Tidak ada pemulihan kata sandi: jika kata sandi hilang, file tidak dapat dipulihkan.',
+  },
+};
+
+export default function FileCrypt({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [mode, setMode] = useState<Mode>('encrypt');
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
@@ -31,7 +107,7 @@ export default function FileCrypt() {
 
   const run = async () => {
     if (!file || !password) {
-      setError(!file ? 'Choose a file first.' : 'Enter a password.');
+      setError(!file ? t.chooseFileFirst : t.enterPassword);
       return;
     }
     setBusy(true);
@@ -50,7 +126,7 @@ export default function FileCrypt() {
         setResult({ blob: new Blob([out]), name: decryptedName(file.name) });
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Operation failed.');
+      setError(e instanceof Error ? e.message : t.operationFailed);
     } finally {
       setBusy(false);
     }
@@ -67,7 +143,7 @@ export default function FileCrypt() {
           onClick={() => { setMode('encrypt'); setResult(null); setError(''); }}
         >
           <Lock className="h-4 w-4" />
-          Encrypt
+          {t.encrypt}
         </Button>
         <Button
           variant={mode === 'decrypt' ? 'primary' : 'secondary'}
@@ -75,17 +151,15 @@ export default function FileCrypt() {
           onClick={() => { setMode('decrypt'); setResult(null); setError(''); }}
         >
           <Unlock className="h-4 w-4" />
-          Decrypt
+          {t.decrypt}
         </Button>
       </div>
 
       <Dropzone onDrop={onDrop} multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop a file or click to browse</p>
+          <p className="text-lg font-bold">{t.dropFile}</p>
           <p className="text-sm text-muted-foreground">
-            {mode === 'encrypt'
-              ? 'Any file — locked with AES-256, never leaves your device'
-              : 'Choose a .gwtenc file to unlock'}
+            {mode === 'encrypt' ? t.encryptHint : t.decryptHint}
           </p>
         </div>
       </Dropzone>
@@ -98,7 +172,7 @@ export default function FileCrypt() {
 
       <label className="block space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Password
+          {t.passwordLabel}
         </span>
         <div className="flex items-stretch gap-2">
           <input
@@ -107,14 +181,14 @@ export default function FileCrypt() {
             onChange={e => setPassword(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') run(); }}
             autoComplete="off"
-            placeholder={mode === 'encrypt' ? 'Choose a strong password' : 'Enter the password'}
+            placeholder={mode === 'encrypt' ? t.placeholderEncrypt : t.placeholderDecrypt}
             className="w-full max-w-md border-2 border-border bg-muted px-3 py-2 text-sm outline-none focus:shadow-brutal-sm"
           />
           <button
             type="button"
             onClick={() => setShow(s => !s)}
-            title={show ? 'Hide password' : 'Show password'}
-            aria-label={show ? 'Hide password' : 'Show password'}
+            title={show ? t.hidePassword : t.showPassword}
+            aria-label={show ? t.hidePassword : t.showPassword}
             className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal"
           >
             {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -122,7 +196,7 @@ export default function FileCrypt() {
         </div>
         {weak && (
           <span className="text-xs text-amber-600 dark:text-amber-400">
-            Short passwords are easy to guess — use 8+ characters (a passphrase is best).
+            {t.weakWarning}
           </span>
         )}
       </label>
@@ -130,11 +204,11 @@ export default function FileCrypt() {
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || !password || busy}>
           {busy
-            ? mode === 'encrypt' ? 'Encrypting…' : 'Decrypting…'
-            : mode === 'encrypt' ? 'Encrypt file' : 'Decrypt file'}
+            ? mode === 'encrypt' ? t.encrypting : t.decrypting
+            : mode === 'encrypt' ? t.encryptFile : t.decryptFile}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setPassword(''); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
@@ -143,7 +217,7 @@ export default function FileCrypt() {
       {result && (
         <div className="space-y-2">
           <Alert variant="success">
-            {mode === 'encrypt' ? 'Encrypted' : 'Decrypted'} — {formatBytes(result.blob.size)}
+            {mode === 'encrypt' ? t.encrypted : t.decrypted} — {formatBytes(result.blob.size)}
           </Alert>
           <ResultActions blob={result.blob} filename={result.name} />
         </div>
@@ -151,9 +225,7 @@ export default function FileCrypt() {
 
       <p className="flex items-start gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-        AES-256-GCM with a PBKDF2 key (250,000 iterations, SHA-256). Everything runs in your
-        browser — the file and password never leave your device. There is no password recovery:
-        lose the password and the file is unrecoverable.
+        {t.footer}
       </p>
     </div>
   );

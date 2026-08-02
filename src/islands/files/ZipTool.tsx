@@ -6,12 +6,70 @@ import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { createZip, extractZip, type ZipEntry } from '@/tools/files/zip.lib';
+import type { Lang } from '@/i18n/config';
 
 type Mode = 'create' | 'extract';
 
+const TR: Record<Lang, {
+  createZip: string;
+  extractZip: string;
+  couldNotCreate: string;
+  couldNotRead: string;
+  dropFiles: string;
+  bundleHint: string;
+  remove: string;
+  zipping: string;
+  createZipCount: (n: number) => string;
+  total: (s: string) => string;
+  clear: string;
+  dropZip: string;
+  listHint: string;
+  reading: string;
+  fileCount: (n: number) => string;
+  download: string;
+}> = {
+  en: {
+    createZip: 'Create ZIP',
+    extractZip: 'Extract ZIP',
+    couldNotCreate: 'Could not create the archive.',
+    couldNotRead: 'Could not read the archive.',
+    dropFiles: 'Drop files or click to browse',
+    bundleHint: 'Bundle any files into a single .zip — all in your browser',
+    remove: 'Remove',
+    zipping: 'Zipping…',
+    createZipCount: (n) => `Create ZIP (${n} file${n === 1 ? '' : 's'})`,
+    total: (s) => `${s} total`,
+    clear: 'Clear',
+    dropZip: 'Drop a .zip or click to browse',
+    listHint: 'List its contents and download any file',
+    reading: 'reading…',
+    fileCount: (n) => `${n} file${n === 1 ? '' : 's'}`,
+    download: 'Download',
+  },
+  id: {
+    createZip: 'Buat ZIP',
+    extractZip: 'Ekstrak ZIP',
+    couldNotCreate: 'Tidak dapat membuat arsip.',
+    couldNotRead: 'Tidak dapat membaca arsip.',
+    dropFiles: 'Letakkan file atau klik untuk menjelajah',
+    bundleHint: 'Gabungkan file apa pun ke dalam satu .zip — semua di browser Anda',
+    remove: 'Hapus',
+    zipping: 'Membuat ZIP…',
+    createZipCount: (n) => `Buat ZIP (${n} file)`,
+    total: (s) => `${s} total`,
+    clear: 'Bersihkan',
+    dropZip: 'Letakkan file .zip atau klik untuk menjelajah',
+    listHint: 'Tampilkan isinya dan unduh file mana pun',
+    reading: 'membaca…',
+    fileCount: (n) => `${n} file`,
+    download: 'Unduh',
+  },
+};
+
 let counter = 0;
 
-export default function ZipTool() {
+export default function ZipTool({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [mode, setMode] = useState<Mode>('create');
   // Create mode: files queued for zipping.
   const [items, setItems] = useState<{ id: string; file: File }[]>([]);
@@ -46,7 +104,7 @@ export default function ZipTool() {
       const zipped = createZip(zipEntries);
       await downloadService.download(new Blob([zipped], { type: 'application/zip' }), 'archive.zip');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not create the archive.');
+      setError(e instanceof Error ? e.message : t.couldNotCreate);
     } finally {
       setBusy(false);
     }
@@ -62,7 +120,7 @@ export default function ZipTool() {
     try {
       setEntries(extractZip(new Uint8Array(await file.arrayBuffer())));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not read the archive.');
+      setError(e instanceof Error ? e.message : t.couldNotRead);
     } finally {
       setBusy(false);
     }
@@ -80,11 +138,11 @@ export default function ZipTool() {
       <div className="flex gap-2">
         <Button variant={mode === 'create' ? 'primary' : 'secondary'} aria-pressed={mode === 'create'} onClick={() => setMode('create')}>
           <FileArchive className="h-4 w-4" />
-          Create ZIP
+          {t.createZip}
         </Button>
         <Button variant={mode === 'extract' ? 'primary' : 'secondary'} aria-pressed={mode === 'extract'} onClick={() => setMode('extract')}>
           <Download className="h-4 w-4" />
-          Extract ZIP
+          {t.extractZip}
         </Button>
       </div>
 
@@ -92,8 +150,8 @@ export default function ZipTool() {
         <>
           <Dropzone onDrop={addFiles} multiple>
             <div className="space-y-1">
-              <p className="text-lg font-bold">Drop files or click to browse</p>
-              <p className="text-sm text-muted-foreground">Bundle any files into a single .zip — all in your browser</p>
+              <p className="text-lg font-bold">{t.dropFiles}</p>
+              <p className="text-sm text-muted-foreground">{t.bundleHint}</p>
             </div>
           </Dropzone>
 
@@ -103,7 +161,7 @@ export default function ZipTool() {
                 <li key={id} className="flex items-center gap-3 border-2 border-border bg-muted p-2">
                   <span className="min-w-0 flex-1 truncate text-sm">{file.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(file.size)}</span>
-                  <button onClick={() => removeItem(id)} title="Remove" className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal">
+                  <button onClick={() => removeItem(id)} title={t.remove} className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal">
                     <X className="h-4 w-4" />
                   </button>
                 </li>
@@ -113,12 +171,12 @@ export default function ZipTool() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Button onClick={makeZip} disabled={items.length === 0 || busy}>
-              {busy ? 'Zipping…' : `Create ZIP (${items.length} file${items.length === 1 ? '' : 's'})`}
+              {busy ? t.zipping : t.createZipCount(items.length)}
             </Button>
             {items.length > 0 && (
               <>
-                <span className="text-sm text-muted-foreground">{formatBytes(totalSize)} total</span>
-                <Button variant="ghost" onClick={() => setItems([])}>Clear</Button>
+                <span className="text-sm text-muted-foreground">{t.total(formatBytes(totalSize))}</span>
+                <Button variant="ghost" onClick={() => setItems([])}>{t.clear}</Button>
               </>
             )}
           </div>
@@ -127,14 +185,14 @@ export default function ZipTool() {
         <>
           <Dropzone onDrop={openArchive} accept=".zip,application/zip,application/x-zip-compressed" multiple={false}>
             <div className="space-y-1">
-              <p className="text-lg font-bold">Drop a .zip or click to browse</p>
-              <p className="text-sm text-muted-foreground">List its contents and download any file</p>
+              <p className="text-lg font-bold">{t.dropZip}</p>
+              <p className="text-sm text-muted-foreground">{t.listHint}</p>
             </div>
           </Dropzone>
 
           {archiveName && !error && (
             <p className="text-sm text-muted-foreground">
-              <span className="font-bold text-foreground">{archiveName}</span> — {busy ? 'reading…' : `${entries.length} file${entries.length === 1 ? '' : 's'}`}
+              <span className="font-bold text-foreground">{archiveName}</span> — {busy ? t.reading : t.fileCount(entries.length)}
             </p>
           )}
 
@@ -144,7 +202,7 @@ export default function ZipTool() {
                 <li key={i} className="flex items-center gap-3 border-2 border-border bg-muted p-2">
                   <span className="min-w-0 flex-1 truncate text-sm">{entry.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(entry.data.length)}</span>
-                  <button onClick={() => downloadEntry(entry)} title="Download" className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal">
+                  <button onClick={() => downloadEntry(entry)} title={t.download} className="border-2 border-border bg-muted p-1.5 shadow-brutal-sm press-brutal">
                     <Download className="h-4 w-4" />
                   </button>
                 </li>

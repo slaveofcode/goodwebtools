@@ -7,11 +7,36 @@ import { themeAtom } from '@/stores/theme.store';
 import { Button } from '@/components/ui/Button';
 import { downloadService } from '@/services/download';
 import { resolveStyle, MAP_STYLES, type StyleChoice } from '@/tools/geo/map-styles.lib';
+import type { Lang } from '@/i18n/config';
 
 const STYLE_KEY = 'gwt.map.style';
 type SearchHit = { name: string; lat: number; lng: number };
 
-export default function StaticMap() {
+const TR: Record<Lang, {
+  searchPlace: string;
+  style: string;
+  centerPin: string;
+  downloadPng: string;
+  hint: string;
+}> = {
+  en: {
+    searchPlace: 'Search a place…',
+    style: 'Style',
+    centerPin: 'Center pin',
+    downloadPng: 'Download PNG',
+    hint: 'Pan & zoom to frame your map, then export the current view. Maps © OpenFreeMap / OpenStreetMap.',
+  },
+  id: {
+    searchPlace: 'Cari tempat…',
+    style: 'Gaya',
+    centerPin: 'Pin tengah',
+    downloadPng: 'Unduh PNG',
+    hint: 'Geser & perbesar untuk membingkai peta Anda, lalu ekspor tampilan saat ini. Peta © OpenFreeMap / OpenStreetMap.',
+  },
+};
+
+export default function StaticMap({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const theme = useStore(themeAtom);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -111,7 +136,7 @@ export default function StaticMap() {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex flex-1 items-center gap-2">
-          <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') search(); }} placeholder="Search a place…" className="w-full border-2 border-border bg-muted px-3 py-2 text-sm outline-none focus:shadow-brutal-sm" />
+          <input value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') search(); }} placeholder={t.searchPlace} className="w-full border-2 border-border bg-muted px-3 py-2 text-sm outline-none focus:shadow-brutal-sm" />
           <Button variant="secondary" onClick={search} disabled={searching}><Search className="h-4 w-4" /></Button>
           {results.length > 0 && (
             <div className="absolute left-0 top-full z-20 mt-1 max-h-64 w-full overflow-y-auto border-2 border-border bg-background shadow-brutal">
@@ -123,16 +148,16 @@ export default function StaticMap() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Style</span>
+        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.style}</span>
         {MAP_STYLES.map(s => <Button key={s.id} variant={style === s.id ? 'primary' : 'secondary'} aria-pressed={style === s.id} onClick={() => pickStyle(s.id)}>{s.label}</Button>)}
-        <Button variant={pinCenter ? 'primary' : 'secondary'} onClick={() => setPinCenter(p => !p)}><MapPin className="h-4 w-4" /> Center pin</Button>
+        <Button variant={pinCenter ? 'primary' : 'secondary'} onClick={() => setPinCenter(p => !p)}><MapPin className="h-4 w-4" /> {t.centerPin}</Button>
       </div>
 
       <div ref={containerRef} className="h-[60vh] w-full border-2 border-border" />
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={downloadPng}><Download className="h-4 w-4" /> Download PNG</Button>
-        <span className="text-xs text-muted-foreground">Pan &amp; zoom to frame your map, then export the current view. Maps © OpenFreeMap / OpenStreetMap.</span>
+        <Button onClick={downloadPng}><Download className="h-4 w-4" /> {t.downloadPng}</Button>
+        <span className="text-xs text-muted-foreground">{t.hint}</span>
       </div>
     </div>
   );

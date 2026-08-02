@@ -8,11 +8,48 @@ import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { resolveStyle, MAP_STYLES, haversineMeters, formatDistance, type StyleChoice } from '@/tools/geo/map-styles.lib';
 import { ddToDms, ddToUtm, encodeGeohash, formatDd, type LatLng } from '@/tools/geo/coord.lib';
+import type { Lang } from '@/i18n/config';
 
 const STYLE_KEY = 'gwt.map.style';
 type SearchHit = { name: string; lat: number; lng: number };
 
-export default function MapExplorer() {
+const TR: Record<Lang, {
+  searchPlace: string;
+  style: string;
+  measuring: string;
+  measure: string;
+  clear: string;
+  hintMeasure: string;
+  hintPin: string;
+  attribution: string;
+  distance: (dist: string, n: number) => string;
+}> = {
+  en: {
+    searchPlace: 'Search a place…',
+    style: 'Style',
+    measuring: 'Measuring…',
+    measure: 'Measure',
+    clear: 'Clear',
+    hintMeasure: 'Click points on the map to measure distance.',
+    hintPin: 'Click anywhere on the map to drop a pin and read its coordinates.',
+    attribution: 'Maps © OpenFreeMap / OpenStreetMap contributors.',
+    distance: (dist, n) => `Distance: ${dist} (${n} points)`,
+  },
+  id: {
+    searchPlace: 'Cari tempat…',
+    style: 'Gaya',
+    measuring: 'Mengukur…',
+    measure: 'Ukur',
+    clear: 'Bersihkan',
+    hintMeasure: 'Klik titik di peta untuk mengukur jarak.',
+    hintPin: 'Klik di mana saja pada peta untuk menandai pin dan membaca koordinatnya.',
+    attribution: 'Peta © OpenFreeMap / OpenStreetMap contributors.',
+    distance: (dist, n) => `Jarak: ${dist} (${n} titik)`,
+  },
+};
+
+export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const theme = useStore(themeAtom);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -161,7 +198,7 @@ export default function MapExplorer() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') search(); }}
-            placeholder="Search a place…"
+            placeholder={t.searchPlace}
             className="w-full border-2 border-border bg-muted px-3 py-2 text-sm outline-none focus:shadow-brutal-sm"
           />
           <Button variant="secondary" onClick={search} disabled={searching}><Search className="h-4 w-4" /></Button>
@@ -177,23 +214,23 @@ export default function MapExplorer() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Style</span>
+        <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.style}</span>
         {MAP_STYLES.map(s => (
           <Button key={s.id} variant={style === s.id ? 'primary' : 'secondary'} aria-pressed={style === s.id} onClick={() => pickStyle(s.id)}>{s.label}</Button>
         ))}
-        <Button variant={measuring ? 'primary' : 'secondary'} onClick={toggleMeasure}><Ruler className="h-4 w-4" /> {measuring ? 'Measuring…' : 'Measure'}</Button>
-        {measuring && measureRef.current.length > 0 && <Button variant="ghost" onClick={clearMeasure}><X className="h-4 w-4" /> Clear</Button>}
+        <Button variant={measuring ? 'primary' : 'secondary'} onClick={toggleMeasure}><Ruler className="h-4 w-4" /> {measuring ? t.measuring : t.measure}</Button>
+        {measuring && measureRef.current.length > 0 && <Button variant="ghost" onClick={clearMeasure}><X className="h-4 w-4" /> {t.clear}</Button>}
       </div>
 
       <div ref={containerRef} className="h-[60vh] w-full border-2 border-border" />
 
       <p className="text-xs text-muted-foreground">
-        {measuring ? 'Click points on the map to measure distance.' : 'Click anywhere on the map to drop a pin and read its coordinates.'}
-        {' '}Maps © OpenFreeMap / OpenStreetMap contributors.
+        {measuring ? t.hintMeasure : t.hintPin}
+        {' '}{t.attribution}
       </p>
 
       {measuring && measureRef.current.length > 1 && (
-        <p className="text-sm font-bold">Distance: {formatDistance(measureDist)} ({measureRef.current.length} points)</p>
+        <p className="text-sm font-bold">{t.distance(formatDistance(measureDist), measureRef.current.length)}</p>
       )}
 
       {pin && !measuring && (

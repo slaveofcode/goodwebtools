@@ -12,7 +12,79 @@ import { downloadService } from '@/services/download';
 import { exportSql, DIALECTS, type Dialect } from '@/tools/draw/sql-export.lib';
 import { exportDiagramImage, type ImageFormat } from '@/tools/draw/diagram-image.lib';
 import { addRef, removeRef, type RefColumn } from '@/tools/draw/refs.lib';
+import type { Lang } from '@/i18n/config';
 import '@xyflow/react/dist/style.css';
+
+const TR: Record<Lang, {
+  loading: string;
+  descPre: string;
+  descPost: string;
+  saveProject: string;
+  exportDbml: string;
+  open: string;
+  saving: string;
+  saved: string;
+  sqlDialect: string;
+  exportSql: string;
+  image: string;
+  scale: string;
+  exportImage: string;
+  expand: string;
+  showNavbar: string;
+  hideNavbarSpace: string;
+  hideNavbar: string;
+  exit: string;
+  copySql: string;
+  downloadSql: string;
+  exportFailed: string;
+}> = {
+  en: {
+    loading: 'Loading diagram…',
+    descPre: 'Write your schema in ',
+    descPost: ' on the left; the ER diagram updates live. Drag tables to arrange them — your layout and schema are saved in your browser.',
+    saveProject: 'Save project',
+    exportDbml: 'Export .dbml',
+    open: 'Open…',
+    saving: 'Saving…',
+    saved: 'Saved',
+    sqlDialect: 'SQL dialect',
+    exportSql: 'Export SQL',
+    image: 'Image',
+    scale: 'Scale',
+    exportImage: 'Export image',
+    expand: 'Expand',
+    showNavbar: 'Show navbar',
+    hideNavbarSpace: 'Hide navbar for more space',
+    hideNavbar: 'Hide navbar',
+    exit: 'Exit',
+    copySql: 'Copy SQL',
+    downloadSql: 'Download .sql',
+    exportFailed: 'Export failed',
+  },
+  id: {
+    loading: 'Memuat diagram…',
+    descPre: 'Tulis skema Anda dalam ',
+    descPost: ' di sebelah kiri; diagram ER diperbarui secara langsung. Seret tabel untuk menatanya — tata letak dan skema Anda disimpan di browser Anda.',
+    saveProject: 'Simpan proyek',
+    exportDbml: 'Ekspor .dbml',
+    open: 'Buka…',
+    saving: 'Menyimpan…',
+    saved: 'Tersimpan',
+    sqlDialect: 'Dialek SQL',
+    exportSql: 'Ekspor SQL',
+    image: 'Gambar',
+    scale: 'Skala',
+    exportImage: 'Ekspor gambar',
+    expand: 'Perbesar',
+    showNavbar: 'Tampilkan navbar',
+    hideNavbarSpace: 'Sembunyikan navbar untuk ruang lebih',
+    hideNavbar: 'Sembunyikan navbar',
+    exit: 'Keluar',
+    copySql: 'Salin SQL',
+    downloadSql: 'Unduh .sql',
+    exportFailed: 'Ekspor gagal',
+  },
+};
 
 const SEED = `Table users {
   id int [pk, increment]
@@ -33,7 +105,8 @@ Ref: posts.user_id > users.id
 const nodeTypes = { table: TableNode };
 const edgeTypes = { relation: RelationEdge };
 
-export default function DbDiagram() {
+export default function DbDiagram({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   // react-flow is browser-only and heavy — load it after mount (like Whiteboard).
   const [RF, setRF] = useState<{
     ReactFlow: ComponentType<Record<string, unknown>>;
@@ -201,7 +274,7 @@ export default function DbDiagram() {
     try {
       setSql(exportSql(dbml, dialect));
     } catch (e) {
-      setSqlErr(e instanceof Error ? e.message : 'Export failed');
+      setSqlErr(e instanceof Error ? e.message : t.exportFailed);
     }
   };
 
@@ -263,7 +336,7 @@ export default function DbDiagram() {
   const onNodeMouseLeave = useCallback(() => setHoveredId(null), []);
 
   const diagram = useMemo(() => {
-    if (!RF) return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading diagram…</div>;
+    if (!RF) return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t.loading}</div>;
     const { ReactFlow, Background, Controls, MiniMap } = RF;
 
     // Derive hover emphasis: connected edges + neighbour tables pop; the rest dim.
@@ -315,18 +388,18 @@ export default function DbDiagram() {
         <MiniMap pannable zoomable />
       </ReactFlow>
     );
-  }, [RF, nodes, edges, onNodesChange, onEdgesChange, onConnect, onEdgesDelete, hoveredId, onNodeMouseEnter, onNodeMouseLeave]);
+  }, [RF, nodes, edges, onNodesChange, onEdgesChange, onConnect, onEdgesDelete, hoveredId, onNodeMouseEnter, onNodeMouseLeave, t]);
 
   return (
     <div className="space-y-3">
       <p className="max-w-3xl text-sm text-muted-foreground">
-        Write your schema in <a href="https://dbml.dbdiagram.io/docs/" target="_blank" rel="noopener noreferrer" className="font-bold underline underline-offset-2">DBML</a> on the left; the ER diagram updates live. Drag tables to arrange them — your layout and schema are saved in your browser.
+        {t.descPre}<a href="https://dbml.dbdiagram.io/docs/" target="_blank" rel="noopener noreferrer" className="font-bold underline underline-offset-2">DBML</a>{t.descPost}
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="secondary" onClick={saveProject}><Save className="h-4 w-4" />Save project</Button>
-        <Button variant="secondary" onClick={exportDbmlFile}>Export .dbml</Button>
-        <Button variant="secondary" onClick={() => fileInputRef.current?.click()}><FolderOpen className="h-4 w-4" />Open…</Button>
+        <Button variant="secondary" onClick={saveProject}><Save className="h-4 w-4" />{t.saveProject}</Button>
+        <Button variant="secondary" onClick={exportDbmlFile}>{t.exportDbml}</Button>
+        <Button variant="secondary" onClick={() => fileInputRef.current?.click()}><FolderOpen className="h-4 w-4" />{t.open}</Button>
         <input
           ref={fileInputRef}
           type="file"
@@ -336,24 +409,24 @@ export default function DbDiagram() {
         />
         <span className="ml-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide">
           {saveState === 'saving' ? (
-            <span className="flex items-center gap-1.5 text-amber-600"><span className="inline-block h-2 w-2 rounded-full bg-amber-500" />Saving…</span>
+            <span className="flex items-center gap-1.5 text-amber-600"><span className="inline-block h-2 w-2 rounded-full bg-amber-500" />{t.saving}</span>
           ) : (
-            <span className="flex items-center gap-1 text-muted-foreground"><Check className="h-3.5 w-3.5" />Saved</span>
+            <span className="flex items-center gap-1 text-muted-foreground"><Check className="h-3.5 w-3.5" />{t.saved}</span>
           )}
         </span>
       </div>
 
       <div className="flex flex-wrap items-end gap-4 border-2 border-border bg-muted/40 p-3">
         <div className="space-y-1">
-          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">SQL dialect</span>
+          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">{t.sqlDialect}</span>
           <select value={dialect} onChange={(e) => setDialect(e.target.value as Dialect)} className="border-2 border-border bg-background px-2 py-1.5 text-sm">
             {DIALECTS.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
           </select>
         </div>
-        <Button onClick={runSqlExport} disabled={!!error}>Export SQL</Button>
+        <Button onClick={runSqlExport} disabled={!!error}>{t.exportSql}</Button>
 
         <div className="space-y-1">
-          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">Image</span>
+          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">{t.image}</span>
           <select value={imgFormat} onChange={(e) => setImgFormat(e.target.value as ImageFormat)} className="border-2 border-border bg-background px-2 py-1.5 text-sm">
             <option value="png">PNG</option>
             <option value="jpeg">JPEG</option>
@@ -362,14 +435,14 @@ export default function DbDiagram() {
           </select>
         </div>
         <div className="space-y-1">
-          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">Scale</span>
+          <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">{t.scale}</span>
           <select value={imgScale} onChange={(e) => setImgScale(Number(e.target.value))} className="border-2 border-border bg-background px-2 py-1.5 text-sm">
             <option value={1}>1×</option><option value={2}>2×</option><option value={3}>3×</option>
           </select>
         </div>
-        <Button variant="secondary" onClick={runImageExport}>Export image</Button>
+        <Button variant="secondary" onClick={runImageExport}>{t.exportImage}</Button>
         {!expanded && (
-          <Button variant="secondary" onClick={() => setExpandedPersist(true)}><Maximize2 className="h-4 w-4" />Expand</Button>
+          <Button variant="secondary" onClick={() => setExpandedPersist(true)}><Maximize2 className="h-4 w-4" />{t.expand}</Button>
         )}
       </div>
 
@@ -397,15 +470,15 @@ export default function DbDiagram() {
         <>
           <button
             onClick={() => setNavHiddenPersist(!navHidden)}
-            title={navHidden ? 'Show navbar' : 'Hide navbar for more space'}
-            aria-label={navHidden ? 'Show navbar' : 'Hide navbar'}
+            title={navHidden ? t.showNavbar : t.hideNavbarSpace}
+            aria-label={navHidden ? t.showNavbar : t.hideNavbar}
             className={`fixed left-1/2 z-50 -translate-x-1/2 rounded-b-md border-2 border-t-0 border-border bg-background px-5 py-0.5 shadow-brutal-sm hover:bg-muted ${navHidden ? '' : '-translate-y-full'}`}
             style={{ top: topOffset }}
           >
             {navHidden ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
           </button>
           <div className="fixed right-4 z-40 flex items-center gap-3" style={{ top: topOffset + 8 }}>
-            <Button variant="secondary" onClick={() => setExpandedPersist(false)} className="shadow-brutal"><Minimize2 className="h-4 w-4" />Exit</Button>
+            <Button variant="secondary" onClick={() => setExpandedPersist(false)} className="shadow-brutal"><Minimize2 className="h-4 w-4" />{t.exit}</Button>
           </div>
         </>
       )}
@@ -414,8 +487,8 @@ export default function DbDiagram() {
       {sql && (
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={() => navigator.clipboard?.writeText(sql)}>Copy SQL</Button>
-            <Button variant="secondary" onClick={() => downloadService.download(new Blob([sql], { type: 'text/sql' }), `schema-${dialect}.sql`)}>Download .sql</Button>
+            <Button variant="secondary" onClick={() => navigator.clipboard?.writeText(sql)}>{t.copySql}</Button>
+            <Button variant="secondary" onClick={() => downloadService.download(new Blob([sql], { type: 'text/sql' }), `schema-${dialect}.sql`)}>{t.downloadSql}</Button>
           </div>
           <pre className="max-h-[40vh] overflow-auto border-2 border-border bg-background p-3 font-mono text-xs">{sql}</pre>
         </div>
