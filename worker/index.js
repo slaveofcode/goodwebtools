@@ -75,7 +75,7 @@ export default {
     if (request.method === 'GET') {
       const accept = request.headers.get('accept') || '';
       const p = url.pathname;
-      const isLocalized = p === '/' || p.startsWith('/tools/') || p.startsWith('/category/') || p === '/about' || p.startsWith('/about/');
+      const isLocalized = p === '/' || p.startsWith('/tools/') || p.startsWith('/category/') || p === '/about' || p.startsWith('/about/') || p === '/privacy' || p.startsWith('/privacy/');
       const alreadyId = p === '/id' || p.startsWith('/id/');
       const cookie = request.headers.get('cookie') || '';
       const hasChoice = /(?:^|;\s*)gwt\.lang=/.test(cookie);
