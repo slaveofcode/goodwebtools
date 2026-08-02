@@ -21,6 +21,7 @@ import { CopyImageButton } from '@/components/ui/CopyImageButton';
 import { downloadService } from '@/services/download';
 import { usePasteImage } from '@/hooks/usePasteImage';
 import { takePendingImage } from '@/services/handoff';
+import type { Lang } from '@/i18n/config';
 
 type Tool = 'select' | 'rect' | 'ellipse' | 'line' | 'arrow' | 'pencil' | 'highlighter' | 'text' | 'blur';
 
@@ -53,6 +54,85 @@ const TOOLS: { tool: Tool; label: string; Icon: typeof Square }[] = [
   { tool: 'text', label: 'Text', Icon: Type },
   { tool: 'blur', label: 'Blur', Icon: Droplets },
 ];
+
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropHint: string;
+  tools: Record<Tool, string>;
+  importImage: string;
+  importBtn: string;
+  color: string;
+  width: string;
+  rounded: string;
+  undo: string;
+  undoAria: string;
+  redo: string;
+  redoAria: string;
+  clearAnnotations: string;
+  selectHint: string;
+  textPlaceholder: string;
+  downloadPng: string;
+  clear: string;
+}> = {
+  en: {
+    dropTitle: 'Drop an image or click to browse',
+    dropHint: 'Annotate with shapes, arrows, text, highlighter, and blur · Select to move or rename',
+    tools: {
+      select: 'Select / move',
+      rect: 'Rectangle',
+      ellipse: 'Ellipse',
+      line: 'Line',
+      arrow: 'Arrow',
+      pencil: 'Pencil',
+      highlighter: 'Highlighter',
+      text: 'Text',
+      blur: 'Blur',
+    },
+    importImage: 'Import image',
+    importBtn: 'Import',
+    color: 'Color',
+    width: 'Width',
+    rounded: 'Rounded',
+    undo: 'Undo (⌘/Ctrl+Z)',
+    undoAria: 'Undo',
+    redo: 'Redo (⌘/Ctrl+Shift+Z)',
+    redoAria: 'Redo',
+    clearAnnotations: 'Clear annotations',
+    selectHint: 'Drag to move · drag a handle to resize · double-click text to rename · Delete to remove',
+    textPlaceholder: 'Type, then Enter',
+    downloadPng: 'Download PNG',
+    clear: 'Clear',
+  },
+  id: {
+    dropTitle: 'Jatuhkan gambar atau klik untuk memilih',
+    dropHint: 'Anotasi dengan bentuk, panah, teks, penyorot, dan blur · Pilih untuk memindahkan atau mengganti nama',
+    tools: {
+      select: 'Pilih / pindahkan',
+      rect: 'Persegi panjang',
+      ellipse: 'Elips',
+      line: 'Garis',
+      arrow: 'Panah',
+      pencil: 'Pensil',
+      highlighter: 'Penyorot',
+      text: 'Teks',
+      blur: 'Blur',
+    },
+    importImage: 'Impor gambar',
+    importBtn: 'Impor',
+    color: 'Warna',
+    width: 'Tebal',
+    rounded: 'Membulat',
+    undo: 'Urungkan (⌘/Ctrl+Z)',
+    undoAria: 'Urungkan',
+    redo: 'Ulangi (⌘/Ctrl+Shift+Z)',
+    redoAria: 'Ulangi',
+    clearAnnotations: 'Bersihkan anotasi',
+    selectHint: 'Seret untuk memindahkan · seret pegangan untuk mengubah ukuran · klik dua kali teks untuk mengganti nama · Delete untuk menghapus',
+    textPlaceholder: 'Ketik, lalu Enter',
+    downloadPng: 'Unduh PNG',
+    clear: 'Bersihkan',
+  },
+};
 
 function drawPath(ctx: CanvasRenderingContext2D, points: [number, number][]) {
   ctx.beginPath();
@@ -326,7 +406,8 @@ function resizeShape(s: Shape, id: HandleId, px: number, py: number, ctx: Canvas
   return { ...s, x: nx, y: ny, w: nw, h: nh };
 }
 
-export default function ImageAnnotate() {
+export default function ImageAnnotate({ lang = 'en' }: { lang?: Lang }) {
+  const tr = TR[lang] ?? TR.en;
   const viewRef = useRef<HTMLCanvasElement>(null);
   const baseRef = useRef<HTMLCanvasElement | null>(null);
   const blurRef = useRef<HTMLCanvasElement | null>(null);
@@ -780,9 +861,9 @@ export default function ImageAnnotate() {
       {!file && (
         <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
           <div className="space-y-1">
-            <p className="text-lg font-bold">Drop an image or click to browse</p>
+            <p className="text-lg font-bold">{tr.dropTitle}</p>
             <p className="text-sm text-muted-foreground">
-              Annotate with shapes, arrows, text, highlighter, and blur · Select to move or rename
+              {tr.dropHint}
             </p>
           </div>
         </Dropzone>
@@ -792,12 +873,12 @@ export default function ImageAnnotate() {
         <>
           {/* Toolbar */}
           <div className="flex flex-wrap items-center gap-2">
-            {TOOLS.map(({ tool: t, label, Icon }) => (
+            {TOOLS.map(({ tool: t, Icon }) => (
               <button
                 key={t}
                 onClick={() => { setTool(t); if (t !== 'select') setSelectedIndex(null); }}
                 aria-pressed={tool === t}
-                title={label}
+                title={tr.tools[t]}
                 className={`border-2 border-border p-2 shadow-brutal-sm press-brutal ${
                   tool === t ? 'bg-accent text-accent-foreground' : 'bg-muted'
                 }`}
@@ -811,11 +892,11 @@ export default function ImageAnnotate() {
             {/* Import an image from disk as a movable/resizable overlay. */}
             <button
               onClick={() => importInputRef.current?.click()}
-              title="Import image"
+              title={tr.importImage}
               className="flex items-center gap-1.5 border-2 border-border bg-muted p-2 text-sm font-bold shadow-brutal-sm press-brutal"
             >
               <ImagePlus className="h-4 w-4" />
-              Import
+              {tr.importBtn}
             </button>
             <input
               ref={importInputRef}
@@ -827,7 +908,7 @@ export default function ImageAnnotate() {
 
             <span className="mx-1 h-6 w-0.5 bg-border" />
 
-            <label className="flex items-center gap-1" title="Color">
+            <label className="flex items-center gap-1" title={tr.color}>
               <input
                 type="color"
                 value={color}
@@ -836,7 +917,7 @@ export default function ImageAnnotate() {
               />
             </label>
             <label className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Width</span>
+              <span className="text-muted-foreground">{tr.width}</span>
               <input
                 type="range"
                 min={2}
@@ -849,26 +930,26 @@ export default function ImageAnnotate() {
             {tool === 'rect' && (
               <label className="flex cursor-pointer items-center gap-2 border-2 border-border bg-muted px-2 py-1.5 text-sm">
                 <input type="checkbox" checked={rounded} onChange={() => setRounded(r => !r)} className="accent-accent" />
-                Rounded
+                {tr.rounded}
               </label>
             )}
 
             <span className="mx-1 h-6 w-0.5 bg-border" />
 
-            <button onClick={undo} disabled={!shapes.length} title="Undo (⌘/Ctrl+Z)" aria-label="Undo" className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
+            <button onClick={undo} disabled={!shapes.length} title={tr.undo} aria-label={tr.undoAria} className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
               <Undo2 className="h-4 w-4" />
             </button>
-            <button onClick={redo} disabled={!undone.length} title="Redo (⌘/Ctrl+Shift+Z)" aria-label="Redo" className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
+            <button onClick={redo} disabled={!undone.length} title={tr.redo} aria-label={tr.redoAria} className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
               <Redo2 className="h-4 w-4" />
             </button>
-            <button onClick={clearAll} disabled={!shapes.length} title="Clear annotations" className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
+            <button onClick={clearAll} disabled={!shapes.length} title={tr.clearAnnotations} className="border-2 border-border bg-muted p-2 shadow-brutal-sm press-brutal disabled:opacity-30">
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
 
           {tool === 'select' && (
             <p className="text-xs text-muted-foreground">
-              Drag to move · drag a handle to resize · double-click text to rename · Delete to remove
+              {tr.selectHint}
             </p>
           )}
 
@@ -894,7 +975,7 @@ export default function ImageAnnotate() {
                   if (e.key === 'Enter') commitText();
                   if (e.key === 'Escape') { setTextEdit(null); setTextValue(''); }
                 }}
-                placeholder="Type, then Enter"
+                placeholder={tr.textPlaceholder}
                 className="absolute border-2 border-accent bg-white px-1 text-sm text-black outline-none"
                 style={{ left: textEdit.left, top: textEdit.top }}
               />
@@ -904,11 +985,11 @@ export default function ImageAnnotate() {
           <div className="flex flex-wrap gap-2">
             <Button onClick={download}>
               <Download className="h-4 w-4" />
-              Download PNG
+              {tr.downloadPng}
             </Button>
             <CopyImageButton blob={toPngBlob} />
             <Button variant="ghost" onClick={() => { setFile(null); setReady(false); setShapes([]); setUndone([]); }}>
-              Clear
+              {tr.clear}
             </Button>
           </div>
         </>
