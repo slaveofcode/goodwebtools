@@ -6,6 +6,7 @@ import { Alert } from '@/components/ui/Alert';
 import { LoadFileButton } from '@/components/ui/LoadFileButton';
 import { CodeBlock } from '@/components/ui/CodeBlock';
 import { DownloadTextButton } from '@/components/ui/DownloadTextButton';
+import type { Lang } from '@/i18n/config';
 
 type Mode = 'format2' | 'format4' | 'minify';
 
@@ -15,13 +16,45 @@ const MODE_INDENT: Record<Mode, number> = {
   minify: 0,
 };
 
-const MODE_LABELS: { mode: Mode; label: string }[] = [
-  { mode: 'format2', label: 'Format (2 spaces)' },
-  { mode: 'format4', label: 'Format (4 spaces)' },
-  { mode: 'minify', label: 'Minify' },
-];
+const TR: Record<Lang, {
+  loadFile: string;
+  inputLabel: string;
+  format2: string;
+  format4: string;
+  minify: string;
+  clear: string;
+  invalidJson: string;
+  result: string;
+}> = {
+  en: {
+    loadFile: 'Load .json file',
+    inputLabel: 'Input JSON',
+    format2: 'Format (2 spaces)',
+    format4: 'Format (4 spaces)',
+    minify: 'Minify',
+    clear: 'Clear',
+    invalidJson: 'Invalid JSON',
+    result: 'Result',
+  },
+  id: {
+    loadFile: 'Muat file .json',
+    inputLabel: 'Input JSON',
+    format2: 'Format (2 spasi)',
+    format4: 'Format (4 spasi)',
+    minify: 'Minify',
+    clear: 'Bersihkan',
+    invalidJson: 'JSON tidak valid',
+    result: 'Hasil',
+  },
+};
 
-export default function JsonFormat() {
+export default function JsonFormat({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
+  const MODE_LABELS: { mode: Mode; label: string }[] = [
+    { mode: 'format2', label: t.format2 },
+    { mode: 'format4', label: t.format4 },
+    { mode: 'minify', label: t.minify },
+  ];
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
@@ -39,7 +72,7 @@ export default function JsonFormat() {
       setOutput(JSON.stringify(parsed, null, MODE_INDENT[mode]));
     } catch (e) {
       setOutput('');
-      setError(e instanceof Error ? e.message : 'Invalid JSON');
+      setError(e instanceof Error ? e.message : t.invalidJson);
     }
   };
 
@@ -65,10 +98,10 @@ export default function JsonFormat() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <LoadFileButton onLoad={loadFile} accept=".json,application/json,.txt,text/plain" label="Load .json file" />
+        <LoadFileButton onLoad={loadFile} accept=".json,application/json,.txt,text/plain" label={t.loadFile} />
       </div>
       <TextArea
-        label="Input JSON"
+        label={t.inputLabel}
         value={input}
         onChange={e => handleInputChange(e.target.value)}
         placeholder='{"hello": "world"}'
@@ -87,7 +120,7 @@ export default function JsonFormat() {
           </Button>
         ))}
         <Button variant="ghost" onClick={clear}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
@@ -96,7 +129,7 @@ export default function JsonFormat() {
       {output && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Result</span>
+            <span className="text-sm font-medium text-muted-foreground">{t.result}</span>
             <div className="flex gap-2">
               <DownloadTextButton text={output} filename="formatted.json" mime="application/json" />
               <CopyButton value={output} />
