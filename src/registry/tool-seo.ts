@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'legacy-letter': {
+    title: 'Free Digital Legacy Letter Tool — Encrypted',
+    description: 'A free tool to write an encrypted letter of passwords and final words for your family — opened by password or family shares, only when the time comes. 100% in your browser.',
+    intro: 'This free digital legacy letter tool lets you write a private message and store account passwords for your loved ones, sealed with AES-256 encryption. Unlock it with a password or split it into family shares — nothing is ever uploaded.',
+    howTo: [
+      'Write your message and add each account — service, username, password, and notes.',
+      'Choose how family will unlock it: a password, family shares (any 3 of 5, say), or both.',
+      'Download the encrypted .gwtvault file and store it safely; hand out the shares separately.',
+      'When the time comes, your family opens the file here with the password or by combining shares.',
+    ],
+    faqs: [
+      { q: 'Is my letter or my passwords uploaded anywhere?', a: 'No. Everything is encrypted and decrypted on your device with AES-256-GCM. The file never leaves your browser, so your passwords are never sent to any server.' },
+      { q: 'How do family shares work?', a: 'The key is split into several shares (for example 5) using Shamir Secret Sharing, and a chosen number of them (say any 3) are needed to open the letter. No single person can open it alone, and it still works if a few shares are lost. Tip: give one share to your lawyer or executor.' },
+      { q: 'Can it release automatically when I die?', a: 'Not automatically — a private, in-browser tool cannot know when you have died without a server holding your data. Instead you control the handoff: share the password or the family shares so they can only be brought together when the time comes.' },
+      { q: 'What if I lose the password and the shares?', a: 'Then the letter cannot be opened — by design, so no one else can read it either. Keep the file and the way to unlock it stored separately and safely.' },
+    ],
+  },
   'json-format': {
     title: 'Free JSON Formatter Tool — Validate & Minify',
     description: 'A free online JSON formatter tool to format, beautify, minify and validate JSON — 100% private. Your JSON is processed in your browser and never uploaded.',
@@ -1274,6 +1291,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'legacy-letter': {
+    title: 'Tool Surat Wasiat Digital Gratis — Terenkripsi',
+    description: 'Tool gratis untuk menulis surat terenkripsi berisi kata sandi dan pesan terakhir untuk keluarga — dibuka dengan kata sandi atau bagian keluarga, hanya saat waktunya tiba. 100% di browser Anda.',
+    intro: 'Tool surat wasiat digital gratis ini memungkinkan Anda menulis pesan pribadi dan menyimpan kata sandi akun untuk orang terkasih, tersegel dengan enkripsi AES-256. Buka dengan kata sandi atau bagi menjadi beberapa bagian keluarga — tidak ada yang pernah diunggah.',
+    howTo: [
+      'Tulis pesan Anda dan tambahkan setiap akun — layanan, nama pengguna, kata sandi, dan catatan.',
+      'Pilih cara keluarga membukanya: kata sandi, bagian keluarga (misalnya 3 dari 5), atau keduanya.',
+      'Unduh berkas .gwtvault terenkripsi dan simpan dengan aman; bagikan setiap bagian secara terpisah.',
+      'Saat waktunya tiba, keluarga membuka berkas di sini dengan kata sandi atau dengan menggabungkan bagian.',
+    ],
+    faqs: [
+      { q: 'Apakah surat atau kata sandi saya diunggah ke suatu tempat?', a: 'Tidak. Semuanya dienkripsi dan didekripsi di perangkat Anda dengan AES-256-GCM. Berkas tidak pernah meninggalkan browser, jadi kata sandi Anda tidak pernah dikirim ke server mana pun.' },
+      { q: 'Bagaimana cara kerja bagian keluarga?', a: 'Kunci dibagi menjadi beberapa bagian (misalnya 5) menggunakan Shamir Secret Sharing, dan sejumlah tertentu (misalnya 3) diperlukan untuk membuka surat. Tidak ada satu orang pun yang bisa membukanya sendirian, dan tetap berfungsi meski beberapa bagian hilang. Tips: berikan satu bagian kepada notaris atau pelaksana wasiat Anda.' },
+      { q: 'Bisakah surat terbuka otomatis saat saya meninggal?', a: 'Tidak secara otomatis — tool privat di browser tidak bisa mengetahui kapan Anda meninggal tanpa server yang menyimpan data Anda. Sebagai gantinya, Anda mengendalikan penyerahannya: bagikan kata sandi atau bagian keluarga agar hanya dapat disatukan saat waktunya tiba.' },
+      { q: 'Bagaimana jika saya kehilangan kata sandi dan bagiannya?', a: 'Maka surat tidak bisa dibuka — memang dirancang begitu, agar tidak ada orang lain yang bisa membacanya. Simpan berkas dan cara membukanya secara terpisah dan aman.' },
+    ],
+  },
   'json-format': {
     title: 'Tool Format JSON Gratis — Validasi & Perkecil',
     description: 'Tool format JSON online gratis untuk merapikan, memperindah, memperkecil, dan memvalidasi JSON — 100% privat. JSON Anda diproses di browser dan tidak pernah diunggah.',
