@@ -68,11 +68,4 @@ const toolList = {
 
     <ToolGrid lang={lang} />
   </main>
-
-  <script>
-    // Let non-keyboard users open the command palette by clicking the hint.
-    document.getElementById('home-search')?.addEventListener('click', () => {
-      window.dispatchEvent(new CustomEvent('gwt:open-search'));
-    });
-  </script>
 </Base>
