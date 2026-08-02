@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useUi } from '@/i18n/shared';
 
 export interface DropzoneProps {
   onDrop: (files: File[]) => void | Promise<void>;
@@ -8,6 +9,7 @@ export interface DropzoneProps {
 }
 
 export function Dropzone({ onDrop, accept, multiple = true, children }: DropzoneProps) {
+  const ui = useUi();
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -41,7 +43,7 @@ export function Dropzone({ onDrop, accept, multiple = true, children }: Dropzone
       className={`block cursor-pointer border-[3px] border-dashed p-8 text-center transition-all ${isDragging ? 'border-accent bg-accent/10 shadow-brutal' : 'border-border hover:shadow-brutal'}`}
     >
       <input type="file" id="file-input" accept={accept} multiple={multiple} onChange={handleFileInput} className="hidden" />
-      {children || <p>Drop files here or click to browse</p>}
+      {children || <p>{ui.dropzone}</p>}
     </label>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { Button } from './Button';
+import { useUi } from '@/i18n/shared';
 
 interface CopyButtonProps {
   value: string;
@@ -8,7 +9,8 @@ interface CopyButtonProps {
   disabled?: boolean;
 }
 
-export function CopyButton({ value, label = 'Copy', disabled }: CopyButtonProps) {
+export function CopyButton({ value, label, disabled }: CopyButtonProps) {
+  const ui = useUi();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -25,7 +27,7 @@ export function CopyButton({ value, label = 'Copy', disabled }: CopyButtonProps)
   return (
     <Button variant="secondary" onClick={handleCopy} disabled={disabled || !value}>
       {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-      {copied ? 'Copied' : label}
+      {copied ? ui.copied : (label ?? ui.copy)}
     </Button>
   );
 }
