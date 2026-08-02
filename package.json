@@ -6,6 +6,9 @@
   "directories": {
     "doc": "docs"
   },
+  "overrides": {
+    "@xmldom/xmldom": "0.8.13"
+  },
   "scripts": {
     "copy:wasm": "node scripts/copy-wasm.mjs",
     "og": "node scripts/generate-og.mjs",
@@ -77,6 +80,7 @@
     "comlink": "^4.4.2",
     "docx-preview": "^0.4.0",
     "dompurify": "^3.4.12",
+    "epubjs": "^0.3.93",
     "fast-xml-parser": "^5.10.0",
     "fflate": "^0.8.3",
     "gifenc": "^1.0.3",

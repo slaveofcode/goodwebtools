@@ -45,6 +45,18 @@ export default defineConfig({
       rollupOptions: {
         // Tauri API imports are only available in Tauri context, externalize for web build
         external: [/^@tauri-apps\//],
+        output: {
+          // epub.js bundles from source (its `module` field is src/index.js) into a
+          // ~2 MB chunk that Rollup would otherwise name `index.*` — undetectable by
+          // the workbox globIgnore. Force stable names so the EPUB reader's heavy,
+          // lazily-imported deps stay out of the PWA precache (see globIgnores below).
+          // jszip is shared with docx-preview, so it gets its own chunk rather than
+          // being merged into epubjs.
+          manualChunks(id) {
+            if (id.includes('node_modules/epubjs')) return 'epubjs';
+            if (id.includes('node_modules/jszip')) return 'jszip';
+          },
+        },
       },
     },
     // mupdf/pdf.js workers use dynamic import() (code-splitting), which requires
@@ -118,6 +130,8 @@ export default defineConfig({
           '**/*huggingface*.js',
           '**/maplibre-gl*.js',
           '**/xlsx*.js',
+          '**/epubjs*.js',
+          '**/jszip*.js',
           'og/*.png',
         ],
         runtimeCaching: [

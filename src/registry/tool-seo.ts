@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'epub-reader': {
+    title: 'Free EPUB Reader — Read E-Books in Your Browser',
+    description: 'A free online EPUB reader to open and read .epub e-books in your browser — chapters, table of contents and adjustable text size. 100% private; nothing is uploaded.',
+    intro: 'This free EPUB reader opens .epub e-books right in your browser with a clean, paginated reading view — table of contents, arrow-key page turning and adjustable text size — no app or account needed. The book is opened on your device and never uploaded.',
+    howTo: [
+      'Drop an .epub file (or click to browse) — it opens entirely in your browser.',
+      'Turn pages with the on-screen buttons or your keyboard’s arrow keys.',
+      'Open the Contents list to jump straight to any chapter.',
+      'Use the − / + buttons to make the text smaller or larger.',
+    ],
+    faqs: [
+      { q: 'Is my e-book uploaded anywhere?', a: 'No. The .epub is opened and rendered entirely in your browser with JavaScript. It never leaves your device, so your library stays private.' },
+      { q: 'Is it safe to open any EPUB?', a: 'Yes. Any scripts embedded in the book are disabled and its content is rendered in a sandboxed frame, so opening a file only ever displays it.' },
+      { q: 'Does it work offline?', a: 'Once the page has loaded it works without a connection, and installing GoodWebTools as an app lets you read anywhere.' },
+      { q: 'Can it open .mobi or Kindle books?', a: 'This reader supports the open EPUB format (.epub). Convert a .mobi or Kindle file to EPUB first, then open it here.' },
+    ],
+  },
   'spreadsheet-viewer': {
     title: 'Free Spreadsheet Viewer — Open XLSX, ODS & CSV',
     description: 'A free spreadsheet viewer to open Excel (.xlsx/.xls), OpenDocument (.ods) and CSV files in your browser — every sheet as a table. 100% private; nothing is uploaded.',
@@ -1342,6 +1359,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'epub-reader': {
+    title: 'Pembaca EPUB Gratis — Baca E-Book di Browser',
+    description: 'Pembaca EPUB gratis untuk membuka dan membaca e-book .epub di browser Anda — bab, daftar isi, dan ukuran teks yang dapat disesuaikan. 100% privat; tidak ada yang diunggah.',
+    intro: 'Pembaca EPUB gratis ini membuka e-book .epub langsung di browser Anda dengan tampilan baca berhalaman yang rapi — daftar isi, membalik halaman dengan tombol panah, dan ukuran teks yang dapat disesuaikan — tanpa aplikasi atau akun. Buku dibuka di perangkat Anda dan tidak pernah diunggah.',
+    howTo: [
+      'Letakkan berkas .epub (atau klik untuk menelusuri) — dibuka sepenuhnya di browser Anda.',
+      'Balik halaman dengan tombol di layar atau tombol panah pada keyboard.',
+      'Buka daftar isi untuk melompat langsung ke bab mana pun.',
+      'Gunakan tombol − / + untuk memperkecil atau memperbesar teks.',
+    ],
+    faqs: [
+      { q: 'Apakah e-book saya diunggah ke suatu tempat?', a: 'Tidak. Berkas .epub dibuka dan ditampilkan sepenuhnya di browser Anda dengan JavaScript. Berkas tidak pernah meninggalkan perangkat, jadi koleksi Anda tetap privat.' },
+      { q: 'Apakah aman membuka EPUB apa pun?', a: 'Ya. Skrip apa pun yang tertanam di dalam buku dinonaktifkan dan kontennya ditampilkan dalam bingkai terisolasi (sandbox), sehingga membuka berkas hanya menampilkannya.' },
+      { q: 'Apakah bekerja secara luring (offline)?', a: 'Setelah halaman dimuat, ini bekerja tanpa koneksi, dan memasang GoodWebTools sebagai aplikasi memungkinkan Anda membaca di mana saja.' },
+      { q: 'Bisakah membuka .mobi atau buku Kindle?', a: 'Pembaca ini mendukung format EPUB terbuka (.epub). Konversi berkas .mobi atau Kindle ke EPUB terlebih dahulu, lalu buka di sini.' },
+    ],
+  },
   'spreadsheet-viewer': {
     title: 'Penampil Spreadsheet Gratis — Buka XLSX, ODS & CSV',
     description: 'Penampil spreadsheet gratis untuk membuka berkas Excel (.xlsx/.xls), OpenDocument (.ods), dan CSV di browser — setiap lembar sebagai tabel. 100% privat; tidak ada yang diunggah.',
