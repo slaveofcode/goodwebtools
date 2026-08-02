@@ -7,8 +7,27 @@ import { type OcrResult } from '@/tools/image/ocr.lib';
 import { parseReceipt } from '@/tools/image/receipt.lib';
 import OcrWorkbench from './OcrWorkbench';
 import ReceiptFields from './ReceiptFields';
+import type { Lang } from '@/i18n/config';
 
-export default function ImageOcr() {
+const TR: Record<Lang, {
+  wasmNote: string; recognizedText: string; downloadTxt: string; parseAsReceipt: string;
+}> = {
+  en: {
+    wasmNote: 'Ran in slower CPU (WASM) mode — WebGPU isn’t available in this browser.',
+    recognizedText: 'Recognized text',
+    downloadTxt: 'Download .txt',
+    parseAsReceipt: 'Parse as receipt',
+  },
+  id: {
+    wasmNote: 'Berjalan dalam mode CPU yang lebih lambat (WASM) — WebGPU tidak tersedia di browser ini.',
+    recognizedText: 'Teks yang dikenali',
+    downloadTxt: 'Unduh .txt',
+    parseAsReceipt: 'Uraikan sebagai struk',
+  },
+};
+
+export default function ImageOcr({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [result, setResult] = useState<OcrResult | null>(null);
   const [text, setText] = useState('');
   const [asReceipt, setAsReceipt] = useState(false);
@@ -21,26 +40,26 @@ export default function ImageOcr() {
 
   return (
     <div className="space-y-4">
-      <OcrWorkbench onResult={setResult} onReset={() => setResult(null)} />
+      <OcrWorkbench onResult={setResult} onReset={() => setResult(null)} lang={lang} />
 
       {result && (
         <div className="space-y-2">
           {result.backend === 'wasm' && (
             <p className="text-xs text-muted-foreground">
-              Ran in slower CPU (WASM) mode — WebGPU isn’t available in this browser.
+              {t.wasmNote}
             </p>
           )}
-          <TextArea label="Recognized text" value={text} onChange={(e) => setText(e.target.value)} rows={12} />
+          <TextArea label={t.recognizedText} value={text} onChange={(e) => setText(e.target.value)} rows={12} />
           <div className="flex gap-2">
             <CopyButton value={text} />
-            <Button variant="secondary" onClick={download}>Download .txt</Button>
+            <Button variant="secondary" onClick={download}>{t.downloadTxt}</Button>
           </div>
 
           <label className="flex items-center gap-2 text-sm font-bold">
             <input type="checkbox" checked={asReceipt} onChange={(e) => setAsReceipt(e.target.checked)} />
-            Parse as receipt
+            {t.parseAsReceipt}
           </label>
-          {asReceipt && receipt && <ReceiptFields data={receipt} />}
+          {asReceipt && receipt && <ReceiptFields data={receipt} lang={lang} />}
         </div>
       )}
     </div>
