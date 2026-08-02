@@ -6,6 +6,52 @@ import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage } from '@/tools/image/canvas.lib';
 import { imageToIco, imageToGif, imageToSvg, canvasSupportsType } from '@/tools/image/encode.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  drop: string;
+  sub: (avif: boolean) => string;
+  outputFormat: string;
+  quality: string;
+  converting: string;
+  convertTo: (label: string) => string;
+  clear: string;
+  conversionFailed: string;
+  notes: Record<string, string>;
+}> = {
+  en: {
+    drop: 'Drop an image or click to browse',
+    sub: (avif) => `Convert to PNG, JPEG, WebP${avif ? ', AVIF' : ''}, GIF, ICO, or SVG · or paste (⌘V)`,
+    outputFormat: 'Output format',
+    quality: 'Quality',
+    converting: 'Converting…',
+    convertTo: (label) => `Convert to ${label}`,
+    clear: 'Clear',
+    conversionFailed: 'Conversion failed',
+    notes: {
+      avif: 'AVIF (AV1 image) — great compression, modern browsers.',
+      gif: 'Single frame, 256 colors.',
+      ico: 'Multi-size favicon: 16, 32, and 48px in one .ico.',
+      svg: 'Wraps the image inside an SVG (embedded, not vectorized).',
+    },
+  },
+  id: {
+    drop: 'Letakkan gambar atau klik untuk memilih',
+    sub: (avif) => `Konversi ke PNG, JPEG, WebP${avif ? ', AVIF' : ''}, GIF, ICO, atau SVG · atau tempel (⌘V)`,
+    outputFormat: 'Format keluaran',
+    quality: 'Kualitas',
+    converting: 'Mengonversi…',
+    convertTo: (label) => `Konversi ke ${label}`,
+    clear: 'Bersihkan',
+    conversionFailed: 'Konversi gagal',
+    notes: {
+      avif: 'AVIF (AV1 image) — kompresi bagus, browser modern.',
+      gif: 'Satu frame, 256 warna.',
+      ico: 'Favicon multi-ukuran: 16, 32, dan 48px dalam satu .ico.',
+      svg: 'Membungkus gambar di dalam SVG (disematkan, bukan divektorkan).',
+    },
+  },
+};
 
 type Kind = 'canvas' | 'ico' | 'gif' | 'svg';
 
@@ -51,7 +97,8 @@ const FORMATS: Format[] = [
   },
 ];
 
-export default function ImageConvert() {
+export default function ImageConvert({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [key, setKey] = useState('png');
   const [quality, setQuality] = useState(90);
@@ -95,7 +142,7 @@ export default function ImageConvert() {
       }
       setResult(blob);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Conversion failed');
+      setError(e instanceof Error ? e.message : t.conversionFailed);
     } finally {
       setBusy(false);
     }
@@ -105,9 +152,9 @@ export default function ImageConvert() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an image or click to browse</p>
+          <p className="text-lg font-bold">{t.drop}</p>
           <p className="text-sm text-muted-foreground">
-            Convert to PNG, JPEG, WebP{avifOk ? ', AVIF' : ''}, GIF, ICO, or SVG · or paste (⌘V)
+            {t.sub(avifOk)}
           </p>
         </div>
       </Dropzone>
@@ -116,7 +163,7 @@ export default function ImageConvert() {
 
       <div className="space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Output format
+          {t.outputFormat}
         </span>
         <div className="flex flex-wrap gap-2">
           {available.map(f => (
@@ -130,13 +177,13 @@ export default function ImageConvert() {
             </Button>
           ))}
         </div>
-        {fmt.note && <p className="text-xs text-muted-foreground">{fmt.note}</p>}
+        {fmt.note && <p className="text-xs text-muted-foreground">{t.notes[fmt.key] ?? fmt.note}</p>}
       </div>
 
       {fmt.lossy && (
         <label className="block space-y-1.5">
           <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            <span>Quality</span>
+            <span>{t.quality}</span>
             <span>{quality}%</span>
           </span>
           <input
@@ -152,10 +199,10 @@ export default function ImageConvert() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || busy}>
-          {busy ? 'Converting…' : `Convert to ${fmt.label}`}
+          {busy ? t.converting : t.convertTo(fmt.label)}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 

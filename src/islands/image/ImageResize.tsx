@@ -5,8 +5,59 @@ import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage, scaleToWidth, scaleToHeight } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import type { Lang } from '@/i18n/config';
 
 const MAX_DISPLAY = 760; // px the "fit" preview occupies
+
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropHint: string;
+  couldNotRead: string;
+  original: string;
+  previewAlt: string;
+  dragToResize: string;
+  width: string;
+  height: string;
+  lockAspect: string;
+  reset: string;
+  resizing: string;
+  resize: string;
+  clear: string;
+  failed: string;
+}> = {
+  en: {
+    dropTitle: 'Drop an image or click to browse',
+    dropHint: 'Drag the corner handle or type exact sizes · or paste (⌘V)',
+    couldNotRead: 'Could not read this image.',
+    original: 'original',
+    previewAlt: 'Resize preview',
+    dragToResize: 'Drag to resize',
+    width: 'Width',
+    height: 'Height',
+    lockAspect: 'Lock aspect ratio',
+    reset: 'Reset',
+    resizing: 'Resizing…',
+    resize: 'Resize',
+    clear: 'Clear',
+    failed: 'Resize failed',
+  },
+  id: {
+    dropTitle: 'Jatuhkan gambar atau klik untuk menelusuri',
+    dropHint: 'Seret gagang sudut atau ketik ukuran persis · atau tempel (⌘V)',
+    couldNotRead: 'Tidak dapat membaca gambar ini.',
+    original: 'asli',
+    previewAlt: 'Pratinjau perubahan ukuran',
+    dragToResize: 'Seret untuk mengubah ukuran',
+    width: 'Lebar',
+    height: 'Tinggi',
+    lockAspect: 'Kunci rasio aspek',
+    reset: 'Atur ulang',
+    resizing: 'Mengubah ukuran…',
+    resize: 'Ubah ukuran',
+    clear: 'Bersihkan',
+    failed: 'Perubahan ukuran gagal',
+  },
+};
 
 function outputFormat(type: string): { mime: string; ext: string } {
   if (type === 'image/jpeg') return { mime: 'image/jpeg', ext: 'jpg' };
@@ -14,7 +65,8 @@ function outputFormat(type: string): { mime: string; ext: string } {
   return { mime: 'image/png', ext: 'png' };
 }
 
-export default function ImageResize() {
+export default function ImageResize({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [srcUrl, setSrcUrl] = useState('');
   const [orig, setOrig] = useState<{ w: number; h: number } | null>(null);
@@ -48,7 +100,7 @@ export default function ImageResize() {
       setHeight(bitmap.height);
       bitmap.close?.();
     } catch {
-      setError('Could not read this image.');
+      setError(t.couldNotRead);
       setFile(null);
     }
   };
@@ -113,7 +165,7 @@ export default function ImageResize() {
       });
       setResult(blob);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Resize failed');
+      setError(e instanceof Error ? e.message : t.failed);
     } finally {
       setBusy(false);
     }
@@ -124,8 +176,8 @@ export default function ImageResize() {
       {!file && (
         <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
           <div className="space-y-1">
-            <p className="text-lg font-bold">Drop an image or click to browse</p>
-            <p className="text-sm text-muted-foreground">Drag the corner handle or type exact sizes · or paste (⌘V)</p>
+            <p className="text-lg font-bold">{t.dropTitle}</p>
+            <p className="text-sm text-muted-foreground">{t.dropHint}</p>
           </div>
         </Dropzone>
       )}
@@ -133,7 +185,7 @@ export default function ImageResize() {
       {file && orig && srcUrl && (
         <>
           <p className="text-sm text-muted-foreground">
-            <span className="font-bold text-foreground">{file.name}</span> — original {orig.w}×
+            <span className="font-bold text-foreground">{file.name}</span> — {t.original} {orig.w}×
             {orig.h}
           </p>
 
@@ -145,7 +197,7 @@ export default function ImageResize() {
             >
               <img
                 src={srcUrl}
-                alt="Resize preview"
+                alt={t.previewAlt}
                 draggable={false}
                 className="block h-full w-full border-2 border-border bg-white"
               />
@@ -157,7 +209,7 @@ export default function ImageResize() {
                 onPointerMove={onHandleMove}
                 onPointerUp={onHandleUp}
                 className="absolute -bottom-2 -right-2 h-5 w-5 cursor-nwse-resize border-2 border-border bg-accent shadow-brutal-sm"
-                aria-label="Drag to resize"
+                aria-label={t.dragToResize}
                 role="slider"
                 aria-valuenow={width}
               />
@@ -167,7 +219,7 @@ export default function ImageResize() {
           <div className="flex flex-wrap items-end gap-4">
             <label className="space-y-1 text-sm">
               <span className="block font-bold uppercase tracking-wide text-muted-foreground">
-                Width
+                {t.width}
               </span>
               <input
                 type="number"
@@ -179,7 +231,7 @@ export default function ImageResize() {
             </label>
             <label className="space-y-1 text-sm">
               <span className="block font-bold uppercase tracking-wide text-muted-foreground">
-                Height
+                {t.height}
               </span>
               <input
                 type="number"
@@ -191,13 +243,13 @@ export default function ImageResize() {
             </label>
             <label className="flex cursor-pointer items-center gap-2 border-2 border-border bg-muted px-3 py-2 text-sm">
               <input type="checkbox" checked={lock} onChange={() => setLock(p => !p)} className="accent-accent" />
-              Lock aspect ratio
+              {t.lockAspect}
             </label>
             <Button
               variant="secondary"
               onClick={() => { changeWidth(orig.w); if (!lock) setHeight(orig.h); }}
             >
-              Reset
+              {t.reset}
             </Button>
           </div>
         </>
@@ -205,10 +257,10 @@ export default function ImageResize() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || busy}>
-          {busy ? 'Resizing…' : 'Resize'}
+          {busy ? t.resizing : t.resize}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setSrcUrl(''); setOrig(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 

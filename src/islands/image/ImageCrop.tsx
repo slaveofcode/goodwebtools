@@ -5,6 +5,7 @@ import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { cropImage, keepFormat } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import type { Lang } from '@/i18n/config';
 
 interface Rect {
   x: number;
@@ -15,7 +16,43 @@ interface Rect {
 type Mode = 'draw' | 'body' | 'nw' | 'ne' | 'sw' | 'se';
 const CORNERS = ['nw', 'ne', 'sw', 'se'] as const;
 
-export default function ImageCrop() {
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropHint: string;
+  sourceAlt: string;
+  fileHint: string;
+  selectFirst: string;
+  cropFailed: string;
+  cropping: string;
+  crop: string;
+  clear: string;
+}> = {
+  en: {
+    dropTitle: 'Drop an image or click to browse',
+    dropHint: 'Drag the crop box; resize it from the corners · or paste (⌘V)',
+    sourceAlt: 'Source',
+    fileHint: ' — drag the box to move, corners to resize · ',
+    selectFirst: 'Draw or adjust a selection first.',
+    cropFailed: 'Crop failed',
+    cropping: 'Cropping…',
+    crop: 'Crop',
+    clear: 'Clear',
+  },
+  id: {
+    dropTitle: 'Jatuhkan gambar atau klik untuk memilih',
+    dropHint: 'Seret kotak crop; ubah ukuran dari sudutnya · atau tempel (⌘V)',
+    sourceAlt: 'Sumber',
+    fileHint: ' — seret kotak untuk memindahkan, sudut untuk mengubah ukuran · ',
+    selectFirst: 'Gambar atau sesuaikan seleksi terlebih dahulu.',
+    cropFailed: 'Crop gagal',
+    cropping: 'Memotong…',
+    crop: 'Potong',
+    clear: 'Bersihkan',
+  },
+};
+
+export default function ImageCrop({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const imgRef = useRef<HTMLImageElement>(null);
   const action = useRef<{ mode: Mode; sx: number; sy: number; start: Rect } | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -107,7 +144,7 @@ export default function ImageCrop() {
   const crop = async () => {
     const img = imgRef.current;
     if (!file || !img || !sel || sel.w < 2 || sel.h < 2) {
-      setError('Draw or adjust a selection first.');
+      setError(t.selectFirst);
       return;
     }
     const s = img.naturalWidth / img.clientWidth;
@@ -123,7 +160,7 @@ export default function ImageCrop() {
       });
       setResult(blob);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Crop failed');
+      setError(e instanceof Error ? e.message : t.cropFailed);
     } finally {
       setBusy(false);
     }
@@ -138,8 +175,8 @@ export default function ImageCrop() {
       {!file && (
         <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
           <div className="space-y-1">
-            <p className="text-lg font-bold">Drop an image or click to browse</p>
-            <p className="text-sm text-muted-foreground">Drag the crop box; resize it from the corners · or paste (⌘V)</p>
+            <p className="text-lg font-bold">{t.dropTitle}</p>
+            <p className="text-sm text-muted-foreground">{t.dropHint}</p>
           </div>
         </Dropzone>
       )}
@@ -147,8 +184,7 @@ export default function ImageCrop() {
       {file && srcUrl && (
         <>
           <p className="text-sm text-muted-foreground">
-            <span className="font-bold text-foreground">{file.name}</span> — drag the box to move,
-            corners to resize · {natW}×{natH}
+            <span className="font-bold text-foreground">{file.name}</span>{t.fileHint}{natW}×{natH}
           </p>
           <div
             className="relative inline-block max-w-full touch-none select-none overflow-hidden border-2 border-border bg-muted"
@@ -159,7 +195,7 @@ export default function ImageCrop() {
             <img
               ref={imgRef}
               src={srcUrl}
-              alt="Source"
+              alt={t.sourceAlt}
               draggable={false}
               onLoad={onImgLoad}
               className="block h-auto w-auto min-w-[70vw] max-w-full"
@@ -219,10 +255,10 @@ export default function ImageCrop() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={crop} disabled={!file || busy}>
-          {busy ? 'Cropping…' : 'Crop'}
+          {busy ? t.cropping : t.crop}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setSrcUrl(''); setSel(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 

@@ -6,6 +6,42 @@ import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { ZoomPane } from '@/components/ui/ZoomPane';
 import { parseSvgSize, rasterizeSvg } from '@/tools/image/svg.lib';
+import type { Lang } from '@/i18n/config';
+
+const TR: Record<Lang, {
+  dropError: string;
+  rasterizeFailed: string;
+  drop: string;
+  sub: string;
+  placeholder: string;
+  exportFormat: string;
+  scale: string;
+  quality: string;
+  exportLabel: (label: string) => string;
+}> = {
+  en: {
+    dropError: 'Please drop an SVG file.',
+    rasterizeFailed: 'Rasterize failed',
+    drop: 'Drop an SVG or click to browse',
+    sub: 'View it, then export to PNG, JPEG, or WebP',
+    placeholder: '…or paste SVG markup here',
+    exportFormat: 'Export format',
+    scale: 'Scale',
+    quality: 'Quality',
+    exportLabel: (label) => `Export ${label}`,
+  },
+  id: {
+    dropError: 'Silakan letakkan berkas SVG.',
+    rasterizeFailed: 'Rasterisasi gagal',
+    drop: 'Letakkan SVG atau klik untuk memilih',
+    sub: 'Lihat, lalu ekspor ke PNG, JPEG, atau WebP',
+    placeholder: '…atau tempel markup SVG di sini',
+    exportFormat: 'Format ekspor',
+    scale: 'Skala',
+    quality: 'Kualitas',
+    exportLabel: (label) => `Ekspor ${label}`,
+  },
+};
 
 const FORMATS = [
   { key: 'png', type: 'image/png' as const, label: 'PNG', lossy: false },
@@ -13,7 +49,8 @@ const FORMATS = [
   { key: 'webp', type: 'image/webp' as const, label: 'WebP', lossy: true },
 ];
 
-export default function SvgViewer() {
+export default function SvgViewer({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [markup, setMarkup] = useState('');
   const [fmt, setFmt] = useState('png');
   const [scale, setScale] = useState(1);
@@ -23,7 +60,7 @@ export default function SvgViewer() {
 
   const onDrop = async (files: File[]) => {
     const f = files.find((x) => x.type === 'image/svg+xml' || x.name.toLowerCase().endsWith('.svg'));
-    if (!f) { setError('Please drop an SVG file.'); return; }
+    if (!f) { setError(t.dropError); return; }
     setError('');
     setResult(null);
     setMarkup(await f.text());
@@ -42,7 +79,7 @@ export default function SvgViewer() {
     try {
       setResult(await rasterizeSvg(clean, { type: format.type, scale, quality: format.lossy ? quality / 100 : undefined }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Rasterize failed');
+      setError(e instanceof Error ? e.message : t.rasterizeFailed);
     }
   };
 
@@ -50,15 +87,15 @@ export default function SvgViewer() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="image/svg+xml,.svg" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an SVG or click to browse</p>
-          <p className="text-sm text-muted-foreground">View it, then export to PNG, JPEG, or WebP</p>
+          <p className="text-lg font-bold">{t.drop}</p>
+          <p className="text-sm text-muted-foreground">{t.sub}</p>
         </div>
       </Dropzone>
 
       <textarea
         value={markup}
         onChange={(e) => { setMarkup(e.target.value); setResult(null); }}
-        placeholder="…or paste SVG markup here"
+        placeholder={t.placeholder}
         className="h-32 w-full border-2 border-border bg-background p-2 font-mono text-xs"
       />
 
@@ -75,7 +112,7 @@ export default function SvgViewer() {
           </ZoomPane>
 
           <div className="space-y-1.5">
-            <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Export format</span>
+            <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.exportFormat}</span>
             <div className="flex flex-wrap gap-2">
               {FORMATS.map((f) => (
                 <Button key={f.key} variant={fmt === f.key ? 'primary' : 'secondary'} aria-pressed={fmt === f.key} onClick={() => setFmt(f.key)}>{f.label}</Button>
@@ -84,18 +121,18 @@ export default function SvgViewer() {
           </div>
 
           <label className="block space-y-1.5">
-            <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground"><span>Scale</span><span>{scale}×</span></span>
+            <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground"><span>{t.scale}</span><span>{scale}×</span></span>
             <input type="range" min={1} max={8} step={1} value={scale} onChange={(e) => setScale(Number(e.target.value))} className="w-full accent-accent" />
           </label>
 
           {format.lossy && (
             <label className="block space-y-1.5">
-              <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground"><span>Quality</span><span>{quality}%</span></span>
+              <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground"><span>{t.quality}</span><span>{quality}%</span></span>
               <input type="range" min={10} max={100} value={quality} onChange={(e) => setQuality(Number(e.target.value))} className="w-full accent-accent" />
             </label>
           )}
 
-          <Button onClick={convert}>Export {format.label}</Button>
+          <Button onClick={convert}>{t.exportLabel(format.label)}</Button>
         </>
       )}
 

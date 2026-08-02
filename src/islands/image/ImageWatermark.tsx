@@ -5,6 +5,7 @@ import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { watermarkImage, keepFormat, scaleToFontScale, type WatermarkLayout } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import type { Lang } from '@/i18n/config';
 
 const LAYOUTS: { value: WatermarkLayout; label: string }[] = [
   { value: 'diagonal', label: 'Diagonal' },
@@ -12,7 +13,52 @@ const LAYOUTS: { value: WatermarkLayout; label: string }[] = [
   { value: 'bottom-right', label: 'Corner' },
 ];
 
-export default function ImageWatermark() {
+const TR: Record<Lang, {
+  dropTitle: string;
+  dropHint: string;
+  watermarkText: string;
+  layout: string;
+  layouts: Record<WatermarkLayout, string>;
+  scale: string;
+  opacity: string;
+  color: string;
+  stamping: string;
+  addWatermark: string;
+  clear: string;
+  watermarkFailed: string;
+}> = {
+  en: {
+    dropTitle: 'Drop an image or click to browse',
+    dropHint: 'Stamp a text watermark onto an image · or paste (⌘V)',
+    watermarkText: 'Watermark text',
+    layout: 'Layout',
+    layouts: { diagonal: 'Diagonal', tiled: 'Tiled', 'bottom-right': 'Corner' },
+    scale: 'Scale',
+    opacity: 'Opacity',
+    color: 'Color',
+    stamping: 'Stamping…',
+    addWatermark: 'Add watermark',
+    clear: 'Clear',
+    watermarkFailed: 'Watermark failed',
+  },
+  id: {
+    dropTitle: 'Jatuhkan gambar atau klik untuk memilih',
+    dropHint: 'Bubuhkan watermark teks ke gambar · atau tempel (⌘V)',
+    watermarkText: 'Teks watermark',
+    layout: 'Tata letak',
+    layouts: { diagonal: 'Diagonal', tiled: 'Ubin', 'bottom-right': 'Sudut' },
+    scale: 'Skala',
+    opacity: 'Opasitas',
+    color: 'Warna',
+    stamping: 'Membubuhkan…',
+    addWatermark: 'Tambah watermark',
+    clear: 'Bersihkan',
+    watermarkFailed: 'Gagal membuat watermark',
+  },
+};
+
+export default function ImageWatermark({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState('© GoodWebTools');
   const [layout, setLayout] = useState<WatermarkLayout>('diagonal');
@@ -50,7 +96,7 @@ export default function ImageWatermark() {
       });
       setResult(blob);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Watermark failed');
+      setError(e instanceof Error ? e.message : t.watermarkFailed);
     } finally {
       setBusy(false);
     }
@@ -60,8 +106,8 @@ export default function ImageWatermark() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an image or click to browse</p>
-          <p className="text-sm text-muted-foreground">Stamp a text watermark onto an image · or paste (⌘V)</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
+          <p className="text-sm text-muted-foreground">{t.dropHint}</p>
         </div>
       </Dropzone>
 
@@ -69,7 +115,7 @@ export default function ImageWatermark() {
 
       <label className="block space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Watermark text
+          {t.watermarkText}
         </span>
         <input
           value={text}
@@ -80,17 +126,17 @@ export default function ImageWatermark() {
 
       <div className="space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Layout
+          {t.layout}
         </span>
         <div className="flex flex-wrap gap-2">
-          {LAYOUTS.map(({ value, label }) => (
+          {LAYOUTS.map(({ value }) => (
             <Button
               key={value}
               variant={layout === value ? 'primary' : 'secondary'}
               aria-pressed={layout === value}
               onClick={() => setLayout(value)}
             >
-              {label}
+              {t.layouts[value]}
             </Button>
           ))}
         </div>
@@ -98,7 +144,7 @@ export default function ImageWatermark() {
 
       <label className="block space-y-1.5">
         <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          <span>Scale</span>
+          <span>{t.scale}</span>
           <span>{scale}%</span>
         </span>
         <input
@@ -114,7 +160,7 @@ export default function ImageWatermark() {
       <div className="flex flex-wrap items-end gap-6">
         <label className="flex-1 space-y-1.5">
           <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            <span>Opacity</span>
+            <span>{t.opacity}</span>
             <span>{opacity}%</span>
           </span>
           <input
@@ -128,7 +174,7 @@ export default function ImageWatermark() {
         </label>
         <label className="space-y-1.5">
           <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Color
+            {t.color}
           </span>
           <input
             type="color"
@@ -141,10 +187,10 @@ export default function ImageWatermark() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || !text.trim() || busy}>
-          {busy ? 'Stamping…' : 'Add watermark'}
+          {busy ? t.stamping : t.addWatermark}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 

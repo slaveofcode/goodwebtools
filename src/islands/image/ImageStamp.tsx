@@ -11,6 +11,7 @@ import {
   type StampPlacement,
 } from '@/tools/image/stamp.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import type { Lang } from '@/i18n/config';
 
 const FONTS: { value: StampFont; label: string }[] = [
   { value: 'sans', label: 'Sans' },
@@ -27,7 +28,69 @@ const PLACEMENTS: { value: StampPlacement; label: string }[] = [
   { value: 'bottom-right', label: 'Bottom right' },
 ];
 
-export default function ImageStamp() {
+const TR: Record<Lang, {
+  drop: string; dropSub: string; presets: string; stampText: string;
+  placement: string; placements: Record<StampPlacement, string>;
+  font: string; style: string; bold: string; italic: string; borderBox: string;
+  color: string; scale: string; opacity: string;
+  apply: string; stamping: string; clear: string; failed: string;
+}> = {
+  en: {
+    drop: 'Drop an image or click to browse',
+    dropSub: 'Stamp a status mark onto an image · or paste (⌘V)',
+    presets: 'Presets',
+    stampText: 'Stamp text',
+    placement: 'Placement',
+    placements: {
+      center: 'Center',
+      'top-left': 'Top left',
+      'top-right': 'Top right',
+      'bottom-left': 'Bottom left',
+      'bottom-right': 'Bottom right',
+    },
+    font: 'Font',
+    style: 'Style',
+    bold: 'Bold',
+    italic: 'Italic',
+    borderBox: 'Border box',
+    color: 'Color',
+    scale: 'Scale',
+    opacity: 'Opacity',
+    apply: 'Apply stamp',
+    stamping: 'Stamping…',
+    clear: 'Clear',
+    failed: 'Stamp failed',
+  },
+  id: {
+    drop: 'Letakkan gambar atau klik untuk telusuri',
+    dropSub: 'Stempelkan tanda status ke gambar · atau tempel (⌘V)',
+    presets: 'Preset',
+    stampText: 'Teks stempel',
+    placement: 'Penempatan',
+    placements: {
+      center: 'Tengah',
+      'top-left': 'Kiri atas',
+      'top-right': 'Kanan atas',
+      'bottom-left': 'Kiri bawah',
+      'bottom-right': 'Kanan bawah',
+    },
+    font: 'Font',
+    style: 'Gaya',
+    bold: 'Tebal',
+    italic: 'Miring',
+    borderBox: 'Kotak batas',
+    color: 'Warna',
+    scale: 'Skala',
+    opacity: 'Opasitas',
+    apply: 'Terapkan stempel',
+    stamping: 'Menstempel…',
+    clear: 'Bersihkan',
+    failed: 'Gagal menstempel',
+  },
+};
+
+export default function ImageStamp({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState('CONFIDENTIAL');
   const [color, setColor] = useState('#c0392b');
@@ -79,7 +142,7 @@ export default function ImageStamp() {
       });
       setResult(blob);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Stamp failed');
+      setError(e instanceof Error ? e.message : t.failed);
     } finally {
       setBusy(false);
     }
@@ -89,8 +152,8 @@ export default function ImageStamp() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an image or click to browse</p>
-          <p className="text-sm text-muted-foreground">Stamp a status mark onto an image · or paste (⌘V)</p>
+          <p className="text-lg font-bold">{t.drop}</p>
+          <p className="text-sm text-muted-foreground">{t.dropSub}</p>
         </div>
       </Dropzone>
 
@@ -98,7 +161,7 @@ export default function ImageStamp() {
 
       <div className="space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Presets
+          {t.presets}
         </span>
         <div className="flex flex-wrap gap-2">
           {STAMP_PRESETS.map(p => (
@@ -111,7 +174,7 @@ export default function ImageStamp() {
 
       <label className="block space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Stamp text
+          {t.stampText}
         </span>
         <input
           value={text}
@@ -122,17 +185,17 @@ export default function ImageStamp() {
 
       <div className="space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Placement
+          {t.placement}
         </span>
         <div className="flex flex-wrap gap-2">
-          {PLACEMENTS.map(({ value, label }) => (
+          {PLACEMENTS.map(({ value }) => (
             <Button
               key={value}
               variant={placement === value ? 'primary' : 'secondary'}
               aria-pressed={placement === value}
               onClick={() => setPlacement(value)}
             >
-              {label}
+              {t.placements[value]}
             </Button>
           ))}
         </div>
@@ -141,7 +204,7 @@ export default function ImageStamp() {
       <div className="flex flex-wrap items-end gap-6">
         <div className="space-y-1.5">
           <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Font
+            {t.font}
           </span>
           <div className="flex flex-wrap gap-2">
             {FONTS.map(({ value, label }) => (
@@ -159,24 +222,24 @@ export default function ImageStamp() {
 
         <div className="space-y-1.5">
           <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Style
+            {t.style}
           </span>
           <div className="flex flex-wrap gap-2">
             <Button variant={bold ? 'primary' : 'secondary'} aria-pressed={bold} onClick={() => setBold(b => !b)}>
-              Bold
+              {t.bold}
             </Button>
             <Button variant={italic ? 'primary' : 'secondary'} aria-pressed={italic} onClick={() => setItalic(i => !i)}>
-              Italic
+              {t.italic}
             </Button>
             <Button variant={bordered ? 'primary' : 'secondary'} aria-pressed={bordered} onClick={() => setBordered(b => !b)}>
-              Border box
+              {t.borderBox}
             </Button>
           </div>
         </div>
 
         <label className="space-y-1.5">
           <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Color
+            {t.color}
           </span>
           <input
             type="color"
@@ -190,7 +253,7 @@ export default function ImageStamp() {
       <div className="flex flex-wrap items-end gap-6">
         <label className="flex-1 space-y-1.5">
           <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            <span>Scale</span>
+            <span>{t.scale}</span>
             <span>{scale}%</span>
           </span>
           <input
@@ -204,7 +267,7 @@ export default function ImageStamp() {
         </label>
         <label className="flex-1 space-y-1.5">
           <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            <span>Opacity</span>
+            <span>{t.opacity}</span>
             <span>{opacity}%</span>
           </span>
           <input
@@ -220,10 +283,10 @@ export default function ImageStamp() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || !text.trim() || busy}>
-          {busy ? 'Stamping…' : 'Apply stamp'}
+          {busy ? t.stamping : t.apply}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 

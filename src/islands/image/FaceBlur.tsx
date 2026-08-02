@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Download } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,7 @@ import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { expandBox, type Box } from '@/tools/image/face-blur.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import type { Lang } from '@/i18n/config';
 
 type Effect = 'blur' | 'pixelate' | 'solid';
 
@@ -17,6 +18,46 @@ const EFFECTS: { key: Effect; label: string }[] = [
   { key: 'pixelate', label: 'Pixelate' },
   { key: 'solid', label: 'Solid' },
 ];
+
+const TR: Record<Lang, {
+  dropTitle: string; dropDesc: string; effect: string; effects: Record<Effect, string>;
+  privacy: ReactNode; loadingDetector: string; detecting: string; working: string;
+  errProcess: string; noFaces: string; result: string; facesHidden: (n: number) => string;
+  altBlurred: string; downloadPng: string;
+}> = {
+  en: {
+    dropTitle: 'Drop an image or click to browse',
+    dropDesc: 'Detects and hides faces with on-device AI · or paste (⌘V)',
+    effect: 'Effect',
+    effects: { blur: 'Blur', pixelate: 'Pixelate', solid: 'Solid' },
+    privacy: <>Runs entirely in your browser — the image never leaves your device. Detection is automatic; for privacy-critical images, prefer <strong>Solid</strong> (blur/pixelate can be partly reversed). The first run downloads a small model, then it's cached.</>,
+    loadingDetector: 'Loading face detector…',
+    detecting: 'Detecting faces…',
+    working: 'Working…',
+    errProcess: 'Could not process this image.',
+    noFaces: 'No faces detected in this image.',
+    result: 'Result',
+    facesHidden: (n) => `${n} face${n === 1 ? '' : 's'} hidden`,
+    altBlurred: 'Faces blurred',
+    downloadPng: 'Download PNG',
+  },
+  id: {
+    dropTitle: 'Letakkan gambar atau klik untuk memilih',
+    dropDesc: 'Mendeteksi dan menyembunyikan wajah dengan AI di perangkat · atau tempel (⌘V)',
+    effect: 'Efek',
+    effects: { blur: 'Blur', pixelate: 'Piksel', solid: 'Blok' },
+    privacy: <>Berjalan sepenuhnya di browser Anda — gambar tidak pernah meninggalkan perangkat Anda. Deteksi berjalan otomatis; untuk gambar yang sangat sensitif, pilih <strong>Blok</strong> (blur/piksel bisa sebagian dipulihkan). Penggunaan pertama mengunduh model kecil, lalu di-cache.</>,
+    loadingDetector: 'Memuat pendeteksi wajah…',
+    detecting: 'Mendeteksi wajah…',
+    working: 'Memproses…',
+    errProcess: 'Tidak dapat memproses gambar ini.',
+    noFaces: 'Tidak ada wajah terdeteksi pada gambar ini.',
+    result: 'Hasil',
+    facesHidden: (n) => `${n} wajah disembunyikan`,
+    altBlurred: 'Wajah diburamkan',
+    downloadPng: 'Unduh PNG',
+  },
+};
 
 // Cache the detector across runs so the model loads once.
 let detectorPromise: Promise<{ detect: (img: ImageBitmap) => { detections: { boundingBox?: { originX: number; originY: number; width: number; height: number } }[] } }> | null = null;
@@ -68,7 +109,8 @@ function obscure(ctx: CanvasRenderingContext2D, bmp: ImageBitmap, box: Box, effe
   ctx.restore();
 }
 
-export default function FaceBlur() {
+export default function FaceBlur({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [effect, setEffect] = useState<Effect>('blur');
   const [srcName, setSrcName] = useState('');
   const [result, setResult] = useState<Blob | null>(null);
@@ -88,10 +130,10 @@ export default function FaceBlur() {
     setError('');
     setBusy(true);
     try {
-      setStage('Loading face detector…');
+      setStage(t.loadingDetector);
       const detector = await getDetector();
       const bmp = await createImageBitmap(file);
-      setStage('Detecting faces…');
+      setStage(t.detecting);
       const { detections } = detector.detect(bmp);
 
       const canvas = document.createElement('canvas');
@@ -123,7 +165,7 @@ export default function FaceBlur() {
         return URL.createObjectURL(blob);
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not process this image.');
+      setError(e instanceof Error ? e.message : t.errProcess);
     } finally {
       setBusy(false);
       setStage('');
@@ -153,15 +195,15 @@ export default function FaceBlur() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an image or click to browse</p>
+          <p className="text-lg font-bold">{t.dropTitle}</p>
           <p className="text-sm text-muted-foreground">
-            Detects and hides faces with on-device AI · or paste (⌘V)
+            {t.dropDesc}
           </p>
         </div>
       </Dropzone>
 
       <div className="space-y-1.5">
-        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">Effect</span>
+        <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.effect}</span>
         <div className="flex flex-wrap gap-2">
           {EFFECTS.map(e => (
             <Button
@@ -171,37 +213,35 @@ export default function FaceBlur() {
               onClick={() => changeEffect(e.key)}
               disabled={busy}
             >
-              {e.label}
+              {t.effects[e.key]}
             </Button>
           ))}
         </div>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Runs entirely in your browser — the image never leaves your device. Detection is automatic;
-        for privacy-critical images, prefer <strong>Solid</strong> (blur/pixelate can be partly
-        reversed). The first run downloads a small model, then it's cached.
+        {t.privacy}
       </p>
 
-      {busy && <p className="text-sm text-muted-foreground">{stage || 'Working…'}</p>}
+      {busy && <p className="text-sm text-muted-foreground">{stage || t.working}</p>}
       {error && <Alert variant="error">{error}</Alert>}
 
       {faceCount === 0 && !busy && !error && (
-        <Alert variant="error">No faces detected in this image.</Alert>
+        <Alert variant="error">{t.noFaces}</Alert>
       )}
 
       {result && resultUrl && !busy && faceCount !== null && faceCount > 0 && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-bold uppercase tracking-wide text-muted-foreground">Result</span>
-            <span>{faceCount} face{faceCount === 1 ? '' : 's'} hidden</span>
+            <span className="font-bold uppercase tracking-wide text-muted-foreground">{t.result}</span>
+            <span>{t.facesHidden(faceCount)}</span>
             <span className="font-mono text-muted-foreground">{formatBytes(result.size)}</span>
           </div>
-          <img src={resultUrl} alt="Faces blurred" className="block max-h-[70vh] w-auto max-w-full border-2 border-border" />
+          <img src={resultUrl} alt={t.altBlurred} className="block max-h-[70vh] w-auto max-w-full border-2 border-border" />
           <div className="flex flex-wrap gap-2">
             <Button onClick={download}>
               <Download className="h-4 w-4" />
-              Download PNG
+              {t.downloadPng}
             </Button>
             <CopyImageButton blob={result} />
           <EditInAnnotatorButton blob={result} filename={(srcName.replace(/\.[^.]+$/, '') || 'image') + '-blurred.png'} />

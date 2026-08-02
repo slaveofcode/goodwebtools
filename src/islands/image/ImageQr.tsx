@@ -6,6 +6,7 @@ import { ImageResult } from '@/components/ui/ImageResult';
 import { keepFormat } from '@/tools/image/canvas.lib';
 import { overlayQr, type QrCorner } from '@/tools/image/qr-overlay.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import type { Lang } from '@/i18n/config';
 
 const CORNERS: { value: QrCorner; label: string }[] = [
   { value: 'top-left', label: 'Top left' },
@@ -14,7 +15,54 @@ const CORNERS: { value: QrCorner; label: string }[] = [
   { value: 'bottom-right', label: 'Bottom right' },
 ];
 
-export default function ImageQr() {
+const TR: Record<Lang, {
+  drop: string; dropSub: string; qrContent: string;
+  corner: string; corners: Record<QrCorner, string>;
+  size: string; backing: string; whiteCard: string;
+  add: string; adding: string; clear: string; failed: string;
+}> = {
+  en: {
+    drop: 'Drop an image or click to browse',
+    dropSub: 'Add a QR code to a corner of an image · or paste (⌘V)',
+    qrContent: 'QR content (text or URL)',
+    corner: 'Corner',
+    corners: {
+      'top-left': 'Top left',
+      'top-right': 'Top right',
+      'bottom-left': 'Bottom left',
+      'bottom-right': 'Bottom right',
+    },
+    size: 'Size',
+    backing: 'Backing',
+    whiteCard: 'White card',
+    add: 'Add QR',
+    adding: 'Adding…',
+    clear: 'Clear',
+    failed: 'Could not add the QR code',
+  },
+  id: {
+    drop: 'Letakkan gambar atau klik untuk telusuri',
+    dropSub: 'Tambahkan kode QR ke sudut gambar · atau tempel (⌘V)',
+    qrContent: 'Konten QR (teks atau URL)',
+    corner: 'Sudut',
+    corners: {
+      'top-left': 'Kiri atas',
+      'top-right': 'Kanan atas',
+      'bottom-left': 'Kiri bawah',
+      'bottom-right': 'Kanan bawah',
+    },
+    size: 'Ukuran',
+    backing: 'Alas',
+    whiteCard: 'Kartu putih',
+    add: 'Tambah QR',
+    adding: 'Menambahkan…',
+    clear: 'Bersihkan',
+    failed: 'Tidak dapat menambahkan kode QR',
+  },
+};
+
+export default function ImageQr({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [content, setContent] = useState('https://goodwebtools.com');
   const [corner, setCorner] = useState<QrCorner>('bottom-right');
@@ -50,7 +98,7 @@ export default function ImageQr() {
       });
       setResult(blob);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not add the QR code');
+      setError(e instanceof Error ? e.message : t.failed);
     } finally {
       setBusy(false);
     }
@@ -60,8 +108,8 @@ export default function ImageQr() {
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
         <div className="space-y-1">
-          <p className="text-lg font-bold">Drop an image or click to browse</p>
-          <p className="text-sm text-muted-foreground">Add a QR code to a corner of an image · or paste (⌘V)</p>
+          <p className="text-lg font-bold">{t.drop}</p>
+          <p className="text-sm text-muted-foreground">{t.dropSub}</p>
         </div>
       </Dropzone>
 
@@ -69,7 +117,7 @@ export default function ImageQr() {
 
       <label className="block space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          QR content (text or URL)
+          {t.qrContent}
         </span>
         <input
           value={content}
@@ -80,17 +128,17 @@ export default function ImageQr() {
 
       <div className="space-y-1.5">
         <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          Corner
+          {t.corner}
         </span>
         <div className="flex flex-wrap gap-2">
-          {CORNERS.map(({ value, label }) => (
+          {CORNERS.map(({ value }) => (
             <Button
               key={value}
               variant={corner === value ? 'primary' : 'secondary'}
               aria-pressed={corner === value}
               onClick={() => setCorner(value)}
             >
-              {label}
+              {t.corners[value]}
             </Button>
           ))}
         </div>
@@ -99,7 +147,7 @@ export default function ImageQr() {
       <div className="flex flex-wrap items-end gap-6">
         <label className="flex-1 space-y-1.5">
           <span className="flex justify-between text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            <span>Size</span>
+            <span>{t.size}</span>
             <span>{sizePercent}%</span>
           </span>
           <input
@@ -113,20 +161,20 @@ export default function ImageQr() {
         </label>
         <div className="space-y-1.5">
           <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Backing
+            {t.backing}
           </span>
           <Button variant={card ? 'primary' : 'secondary'} aria-pressed={card} onClick={() => setCard(c => !c)}>
-            White card
+            {t.whiteCard}
           </Button>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || !content.trim() || busy}>
-          {busy ? 'Adding…' : 'Add QR'}
+          {busy ? t.adding : t.add}
         </Button>
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
