@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 
-export type Category = 'Dev' | 'PDF' | 'Image' | 'Files' | 'Draw' | 'Media' | 'Network' | 'Maps' | 'Playground';
+export type Category = 'Dev' | 'PDF' | 'Image' | 'Files' | 'Draw' | 'Media' | 'Network' | 'Maps' | 'Legacy' | 'Playground';
 
 export interface AssetRef {
   url: string;
