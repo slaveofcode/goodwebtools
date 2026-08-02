@@ -10,6 +10,7 @@ export const categories: Category[] = [
   'Media',
   'Network',
   'Maps',
+  'Legacy',
   'Playground'
 ];
 
@@ -22,6 +23,7 @@ export const categoryColors: Record<Category, string> = {
   Media: 'bg-pink-500',
   Network: 'bg-cyan-500',
   Maps: 'bg-emerald-500',
+  Legacy: 'bg-indigo-500',
   Playground: 'bg-orange-500'
 };
 
@@ -56,6 +58,7 @@ export const categoryDescriptionsId: Record<Category, string> = {
   Media: 'Utilitas audio dan video privat — konversi, pangkas, rekam, dan transkripsi media sepenuhnya di perangkat Anda. Rekaman Anda tidak pernah meninggalkan browser.',
   Network: 'Tool peer-to-peer yang menghubungkan dua perangkat secara langsung untuk mentransfer berkas atau berkomunikasi — data Anda mengalir antar perangkat, bukan melalui server.',
   Maps: 'Tool pemetaan sumber terbuka — konversi koordinat, jelajahi dan ekspor peta, serta lihat berkas GeoJSON, GPX, dan KML. Dibangun di atas data peta terbuka, berjalan di browser Anda.',
+  Legacy: 'Titipkan pesan dan kata sandi penting untuk keluarga — dienkripsi di perangkat Anda dan hanya bisa dibuka saat waktunya tiba. Tidak ada yang diunggah ke server.',
   Playground: 'Playground interaktif dan eksperimen untuk menjelajah dan belajar — semuanya berjalan di sisi klien di browser Anda.',
 };
 
@@ -69,5 +72,6 @@ export const categoryDescriptions: Record<Category, string> = {
   Media: 'Private audio and video utilities — convert, trim, record and transcribe media entirely on your device using on-device processing. Your recordings never leave your browser.',
   Network: 'Peer-to-peer tools that connect two devices directly to transfer files or communicate — your data flows device to device, not through a server.',
   Maps: 'Open-source mapping tools — convert coordinates, explore and export maps, and view GeoJSON, GPX and KML files. Built on open map data, running in your browser.',
+  Legacy: 'Entrust messages and important passwords to your family — encrypted on your device and openable only when the time comes. Nothing is uploaded to any server.',
   Playground: 'Interactive playgrounds and experiments to explore and learn — all running client-side in your browser.',
 };
