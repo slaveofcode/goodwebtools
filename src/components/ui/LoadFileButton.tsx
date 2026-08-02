@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { FileUp } from 'lucide-react';
+import { useUi } from '@/i18n/shared';
 import { Button } from './Button';
 
 interface LoadFileButtonProps {
@@ -11,7 +12,8 @@ interface LoadFileButtonProps {
 }
 
 /** A small button that reads a text file from disk and hands back its contents. */
-export function LoadFileButton({ onLoad, accept, label = 'Load file' }: LoadFileButtonProps) {
+export function LoadFileButton({ onLoad, accept, label }: LoadFileButtonProps) {
+  const ui = useUi();
   const ref = useRef<HTMLInputElement>(null);
 
   const handle = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,7 +27,7 @@ export function LoadFileButton({ onLoad, accept, label = 'Load file' }: LoadFile
     <>
       <Button variant="secondary" onClick={() => ref.current?.click()}>
         <FileUp className="h-4 w-4" />
-        {label}
+        {label ?? ui.loadFile}
       </Button>
       <input ref={ref} type="file" accept={accept} onChange={handle} className="hidden" />
     </>

@@ -1,5 +1,6 @@
 import { Download } from 'lucide-react';
 import { downloadService } from '@/services/download';
+import { useUi } from '@/i18n/shared';
 import { Button } from './Button';
 import { CopyImageButton } from './CopyImageButton';
 import { EditInAnnotatorButton } from './EditInAnnotatorButton';
@@ -11,6 +12,7 @@ export interface ResultActionsProps {
 }
 
 export function ResultActions({ blob, filename, disabled }: ResultActionsProps) {
+  const ui = useUi();
   const handleDownload = async () => {
     if (!blob) return;
     await downloadService.download(blob, filename);
@@ -22,7 +24,7 @@ export function ResultActions({ blob, filename, disabled }: ResultActionsProps) 
     <div className="flex flex-wrap gap-2">
       <Button onClick={handleDownload} disabled={disabled || !blob}>
         <Download className="h-4 w-4" />
-        Download {filename}
+        {ui.download} {filename}
       </Button>
       {isImage && <CopyImageButton blob={blob} disabled={disabled} />}
       {isImage && <EditInAnnotatorButton blob={blob} filename={filename} disabled={disabled} />}
