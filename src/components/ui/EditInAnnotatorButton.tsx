@@ -1,5 +1,6 @@
 import { PenTool } from 'lucide-react';
 import { sendImageToAnnotator } from '@/services/handoff';
+import { useUi } from '@/i18n/shared';
 import { Button } from './Button';
 
 interface EditInAnnotatorButtonProps {
@@ -11,6 +12,7 @@ interface EditInAnnotatorButtonProps {
 
 /** Opens the Image Annotator pre-loaded with this image (via IndexedDB handoff). */
 export function EditInAnnotatorButton({ blob, filename = 'image.png', disabled }: EditInAnnotatorButtonProps) {
+  const ui = useUi();
   const handleClick = async () => {
     if (!blob) return;
     const resolved = typeof blob === 'function' ? await blob() : blob;
@@ -20,7 +22,7 @@ export function EditInAnnotatorButton({ blob, filename = 'image.png', disabled }
   return (
     <Button variant="secondary" onClick={handleClick} disabled={disabled || !blob}>
       <PenTool className="h-4 w-4" />
-      Edit in Annotator
+      {ui.editAnnotator}
     </Button>
   );
 }
