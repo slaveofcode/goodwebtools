@@ -187,6 +187,71 @@ function HowItWorks({ lang }: { lang: Lang }) {
   );
 }
 
+// Create/Open form strings, per language. (Deep crypto-lib error messages — e.g.
+// "Wrong password" — remain English for now.)
+const F: Record<Lang, {
+  back: string; ready: string; download: string;
+  sharesHead: (k: number, n: number) => string; sharesDesc: (k: number) => string;
+  keepTitle: string; keepBody: (hasShares: boolean, k: number) => string; editLetter: string;
+  yourMessage: string; messagePh: string; accounts: string;
+  svcPh: string; userPh: string; passPh: string; sitePh: string; notesPh: string;
+  removeAria: string; addAccount: string; unlockHeading: string; passwordPh: string; confirmPh: string;
+  alsoSplit: string; alsoSplitHint: string; anyPre: string; ofMid: string; sharesSuf: string;
+  atLeastOne: string; encrypt: string; encrypting: string;
+  errNoMethod: string; errMismatch: string; errShort: string; errShares: string; errCreate: string;
+  dropTitle: string; dropDesc: string; openWithPw: string; openBtn: string; openWithShares: string;
+  pasteShares: (k: number, n: number) => string; combineOpen: string; chooseDifferent: string;
+  print: string; messageLabel: string; untitled: string;
+  lblUsername: string; lblPassword: string; lblWebsite: string; lblNotes: string;
+  copy: string; revealAria: string; written: (d: string) => string;
+  errRead: string; errOpen: string;
+}> = {
+  en: {
+    back: '← Back', ready: 'Your encrypted letter is ready. Download it and keep it safe.', download: 'Download the letter',
+    sharesHead: (k, n) => `Family shares — any ${k} of these ${n} open the letter`,
+    sharesDesc: k => `Give each share to a different trusted person (a relative — and consider giving one to your lawyer/executor). No single person can open the letter alone; any ${k} together can.`,
+    keepTitle: 'Keep it recoverable',
+    keepBody: (hasShares, k) => `This letter can be opened only with its password${hasShares ? ` or ${k} family shares` : ''}. If those are lost, the contents are gone forever — by design, so no one else can read them. Store the file and the way to unlock it separately.`,
+    editLetter: 'Edit the letter',
+    yourMessage: 'Your message', messagePh: 'Final words for your family…', accounts: 'Accounts & secrets',
+    svcPh: 'Service (e.g. Instagram)', userPh: 'Username / email', passPh: 'Password / PIN', sitePh: 'Website (optional)', notesPh: 'Notes (e.g. 2FA on my phone)',
+    removeAria: 'Remove', addAccount: 'Add account', unlockHeading: 'How family will unlock it', passwordPh: 'Password', confirmPh: 'Confirm password',
+    alsoSplit: 'Also split into family shares', alsoSplitHint: '— so no single person can open it alone', anyPre: 'Any', ofMid: 'of', sharesSuf: 'shares',
+    atLeastOne: 'Set a password, family shares, or both. At least one is required.', encrypt: 'Encrypt & create letter', encrypting: 'Encrypting…',
+    errNoMethod: 'Choose at least one way to unlock: a password or family shares.', errMismatch: 'The passwords do not match.', errShort: 'Use a password of at least 8 characters.',
+    errShares: 'Check the family-share numbers (threshold ≥ 2, and total ≥ threshold).', errCreate: 'Could not create the letter.',
+    dropTitle: 'Drop the letter file', dropDesc: 'It is decrypted here on your device — nothing is uploaded.',
+    openWithPw: 'Open with password', openBtn: 'Open', openWithShares: 'Open with family shares',
+    pasteShares: (k, n) => `Paste ${k} of the ${n} shares, one per line.`, combineOpen: 'Combine & open', chooseDifferent: 'Choose a different file',
+    print: 'Print / Save PDF', messageLabel: 'Message', untitled: '(untitled)',
+    lblUsername: 'Username', lblPassword: 'Password', lblWebsite: 'Website', lblNotes: 'Notes',
+    copy: 'Copy', revealAria: 'Reveal', written: d => `Written ${d}.`,
+    errRead: 'Could not read this file.', errOpen: 'Could not open the letter.',
+  },
+  id: {
+    back: '← Kembali', ready: 'Surat terenkripsi Anda sudah siap. Unduh dan simpan dengan aman.', download: 'Unduh surat',
+    sharesHead: (k, n) => `Bagian keluarga — ${k} mana pun dari ${n} ini membuka surat`,
+    sharesDesc: k => `Berikan tiap bagian kepada orang tepercaya yang berbeda (kerabat — dan pertimbangkan memberikan satu kepada notaris/pelaksana wasiat Anda). Tidak ada satu orang pun yang bisa membuka surat sendirian; ${k} mana pun bersama-sama bisa.`,
+    keepTitle: 'Jaga agar tetap bisa dibuka',
+    keepBody: (hasShares, k) => `Surat ini hanya bisa dibuka dengan kata sandinya${hasShares ? ` atau ${k} bagian keluarga` : ''}. Jika itu hilang, isinya lenyap selamanya — memang dirancang begitu, agar tidak ada orang lain yang bisa membacanya. Simpan berkas dan cara membukanya secara terpisah.`,
+    editLetter: 'Edit surat',
+    yourMessage: 'Pesan Anda', messagePh: 'Kata-kata terakhir untuk keluarga Anda…', accounts: 'Akun & rahasia',
+    svcPh: 'Layanan (mis. Instagram)', userPh: 'Nama pengguna / email', passPh: 'Kata sandi / PIN', sitePh: 'Situs web (opsional)', notesPh: 'Catatan (mis. 2FA di ponsel saya)',
+    removeAria: 'Hapus', addAccount: 'Tambah akun', unlockHeading: 'Cara keluarga membukanya', passwordPh: 'Kata sandi', confirmPh: 'Konfirmasi kata sandi',
+    alsoSplit: 'Bagi juga menjadi bagian keluarga', alsoSplitHint: '— agar tidak ada satu orang pun yang bisa membukanya sendirian', anyPre: 'Butuh', ofMid: 'dari', sharesSuf: 'bagian',
+    atLeastOne: 'Tetapkan kata sandi, bagian keluarga, atau keduanya. Minimal satu diperlukan.', encrypt: 'Enkripsi & buat surat', encrypting: 'Mengenkripsi…',
+    errNoMethod: 'Pilih setidaknya satu cara membuka: kata sandi atau bagian keluarga.', errMismatch: 'Kata sandi tidak cocok.', errShort: 'Gunakan kata sandi minimal 8 karakter.',
+    errShares: 'Periksa angka bagian keluarga (ambang ≥ 2, dan total ≥ ambang).', errCreate: 'Tidak dapat membuat surat.',
+    dropTitle: 'Letakkan berkas surat', dropDesc: 'Didekripsi di sini di perangkat Anda — tidak ada yang diunggah.',
+    openWithPw: 'Buka dengan kata sandi', openBtn: 'Buka', openWithShares: 'Buka dengan bagian keluarga',
+    pasteShares: (k, n) => `Tempel ${k} dari ${n} bagian, satu per baris.`, combineOpen: 'Gabungkan & buka', chooseDifferent: 'Pilih berkas lain',
+    print: 'Cetak / Simpan PDF', messageLabel: 'Pesan', untitled: '(tanpa judul)',
+    lblUsername: 'Nama pengguna', lblPassword: 'Kata sandi', lblWebsite: 'Situs web', lblNotes: 'Catatan',
+    copy: 'Salin', revealAria: 'Tampilkan', written: d => `Ditulis ${d}.`,
+    errRead: 'Tidak dapat membaca berkas ini.', errOpen: 'Tidak dapat membuka surat.',
+  },
+};
+
 export default function LegacyLetter({ lang = 'en' }: { lang?: Lang }) {
   const [mode, setMode] = useState<Mode>(null);
   const tr = T[lang] ?? T.en;
@@ -202,13 +267,14 @@ export default function LegacyLetter({ lang = 'en' }: { lang?: Lang }) {
           <HowItWorks lang={lang} />
         </div>
       )}
-      {mode === 'create' && <CreateView onBack={() => setMode(null)} />}
-      {mode === 'open' && <OpenView onBack={() => setMode(null)} />}
+      {mode === 'create' && <CreateView onBack={() => setMode(null)} lang={lang} />}
+      {mode === 'open' && <OpenView onBack={() => setMode(null)} lang={lang} />}
     </div>
   );
 }
 
-function CreateView({ onBack }: { onBack: () => void }) {
+function CreateView({ onBack, lang }: { onBack: () => void; lang: Lang }) {
+  const f = F[lang] ?? F.en;
   const [message, setMessage] = useState('');
   const [accounts, setAccounts] = useState<Account[]>([emptyAccount()]);
   const [password, setPassword] = useState('');
@@ -226,10 +292,10 @@ function CreateView({ onBack }: { onBack: () => void }) {
   const generate = async () => {
     setError('');
     const usePw = password.length > 0;
-    if (!usePw && !useShares) { setError('Choose at least one way to unlock: a password or family shares.'); return; }
-    if (usePw && password !== confirm) { setError('The passwords do not match.'); return; }
-    if (usePw && password.length < 8) { setError('Use a password of at least 8 characters.'); return; }
-    if (useShares && (k < 2 || n < k || n > 20)) { setError('Check the family-share numbers (threshold ≥ 2, and total ≥ threshold).'); return; }
+    if (!usePw && !useShares) { setError(f.errNoMethod); return; }
+    if (usePw && password !== confirm) { setError(f.errMismatch); return; }
+    if (usePw && password.length < 8) { setError(f.errShort); return; }
+    if (useShares && (k < 2 || n < k || n > 20)) { setError(f.errShares); return; }
     const content: LegacyContent = {
       message,
       accounts: accounts.filter(a => a.service.trim() || a.username?.trim() || a.password?.trim()),
@@ -240,7 +306,7 @@ function CreateView({ onBack }: { onBack: () => void }) {
       const res = await createVault(content, { password: usePw ? password : undefined, shares: useShares ? { n, k } : undefined });
       setResult(res);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not create the letter.');
+      setError(e instanceof Error ? e.message : f.errCreate);
     } finally {
       setBusy(false);
     }
@@ -249,16 +315,16 @@ function CreateView({ onBack }: { onBack: () => void }) {
   if (result) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" onClick={onBack}>← Back</Button>
-        <Alert variant="success">Your encrypted letter is ready. Download it and keep it safe.</Alert>
+        <Button variant="ghost" onClick={onBack}>{f.back}</Button>
+        <Alert variant="success">{f.ready}</Alert>
         <Button onClick={() => downloadService.download(new Blob([result.file], { type: 'application/json' }), `surat-wasiat.${VAULT_EXT}`)}>
-          <Download className="h-4 w-4" /> Download the letter (.{VAULT_EXT})
+          <Download className="h-4 w-4" /> {f.download} (.{VAULT_EXT})
         </Button>
 
         {result.shares.length > 0 && (
           <div className="space-y-2 border-2 border-border p-3">
-            <p className="flex items-center gap-2 font-bold uppercase tracking-wide"><Users className="h-4 w-4" /> Family shares — hand out {k} of these {result.shares.length} are needed</p>
-            <p className="text-sm text-muted-foreground">Give each share to a different trusted person (a relative — and consider giving one to your lawyer/executor). No single person can open the letter alone; any {k} together can.</p>
+            <p className="flex items-center gap-2 font-bold uppercase tracking-wide"><Users className="h-4 w-4" /> {f.sharesHead(k, result.shares.length)}</p>
+            <p className="text-sm text-muted-foreground">{f.sharesDesc(k)}</p>
             {result.shares.map((s, i) => (
               <div key={i} className="flex items-center gap-2">
                 <code className="min-w-0 flex-1 truncate border-2 border-border bg-muted px-2 py-1 text-xs">{s}</code>
@@ -269,73 +335,70 @@ function CreateView({ onBack }: { onBack: () => void }) {
         )}
 
         <div className="border-2 border-border bg-muted px-3 py-2 text-sm">
-          <p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-4 w-4" /> Keep it recoverable</p>
-          <p className="mt-1 text-muted-foreground">
-            This letter can be opened <strong>only</strong> with its password{result.shares.length > 0 ? ` or ${k} family shares` : ''}.
-            If those are lost, the contents are gone forever — by design, so no one else can read them. Store the
-            file and the way to unlock it separately.
-          </p>
+          <p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-4 w-4" /> {f.keepTitle}</p>
+          <p className="mt-1 text-muted-foreground">{f.keepBody(result.shares.length > 0, k)}</p>
         </div>
-        <Button variant="secondary" onClick={() => setResult(null)}>Edit the letter</Button>
+        <Button variant="secondary" onClick={() => setResult(null)}>{f.editLetter}</Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-5">
-      <Button variant="ghost" onClick={onBack}>← Back</Button>
+      <Button variant="ghost" onClick={onBack}>{f.back}</Button>
 
       <div className="space-y-2">
-        <label className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Your message</label>
-        <textarea value={message} onChange={e => setMessage(e.target.value)} rows={5} placeholder="Final words for your family…" className={input} />
+        <label className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{f.yourMessage}</label>
+        <textarea value={message} onChange={e => setMessage(e.target.value)} rows={5} placeholder={f.messagePh} className={input} />
       </div>
 
       <div className="space-y-3">
-        <label className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Accounts &amp; secrets</label>
+        <label className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{f.accounts}</label>
         {accounts.map((a, i) => (
           <div key={i} className="space-y-2 border-2 border-border p-3">
             <div className="flex gap-2">
-              <input value={a.service} onChange={e => setAccount(i, { service: e.target.value })} placeholder="Service (e.g. Instagram)" className={input} />
-              {accounts.length > 1 && <Button variant="ghost" aria-label="Remove" onClick={() => setAccounts(x => x.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>}
+              <input value={a.service} onChange={e => setAccount(i, { service: e.target.value })} placeholder={f.svcPh} className={input} />
+              {accounts.length > 1 && <Button variant="ghost" aria-label={f.removeAria} onClick={() => setAccounts(x => x.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></Button>}
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <input value={a.username} onChange={e => setAccount(i, { username: e.target.value })} placeholder="Username / email" className={input} />
-              <input value={a.password} onChange={e => setAccount(i, { password: e.target.value })} placeholder="Password / PIN" className={input} />
-              <input value={a.url} onChange={e => setAccount(i, { url: e.target.value })} placeholder="Website (optional)" className={input} />
-              <input value={a.notes} onChange={e => setAccount(i, { notes: e.target.value })} placeholder="Notes (e.g. 2FA on my phone)" className={input} />
+              <input value={a.username} onChange={e => setAccount(i, { username: e.target.value })} placeholder={f.userPh} className={input} />
+              <input value={a.password} onChange={e => setAccount(i, { password: e.target.value })} placeholder={f.passPh} className={input} />
+              <input value={a.url} onChange={e => setAccount(i, { url: e.target.value })} placeholder={f.sitePh} className={input} />
+              <input value={a.notes} onChange={e => setAccount(i, { notes: e.target.value })} placeholder={f.notesPh} className={input} />
             </div>
           </div>
         ))}
-        <Button variant="secondary" onClick={() => setAccounts(a => [...a, emptyAccount()])}><Plus className="h-4 w-4" /> Add account</Button>
+        <Button variant="secondary" onClick={() => setAccounts(a => [...a, emptyAccount()])}><Plus className="h-4 w-4" /> {f.addAccount}</Button>
       </div>
 
       <div className="space-y-3 border-2 border-border p-3">
-        <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">How family will unlock it</p>
+        <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{f.unlockHeading}</p>
         <div className="grid gap-2 sm:grid-cols-2">
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className={input} />
-          <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Confirm password" className={input} />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={f.passwordPh} className={input} />
+          <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={f.confirmPh} className={input} />
         </div>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex flex-wrap items-center gap-2 text-sm">
           <input type="checkbox" checked={useShares} onChange={e => setUseShares(e.target.checked)} />
-          <span className="font-bold">Also split into family shares</span>
-          <span className="text-muted-foreground">— so no single person can open it alone</span>
+          <span className="font-bold">{f.alsoSplit}</span>
+          <span className="text-muted-foreground">{f.alsoSplitHint}</span>
         </label>
         {useShares && (
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <label className="flex items-center gap-2">Any <input type="number" min={2} max={n} value={k} onChange={e => setK(Math.max(2, Math.min(n, +e.target.value)))} className="w-16 border-2 border-border bg-muted px-2 py-1" /></label>
-            <label className="flex items-center gap-2">of <input type="number" min={k} max={20} value={n} onChange={e => setN(Math.max(k, Math.min(20, +e.target.value)))} className="w-16 border-2 border-border bg-muted px-2 py-1" /> shares</label>
+            <label className="flex items-center gap-2">{f.anyPre} <input type="number" min={2} max={n} value={k} onChange={e => setK(Math.max(2, Math.min(n, +e.target.value)))} className="w-16 border-2 border-border bg-muted px-2 py-1" /></label>
+            <label className="flex items-center gap-2">{f.ofMid} <input type="number" min={k} max={20} value={n} onChange={e => setN(Math.max(k, Math.min(20, +e.target.value)))} className="w-16 border-2 border-border bg-muted px-2 py-1" /> {f.sharesSuf}</label>
           </div>
         )}
-        <p className="text-xs text-muted-foreground">Set a password, family shares, or both. At least one is required.</p>
+        <p className="text-xs text-muted-foreground">{f.atLeastOne}</p>
       </div>
 
       {error && <Alert variant="error">{error}</Alert>}
-      <Button onClick={generate} disabled={busy}><Lock className="h-4 w-4" /> {busy ? 'Encrypting…' : 'Encrypt & create letter'}</Button>
+      <Button onClick={generate} disabled={busy}><Lock className="h-4 w-4" /> {busy ? f.encrypting : f.encrypt}</Button>
     </div>
   );
 }
 
-function OpenView({ onBack }: { onBack: () => void }) {
+function OpenView({ onBack, lang }: { onBack: () => void; lang: Lang }) {
+  const f = F[lang] ?? F.en;
   const [file, setFile] = useState<string | null>(null);
   const [caps, setCaps] = useState<{ password: boolean; shares: { n: number; k: number } | null } | null>(null);
   const [password, setPassword] = useState('');
@@ -346,14 +409,14 @@ function OpenView({ onBack }: { onBack: () => void }) {
 
   const onDrop = async (files: File[]) => {
     setError(''); setContent(null);
-    const f = files[0];
-    if (!f) return;
+    const dropped = files[0];
+    if (!dropped) return;
     try {
-      const text = await f.text();
+      const text = await dropped.text();
       setCaps(vaultCapabilities(text));
       setFile(text);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not read this file.');
+      setError(e instanceof Error ? e.message : f.errRead);
       setFile(null); setCaps(null);
     }
   };
@@ -362,7 +425,7 @@ function OpenView({ onBack }: { onBack: () => void }) {
     if (!file) return;
     setError('');
     try { setContent(await openWithPassword(file, password)); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Could not open the letter.'); }
+    catch (e) { setError(e instanceof Error ? e.message : f.errOpen); }
   };
   const openShares = async () => {
     if (!file) return;
@@ -370,56 +433,56 @@ function OpenView({ onBack }: { onBack: () => void }) {
     try {
       const list = sharesText.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       setContent(await openWithShares(file, list));
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not open the letter.'); }
+    } catch (e) { setError(e instanceof Error ? e.message : f.errOpen); }
   };
 
   if (content) {
     return (
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2 print:hidden">
-          <Button variant="ghost" onClick={onBack}>← Back</Button>
-          <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" /> Print / Save PDF</Button>
+          <Button variant="ghost" onClick={onBack}>{f.back}</Button>
+          <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" /> {f.print}</Button>
         </div>
         {content.message && (
           <div className="space-y-1 border-2 border-border p-4">
-            <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Message</p>
+            <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{f.messageLabel}</p>
             <p className="whitespace-pre-wrap">{content.message}</p>
           </div>
         )}
         {content.accounts.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Accounts &amp; secrets</p>
+            <p className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{f.accounts}</p>
             {content.accounts.map((a, i) => (
               <div key={i} className="space-y-1 border-2 border-border p-3">
-                <p className="font-bold">{a.service || '(untitled)'}</p>
-                {a.username && <Row label="Username" value={a.username} />}
+                <p className="font-bold">{a.service || f.untitled}</p>
+                {a.username && <Row label={f.lblUsername} value={a.username} copy={f.copy} />}
                 {a.password && (
                   <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="w-24 shrink-0 font-bold text-muted-foreground">Password</span>
+                    <span className="w-24 shrink-0 font-bold text-muted-foreground">{f.lblPassword}</span>
                     <code className="border-2 border-border bg-muted px-2 py-0.5">{reveal[i] ? a.password : '••••••••'}</code>
-                    <button onClick={() => setReveal(r => ({ ...r, [i]: !r[i] }))} aria-label="Reveal" className="press-brutal">{reveal[i] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
-                    <CopyButton value={a.password} label="Copy" />
+                    <button onClick={() => setReveal(r => ({ ...r, [i]: !r[i] }))} aria-label={f.revealAria} className="press-brutal">{reveal[i] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
+                    <CopyButton value={a.password} label={f.copy} />
                   </div>
                 )}
-                {a.url && <Row label="Website" value={a.url} />}
-                {a.notes && <Row label="Notes" value={a.notes} />}
+                {a.url && <Row label={f.lblWebsite} value={a.url} copy={f.copy} />}
+                {a.notes && <Row label={f.lblNotes} value={a.notes} copy={f.copy} />}
               </div>
             ))}
           </div>
         )}
-        {content.createdAt && <p className="text-xs text-muted-foreground">Written {content.createdAt}.</p>}
+        {content.createdAt && <p className="text-xs text-muted-foreground">{f.written(content.createdAt)}</p>}
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <Button variant="ghost" onClick={onBack}>← Back</Button>
+      <Button variant="ghost" onClick={onBack}>{f.back}</Button>
       {!file && (
         <Dropzone onDrop={onDrop} accept={`.${VAULT_EXT},application/json`} multiple={false}>
           <div className="space-y-1">
-            <p className="text-lg font-bold">Drop the letter file (.{VAULT_EXT})</p>
-            <p className="text-sm text-muted-foreground">It is decrypted here on your device — nothing is uploaded.</p>
+            <p className="text-lg font-bold">{f.dropTitle} (.{VAULT_EXT})</p>
+            <p className="text-sm text-muted-foreground">{f.dropDesc}</p>
           </div>
         </Dropzone>
       )}
@@ -428,22 +491,22 @@ function OpenView({ onBack }: { onBack: () => void }) {
         <div className="space-y-4">
           {caps.password && (
             <div className="space-y-2 border-2 border-border p-3">
-              <p className="flex items-center gap-2 font-bold uppercase tracking-wide"><KeyRound className="h-4 w-4" /> Open with password</p>
+              <p className="flex items-center gap-2 font-bold uppercase tracking-wide"><KeyRound className="h-4 w-4" /> {f.openWithPw}</p>
               <div className="flex gap-2">
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') openPw(); }} placeholder="Password" className={input} />
-                <Button onClick={openPw}>Open</Button>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') openPw(); }} placeholder={f.passwordPh} className={input} />
+                <Button onClick={openPw}>{f.openBtn}</Button>
               </div>
             </div>
           )}
           {caps.shares && (
             <div className="space-y-2 border-2 border-border p-3">
-              <p className="flex items-center gap-2 font-bold uppercase tracking-wide"><Users className="h-4 w-4" /> Open with family shares</p>
-              <p className="text-sm text-muted-foreground">Paste {caps.shares.k} of the {caps.shares.n} shares, one per line.</p>
+              <p className="flex items-center gap-2 font-bold uppercase tracking-wide"><Users className="h-4 w-4" /> {f.openWithShares}</p>
+              <p className="text-sm text-muted-foreground">{f.pasteShares(caps.shares.k, caps.shares.n)}</p>
               <textarea value={sharesText} onChange={e => setSharesText(e.target.value)} rows={caps.shares.k + 1} placeholder={'gwt-wasiat.v1.…\ngwt-wasiat.v1.…'} className={input} />
-              <Button onClick={openShares}>Combine &amp; open</Button>
+              <Button onClick={openShares}>{f.combineOpen}</Button>
             </div>
           )}
-          <Button variant="ghost" onClick={() => { setFile(null); setCaps(null); setError(''); }}>Choose a different file</Button>
+          <Button variant="ghost" onClick={() => { setFile(null); setCaps(null); setError(''); }}>{f.chooseDifferent}</Button>
         </div>
       )}
 
@@ -452,12 +515,12 @@ function OpenView({ onBack }: { onBack: () => void }) {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, copy }: { label: string; value: string; copy: string }) {
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
       <span className="w-24 shrink-0 font-bold text-muted-foreground">{label}</span>
       <span className="min-w-0 break-all">{value}</span>
-      <CopyButton value={value} label="Copy" />
+      <CopyButton value={value} label={copy} />
     </div>
   );
 }
