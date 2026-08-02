@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'ghost-backup': {
+    title: 'Free Ghost Blog Backup Tool — Export to Markdown',
+    description: 'A free tool to convert a Ghost blog export into Markdown or standalone HTML files — one per post, with frontmatter and tags. Runs in your browser; nothing is uploaded.',
+    intro: 'This free Ghost backup tool turns the JSON you export from Ghost admin into a ZIP of clean Markdown (or ready-to-host HTML) files — one per post, with YAML frontmatter and your tags. Perfect for backing up, migrating to a static site, or moving off Ghost. Everything is processed on your device.',
+    howTo: [
+      'In Ghost admin, go to Settings → Migration → Export and download your content JSON.',
+      'Drop that JSON file here — it is parsed entirely in your browser.',
+      'Choose what to include (drafts, pages) and the output format: Markdown, HTML, or both.',
+      'Download a ZIP with one file per post, organized into posts/, pages/ and drafts/ folders.',
+    ],
+    faqs: [
+      { q: 'Is my blog content uploaded anywhere?', a: 'No. Your Ghost export is read and converted entirely in your browser with JavaScript. The file never leaves your device.' },
+      { q: 'What is the Ghost export format?', a: 'It is a single JSON file you download from Ghost admin (Settings → Migration → Export). It contains all your posts, pages, tags and metadata.' },
+      { q: 'Does it include my images?', a: 'Ghost exports do not include image files — only their URLs. So image links in the output still point at your Ghost site or CDN; save the images separately if you are shutting the site down.' },
+      { q: 'Can I use the output with Astro, Hugo or Jekyll?', a: 'Yes. Each post becomes a Markdown file with generic YAML frontmatter (title, slug, date, tags, draft…), which works with Astro, Hugo, Jekyll, 11ty and Obsidian with minimal tweaks. You can also export standalone HTML pages to host directly.' },
+    ],
+  },
   'legacy-letter': {
     title: 'Free Digital Legacy Letter Tool — Encrypted',
     description: 'A free tool to write an encrypted letter of passwords and final words for your family — opened by password or family shares, only when the time comes. 100% in your browser.',
@@ -1291,6 +1308,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'ghost-backup': {
+    title: 'Tool Cadangan Blog Ghost Gratis — Ekspor ke Markdown',
+    description: 'Tool gratis untuk mengubah ekspor blog Ghost menjadi berkas Markdown atau HTML mandiri — satu per pos, dengan frontmatter dan tag. Berjalan di browser; tidak ada yang diunggah.',
+    intro: 'Tool cadangan Ghost gratis ini mengubah JSON yang Anda ekspor dari admin Ghost menjadi ZIP berisi berkas Markdown yang rapi (atau HTML siap-hosting) — satu per pos, dengan frontmatter YAML dan tag Anda. Cocok untuk mencadangkan, migrasi ke situs statis, atau pindah dari Ghost. Semuanya diproses di perangkat Anda.',
+    howTo: [
+      'Di admin Ghost, buka Settings → Migration → Export dan unduh JSON konten Anda.',
+      'Letakkan berkas JSON itu di sini — diurai sepenuhnya di browser Anda.',
+      'Pilih yang disertakan (draf, halaman) dan format keluaran: Markdown, HTML, atau keduanya.',
+      'Unduh ZIP berisi satu berkas per pos, tertata dalam folder posts/, pages/, dan drafts/.',
+    ],
+    faqs: [
+      { q: 'Apakah konten blog saya diunggah ke suatu tempat?', a: 'Tidak. Ekspor Ghost Anda dibaca dan dikonversi sepenuhnya di browser Anda dengan JavaScript. Berkas tidak pernah meninggalkan perangkat.' },
+      { q: 'Apa format ekspor Ghost?', a: 'Berupa satu berkas JSON yang Anda unduh dari admin Ghost (Settings → Migration → Export). Berisi semua pos, halaman, tag, dan metadata Anda.' },
+      { q: 'Apakah menyertakan gambar saya?', a: 'Ekspor Ghost tidak menyertakan berkas gambar — hanya URL-nya. Jadi tautan gambar pada keluaran tetap mengarah ke situs Ghost atau CDN Anda; simpan gambar secara terpisah jika Anda menutup situs.' },
+      { q: 'Bisakah keluarannya dipakai dengan Astro, Hugo, atau Jekyll?', a: 'Ya. Setiap pos menjadi berkas Markdown dengan frontmatter YAML generik (title, slug, date, tags, draft…), yang bekerja dengan Astro, Hugo, Jekyll, 11ty, dan Obsidian dengan sedikit penyesuaian. Anda juga dapat mengekspor halaman HTML mandiri untuk dihosting langsung.' },
+    ],
+  },
   'legacy-letter': {
     title: 'Tool Surat Wasiat Digital Gratis — Terenkripsi',
     description: 'Tool gratis untuk menulis surat terenkripsi berisi kata sandi dan pesan terakhir untuk keluarga — dibuka dengan kata sandi atau bagian keluarga, hanya saat waktunya tiba. 100% di browser Anda.',
