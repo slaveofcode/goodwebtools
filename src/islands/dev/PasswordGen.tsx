@@ -10,8 +10,42 @@ import {
   type SetKey,
   type Options,
 } from '@/tools/dev/password.lib';
+import type { Lang } from '@/i18n/config';
 
-export default function PasswordGen() {
+const TR: Record<Lang, {
+  regenerate: string;
+  strength: string;
+  minChars: string;
+  maxChars: string;
+  length: string;
+  minNumbers: string;
+  minSpecial: string;
+  avoidAmbiguous: string;
+}> = {
+  en: {
+    regenerate: 'Regenerate',
+    strength: 'Strength',
+    minChars: 'Min chars',
+    maxChars: 'Max chars',
+    length: 'Length',
+    minNumbers: 'Min numbers',
+    minSpecial: 'Min special',
+    avoidAmbiguous: 'Avoid ambiguous characters',
+  },
+  id: {
+    regenerate: 'Buat ulang',
+    strength: 'Kekuatan',
+    minChars: 'Min karakter',
+    maxChars: 'Maks karakter',
+    length: 'Panjang',
+    minNumbers: 'Min angka',
+    minSpecial: 'Min karakter khusus',
+    avoidAmbiguous: 'Hindari karakter ambigu',
+  },
+};
+
+export default function PasswordGen({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [minLength, setMinLength] = useState(8);
   const [maxLength, setMaxLength] = useState(32);
   const [length, setLength] = useState(16);
@@ -52,20 +86,20 @@ export default function PasswordGen() {
     <div className="space-y-5">
       <div className="flex items-center gap-3 border-2 border-border bg-muted p-3 shadow-brutal-sm">
         <code className="flex-1 break-all text-lg">{password || '—'}</code>
-        <Button variant="ghost" onClick={regenerate} aria-label="Regenerate">
+        <Button variant="ghost" onClick={regenerate} aria-label={t.regenerate}>
           <RefreshCw className="h-4 w-4" />
         </Button>
         <CopyButton value={password} />
       </div>
 
       <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">Strength</span>
+        <span className="text-muted-foreground">{t.strength}</span>
         <span className={`font-bold uppercase ${strength.color}`}>{strength.label}</span>
       </div>
 
       <div className="flex flex-wrap items-end gap-4">
         <label className="space-y-1 text-sm">
-          <span className="block text-muted-foreground">Min chars</span>
+          <span className="block text-muted-foreground">{t.minChars}</span>
           <input
             type="number"
             min={1}
@@ -76,7 +110,7 @@ export default function PasswordGen() {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="block text-muted-foreground">Max chars</span>
+          <span className="block text-muted-foreground">{t.maxChars}</span>
           <input
             type="number"
             min={minLength}
@@ -90,7 +124,7 @@ export default function PasswordGen() {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Length</span>
+          <span className="text-muted-foreground">{t.length}</span>
           <span className="font-bold">{length}</span>
         </div>
         <input
@@ -122,7 +156,7 @@ export default function PasswordGen() {
 
       <div className="flex flex-wrap items-end gap-4">
         <label className="space-y-1 text-sm">
-          <span className="block text-muted-foreground">Min numbers</span>
+          <span className="block text-muted-foreground">{t.minNumbers}</span>
           <input
             type="number"
             min={0}
@@ -134,7 +168,7 @@ export default function PasswordGen() {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="block text-muted-foreground">Min special</span>
+          <span className="block text-muted-foreground">{t.minSpecial}</span>
           <input
             type="number"
             min={0}
@@ -154,7 +188,7 @@ export default function PasswordGen() {
           onChange={() => setAvoidAmbiguous(prev => !prev)}
           className="accent-accent"
         />
-        Avoid ambiguous characters
+        {t.avoidAmbiguous}
       </label>
     </div>
   );

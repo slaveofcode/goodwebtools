@@ -3,10 +3,38 @@ import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
+import type { Lang } from '@/i18n/config';
 
 type Mode = 'encode' | 'decode';
 
-export default function UrlEncode() {
+const TR: Record<Lang, {
+  inputLabel: string;
+  encode: string;
+  decode: string;
+  clear: string;
+  invalidInput: string;
+  result: string;
+}> = {
+  en: {
+    inputLabel: 'Input',
+    encode: 'Encode →',
+    decode: '← Decode',
+    clear: 'Clear',
+    invalidInput: 'Invalid input for URL decoding',
+    result: 'Result',
+  },
+  id: {
+    inputLabel: 'Input',
+    encode: 'Encode →',
+    decode: '← Decode',
+    clear: 'Bersihkan',
+    invalidInput: 'Input tidak valid untuk decoding URL',
+    result: 'Hasil',
+  },
+};
+
+export default function UrlEncode({ lang = 'en' }: { lang?: Lang }) {
+  const t = TR[lang] ?? TR.en;
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
@@ -23,7 +51,7 @@ export default function UrlEncode() {
       setOutput(mode === 'encode' ? encodeURIComponent(source) : decodeURIComponent(source));
     } catch {
       setOutput('');
-      setError('Invalid input for URL decoding');
+      setError(t.invalidInput);
     }
   };
 
@@ -42,7 +70,7 @@ export default function UrlEncode() {
   return (
     <div className="space-y-4">
       <TextArea
-        label="Input"
+        label={t.inputLabel}
         value={input}
         onChange={e => handleInputChange(e.target.value)}
         placeholder="https://example.com/?q=hello world"
@@ -55,17 +83,17 @@ export default function UrlEncode() {
           aria-pressed={activeMode === 'encode'}
           onClick={() => run('encode')}
         >
-          Encode →
+          {t.encode}
         </Button>
         <Button
           variant={activeMode === 'decode' ? 'primary' : 'secondary'}
           aria-pressed={activeMode === 'decode'}
           onClick={() => run('decode')}
         >
-          ← Decode
+          {t.decode}
         </Button>
         <Button variant="ghost" onClick={clear}>
-          Clear
+          {t.clear}
         </Button>
       </div>
 
@@ -74,7 +102,7 @@ export default function UrlEncode() {
       {output && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Result</span>
+            <span className="text-sm font-medium text-muted-foreground">{t.result}</span>
             <CopyButton value={output} />
           </div>
           <pre className="max-h-[20rem] overflow-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-muted/40 p-3 text-sm">
