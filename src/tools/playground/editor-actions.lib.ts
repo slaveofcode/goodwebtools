@@ -5,9 +5,12 @@
  * drift. Wired up in MonacoEditor.
  */
 
+// Structural subset of monaco's KeyMod/KeyCode enums — narrow to the members we
+// use so the real monaco namespace (whose enums have no string index signature)
+// is assignable here.
 export interface MonacoKeys {
-  KeyMod: { CtrlCmd: number; Shift: number; Alt: number; WinCtrl: number };
-  KeyCode: Record<string, number>;
+  KeyMod: { CtrlCmd: number; Shift: number };
+  KeyCode: { KeyL: number; KeyS: number; KeyO: number };
 }
 
 export interface EditorKeybindings {
