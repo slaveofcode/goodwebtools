@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'sql-format': {
+    title: 'Free SQL Formatter — Beautify SQL Queries Online',
+    description: 'A free SQL formatter to beautify and pretty-print SQL queries in your browser — PostgreSQL, MySQL, SQLite, BigQuery and more. 100% private; nothing is uploaded.',
+    intro: 'This free SQL formatter beautifies and pretty-prints your SQL queries right in your browser. Pick your database dialect, keyword case and indentation and get clean, readable SQL instantly. It runs entirely on your device, so your queries are never uploaded.',
+    howTo: [
+      'Paste your SQL query into the box (or load the example).',
+      'Choose your dialect — PostgreSQL, MySQL, SQLite, BigQuery and more.',
+      'Set keyword case (UPPER, lower or keep) and indentation (2, 4 spaces or tab).',
+      'Copy the formatted SQL or download it as a .sql file.',
+    ],
+    faqs: [
+      { q: 'Is my SQL uploaded to a server?', a: 'No. Formatting happens entirely in your browser with JavaScript. Your queries never leave your device, so it is safe for proprietary or sensitive SQL.' },
+      { q: 'Which SQL dialects are supported?', a: 'Standard SQL plus PostgreSQL, MySQL, MariaDB, SQLite, SQL Server (T-SQL), Oracle (PL/SQL), BigQuery, Snowflake, Redshift, Spark, DuckDB, ClickHouse, Db2, Hive and Trino.' },
+      { q: 'Can it uppercase or lowercase keywords?', a: 'Yes — choose UPPER to capitalise keywords like SELECT and FROM, lower to make them lowercase, or Keep to leave them as they are.' },
+      { q: 'Does it validate or run my query?', a: 'No. It only formats the text for readability; it does not execute, validate or connect to any database.' },
+    ],
+  },
   'compare-lists': {
     title: 'Compare Two Lists — Merge, Dedupe & Diff Lines',
     description: 'Compare two lists of lines online: merge and remove duplicates, subtract one list from another, or find common lines. Free, private and instant — nothing is uploaded.',
@@ -1410,6 +1427,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'sql-format': {
+    title: 'Pemformat SQL Gratis — Rapikan Kueri SQL Online',
+    description: 'Pemformat SQL gratis untuk merapikan dan mempercantik kueri SQL di browser Anda — PostgreSQL, MySQL, SQLite, BigQuery, dan lainnya. 100% privat; tidak ada yang diunggah.',
+    intro: 'Pemformat SQL gratis ini merapikan dan mempercantik kueri SQL Anda langsung di browser. Pilih dialek basis data, huruf kata kunci, dan indentasi untuk mendapatkan SQL yang bersih dan mudah dibaca secara instan. Semuanya berjalan di perangkat Anda, jadi kueri Anda tidak pernah diunggah.',
+    howTo: [
+      'Tempel kueri SQL Anda ke dalam kotak (atau muat contoh).',
+      'Pilih dialek Anda — PostgreSQL, MySQL, SQLite, BigQuery, dan lainnya.',
+      'Atur huruf kata kunci (BESAR, kecil, atau biarkan) dan indentasi (2, 4 spasi, atau tab).',
+      'Salin SQL terformat atau unduh sebagai berkas .sql.',
+    ],
+    faqs: [
+      { q: 'Apakah SQL saya diunggah ke server?', a: 'Tidak. Pemformatan terjadi sepenuhnya di browser Anda dengan JavaScript. Kueri Anda tidak pernah meninggalkan perangkat, jadi aman untuk SQL rahasia atau sensitif.' },
+      { q: 'Dialek SQL apa saja yang didukung?', a: 'Standard SQL ditambah PostgreSQL, MySQL, MariaDB, SQLite, SQL Server (T-SQL), Oracle (PL/SQL), BigQuery, Snowflake, Redshift, Spark, DuckDB, ClickHouse, Db2, Hive, dan Trino.' },
+      { q: 'Bisakah membuat kata kunci huruf besar atau kecil?', a: 'Ya — pilih BESAR untuk mengapitalkan kata kunci seperti SELECT dan FROM, kecil untuk membuatnya huruf kecil, atau Biarkan agar tetap seperti aslinya.' },
+      { q: 'Apakah memvalidasi atau menjalankan kueri saya?', a: 'Tidak. Ini hanya memformat teks agar mudah dibaca; tidak menjalankan, memvalidasi, atau terhubung ke basis data apa pun.' },
+    ],
+  },
   'compare-lists': {
     title: 'Bandingkan Dua Daftar — Gabung, Hapus Duplikat & Diff',
     description: 'Bandingkan dua daftar baris secara online: gabung dan hapus duplikat, kurangi satu daftar dari yang lain, atau temukan baris yang sama. Gratis, privat, instan — tidak ada yang diunggah.',
