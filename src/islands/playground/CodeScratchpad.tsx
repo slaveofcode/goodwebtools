@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Plus, X, FolderOpen, Save, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import MonacoEditor from './MonacoEditor';
@@ -19,6 +19,7 @@ const TR: Record<Lang, {
   loading: string;
   closeFile: (name: string) => string;
   newFile: string;
+  unsaved: string;
   helper: ReactNode;
 }> = {
   en: {
@@ -32,6 +33,7 @@ const TR: Record<Lang, {
     loading: 'Loading…',
     closeFile: (name) => `Close ${name}`,
     newFile: 'New file',
+    unsaved: 'Unsaved changes',
     helper: (
       <>
         Tabs autosave locally. Double-click a tab to rename. Save <kbd>⌘S</kbd>, open <kbd>⌘O</kbd>.
@@ -51,6 +53,7 @@ const TR: Record<Lang, {
     loading: 'Memuat…',
     closeFile: (name) => `Tutup ${name}`,
     newFile: 'File baru',
+    unsaved: 'Perubahan belum disimpan',
     helper: (
       <>
         Tab tersimpan otomatis secara lokal. Klik dua kali tab untuk mengganti nama. Simpan <kbd>⌘S</kbd>, buka <kbd>⌘O</kbd>.
@@ -60,6 +63,35 @@ const TR: Record<Lang, {
     ),
   },
 };
+
+// Minimal File System Access API surface (not in every TS lib.dom), so tabs can
+// stay linked to a real file on disk and save back in place — like an editor.
+type FsPerm = 'granted' | 'denied' | 'prompt';
+interface FsWritable { write(data: string): Promise<void>; close(): Promise<void>; }
+interface FsFileHandle {
+  name: string;
+  getFile(): Promise<File>;
+  createWritable(): Promise<FsWritable>;
+  queryPermission?(d: { mode: 'read' | 'readwrite' }): Promise<FsPerm>;
+  requestPermission?(d: { mode: 'read' | 'readwrite' }): Promise<FsPerm>;
+}
+interface FsWindow {
+  showOpenFilePicker?(o?: { multiple?: boolean }): Promise<FsFileHandle[]>;
+  showSaveFilePicker?(o?: { suggestedName?: string }): Promise<FsFileHandle>;
+}
+
+async function ensureReadWrite(h: FsFileHandle): Promise<boolean> {
+  const opts = { mode: 'readwrite' as const };
+  if (!h.queryPermission || !h.requestPermission) return true;
+  if ((await h.queryPermission(opts)) === 'granted') return true;
+  return (await h.requestPermission(opts)) === 'granted';
+}
+
+async function writeToHandle(h: FsFileHandle, content: string): Promise<void> {
+  const writable = await h.createWritable();
+  await writable.write(content);
+  await writable.close();
+}
 
 let counter = 0;
 const newId = () => `f${Date.now()}-${counter++}`;
@@ -74,6 +106,12 @@ export default function CodeScratchpad({ lang = 'en' }: { lang?: Lang }) {
   const [activeId, setActiveId] = useState<string>('');
   const [ready, setReady] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Tabs linked to a file on disk (per tab id), and tabs with unsaved edits.
+  const handles = useRef<Map<string, FsFileHandle>>(new Map());
+  const [dirty, setDirty] = useState<Set<string>>(new Set());
+
+  const markClean = (id: string) =>
+    setDirty((d) => { if (!d.has(id)) return d; const n = new Set(d); n.delete(id); return n; });
 
   // Restore persisted tabs on mount.
   useEffect(() => {
@@ -94,8 +132,10 @@ export default function CodeScratchpad({ lang = 'en' }: { lang?: Lang }) {
 
   const active = files.find((f) => f.id === activeId) ?? null;
 
-  const updateActive = (content: string) =>
+  const updateActive = (content: string) => {
     setFiles((fs) => fs.map((f) => (f.id === activeId ? { ...f, content } : f)));
+    setDirty((d) => (d.has(activeId) ? d : new Set(d).add(activeId)));
+  };
 
   const addFile = () => {
     const name = prompt(t.fileNamePrompt, 'untitled.txt');
@@ -114,6 +154,8 @@ export default function CodeScratchpad({ lang = 'en' }: { lang?: Lang }) {
   };
 
   const closeFile = (id: string) => {
+    handles.current.delete(id);
+    markClean(id);
     setFiles((fs) => {
       const next = fs.filter((f) => f.id !== id);
       const result = next.length ? next : [blankFile()];
@@ -123,25 +165,31 @@ export default function CodeScratchpad({ lang = 'en' }: { lang?: Lang }) {
   };
 
   const openFromDisk = async () => {
+    const w = window as unknown as FsWindow;
     try {
-      const files = await fileService.openFile({ multiple: false });
-      if (files.length === 0) return;
-
-      const file = files[0];
-      const content = await fileService.readFile(file);
-      const f: ScratchFile = {
-        id: newId(),
-        name: file.name,
-        language: extensionToLanguage(file.name),
-        content
-      };
-
-      setFiles((fs) => [...fs, f]);
-      setActiveId(f.id);
-    } catch (e) {
-      if ((e as Error).message !== 'No files selected' && (e as Error).name !== 'AbortError') {
-        alert(t.couldNotOpen);
+      if (w.showOpenFilePicker) {
+        // Keep the handle so edits can be saved straight back to this file.
+        const [handle] = await w.showOpenFilePicker({ multiple: false });
+        if (!handle) return;
+        const file = await handle.getFile();
+        const content = await file.text();
+        const id = newId();
+        handles.current.set(id, handle);
+        setFiles((fs) => [...fs, { id, name: file.name, language: extensionToLanguage(file.name), content }]);
+        setActiveId(id);
+      } else {
+        // Fallback (Firefox/Safari): read-only open, no in-place save.
+        const picked = await fileService.openFile({ multiple: false });
+        if (picked.length === 0) return;
+        const file = picked[0];
+        const content = await fileService.readFile(file);
+        const id = newId();
+        setFiles((fs) => [...fs, { id, name: file.name, language: extensionToLanguage(file.name), content }]);
+        setActiveId(id);
       }
+    } catch (e) {
+      const err = e as Error;
+      if (err.name !== 'AbortError' && err.message !== 'No files selected') alert(t.couldNotOpen);
     }
   };
 
@@ -158,13 +206,35 @@ export default function CodeScratchpad({ lang = 'en' }: { lang?: Lang }) {
 
   const saveActive = async () => {
     if (!active) return;
+    const fileId = active.id;
+    const w = window as unknown as FsWindow;
     try {
-      await fileService.saveFile(active.content, {
-        suggestedName: active.name,
-      });
+      const linked = handles.current.get(fileId);
+      if (linked) {
+        // Already tied to a file on disk → write straight back, no dialog.
+        if (!(await ensureReadWrite(linked))) return;
+        await writeToHandle(linked, active.content);
+        markClean(fileId);
+        return;
+      }
+      if (w.showSaveFilePicker) {
+        const handle = await w.showSaveFilePicker({ suggestedName: active.name });
+        await writeToHandle(handle, active.content);
+        handles.current.set(fileId, handle);
+        // Adopt the chosen file name (and its language) for this tab.
+        if (handle.name !== active.name) {
+          const nm = handle.name;
+          setFiles((fs) => fs.map((f) => (f.id === fileId ? { ...f, name: nm, language: extensionToLanguage(nm) } : f)));
+        }
+        markClean(fileId);
+      } else {
+        // Fallback: plain download (can't link or rename in place).
+        await fileService.saveFile(active.content, { suggestedName: active.name });
+        markClean(fileId);
+      }
     } catch (e) {
-      // User cancelled or error - no action needed
-      console.warn('Save cancelled or failed:', e);
+      const err = e as Error;
+      if (err.name !== 'AbortError') console.warn('Save cancelled or failed:', err);
     }
   };
 
@@ -180,7 +250,9 @@ export default function CodeScratchpad({ lang = 'en' }: { lang?: Lang }) {
               onDoubleClick={() => renameFile(f.id)}
               className={`flex items-center gap-1 border-2 px-2 py-1 text-sm ${f.id === activeId ? 'border-border bg-accent text-accent-foreground' : 'border-border bg-muted'}`}
             >
-              <button onClick={() => setActiveId(f.id)} className="font-bold">{f.name}</button>
+              <button onClick={() => setActiveId(f.id)} className="font-bold" title={dirty.has(f.id) ? t.unsaved : undefined}>
+                {dirty.has(f.id) && <span aria-hidden className="mr-0.5">*</span>}{f.name}
+              </button>
               <button onClick={() => closeFile(f.id)} aria-label={t.closeFile(f.name)}><X className="h-3.5 w-3.5" /></button>
             </div>
           ))}
