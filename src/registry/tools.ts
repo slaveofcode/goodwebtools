@@ -169,6 +169,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'sql-format',
+    name: 'SQL Formatter',
+    category: 'Dev',
+    route: '/tools/sql-format',
+    keywords: ['sql', 'format', 'formatter', 'beautify', 'prettify', 'pretty', 'query', 'postgresql', 'mysql', 'sqlite', 'bigquery', 'database'],
+    icon: Database,
+    summary: 'Format and beautify SQL queries (PostgreSQL, MySQL, and more)',
+    load: () => import('@/islands/dev/SqlFormat'),
+    status: 'beta'
+  },
+  {
     id: 'docx-viewer',
     name: 'Word (DOCX) Viewer',
     category: 'Documents',
