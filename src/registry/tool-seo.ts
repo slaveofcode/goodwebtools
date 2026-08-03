@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'compare-lists': {
+    title: 'Compare Two Lists — Merge, Dedupe & Diff Lines',
+    description: 'Compare two lists of lines online: merge and remove duplicates, subtract one list from another, or find common lines. Free, private and instant — nothing is uploaded.',
+    intro: 'Paste two lists and compare them line by line with set operations — merge and remove duplicates, subtract one list from the other, find the lines they share, spot what is unique to one side, or list duplicates. It runs entirely in your browser, so your data is never uploaded.',
+    howTo: [
+      'Paste your first list into List A and your second into List B (one item per line).',
+      'Pick an operation: Merge & dedupe, In A not B, In B not A, Common to both, In only one, or Duplicates.',
+      'Toggle options as needed — ignore case, trim whitespace, ignore blank lines, or sort the result.',
+      'Copy the result or download it as a .txt file.',
+    ],
+    faqs: [
+      { q: 'What can I do with two lists?', a: 'Merge them and remove duplicates (union), remove one list’s lines from the other (difference), keep only the lines they have in common (intersection), keep lines that are in just one list (symmetric difference), or list lines that appear more than once.' },
+      { q: 'Is my data uploaded?', a: 'No. All comparison happens in your browser with JavaScript. Your lists never leave your device, so it is safe for private or sensitive data.' },
+      { q: 'Can it ignore case and extra spaces?', a: 'Yes. Turn on “Ignore case” to match regardless of capitalisation and “Trim whitespace” to ignore leading and trailing spaces when comparing. You can also ignore blank lines and sort the output.' },
+      { q: 'Are duplicates removed from the result?', a: 'Yes — every operation returns a de-duplicated list, preserving the first occurrence of each line and its original text.' },
+    ],
+  },
   'docx-to-pdf': {
     title: 'Free DOCX to PDF Converter — Word to PDF Online',
     description: 'Convert Word (.docx) documents to PDF right in your browser — page-accurate, with your layout, tables and images. 100% private; nothing is uploaded.',
@@ -1393,6 +1410,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'compare-lists': {
+    title: 'Bandingkan Dua Daftar — Gabung, Hapus Duplikat & Diff',
+    description: 'Bandingkan dua daftar baris secara online: gabung dan hapus duplikat, kurangi satu daftar dari yang lain, atau temukan baris yang sama. Gratis, privat, instan — tidak ada yang diunggah.',
+    intro: 'Tempel dua daftar dan bandingkan baris per baris dengan operasi himpunan — gabung dan hapus duplikat, kurangi satu daftar dari yang lain, temukan baris yang sama, lihat yang hanya ada di salah satu sisi, atau daftar duplikat. Semuanya berjalan di browser Anda, jadi data Anda tidak pernah diunggah.',
+    howTo: [
+      'Tempel daftar pertama ke Daftar A dan daftar kedua ke Daftar B (satu item per baris).',
+      'Pilih operasi: Gabung & hapus duplikat, Di A tidak di B, Di B tidak di A, Sama di keduanya, Hanya di salah satu, atau Duplikat.',
+      'Aktifkan opsi sesuai kebutuhan — abaikan huruf besar/kecil, pangkas spasi, abaikan baris kosong, atau urutkan hasil.',
+      'Salin hasilnya atau unduh sebagai berkas .txt.',
+    ],
+    faqs: [
+      { q: 'Apa yang bisa saya lakukan dengan dua daftar?', a: 'Gabungkan dan hapus duplikat (union), hapus baris satu daftar dari yang lain (difference), simpan hanya baris yang sama (intersection), simpan baris yang hanya ada di satu daftar (symmetric difference), atau daftar baris yang muncul lebih dari sekali.' },
+      { q: 'Apakah data saya diunggah?', a: 'Tidak. Semua perbandingan terjadi di browser Anda dengan JavaScript. Daftar Anda tidak pernah meninggalkan perangkat, jadi aman untuk data privat atau sensitif.' },
+      { q: 'Bisakah mengabaikan huruf besar/kecil dan spasi berlebih?', a: 'Ya. Aktifkan “Abaikan huruf besar/kecil” untuk mencocokkan tanpa memandang kapitalisasi dan “Pangkas spasi” untuk mengabaikan spasi di awal dan akhir saat membandingkan. Anda juga dapat mengabaikan baris kosong dan mengurutkan keluaran.' },
+      { q: 'Apakah duplikat dihapus dari hasil?', a: 'Ya — setiap operasi mengembalikan daftar tanpa duplikat, mempertahankan kemunculan pertama setiap baris beserta teks aslinya.' },
+    ],
+  },
   'docx-to-pdf': {
     title: 'Konverter DOCX ke PDF Gratis — Word ke PDF Online',
     description: 'Konversi dokumen Word (.docx) ke PDF langsung di browser Anda — akurat per halaman, dengan tata letak, tabel, dan gambar. 100% privat; tidak ada yang diunggah.',
