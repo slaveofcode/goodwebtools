@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'docx-to-pdf': {
+    title: 'Free DOCX to PDF Converter — Word to PDF Online',
+    description: 'Convert Word (.docx) documents to PDF right in your browser — page-accurate, with your layout, tables and images. 100% private; nothing is uploaded.',
+    intro: 'This free DOCX to PDF converter turns Word documents into PDF entirely in your browser — keeping your page layout, tables and images. There is no upload and no account: the file is converted on your device and never leaves it, so even confidential documents stay private.',
+    howTo: [
+      'Drop a .docx file (or click to browse) — it is rendered in your browser.',
+      'Check the preview, then click Download PDF to save a page-accurate PDF.',
+      'Prefer selectable, searchable text? Use Print / Save as PDF instead.',
+      'Nothing is uploaded — the whole conversion happens on your device.',
+    ],
+    faqs: [
+      { q: 'Is my document uploaded to a server?', a: 'No. The .docx is rendered and converted to PDF entirely in your browser with JavaScript. It never leaves your device, so it is safe for confidential files.' },
+      { q: 'Will the PDF text be selectable?', a: 'The one-click Download PDF produces a visual, page-perfect copy where text is rendered as images. For a PDF with selectable, searchable text, use the Print / Save as PDF button, which uses your browser’s own PDF export.' },
+      { q: 'Does it keep my layout, tables and images?', a: 'Yes — the document is rendered with its real layout, tables and images, and each page is placed into the PDF at its correct size.' },
+      { q: 'Does it support old .doc files?', a: 'No — only the modern .docx format. Open an old .doc in Word or Google Docs and save it as .docx first.' },
+    ],
+  },
   'odt-viewer': {
     title: 'Free ODT Viewer — Open OpenDocument Files Online',
     description: 'A free ODT viewer to open and read OpenDocument Text (.odt) files in your browser — headings, lists, tables and images. 100% private; nothing is uploaded.',
@@ -1376,6 +1393,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'docx-to-pdf': {
+    title: 'Konverter DOCX ke PDF Gratis — Word ke PDF Online',
+    description: 'Konversi dokumen Word (.docx) ke PDF langsung di browser Anda — akurat per halaman, dengan tata letak, tabel, dan gambar. 100% privat; tidak ada yang diunggah.',
+    intro: 'Konverter DOCX ke PDF gratis ini mengubah dokumen Word menjadi PDF sepenuhnya di browser Anda — mempertahankan tata letak halaman, tabel, dan gambar. Tanpa unggahan dan tanpa akun: berkas dikonversi di perangkat Anda dan tidak pernah meninggalkannya, jadi dokumen rahasia pun tetap privat.',
+    howTo: [
+      'Letakkan berkas .docx (atau klik untuk menelusuri) — ditampilkan di browser Anda.',
+      'Periksa pratinjau, lalu klik Unduh PDF untuk menyimpan PDF yang akurat per halaman.',
+      'Ingin teks yang dapat dipilih dan dicari? Gunakan Cetak / Simpan PDF.',
+      'Tidak ada yang diunggah — seluruh konversi terjadi di perangkat Anda.',
+    ],
+    faqs: [
+      { q: 'Apakah dokumen saya diunggah ke server?', a: 'Tidak. Berkas .docx ditampilkan dan dikonversi ke PDF sepenuhnya di browser Anda dengan JavaScript. Berkas tidak pernah meninggalkan perangkat, jadi aman untuk berkas rahasia.' },
+      { q: 'Apakah teks PDF dapat dipilih?', a: 'Unduh PDF sekali klik menghasilkan salinan visual yang akurat per halaman di mana teks ditampilkan sebagai gambar. Untuk PDF dengan teks yang dapat dipilih dan dicari, gunakan tombol Cetak / Simpan PDF yang memakai ekspor PDF bawaan browser Anda.' },
+      { q: 'Apakah tata letak, tabel, dan gambar dipertahankan?', a: 'Ya — dokumen ditampilkan dengan tata letak, tabel, dan gambar aslinya, dan setiap halaman ditempatkan ke dalam PDF pada ukuran yang benar.' },
+      { q: 'Apakah mendukung berkas .doc lama?', a: 'Tidak — hanya format .docx modern. Buka .doc lama di Word atau Google Docs lalu simpan sebagai .docx terlebih dahulu.' },
+    ],
+  },
   'odt-viewer': {
     title: 'Penampil ODT Gratis — Buka Berkas OpenDocument Online',
     description: 'Penampil ODT gratis untuk membuka dan membaca berkas OpenDocument Text (.odt) di browser Anda — judul, daftar, tabel, dan gambar. 100% privat; tidak ada yang diunggah.',
