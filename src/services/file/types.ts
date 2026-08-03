@@ -23,7 +23,7 @@ export interface FileInfo {
 
 export interface FileService {
   openFile(options?: FilePickerOptions): Promise<File[]>;
-  saveFile(data: Blob | string, options?: SaveFileOptions): Promise<boolean>;
+  saveFile(data: Blob | string, options?: SaveFileOptions): Promise<SaveFileResult>;
   readFile(file: File): Promise<string>;
   readFileAsBuffer(file: File): Promise<ArrayBuffer>;
   getCapabilities(): FileServiceCapabilities;
