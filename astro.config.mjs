@@ -132,6 +132,7 @@ export default defineConfig({
           '**/xlsx*.js',
           '**/epubjs*.js',
           '**/jszip*.js',
+          '**/html2canvas*.js',
           'og/*.png',
         ],
         runtimeCaching: [
