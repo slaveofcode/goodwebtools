@@ -78,6 +78,7 @@
     "astro": "^4.16.19",
     "cmdk": "^0.2.1",
     "comlink": "^4.4.2",
+    "docx": "^9.7.1",
     "docx-preview": "^0.4.0",
     "dompurify": "^3.4.12",
     "epubjs": "^0.3.93",

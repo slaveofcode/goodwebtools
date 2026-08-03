@@ -7,6 +7,23 @@ import type { Lang } from '@/i18n/config';
  * a locale entry is missing. Feeds on-page copy + HowTo/FAQPage structured data.
  */
 const en: Record<string, ToolSeoContent> = {
+  'pdf-to-docx': {
+    title: 'Free PDF to Word Converter — PDF to DOCX Online',
+    description: 'Convert a PDF to an editable Word (.docx) document in your browser — with OCR for scanned pages. 100% private; nothing is uploaded.',
+    intro: 'This free PDF to Word converter turns a PDF into an editable .docx document right in your browser. It rebuilds the text into real paragraphs and headings, and scanned or image-only pages fall back to on-device OCR — all without uploading your file anywhere.',
+    howTo: [
+      'Drop a PDF (or click to browse) — it is processed entirely in your browser.',
+      'Pages with selectable text are extracted directly; scanned pages use on-device OCR automatically.',
+      'Tick “Force OCR” if your PDF is a scan the tool doesn’t detect as one.',
+      'The editable .docx downloads when it is ready.',
+    ],
+    faqs: [
+      { q: 'Is my PDF uploaded to a server?', a: 'No. The PDF is parsed, OCR’d and converted to Word entirely in your browser with JavaScript and WebAssembly. It never leaves your device.' },
+      { q: 'Will the Word file look exactly like the PDF?', a: 'No — it contains editable, reflowable text (paragraphs and headings), not a pixel-perfect copy. Because PDF stores positioned glyphs rather than paragraphs, exact layout, tables and multi-column pages are reconstructed heuristically and may need cleanup. This is a fundamental limit of PDF→Word, not specific to this tool.' },
+      { q: 'Does it work on scanned PDFs?', a: 'Yes. Pages with no selectable text are run through on-device OCR to recover the words, and you can force OCR on every page with the checkbox.' },
+      { q: 'Which languages does the OCR read?', a: 'The on-device OCR is tuned for Latin-script text (including English and Indonesian). Other scripts may be less accurate.' },
+    ],
+  },
   'sql-format': {
     title: 'Free SQL Formatter — Beautify SQL Queries Online',
     description: 'A free SQL formatter to beautify and pretty-print SQL queries in your browser — PostgreSQL, MySQL, SQLite, BigQuery and more. 100% private; nothing is uploaded.',
@@ -1427,6 +1444,23 @@ const en: Record<string, ToolSeoContent> = {
 };
 
 const id: Record<string, ToolSeoContent> = {
+  'pdf-to-docx': {
+    title: 'Konverter PDF ke Word Gratis — PDF ke DOCX Online',
+    description: 'Konversi PDF menjadi dokumen Word (.docx) yang dapat diedit di browser Anda — dengan OCR untuk halaman hasil pindaian. 100% privat; tidak ada yang diunggah.',
+    intro: 'Konverter PDF ke Word gratis ini mengubah PDF menjadi dokumen .docx yang dapat diedit langsung di browser Anda. Teks disusun ulang menjadi paragraf dan judul nyata, dan halaman hasil pindaian atau gambar memakai OCR di perangkat — semua tanpa mengunggah berkas Anda ke mana pun.',
+    howTo: [
+      'Letakkan PDF (atau klik untuk menelusuri) — diproses sepenuhnya di browser Anda.',
+      'Halaman dengan teks yang dapat dipilih diekstrak langsung; halaman pindaian memakai OCR di perangkat secara otomatis.',
+      'Centang “Paksa OCR” jika PDF Anda adalah pindaian yang tidak terdeteksi sebagai pindaian.',
+      'Berkas .docx yang dapat diedit akan terunduh saat siap.',
+    ],
+    faqs: [
+      { q: 'Apakah PDF saya diunggah ke server?', a: 'Tidak. PDF diurai, di-OCR, dan dikonversi ke Word sepenuhnya di browser Anda dengan JavaScript dan WebAssembly. Berkas tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah berkas Word akan tampak persis seperti PDF?', a: 'Tidak — berkas berisi teks yang dapat diedit dan disusun ulang (paragraf dan judul), bukan salinan yang sempurna. Karena PDF menyimpan glif berposisi, bukan paragraf, tata letak persis, tabel, dan halaman multi-kolom disusun ulang secara heuristik dan mungkin perlu dirapikan. Ini keterbatasan mendasar PDF→Word, bukan khusus tool ini.' },
+      { q: 'Apakah bekerja pada PDF hasil pindaian?', a: 'Ya. Halaman tanpa teks yang dapat dipilih dijalankan melalui OCR di perangkat untuk memulihkan kata-kata, dan Anda dapat memaksa OCR pada setiap halaman dengan kotak centang.' },
+      { q: 'Bahasa apa yang dibaca OCR?', a: 'OCR di perangkat disetel untuk teks beraksara Latin (termasuk Inggris dan Indonesia). Aksara lain mungkin kurang akurat.' },
+    ],
+  },
   'sql-format': {
     title: 'Pemformat SQL Gratis — Rapikan Kueri SQL Online',
     description: 'Pemformat SQL gratis untuk merapikan dan mempercantik kueri SQL di browser Anda — PostgreSQL, MySQL, SQLite, BigQuery, dan lainnya. 100% privat; tidak ada yang diunggah.',
