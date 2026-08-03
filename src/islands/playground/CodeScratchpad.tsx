@@ -34,8 +34,9 @@ const TR: Record<Lang, {
     newFile: 'New file',
     helper: (
       <>
-        Tabs autosave locally. Double-click a tab to rename. Move line <kbd>⌥↑/↓</kbd>, add cursor <kbd>⌘⌥↑/↓</kbd>,
-        select-next <kbd>⌘D</kbd>, all occurrences <kbd>⌘⇧L</kbd>, column select <kbd>⇧⌥</kbd>+drag. On-device only.
+        Tabs autosave locally. Double-click a tab to rename. Save <kbd>⌘S</kbd>, open <kbd>⌘O</kbd>.
+        Select a word, then all occurrences <kbd>⌘⇧L</kbd> (or right-click → <em>Select All Occurrences</em> if your browser grabs that key),
+        select-next <kbd>⌘D</kbd>, add cursor <kbd>⌘⌥↑/↓</kbd>, move line <kbd>⌥↑/↓</kbd>, column select <kbd>⇧⌥</kbd>+drag. On-device only.
       </>
     ),
   },
@@ -52,8 +53,9 @@ const TR: Record<Lang, {
     newFile: 'File baru',
     helper: (
       <>
-        Tab tersimpan otomatis secara lokal. Klik dua kali tab untuk mengganti nama. Pindah baris <kbd>⌥↑/↓</kbd>, tambah kursor <kbd>⌘⌥↑/↓</kbd>,
-        pilih-berikutnya <kbd>⌘D</kbd>, semua kemunculan <kbd>⌘⇧L</kbd>, pilih kolom <kbd>⇧⌥</kbd>+seret. Hanya di perangkat.
+        Tab tersimpan otomatis secara lokal. Klik dua kali tab untuk mengganti nama. Simpan <kbd>⌘S</kbd>, buka <kbd>⌘O</kbd>.
+        Pilih sebuah kata, lalu semua kemunculan <kbd>⌘⇧L</kbd> (atau klik kanan → <em>Select All Occurrences</em> jika browser menangkap tombol itu),
+        pilih-berikutnya <kbd>⌘D</kbd>, tambah kursor <kbd>⌘⌥↑/↓</kbd>, pindah baris <kbd>⌥↑/↓</kbd>, pilih kolom <kbd>⇧⌥</kbd>+seret. Hanya di perangkat.
       </>
     ),
   },
@@ -204,6 +206,8 @@ export default function CodeScratchpad({ lang = 'en' }: { lang?: Lang }) {
           value={active.content}
           language={active.language}
           onChange={updateActive}
+          onSave={saveActive}
+          onOpen={openFromDisk}
         />
       )}
     </div>
