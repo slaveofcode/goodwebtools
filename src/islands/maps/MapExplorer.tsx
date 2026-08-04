@@ -125,6 +125,10 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       map.on('click', e => handleClick(e.lngLat.lat, e.lngLat.lng));
       map.on('style.load', () => { ensureMeasureLayer(); refreshMeasureLine(); });
       map.on('load', () => map.resize());
+      // After any pan/zoom animation (flyTo, GeolocateControl, etc.) revalidate the
+      // canvas size — without this, MapLibre reports stale dimensions and tiles don't
+      // fill the viewport, leaving the map blank.
+      map.on('moveend', () => map.resize());
       // The container is mounted via a dynamically-imported island, so it can be
       // laid out after the map is created — resize once it (or its size) settles,
       // otherwise the map renders blank at 0×0.
