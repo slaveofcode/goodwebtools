@@ -58,6 +58,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Are duplicates removed from the result?', a: 'Yes — every operation returns a de-duplicated list, preserving the first occurrence of each line and its original text.' },
     ],
   },
+  'cron-expression': {
+    title: 'Free Cron Expression Editor — Cron Syntax Explainer Online',
+    description: 'Parse and explain cron expressions in plain English, see the next 10 scheduled run times, and pick from common presets. 100% client-side; nothing is uploaded.',
+    intro: 'This free cron expression editor explains any standard cron schedule in plain English and shows the next 10 run times — so you can verify your schedule at a glance. Type or paste a 5-field cron expression (minute hour dom month weekday), pick a preset, and see exactly when your job will fire next. Everything runs in your browser; nothing is sent to a server.',
+    howTo: [
+      'Type a 5-field cron expression in the box (e.g. 0 9 * * 1-5 for weekdays at 09:00).',
+      'The human-readable description updates instantly as you type.',
+      'Check the "Next 10 run times" list to confirm the schedule looks right.',
+      'Use the preset buttons for common schedules like every 15 minutes, daily, or monthly.',
+    ],
+    faqs: [
+      { q: 'What is the cron field order?', a: 'Standard unix cron uses 5 fields left-to-right: minute (0–59), hour (0–23), day of month (1–31), month (1–12), and day of week (0–7, where both 0 and 7 mean Sunday).' },
+      { q: 'What special characters can I use?', a: 'Star (*) matches every value; */n means every n units; a-b is a range; a,b,c is a list; and a-b/n is a range with step. For example */15 fires every 15 minutes and 1-5 means Monday through Friday.' },
+      { q: 'How does the DOM/DOW interaction work?', a: 'Standard unix cron: if both the day-of-month and day-of-week fields are restricted (not *), a time fires when EITHER condition matches — the two are combined with OR, not AND.' },
+      { q: 'Is my cron expression sent to a server?', a: 'No. Parsing, explaining and computing run times all happen entirely in your browser with JavaScript. Nothing is ever uploaded.' },
+    ],
+  },
   'docx-to-pdf': {
     title: 'Free DOCX to PDF Converter — Word to PDF Online',
     description: 'Convert Word (.docx) documents to PDF right in your browser — page-accurate, with your layout, tables and images. 100% private; nothing is uploaded.',
@@ -1493,6 +1510,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah data saya diunggah?', a: 'Tidak. Semua perbandingan terjadi di browser Anda dengan JavaScript. Daftar Anda tidak pernah meninggalkan perangkat, jadi aman untuk data privat atau sensitif.' },
       { q: 'Bisakah mengabaikan huruf besar/kecil dan spasi berlebih?', a: 'Ya. Aktifkan “Abaikan huruf besar/kecil” untuk mencocokkan tanpa memandang kapitalisasi dan “Pangkas spasi” untuk mengabaikan spasi di awal dan akhir saat membandingkan. Anda juga dapat mengabaikan baris kosong dan mengurutkan keluaran.' },
       { q: 'Apakah duplikat dihapus dari hasil?', a: 'Ya — setiap operasi mengembalikan daftar tanpa duplikat, mempertahankan kemunculan pertama setiap baris beserta teks aslinya.' },
+    ],
+  },
+  'cron-expression': {
+    title: 'Tool Ekspresi Cron Gratis — Penjelas Sintaks Cron Online',
+    description: 'Urai dan jelaskan ekspresi cron dalam bahasa Indonesia yang mudah dipahami, lihat 10 waktu eksekusi berikutnya, dan pilih dari preset umum. 100% di sisi klien; tidak ada yang diunggah.',
+    intro: 'Tool ekspresi cron gratis ini menjelaskan jadwal cron dalam bahasa yang mudah dipahami dan menampilkan 10 waktu eksekusi berikutnya — sehingga Anda bisa memverifikasi jadwal sekilas. Ketik atau tempel ekspresi cron 5-field (menit jam hari-bulan bulan hari-minggu), pilih preset, dan lihat kapan pekerjaan Anda akan berjalan selanjutnya. Semuanya berjalan di browser; tidak ada yang dikirim ke server.',
+    howTo: [
+      'Ketik ekspresi cron 5-field di kotak (misalnya 0 9 * * 1-5 untuk hari kerja pukul 09:00).',
+      'Deskripsi dalam bahasa yang mudah dipahami diperbarui secara instan saat Anda mengetik.',
+      'Periksa daftar "10 waktu eksekusi berikutnya" untuk memastikan jadwal sudah benar.',
+      'Gunakan tombol preset untuk jadwal umum seperti setiap 15 menit, harian, atau bulanan.',
+    ],
+    faqs: [
+      { q: 'Apa urutan field dalam cron?', a: 'Cron unix standar menggunakan 5 field dari kiri ke kanan: menit (0–59), jam (0–23), hari-dalam-bulan (1–31), bulan (1–12), dan hari-dalam-minggu (0–7, di mana 0 dan 7 keduanya berarti Minggu).' },
+      { q: 'Karakter khusus apa yang bisa saya gunakan?', a: 'Tanda bintang (*) cocok dengan setiap nilai; */n berarti setiap n unit; a-b adalah rentang; a,b,c adalah daftar; dan a-b/n adalah rentang dengan langkah. Misalnya */15 berjalan setiap 15 menit dan 1-5 berarti Senin hingga Jumat.' },
+      { q: 'Bagaimana interaksi DOM/DOW bekerja?', a: 'Cron unix standar: jika field hari-dalam-bulan dan hari-dalam-minggu keduanya dibatasi (bukan *), jadwal berjalan ketika SALAH SATU kondisi terpenuhi — keduanya digabung dengan OR, bukan AND.' },
+      { q: 'Apakah ekspresi cron saya dikirim ke server?', a: 'Tidak. Penguraian, penjelasan, dan penghitungan waktu eksekusi semuanya terjadi sepenuhnya di browser Anda dengan JavaScript. Tidak ada yang pernah diunggah.' },
     ],
   },
   'docx-to-pdf': {
