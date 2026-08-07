@@ -59,6 +59,10 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
   const measureRef = useRef<LatLng[]>([]);
   const measuringRef = useRef(false);
   const roRef = useRef<ResizeObserver | null>(null);
+  // Track the URL currently loaded by the map to avoid spurious setStyle calls.
+  // Calling setStyle with the same URL still triggers a full style reload in
+  // MapLibre, which cancels any in-flight tile requests and causes blank tiles.
+  const appliedStyleUrl = useRef('');
 
   const [style, setStyle] = useState<StyleChoice>('auto');
   const [pin, setPin] = useState<LatLng | null>(null);
@@ -114,11 +118,15 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       const ml = await import('maplibre-gl');
       if (cancelled || !containerRef.current || mapRef.current) return;
       mlRef.current = ml;
+      const initialUrl = resolveStyle(style, theme).url;
+      appliedStyleUrl.current = initialUrl;
       const map = new ml.Map({
         container: containerRef.current,
-        style: resolveStyle(style, theme).url,
+        style: initialUrl,
         center: [106.8272, -6.1751],
         zoom: 3,
+        minZoom: 0,
+        maxZoom: 20,
       });
       map.addControl(new ml.NavigationControl(), 'top-right');
       map.addControl(new ml.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: false }), 'top-right');
@@ -135,7 +143,13 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       map.on('moveend', () => {
         if (resizePending) return;
         resizePending = true;
-        requestAnimationFrame(() => { resizePending = false; map.resize(); });
+        requestAnimationFrame(() => {
+          resizePending = false;
+          // resize() is a no-op when canvas dimensions haven't changed, so follow
+          // it with triggerRepaint() to ensure tile fetching runs for the new viewport.
+          map.resize();
+          map.triggerRepaint();
+        });
       });
       // The container is mounted via a dynamically-imported island, so it can be
       // laid out after the map is created — resize once it (or its size) settles,
@@ -149,9 +163,14 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-style on choice or site-theme change.
+  // Re-style on choice or site-theme change — but only when the URL actually
+  // changes. MapLibre reloads the full style (cancelling in-flight tile requests)
+  // even when setStyle is called with the same URL, so skip no-op calls.
   useEffect(() => {
-    mapRef.current?.setStyle(resolveStyle(style, theme).url);
+    const url = resolveStyle(style, theme).url;
+    if (!mapRef.current || url === appliedStyleUrl.current) return;
+    appliedStyleUrl.current = url;
+    mapRef.current.setStyle(url);
   }, [style, theme]);
 
   const pickStyle = (s: StyleChoice) => { setStyle(s); try { localStorage.setItem(STYLE_KEY, s); } catch { /* */ } };
