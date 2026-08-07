@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { CalendarClock } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
+import { CalendarClock, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
@@ -7,6 +7,7 @@ import {
   parseCron, explainCron, nextRuns,
   FIELD_LABELS, CRON_PRESETS,
 } from '@/tools/dev/cron.lib';
+import { naturalToCron, NATURAL_EXAMPLES } from '@/tools/dev/cron-natural.lib';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, {
@@ -15,9 +16,12 @@ const TR: Record<Lang, {
   nextRuns: string;
   presets: string;
   invalidExpr: string;
-  every: string;
   noRuns: string;
-  fieldHints: string;
+  describeLabel: string;
+  describePlaceholder: string;
+  convertBtn: string;
+  convertError: string;
+  dividerOr: string;
 }> = {
   en: {
     exprLabel: 'Cron expression',
@@ -25,9 +29,12 @@ const TR: Record<Lang, {
     nextRuns: 'Next 10 run times',
     presets: 'Presets',
     invalidExpr: 'Invalid expression',
-    every: 'Every minute',
     noRuns: 'No scheduled runs found in the next 4 years.',
-    fieldHints: 'Field hints',
+    describeLabel: 'Describe your schedule',
+    describePlaceholder: 'e.g. every weekday at 9am, every 15 minutes, midnight on the 1st…',
+    convertBtn: 'Convert to cron',
+    convertError: 'Could not parse — try "every 15 minutes", "weekdays at 9am", "1st of every month"',
+    dividerOr: 'or type a cron expression directly',
   },
   id: {
     exprLabel: 'Ekspresi cron',
@@ -35,9 +42,12 @@ const TR: Record<Lang, {
     nextRuns: '10 waktu eksekusi berikutnya',
     presets: 'Preset',
     invalidExpr: 'Ekspresi tidak valid',
-    every: 'Setiap menit',
     noRuns: 'Tidak ada jadwal yang ditemukan dalam 4 tahun ke depan.',
-    fieldHints: 'Panduan field',
+    describeLabel: 'Deskripsikan jadwal Anda',
+    describePlaceholder: 'cth. setiap hari kerja pukul 9 pagi, setiap 15 menit, tengah malam tanggal 1…',
+    convertBtn: 'Konversi ke cron',
+    convertError: 'Tidak dapat diurai — coba "every 15 minutes", "weekdays at 9am", "1st of every month"',
+    dividerOr: 'atau ketik ekspresi cron secara langsung',
   },
 };
 
@@ -51,6 +61,9 @@ function formatDate(d: Date): string {
 export default function CronExplainer({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
   const [expr, setExpr] = useState('* * * * *');
+  const [nlInput, setNlInput] = useState('');
+  const [nlError, setNlError] = useState('');
+  const exprRef = useRef<HTMLInputElement>(null);
 
   const parsed = useMemo(() => parseCron(expr), [expr]);
   const explanation = useMemo(() => {
@@ -65,15 +78,60 @@ export default function CronExplainer({ lang = 'en' }: { lang?: Lang }) {
   const parts = expr.trim().split(/\s+/);
   const fieldParts = parts.length === 5 ? parts : ['*', '*', '*', '*', '*'];
 
+  const handleConvert = () => {
+    setNlError('');
+    const result = naturalToCron(nlInput);
+    if (result.ok) {
+      setExpr(result.expr);
+      exprRef.current?.focus();
+    } else {
+      setNlError(result.error);
+    }
+  };
+
+  // Cycle through example hints on placeholder click (accessibility: shows examples)
+  const exampleHint = NATURAL_EXAMPLES[Math.floor((Date.now() / 4000)) % NATURAL_EXAMPLES.length];
+
   return (
     <div className="space-y-4">
-      {/* Main input */}
+      {/* Reverse: natural language → cron */}
+      <div className="space-y-2">
+        <label className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          {t.describeLabel}
+        </label>
+        <div className="flex gap-2">
+          <input
+            value={nlInput}
+            onChange={e => { setNlInput(e.target.value); setNlError(''); }}
+            onKeyDown={e => { if (e.key === 'Enter') handleConvert(); }}
+            placeholder={t.describePlaceholder}
+            className="flex-1 border-2 border-border bg-background px-3 py-2 text-sm outline-none focus:shadow-brutal-sm"
+            aria-label={t.describeLabel}
+          />
+          <Button variant="primary" onClick={handleConvert} disabled={!nlInput.trim()}>
+            <ArrowDown className="h-4 w-4" />
+            {t.convertBtn}
+          </Button>
+        </div>
+        {nlError && <Alert variant="error">{nlError}</Alert>}
+        <p className="text-xs text-muted-foreground">e.g. {exampleHint}</p>
+      </div>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="h-px flex-1 bg-border" />
+        <span>{t.dividerOr}</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
+      {/* Main expression input */}
       <div className="space-y-2">
         <label className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">
           {t.exprLabel}
         </label>
         <div className="flex items-center gap-2">
           <input
+            ref={exprRef}
             value={expr}
             onChange={e => setExpr(e.target.value)}
             spellCheck={false}
