@@ -128,7 +128,15 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       // After any pan/zoom animation (flyTo, GeolocateControl, etc.) revalidate the
       // canvas size — without this, MapLibre reports stale dimensions and tiles don't
       // fill the viewport, leaving the map blank.
-      map.on('moveend', () => map.resize());
+      // Guard + rAF: calling map.resize() synchronously inside moveend causes MapLibre
+      // to fire moveend again from within constrainInternal → stack overflow. Deferring
+      // to the next animation frame breaks the synchronous recursion.
+      let resizePending = false;
+      map.on('moveend', () => {
+        if (resizePending) return;
+        resizePending = true;
+        requestAnimationFrame(() => { resizePending = false; map.resize(); });
+      });
       // The container is mounted via a dynamically-imported island, so it can be
       // laid out after the map is created — resize once it (or its size) settles,
       // otherwise the map renders blank at 0×0.
