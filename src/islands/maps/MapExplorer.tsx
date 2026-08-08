@@ -18,32 +18,44 @@ import type { Lang } from '@/i18n/config';
 async function fetchResolvedStyle(url: string): Promise<string | Record<string, any>> {
   try {
     const res = await fetch(url, { cache: 'no-cache' });
+    console.log('[map] style fetch', url, res.status, res.ok);
     if (!res.ok) return url;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const style = await res.json() as { version?: number; sources?: Record<string, any> };
     // Validate: must look like a MapLibre style (has version + sources)
-    if (!style.version || !style.sources) return url;
+    if (!style.version || !style.sources) {
+      console.warn('[map] style response invalid (no version/sources):', JSON.stringify(style).slice(0, 200));
+      return url;
+    }
     await Promise.all(
       Object.values(style.sources).map(async (src) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const s = src as Record<string, any>;
         if (s.type === 'vector' && typeof s.url === 'string' && !s.tiles) {
           try {
+            console.log('[map] fetching TileJSON', s.url);
             const tj = await fetch(s.url, { cache: 'no-cache' }).then(r => r.json()) as {
               tiles?: string[]; minzoom?: number; maxzoom?: number;
             };
+            console.log('[map] TileJSON tiles[0]:', tj.tiles?.[0], 'maxzoom:', tj.maxzoom);
             if (tj.tiles?.length) {
               s.tiles = tj.tiles;
               if (tj.minzoom != null) s.minzoom = tj.minzoom;
               if (tj.maxzoom != null) s.maxzoom = tj.maxzoom;
               delete s.url;
             }
-          } catch { /* keep url-based source as fallback */ }
+          } catch (e) {
+            console.error('[map] TileJSON fetch failed:', e);
+          }
         }
       })
     );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const omt = (style.sources as Record<string, any>)?.openmaptiles;
+    console.log('[map] openmaptiles source after resolve:', omt?.tiles?.[0] ?? '(still url-based: ' + omt?.url + ')');
     return style;
-  } catch {
+  } catch (e) {
+    console.error('[map] fetchResolvedStyle failed:', e);
     return url;
   }
 }
@@ -182,6 +194,10 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       map.on('click', e => handleClick(e.lngLat.lat, e.lngLat.lng));
       map.on('style.load', () => { ensureMeasureLayer(); refreshMeasureLine(); });
       map.on('load', () => map.resize());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      map.on('error', (e: any) => console.error('[map] error:', e?.error?.message ?? e));
+      map.on('sourcedataloading', (e) => console.log('[map] source loading:', e.sourceId));
+      map.on('sourcedata', (e) => { if (e.isSourceLoaded) console.log('[map] source loaded:', e.sourceId); });
       // Force a repaint after each move so MapLibre re-evaluates missing tiles.
       // We do NOT call resize() here — the canvas size doesn't change on pan/zoom,
       // and calling resize() synchronously in moveend triggers constrainInternal
