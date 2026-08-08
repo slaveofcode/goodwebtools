@@ -10,6 +10,44 @@ import { resolveStyle, MAP_STYLES, haversineMeters, formatDistance, type StyleCh
 import { ddToDms, ddToUtm, encodeGeohash, formatDd, type LatLng } from '@/tools/geo/coord.lib';
 import type { Lang } from '@/i18n/config';
 
+// Pre-fetch a MapLibre style URL and inline any TileJSON-backed vector sources
+// so MapLibre never needs to make a separate TileJSON fetch. This works around
+// Cloudflare edge-caching issues where the style URL returns stale/broken content
+// at certain CDN nodes. cache:'no-cache' forces revalidation with the origin server.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchResolvedStyle(url: string): Promise<string | Record<string, any>> {
+  try {
+    const res = await fetch(url, { cache: 'no-cache' });
+    if (!res.ok) return url;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const style = await res.json() as { version?: number; sources?: Record<string, any> };
+    // Validate: must look like a MapLibre style (has version + sources)
+    if (!style.version || !style.sources) return url;
+    await Promise.all(
+      Object.values(style.sources).map(async (src) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const s = src as Record<string, any>;
+        if (s.type === 'vector' && typeof s.url === 'string' && !s.tiles) {
+          try {
+            const tj = await fetch(s.url, { cache: 'no-cache' }).then(r => r.json()) as {
+              tiles?: string[]; minzoom?: number; maxzoom?: number;
+            };
+            if (tj.tiles?.length) {
+              s.tiles = tj.tiles;
+              if (tj.minzoom != null) s.minzoom = tj.minzoom;
+              if (tj.maxzoom != null) s.maxzoom = tj.maxzoom;
+              delete s.url;
+            }
+          } catch { /* keep url-based source as fallback */ }
+        }
+      })
+    );
+    return style;
+  } catch {
+    return url;
+  }
+}
+
 const STYLE_KEY = 'gwt.map.style';
 type SearchHit = { name: string; lat: number; lng: number };
 
@@ -120,37 +158,35 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       mlRef.current = ml;
       const initialUrl = resolveStyle(style, theme).url;
       appliedStyleUrl.current = initialUrl;
+      // Fetch style + resolve inline TileJSON before creating the map so MapLibre
+      // never needs its own TileJSON fetch (avoids stale CDN edge responses).
+      const styleInput = await fetchResolvedStyle(initialUrl);
+      if (cancelled || !containerRef.current) return;
       const map = new ml.Map({
         container: containerRef.current,
-        style: initialUrl,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        style: styleInput as any,
         center: [106.8272, -6.1751],
         zoom: 3,
         minZoom: 0,
         maxZoom: 20,
       });
       map.addControl(new ml.NavigationControl(), 'top-right');
-      map.addControl(new ml.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: false }), 'top-right');
+      // Cap GeolocateControl zoom at 14 — the vector tile source's maxzoom is 14;
+      // zooming beyond that causes overzoom tile-loading issues in MapLibre v6.
+      map.addControl(new ml.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: false,
+        fitBoundsOptions: { maxZoom: 14 },
+      }), 'top-right');
       map.on('click', e => handleClick(e.lngLat.lat, e.lngLat.lng));
       map.on('style.load', () => { ensureMeasureLayer(); refreshMeasureLine(); });
       map.on('load', () => map.resize());
-      // After any pan/zoom animation (flyTo, GeolocateControl, etc.) revalidate the
-      // canvas size — without this, MapLibre reports stale dimensions and tiles don't
-      // fill the viewport, leaving the map blank.
-      // Guard + rAF: calling map.resize() synchronously inside moveend causes MapLibre
-      // to fire moveend again from within constrainInternal → stack overflow. Deferring
-      // to the next animation frame breaks the synchronous recursion.
-      let resizePending = false;
-      map.on('moveend', () => {
-        if (resizePending) return;
-        resizePending = true;
-        requestAnimationFrame(() => {
-          resizePending = false;
-          // resize() is a no-op when canvas dimensions haven't changed, so follow
-          // it with triggerRepaint() to ensure tile fetching runs for the new viewport.
-          map.resize();
-          map.triggerRepaint();
-        });
-      });
+      // Force a repaint after each move so MapLibre re-evaluates missing tiles.
+      // We do NOT call resize() here — the canvas size doesn't change on pan/zoom,
+      // and calling resize() synchronously in moveend triggers constrainInternal
+      // recursion in MapLibre v6. The ResizeObserver below handles actual size changes.
+      map.on('moveend', () => { map.triggerRepaint(); });
       // The container is mounted via a dynamically-imported island, so it can be
       // laid out after the map is created — resize once it (or its size) settles,
       // otherwise the map renders blank at 0×0.
@@ -170,7 +206,14 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
     const url = resolveStyle(style, theme).url;
     if (!mapRef.current || url === appliedStyleUrl.current) return;
     appliedStyleUrl.current = url;
-    mapRef.current.setStyle(url);
+    let isCurrent = true;
+    fetchResolvedStyle(url).then(styleInput => {
+      if (isCurrent && mapRef.current) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mapRef.current.setStyle(styleInput as any);
+      }
+    });
+    return () => { isCurrent = false; };
   }, [style, theme]);
 
   const pickStyle = (s: StyleChoice) => { setStyle(s); try { localStorage.setItem(STYLE_KEY, s); } catch { /* */ } };
@@ -207,7 +250,9 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
 
   const myLocation = () => {
     navigator.geolocation?.getCurrentPosition(pos => {
-      mapRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 15 });
+      // Cap at zoom 14 — the vector tile source's maxzoom; overzooming beyond that
+      // causes blank tiles in MapLibre v6.
+      mapRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 14 });
       handleClick(pos.coords.latitude, pos.coords.longitude);
     });
   };
