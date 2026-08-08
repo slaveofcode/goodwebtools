@@ -1,6 +1,6 @@
 import type { LatLng } from './coord.lib';
 
-/** OpenFreeMap styles (free, open, no API key). 'auto' follows the site theme. */
+/** CARTO raster tiles (free, no API key, Fastly CDN). 'auto' follows the site theme. */
 export type StyleChoice = 'auto' | 'liberty' | 'bright' | 'positron' | 'dark';
 export type ConcreteStyle = Exclude<StyleChoice, 'auto'>;
 
@@ -12,10 +12,43 @@ export const MAP_STYLES: { id: StyleChoice; label: string }[] = [
   { id: 'dark', label: 'Dark' },
 ];
 
-/** Resolve a style choice (+ current site theme) to a concrete OpenFreeMap style. */
-export function resolveStyle(choice: StyleChoice, siteTheme: 'light' | 'dark'): { id: ConcreteStyle; url: string } {
+type CartoVariant = 'voyager' | 'light' | 'dark';
+
+const CARTO_PATH: Record<CartoVariant, string> = {
+  voyager: 'rastertiles/voyager',
+  light:   'light_all',
+  dark:    'dark_all',
+};
+
+const STYLE_VARIANT: Record<ConcreteStyle, CartoVariant> = {
+  liberty:  'voyager',
+  bright:   'light',
+  positron: 'light',
+  dark:     'dark',
+};
+
+const ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function cartoMapStyle(variant: CartoVariant): Record<string, any> {
+  const path = CARTO_PATH[variant];
+  const tiles = (['a','b','c','d'] as const).map(
+    s => `https://${s}.basemaps.cartocdn.com/${path}/{z}/{x}/{y}@2x.png`
+  );
+  return {
+    version: 8,
+    sources: {
+      carto: { type: 'raster', tiles, tileSize: 512, attribution: ATTRIBUTION },
+    },
+    layers: [{ id: 'carto', type: 'raster', source: 'carto', minzoom: 0, maxzoom: 22 }],
+  };
+}
+
+/** Resolve a style choice (+ current site theme) to a concrete CARTO raster style object. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function resolveStyle(choice: StyleChoice, siteTheme: 'light' | 'dark'): { id: ConcreteStyle; style: Record<string, any> } {
   const id: ConcreteStyle = choice === 'auto' ? (siteTheme === 'dark' ? 'dark' : 'liberty') : choice;
-  return { id, url: `/ofm/styles/${id}` };
+  return { id, style: cartoMapStyle(STYLE_VARIANT[id]) };
 }
 
 /** Great-circle distance between two points, in metres. */
