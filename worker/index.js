@@ -53,6 +53,32 @@ export default {
       return new Response(res.body, { status: res.status, headers });
     }
 
+    // Same-origin proxy for OpenFreeMap tile/style/glyph requests. The OFM CDN
+    // (Cloudflare Singapore edge) sometimes returns corrupt responses to users in
+    // Southeast Asia — both style JSON and vector PBF tiles. Proxying server-side
+    // through our Worker fetches from OFM's origin over CF's backbone, bypassing
+    // the broken edge node entirely. Tiles are versioned by timestamp in the URL
+    // so they're safe to cache long-term; style/TileJSON use a short TTL.
+    if (url.pathname.startsWith('/ofm/')) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      const upstream = 'https://tiles.openfreemap.org/' + url.pathname.slice('/ofm/'.length) + url.search;
+      const res = await fetch(upstream, {
+        headers: { 'user-agent': 'goodwebtools-ofm-proxy' },
+        cf: { cacheEverything: true, cacheTtl: 86400 },
+      });
+      if (!res.ok) {
+        return new Response('Upstream OFM fetch failed', { status: res.status || 502 });
+      }
+      const headers = new Headers(res.headers);
+      headers.set('access-control-allow-origin', '*');
+      headers.delete('set-cookie');
+      const isPbf = url.pathname.endsWith('.pbf');
+      headers.set('cache-control', isPbf ? 'public, max-age=2592000, immutable' : 'public, max-age=3600');
+      return new Response(res.body, { status: res.status, headers });
+    }
+
     if (url.pathname.startsWith('/models/')) {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         return new Response('Method not allowed', { status: 405 });
