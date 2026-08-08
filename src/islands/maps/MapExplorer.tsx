@@ -10,21 +10,20 @@ import { resolveStyle, MAP_STYLES, haversineMeters, formatDistance, type StyleCh
 import { ddToDms, ddToUtm, encodeGeohash, formatDd, type LatLng } from '@/tools/geo/coord.lib';
 import type { Lang } from '@/i18n/config';
 
-// Pre-fetch a MapLibre style URL through our proxy, inline any TileJSON-backed
-// vector sources, and rewrite all remaining OFM URLs so every subsequent fetch
-// (glyphs, sprites, tiles) also goes through the same-origin proxy.
+// Fetch the MapLibre style through our proxy and return the parsed JSON.
+// We do NOT manually rewrite URLs inside the style — that is handled entirely
+// by the map's `transformRequest` callback, which intercepts every network
+// request MapLibre makes (tiles, TileJSON, sprites, glyphs) and routes any
+// https://tiles.openfreemap.org/ URL through our /ofm/ Worker proxy.
 //
-// IMPORTANT: All rewritten URLs must be absolute. MapLibre rejects relative
-// sprite/glyph URLs outright, and Web Workers resolve relative tile URLs
-// against their own blob URL (not the page origin), causing silent failures.
+// Earlier attempts to manually inline TileJSON and rewrite tile URLs broke
+// MapLibre's vector tile pipeline: inlining `tiles` without the TileJSON's
+// `vector_layers` metadata caused MapLibre to load tile bytes but silently
+// fail to extract features from them (confirmed: valid 181 KB PBF received,
+// zero features rendered). Letting MapLibre own its TileJSON fetch (via
+// transformRequest) gives it the full metadata it needs.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchResolvedStyle(url: string): Promise<string | Record<string, any>> {
-  // Build absolute proxy base at call time — location is always available here
-  // (this function is only called inside useEffect, never during SSR).
-  const proxyBase = `${location.origin}/ofm/`;
-  const ofm = (u: unknown): unknown =>
-    typeof u === 'string' ? u.replace('https://tiles.openfreemap.org/', proxyBase) : u;
-
   try {
     const res = await fetch(url, { cache: 'no-cache' });
     console.log('[map] style fetch', url, res.status, res.ok);
@@ -32,45 +31,9 @@ async function fetchResolvedStyle(url: string): Promise<string | Record<string, 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const style = await res.json() as Record<string, any>;
     if (!style.version || !style.sources) {
-      console.warn('[map] style response invalid (no version/sources):', JSON.stringify(style).slice(0, 200));
+      console.warn('[map] style response invalid:', JSON.stringify(style).slice(0, 200));
       return url;
     }
-    // Rewrite top-level glyph/sprite URLs through our proxy
-    if (typeof style.glyphs === 'string') style.glyphs = ofm(style.glyphs);
-    if (typeof style.sprite === 'string') style.sprite = ofm(style.sprite);
-    // Rewrite sources and inline vector TileJSON
-    await Promise.all(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      Object.values(style.sources).map(async (src) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const s = src as Record<string, any>;
-        // Rewrite any existing raster tile URLs
-        if (Array.isArray(s.tiles)) s.tiles = s.tiles.map(ofm);
-        // Inline vector TileJSON and rewrite tile URLs through proxy
-        if (s.type === 'vector' && typeof s.url === 'string' && !s.tiles) {
-          const tjUrl = ofm(s.url) as string;
-          try {
-            console.log('[map] fetching TileJSON', tjUrl);
-            const tj = await fetch(tjUrl, { cache: 'no-cache' }).then(r => r.json()) as {
-              tiles?: string[]; minzoom?: number; maxzoom?: number;
-            };
-            console.log('[map] TileJSON tiles[0]:', tj.tiles?.[0], 'maxzoom:', tj.maxzoom);
-            if (tj.tiles?.length) {
-              s.tiles = tj.tiles.map(ofm);
-              if (tj.minzoom != null) s.minzoom = tj.minzoom;
-              if (tj.maxzoom != null) s.maxzoom = tj.maxzoom;
-              delete s.url;
-            }
-          } catch (e) {
-            console.error('[map] TileJSON fetch failed:', e);
-            s.url = tjUrl; // leave the proxy URL so MapLibre can retry via proxy
-          }
-        }
-      })
-    );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const omt = style.sources?.openmaptiles;
-    console.log('[map] openmaptiles source after resolve:', omt?.tiles?.[0] ?? '(still url-based: ' + omt?.url + ')');
     return style;
   } catch (e) {
     console.error('[map] fetchResolvedStyle failed:', e);
@@ -188,31 +151,15 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       mlRef.current = ml;
       const initialUrl = resolveStyle(style, theme).url;
       appliedStyleUrl.current = initialUrl;
-      // Fetch style + resolve inline TileJSON before creating the map so MapLibre
-      // never needs its own TileJSON fetch (avoids stale CDN edge responses).
+      // Fetch the style JSON through our proxy. URL rewriting is handled entirely
+      // by transformRequest below — we do NOT manually patch URLs in the style.
       const styleInput = await fetchResolvedStyle(initialUrl);
       if (cancelled || !containerRef.current) return;
 
-      // Diagnostic: probe one vector tile to verify the proxy returns valid PBF.
-      // Valid gzip-PBF starts with bytes 1f 8b; raw PBF starts with a protobuf tag.
-      // HTML/JSON/text responses (corrupted edge cache) start with ASCII bytes.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const omtTiles = (styleInput as any)?.sources?.openmaptiles?.tiles;
-      if (Array.isArray(omtTiles) && omtTiles[0]) {
-        const probeUrl = (omtTiles[0] as string).replace('{z}', '5').replace('{x}', '26').replace('{y}', '16');
-        fetch(probeUrl).then(async r => {
-          const buf = await r.arrayBuffer();
-          const b = new Uint8Array(buf.slice(0, 8));
-          const hex = Array.from(b).map(n => n.toString(16).padStart(2, '0')).join(' ');
-          console.log('[map] tile probe', probeUrl, '→ status:', r.status, 'ct:', r.headers.get('content-type'), 'size:', buf.byteLength, 'bytes:', hex);
-        }).catch(e => console.error('[map] tile probe error:', e));
-      }
-
-      // Rewrite every OpenFreeMap URL that MapLibre would fetch on its own
-      // (TileJSON, vector/raster tiles, glyphs, sprites) through our /ofm/ proxy.
-      // This is the definitive safety net: even if fetchResolvedStyle leaves a
-      // raw OFM url in the source config, transformRequest rewrites it before
-      // any network request is dispatched — including requests from tile workers.
+      // Route every OFM URL MapLibre fetches (TileJSON, tiles, sprites, glyphs)
+      // through our /ofm/ Worker proxy. This is the single source of truth for
+      // URL rewriting — transformRequest is called for ALL network requests
+      // including those from MapLibre's tile Web Workers.
       const OFM_ORIGIN = 'https://tiles.openfreemap.org/';
       const ofmProxyBase = `${location.origin}/ofm/`;
       const transformRequest = (url: string) => {
