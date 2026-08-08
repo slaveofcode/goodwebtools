@@ -10,36 +10,6 @@ import { resolveStyle, MAP_STYLES, haversineMeters, formatDistance, type StyleCh
 import { ddToDms, ddToUtm, encodeGeohash, formatDd, type LatLng } from '@/tools/geo/coord.lib';
 import type { Lang } from '@/i18n/config';
 
-// Fetch the MapLibre style through our proxy and return the parsed JSON.
-// We do NOT manually rewrite URLs inside the style — that is handled entirely
-// by the map's `transformRequest` callback, which intercepts every network
-// request MapLibre makes (tiles, TileJSON, sprites, glyphs) and routes any
-// https://tiles.openfreemap.org/ URL through our /ofm/ Worker proxy.
-//
-// Earlier attempts to manually inline TileJSON and rewrite tile URLs broke
-// MapLibre's vector tile pipeline: inlining `tiles` without the TileJSON's
-// `vector_layers` metadata caused MapLibre to load tile bytes but silently
-// fail to extract features from them (confirmed: valid 181 KB PBF received,
-// zero features rendered). Letting MapLibre own its TileJSON fetch (via
-// transformRequest) gives it the full metadata it needs.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchResolvedStyle(url: string): Promise<string | Record<string, any>> {
-  try {
-    const res = await fetch(url, { cache: 'no-cache' });
-    console.log('[map] style fetch', url, res.status, res.ok);
-    if (!res.ok) return url;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const style = await res.json() as Record<string, any>;
-    if (!style.version || !style.sources) {
-      console.warn('[map] style response invalid:', JSON.stringify(style).slice(0, 200));
-      return url;
-    }
-    return style;
-  } catch (e) {
-    console.error('[map] fetchResolvedStyle failed:', e);
-    return url;
-  }
-}
 
 const STYLE_KEY = 'gwt.map.style';
 type SearchHit = { name: string; lat: number; lng: number };
@@ -63,7 +33,7 @@ const TR: Record<Lang, {
     clear: 'Clear',
     hintMeasure: 'Click points on the map to measure distance.',
     hintPin: 'Click anywhere on the map to drop a pin and read its coordinates.',
-    attribution: 'Maps © OpenFreeMap / OpenStreetMap contributors.',
+    attribution: 'Maps © OpenStreetMap contributors, © CARTO',
     distance: (dist, n) => `Distance: ${dist} (${n} points)`,
   },
   id: {
@@ -74,7 +44,7 @@ const TR: Record<Lang, {
     clear: 'Bersihkan',
     hintMeasure: 'Klik titik di peta untuk mengukur jarak.',
     hintPin: 'Klik di mana saja pada peta untuk menandai pin dan membaca koordinatnya.',
-    attribution: 'Peta © OpenFreeMap / OpenStreetMap contributors.',
+    attribution: 'Peta © OpenStreetMap contributors, © CARTO',
     distance: (dist, n) => `Jarak: ${dist} (${n} titik)`,
   },
 };
@@ -90,10 +60,8 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
   const measureRef = useRef<LatLng[]>([]);
   const measuringRef = useRef(false);
   const roRef = useRef<ResizeObserver | null>(null);
-  // Track the URL currently loaded by the map to avoid spurious setStyle calls.
-  // Calling setStyle with the same URL still triggers a full style reload in
-  // MapLibre, which cancels any in-flight tile requests and causes blank tiles.
-  const appliedStyleUrl = useRef('');
+  // Track the style ID currently loaded by the map to avoid spurious setStyle calls.
+  const appliedStyleId = useRef('');
 
   const [style, setStyle] = useState<StyleChoice>('auto');
   const [pin, setPin] = useState<LatLng | null>(null);
@@ -149,55 +117,29 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       const ml = await import('maplibre-gl');
       if (cancelled || !containerRef.current || mapRef.current) return;
       mlRef.current = ml;
-      const initialUrl = resolveStyle(style, theme).url;
-      appliedStyleUrl.current = initialUrl;
-      // Fetch the style JSON through our proxy. URL rewriting is handled entirely
-      // by transformRequest below — we do NOT manually patch URLs in the style.
-      const styleInput = await fetchResolvedStyle(initialUrl);
-      if (cancelled || !containerRef.current) return;
-
-      // Route every OFM URL MapLibre fetches (TileJSON, tiles, sprites, glyphs)
-      // through our /ofm/ Worker proxy. This is the single source of truth for
-      // URL rewriting — transformRequest is called for ALL network requests
-      // including those from MapLibre's tile Web Workers.
-      const OFM_ORIGIN = 'https://tiles.openfreemap.org/';
-      const ofmProxyBase = `${location.origin}/ofm/`;
-      const transformRequest = (url: string) => {
-        if (url.startsWith(OFM_ORIGIN)) {
-          return { url: ofmProxyBase + url.slice(OFM_ORIGIN.length) };
-        }
-      };
+      const { id, style: styleObj } = resolveStyle(style, theme);
+      appliedStyleId.current = id;
 
       const map = new ml.Map({
         container: containerRef.current,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        style: styleInput as any,
+        style: styleObj as any,
         center: [106.8272, -6.1751],
         zoom: 3,
         minZoom: 0,
         maxZoom: 20,
-        transformRequest,
       });
       map.addControl(new ml.NavigationControl(), 'top-right');
-      // Cap GeolocateControl zoom at 14 — the vector tile source's maxzoom is 14;
-      // zooming beyond that causes overzoom tile-loading issues in MapLibre v6.
       map.addControl(new ml.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: false,
-        fitBoundsOptions: { maxZoom: 14 },
+        fitBoundsOptions: { maxZoom: 18 },
       }), 'top-right');
       map.on('click', e => handleClick(e.lngLat.lat, e.lngLat.lng));
       map.on('style.load', () => { ensureMeasureLayer(); refreshMeasureLine(); });
       map.on('load', () => map.resize());
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       map.on('error', (e: any) => console.error('[map] error:', e?.error?.message ?? e));
-      map.on('sourcedataloading', (e) => console.log('[map] source loading:', e.sourceId));
-      map.on('sourcedata', (e) => { if (e.isSourceLoaded) console.log('[map] source loaded:', e.sourceId); });
-      // Force a repaint after each move so MapLibre re-evaluates missing tiles.
-      // We do NOT call resize() here — the canvas size doesn't change on pan/zoom,
-      // and calling resize() synchronously in moveend triggers constrainInternal
-      // recursion in MapLibre v6. The ResizeObserver below handles actual size changes.
-      map.on('moveend', () => { map.triggerRepaint(); });
       // The container is mounted via a dynamically-imported island, so it can be
       // laid out after the map is created — resize once it (or its size) settles,
       // otherwise the map renders blank at 0×0.
@@ -210,21 +152,13 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-style on choice or site-theme change — but only when the URL actually
-  // changes. MapLibre reloads the full style (cancelling in-flight tile requests)
-  // even when setStyle is called with the same URL, so skip no-op calls.
+  // Re-style on choice or site-theme change — skip no-op calls (same ID).
   useEffect(() => {
-    const url = resolveStyle(style, theme).url;
-    if (!mapRef.current || url === appliedStyleUrl.current) return;
-    appliedStyleUrl.current = url;
-    let isCurrent = true;
-    fetchResolvedStyle(url).then(styleInput => {
-      if (isCurrent && mapRef.current) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        mapRef.current.setStyle(styleInput as any);
-      }
-    });
-    return () => { isCurrent = false; };
+    const { id, style: styleObj } = resolveStyle(style, theme);
+    if (!mapRef.current || id === appliedStyleId.current) return;
+    appliedStyleId.current = id;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mapRef.current.setStyle(styleObj as any);
   }, [style, theme]);
 
   const pickStyle = (s: StyleChoice) => { setStyle(s); try { localStorage.setItem(STYLE_KEY, s); } catch { /* */ } };
@@ -261,9 +195,7 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
 
   const myLocation = () => {
     navigator.geolocation?.getCurrentPosition(pos => {
-      // Cap at zoom 14 — the vector tile source's maxzoom; overzooming beyond that
-      // causes blank tiles in MapLibre v6.
-      mapRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 14 });
+      mapRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16 });
       handleClick(pos.coords.latitude, pos.coords.longitude);
     });
   };

@@ -10,13 +10,22 @@ describe('resolveStyle', () => {
     expect(resolveStyle('positron', 'dark').id).toBe('positron');
     expect(resolveStyle('dark', 'light').id).toBe('dark');
   });
-  it('produces a proxied style url', () => {
-    expect(resolveStyle('bright', 'light').url).toBe('/ofm/styles/bright');
+  it('returns a MapLibre raster style object with CARTO tiles', () => {
+    const { style } = resolveStyle('liberty', 'light');
+    expect(style.version).toBe(8);
+    expect((style.sources as Record<string, unknown>).carto).toBeDefined();
+    const tiles = ((style.sources as Record<string, { tiles: string[] }>).carto).tiles;
+    expect(tiles[0]).toMatch(/cartocdn\.com\/rastertiles\/voyager/);
+  });
+  it('uses dark_all tiles for the dark style', () => {
+    const { style } = resolveStyle('dark', 'dark');
+    const tiles = ((style.sources as Record<string, { tiles: string[] }>).carto).tiles;
+    expect(tiles[0]).toMatch(/dark_all/);
   });
 });
 
 describe('MAP_STYLES', () => {
-  it('exposes auto + the four OpenFreeMap styles', () => {
+  it('exposes auto + the four styles', () => {
     expect(MAP_STYLES.map(s => s.id)).toEqual(['auto', 'liberty', 'bright', 'positron', 'dark']);
   });
 });
