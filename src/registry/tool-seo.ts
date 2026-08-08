@@ -1458,6 +1458,40 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does the transparent option really remove the background?', a: 'Yes. With Transparent background on, the PNG is exported with no fill behind the strokes; turn it off to flatten the signature onto a white background instead.' },
     ],
   },
+  'clipboard-inspector': {
+    title: 'Free Clipboard Inspector Tool — See What\'s on Your Clipboard',
+    description: 'Inspect your clipboard contents instantly — see raw text, HTML, images, file names and MIME types all at once. Free, private and runs entirely in your browser.',
+    intro: 'The Clipboard Inspector tool reveals everything stored on your clipboard at once: plain text, rich HTML, embedded images, file references and every MIME type present. Useful for debugging paste behaviour, checking what a copy operation actually produces, or understanding why a paste looks different in two apps. It runs entirely in your browser — your clipboard data never leaves your device.',
+    howTo: [
+      'Click "Paste & Inspect" (or press Ctrl+V / Cmd+V) to read your current clipboard.',
+      'Each content type that is present — text/plain, text/html, image/png, etc. — appears as its own panel.',
+      'Expand a panel to see the raw value: rendered HTML, image preview, plain text or hex bytes.',
+      'Click any panel header to copy that specific type back to your clipboard.',
+    ],
+    faqs: [
+      { q: 'Is my clipboard data sent to a server?', a: 'No. The Clipboard API is called entirely in your browser; the data is displayed locally and never uploaded anywhere.' },
+      { q: 'Why do I see multiple entries for one copy?', a: 'Most apps place several MIME types on the clipboard at once — e.g. text/plain (fallback) and text/html (rich version) — so paste targets can pick the best one. The inspector shows all of them.' },
+      { q: 'Why can\'t I see image data I copied from an app?', a: 'Some apps copy a file path or proprietary type rather than raw image bytes. The inspector shows whatever the browser\'s Clipboard API can read; OS-level or proprietary formats are outside its reach.' },
+      { q: 'Does it work with files?', a: 'Yes. When you copy files in your OS file manager and paste here, the inspector shows the file names and their MIME types — though it cannot read the file contents themselves for security reasons.' },
+    ],
+  },
+  'hotkey-test': {
+    title: 'Hotkey Test Tool — Test Global Keyboard Shortcuts (Desktop)',
+    description: 'Test whether a global keyboard shortcut registers correctly on your system. Runs in the GoodWebTools desktop app — press any key combination and see the result instantly.',
+    intro: 'The Hotkey Test tool lets you verify that a global keyboard shortcut is recognised by the operating system. Type a combination into the field and press it anywhere on your desktop — even when another window is focused — to confirm it fires correctly. Available in the GoodWebTools desktop app for macOS, Windows and Linux.',
+    howTo: [
+      'Open this tool in the GoodWebTools desktop app.',
+      'Click the shortcut field and press the key combination you want to test (e.g. Ctrl+Shift+G).',
+      'Switch focus to another app and press the same combination — the tool logs whether the hotkey fires.',
+      'Use this to confirm your chosen shortcut does not conflict with system or app-level shortcuts.',
+    ],
+    faqs: [
+      { q: 'Why is this desktop-only?', a: 'Global hotkeys — shortcuts that fire even when the browser is not focused — require OS-level integration that web browsers cannot access. The desktop app uses Tauri\'s native hotkey API to register and test them.' },
+      { q: 'Does it register the hotkey permanently?', a: 'No. The hotkey is only active while you are on this page inside the desktop app. It is unregistered automatically when you navigate away.' },
+      { q: 'Which modifiers are supported?', a: 'Ctrl, Shift, Alt and Meta (Windows key / Cmd) are all supported in any combination, along with any letter, digit or function key.' },
+      { q: 'What if my chosen shortcut is already taken?', a: 'The tool reports whether registration succeeds or fails. If a system shortcut or another app already holds the combination, registration will fail and you will see an error — choose a different combination.' },
+    ],
+  },
 };
 
 const id: Record<string, ToolSeoContent> = {
@@ -2910,6 +2944,40 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Sebaiknya saya mengekspor PNG atau SVG?', a: 'PNG adalah gambar yang siap ditempel, dan dengan Transparent background ia menempel dengan rapi pada dokumen apa pun. SVG adalah berkas vektor yang tetap tajam pada ukuran berapa pun — ideal untuk penskalaan atau pengeditan lebih lanjut.' },
       { q: 'Bisakah saya menandatangani di ponsel saya?', a: 'Ya. Papan ini mendukung input sentuh, jadi Anda dapat menandatangani dengan jari di ponsel atau tablet, atau dengan stylus.' },
       { q: 'Apakah opsi transparan benar-benar menghapus latar belakang?', a: 'Ya. Dengan Transparent background aktif, PNG diekspor tanpa isian di belakang goresan; nonaktifkan untuk meratakan tanda tangan di atas latar belakang putih sebagai gantinya.' },
+    ],
+  },
+  'clipboard-inspector': {
+    title: 'Tool Clipboard Inspector Gratis — Lihat Isi Clipboard Anda',
+    description: 'Periksa isi clipboard Anda seketika — lihat teks mentah, HTML, gambar, nama berkas, dan MIME type sekaligus. Gratis, privat, dan berjalan sepenuhnya di browser Anda.',
+    intro: 'Tool Clipboard Inspector mengungkap semua yang tersimpan di clipboard Anda sekaligus: teks biasa, HTML kaya, gambar tertanam, referensi berkas, dan setiap MIME type yang ada. Berguna untuk men-debug perilaku paste, memeriksa apa yang sebenarnya dihasilkan operasi salin, atau memahami mengapa hasil paste tampak berbeda di dua aplikasi. Berjalan sepenuhnya di browser Anda — data clipboard tidak pernah meninggalkan perangkat Anda.',
+    howTo: [
+      'Klik "Paste & Inspect" (atau tekan Ctrl+V / Cmd+V) untuk membaca clipboard Anda saat ini.',
+      'Setiap jenis konten yang ada — text/plain, text/html, image/png, dll. — muncul sebagai panel tersendiri.',
+      'Perluas panel untuk melihat nilai mentahnya: HTML yang dirender, pratinjau gambar, teks biasa, atau byte hex.',
+      'Klik header panel mana pun untuk menyalin jenis konten tersebut kembali ke clipboard Anda.',
+    ],
+    faqs: [
+      { q: 'Apakah data clipboard saya dikirim ke server?', a: 'Tidak. Clipboard API dipanggil sepenuhnya di browser Anda; data ditampilkan secara lokal dan tidak pernah diunggah ke mana pun.' },
+      { q: 'Mengapa saya melihat beberapa entri untuk satu salinan?', a: 'Sebagian besar aplikasi menempatkan beberapa MIME type sekaligus di clipboard — misalnya text/plain (fallback) dan text/html (versi kaya) — sehingga target paste dapat memilih yang terbaik. Inspector menampilkan semuanya.' },
+      { q: 'Mengapa saya tidak bisa melihat data gambar yang saya salin dari aplikasi?', a: 'Beberapa aplikasi menyalin path berkas atau jenis berpemilik, bukan byte gambar mentah. Inspector menampilkan apa pun yang dapat dibaca oleh Clipboard API browser; format tingkat OS atau berpemilik di luar jangkauannya.' },
+      { q: 'Apakah berfungsi dengan berkas?', a: 'Ya. Saat Anda menyalin berkas di file manager OS dan paste di sini, inspector menampilkan nama berkas beserta MIME type-nya — meski tidak dapat membaca isi berkas itu sendiri karena alasan keamanan.' },
+    ],
+  },
+  'hotkey-test': {
+    title: 'Tool Hotkey Test — Uji Pintasan Keyboard Global (Desktop)',
+    description: 'Uji apakah pintasan keyboard global terdaftar dengan benar di sistem Anda. Berjalan di aplikasi desktop GoodWebTools — tekan kombinasi tombol apa pun dan lihat hasilnya seketika.',
+    intro: 'Tool Hotkey Test memungkinkan Anda memverifikasi bahwa pintasan keyboard global dikenali oleh sistem operasi. Ketik kombinasi ke dalam kolom dan tekan di mana saja di desktop Anda — bahkan saat jendela lain sedang aktif — untuk memastikan pintasan tersebut berfungsi dengan benar. Tersedia di aplikasi desktop GoodWebTools untuk macOS, Windows, dan Linux.',
+    howTo: [
+      'Buka tool ini di aplikasi desktop GoodWebTools.',
+      'Klik kolom pintasan dan tekan kombinasi tombol yang ingin Anda uji (mis. Ctrl+Shift+G).',
+      'Pindahkan fokus ke aplikasi lain dan tekan kombinasi yang sama — tool mencatat apakah hotkey terpicu.',
+      'Gunakan ini untuk memastikan pintasan yang Anda pilih tidak bertentangan dengan pintasan sistem atau aplikasi lain.',
+    ],
+    faqs: [
+      { q: 'Mengapa ini hanya tersedia di desktop?', a: 'Hotkey global — pintasan yang terpicu bahkan saat browser tidak aktif — memerlukan integrasi tingkat OS yang tidak dapat diakses browser web. Aplikasi desktop menggunakan API hotkey native Tauri untuk mendaftarkan dan mengujinya.' },
+      { q: 'Apakah hotkey terdaftar secara permanen?', a: 'Tidak. Hotkey hanya aktif saat Anda berada di halaman ini di dalam aplikasi desktop. Hotkey otomatis dibatalkan pendaftarannya saat Anda berpindah halaman.' },
+      { q: 'Modifier apa saja yang didukung?', a: 'Ctrl, Shift, Alt, dan Meta (tombol Windows / Cmd) semuanya didukung dalam kombinasi apa pun, beserta huruf, angka, atau tombol fungsi apa pun.' },
+      { q: 'Bagaimana jika pintasan yang saya pilih sudah digunakan?', a: 'Tool melaporkan apakah pendaftaran berhasil atau gagal. Jika pintasan sistem atau aplikasi lain sudah menggunakan kombinasi tersebut, pendaftaran akan gagal dan Anda akan melihat pesan error — pilih kombinasi yang berbeda.' },
     ],
   },
 };
