@@ -10,8 +10,8 @@ describe('resolveStyle', () => {
     expect(resolveStyle('positron', 'dark').id).toBe('positron');
     expect(resolveStyle('dark', 'light').id).toBe('dark');
   });
-  it('produces an OpenFreeMap style url', () => {
-    expect(resolveStyle('bright', 'light').url).toBe('https://tiles.openfreemap.org/styles/bright');
+  it('produces a proxied style url', () => {
+    expect(resolveStyle('bright', 'light').url).toBe('/ofm/styles/bright');
   });
 });
 

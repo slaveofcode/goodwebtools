@@ -15,7 +15,7 @@ export const MAP_STYLES: { id: StyleChoice; label: string }[] = [
 /** Resolve a style choice (+ current site theme) to a concrete OpenFreeMap style. */
 export function resolveStyle(choice: StyleChoice, siteTheme: 'light' | 'dark'): { id: ConcreteStyle; url: string } {
   const id: ConcreteStyle = choice === 'auto' ? (siteTheme === 'dark' ? 'dark' : 'liberty') : choice;
-  return { id, url: `https://tiles.openfreemap.org/styles/${id}` };
+  return { id, url: `/ofm/styles/${id}` };
 }
 
 /** Great-circle distance between two points, in metres. */
