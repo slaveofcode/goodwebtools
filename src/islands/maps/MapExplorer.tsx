@@ -192,6 +192,19 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       // never needs its own TileJSON fetch (avoids stale CDN edge responses).
       const styleInput = await fetchResolvedStyle(initialUrl);
       if (cancelled || !containerRef.current) return;
+      // Rewrite every OpenFreeMap URL that MapLibre would fetch on its own
+      // (TileJSON, vector/raster tiles, glyphs, sprites) through our /ofm/ proxy.
+      // This is the definitive safety net: even if fetchResolvedStyle leaves a
+      // raw OFM url in the source config, transformRequest rewrites it before
+      // any network request is dispatched — including requests from tile workers.
+      const OFM_ORIGIN = 'https://tiles.openfreemap.org/';
+      const ofmProxyBase = `${location.origin}/ofm/`;
+      const transformRequest = (url: string) => {
+        if (url.startsWith(OFM_ORIGIN)) {
+          return { url: ofmProxyBase + url.slice(OFM_ORIGIN.length) };
+        }
+      };
+
       const map = new ml.Map({
         container: containerRef.current,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -200,6 +213,7 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
         zoom: 3,
         minZoom: 0,
         maxZoom: 20,
+        transformRequest,
       });
       map.addControl(new ml.NavigationControl(), 'top-right');
       // Cap GeolocateControl zoom at 14 — the vector tile source's maxzoom is 14;
