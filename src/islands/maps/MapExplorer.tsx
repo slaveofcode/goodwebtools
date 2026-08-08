@@ -192,6 +192,22 @@ export default function MapExplorer({ lang = 'en' }: { lang?: Lang }) {
       // never needs its own TileJSON fetch (avoids stale CDN edge responses).
       const styleInput = await fetchResolvedStyle(initialUrl);
       if (cancelled || !containerRef.current) return;
+
+      // Diagnostic: probe one vector tile to verify the proxy returns valid PBF.
+      // Valid gzip-PBF starts with bytes 1f 8b; raw PBF starts with a protobuf tag.
+      // HTML/JSON/text responses (corrupted edge cache) start with ASCII bytes.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const omtTiles = (styleInput as any)?.sources?.openmaptiles?.tiles;
+      if (Array.isArray(omtTiles) && omtTiles[0]) {
+        const probeUrl = (omtTiles[0] as string).replace('{z}', '5').replace('{x}', '26').replace('{y}', '16');
+        fetch(probeUrl).then(async r => {
+          const buf = await r.arrayBuffer();
+          const b = new Uint8Array(buf.slice(0, 8));
+          const hex = Array.from(b).map(n => n.toString(16).padStart(2, '0')).join(' ');
+          console.log('[map] tile probe', probeUrl, '→ status:', r.status, 'ct:', r.headers.get('content-type'), 'size:', buf.byteLength, 'bytes:', hex);
+        }).catch(e => console.error('[map] tile probe error:', e));
+      }
+
       // Rewrite every OpenFreeMap URL that MapLibre would fetch on its own
       // (TileJSON, vector/raster tiles, glyphs, sprites) through our /ofm/ proxy.
       // This is the definitive safety net: even if fetchResolvedStyle leaves a
