@@ -10,18 +10,21 @@ import { resolveStyle, MAP_STYLES, haversineMeters, formatDistance, type StyleCh
 import { ddToDms, ddToUtm, encodeGeohash, formatDd, type LatLng } from '@/tools/geo/coord.lib';
 import type { Lang } from '@/i18n/config';
 
-// Rewrite OFM absolute URLs to go through our same-origin /ofm/ proxy, which
-// fetches from tiles.openfreemap.org server-side over Cloudflare's backbone.
-// This bypasses the broken Singapore CDN edge that serves corrupt style/tile
-// responses to Southeast Asian users.
-const ofm = (u: unknown): unknown =>
-  typeof u === 'string' ? u.replace('https://tiles.openfreemap.org/', '/ofm/') : u;
-
 // Pre-fetch a MapLibre style URL through our proxy, inline any TileJSON-backed
 // vector sources, and rewrite all remaining OFM URLs so every subsequent fetch
 // (glyphs, sprites, tiles) also goes through the same-origin proxy.
+//
+// IMPORTANT: All rewritten URLs must be absolute. MapLibre rejects relative
+// sprite/glyph URLs outright, and Web Workers resolve relative tile URLs
+// against their own blob URL (not the page origin), causing silent failures.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchResolvedStyle(url: string): Promise<string | Record<string, any>> {
+  // Build absolute proxy base at call time — location is always available here
+  // (this function is only called inside useEffect, never during SSR).
+  const proxyBase = `${location.origin}/ofm/`;
+  const ofm = (u: unknown): unknown =>
+    typeof u === 'string' ? u.replace('https://tiles.openfreemap.org/', proxyBase) : u;
+
   try {
     const res = await fetch(url, { cache: 'no-cache' });
     console.log('[map] style fetch', url, res.status, res.ok);
