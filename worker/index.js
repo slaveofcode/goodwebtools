@@ -64,9 +64,15 @@ export default {
         return new Response('Method not allowed', { status: 405 });
       }
       const upstream = 'https://tiles.openfreemap.org/' + url.pathname.slice('/ofm/'.length) + url.search;
+      // Fetch WITHOUT cf.cacheEverything so we bypass Cloudflare's edge cache.
+      // The Singapore edge had corrupted cached responses for OFM PBF tile URLs
+      // (HTTP 200 with wrong body), which were being served by the edge cache
+      // when cacheEverything:true was set. Going directly to OFM's origin via
+      // CF backbone avoids those stale entries. The browser's own HTTP cache
+      // (driven by the cache-control header we set below) handles client-side
+      // caching without touching the broken edge entries.
       const res = await fetch(upstream, {
         headers: { 'user-agent': 'goodwebtools-ofm-proxy' },
-        cf: { cacheEverything: true, cacheTtl: 86400 },
       });
       if (!res.ok) {
         return new Response('Upstream OFM fetch failed', { status: res.status || 502 });
