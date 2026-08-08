@@ -10,10 +10,16 @@ import { resolveStyle, MAP_STYLES, haversineMeters, formatDistance, type StyleCh
 import { ddToDms, ddToUtm, encodeGeohash, formatDd, type LatLng } from '@/tools/geo/coord.lib';
 import type { Lang } from '@/i18n/config';
 
-// Pre-fetch a MapLibre style URL and inline any TileJSON-backed vector sources
-// so MapLibre never needs to make a separate TileJSON fetch. This works around
-// Cloudflare edge-caching issues where the style URL returns stale/broken content
-// at certain CDN nodes. cache:'no-cache' forces revalidation with the origin server.
+// Rewrite OFM absolute URLs to go through our same-origin /ofm/ proxy, which
+// fetches from tiles.openfreemap.org server-side over Cloudflare's backbone.
+// This bypasses the broken Singapore CDN edge that serves corrupt style/tile
+// responses to Southeast Asian users.
+const ofm = (u: unknown): unknown =>
+  typeof u === 'string' ? u.replace('https://tiles.openfreemap.org/', '/ofm/') : u;
+
+// Pre-fetch a MapLibre style URL through our proxy, inline any TileJSON-backed
+// vector sources, and rewrite all remaining OFM URLs so every subsequent fetch
+// (glyphs, sprites, tiles) also goes through the same-origin proxy.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchResolvedStyle(url: string): Promise<string | Record<string, any>> {
   try {
@@ -21,37 +27,46 @@ async function fetchResolvedStyle(url: string): Promise<string | Record<string, 
     console.log('[map] style fetch', url, res.status, res.ok);
     if (!res.ok) return url;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const style = await res.json() as { version?: number; sources?: Record<string, any> };
-    // Validate: must look like a MapLibre style (has version + sources)
+    const style = await res.json() as Record<string, any>;
     if (!style.version || !style.sources) {
       console.warn('[map] style response invalid (no version/sources):', JSON.stringify(style).slice(0, 200));
       return url;
     }
+    // Rewrite top-level glyph/sprite URLs through our proxy
+    if (typeof style.glyphs === 'string') style.glyphs = ofm(style.glyphs);
+    if (typeof style.sprite === 'string') style.sprite = ofm(style.sprite);
+    // Rewrite sources and inline vector TileJSON
     await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       Object.values(style.sources).map(async (src) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const s = src as Record<string, any>;
+        // Rewrite any existing raster tile URLs
+        if (Array.isArray(s.tiles)) s.tiles = s.tiles.map(ofm);
+        // Inline vector TileJSON and rewrite tile URLs through proxy
         if (s.type === 'vector' && typeof s.url === 'string' && !s.tiles) {
+          const tjUrl = ofm(s.url) as string;
           try {
-            console.log('[map] fetching TileJSON', s.url);
-            const tj = await fetch(s.url, { cache: 'no-cache' }).then(r => r.json()) as {
+            console.log('[map] fetching TileJSON', tjUrl);
+            const tj = await fetch(tjUrl, { cache: 'no-cache' }).then(r => r.json()) as {
               tiles?: string[]; minzoom?: number; maxzoom?: number;
             };
             console.log('[map] TileJSON tiles[0]:', tj.tiles?.[0], 'maxzoom:', tj.maxzoom);
             if (tj.tiles?.length) {
-              s.tiles = tj.tiles;
+              s.tiles = tj.tiles.map(ofm);
               if (tj.minzoom != null) s.minzoom = tj.minzoom;
               if (tj.maxzoom != null) s.maxzoom = tj.maxzoom;
               delete s.url;
             }
           } catch (e) {
             console.error('[map] TileJSON fetch failed:', e);
+            s.url = tjUrl; // leave the proxy URL so MapLibre can retry via proxy
           }
         }
       })
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const omt = (style.sources as Record<string, any>)?.openmaptiles;
+    const omt = style.sources?.openmaptiles;
     console.log('[map] openmaptiles source after resolve:', omt?.tiles?.[0] ?? '(still url-based: ' + omt?.url + ')');
     return style;
   } catch (e) {
