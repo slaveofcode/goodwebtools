@@ -24,14 +24,14 @@ const TR: Record<Lang, {
     style: 'Style',
     centerPin: 'Center pin',
     downloadPng: 'Download PNG',
-    hint: 'Pan & zoom to frame your map, then export the current view. Maps © OpenFreeMap / OpenStreetMap.',
+    hint: 'Pan & zoom to frame your map, then export the current view. Maps © OpenStreetMap contributors, © CARTO',
   },
   id: {
     searchPlace: 'Cari tempat…',
     style: 'Gaya',
     centerPin: 'Pin tengah',
     downloadPng: 'Unduh PNG',
-    hint: 'Geser & perbesar untuk membingkai peta Anda, lalu ekspor tampilan saat ini. Peta © OpenFreeMap / OpenStreetMap.',
+    hint: 'Geser & perbesar untuk membingkai peta Anda, lalu ekspor tampilan saat ini. Peta © OpenStreetMap contributors, © CARTO',
   },
 };
 
@@ -43,6 +43,7 @@ export default function StaticMap({ lang = 'en' }: { lang?: Lang }) {
   const mlRef = useRef<typeof import('maplibre-gl') | null>(null);
   const markerRef = useRef<MlMarker | null>(null);
   const roRef = useRef<ResizeObserver | null>(null);
+  const appliedStyleId = useRef('');
 
   const [style, setStyle] = useState<StyleChoice>('auto');
   const [pinCenter, setPinCenter] = useState(false);
@@ -58,9 +59,12 @@ export default function StaticMap({ lang = 'en' }: { lang?: Lang }) {
       const ml = await import('maplibre-gl');
       if (cancelled || !containerRef.current || mapRef.current) return;
       mlRef.current = ml;
+      const { id, style: styleObj } = resolveStyle(style, theme);
+      appliedStyleId.current = id;
       const map = new ml.Map({
         container: containerRef.current,
-        style: resolveStyle(style, theme).url,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        style: styleObj as any,
         center: [2.3522, 48.8566],
         zoom: 11,
         preserveDrawingBuffer: true, // required to read the canvas for PNG export
@@ -76,7 +80,13 @@ export default function StaticMap({ lang = 'en' }: { lang?: Lang }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => { mapRef.current?.setStyle(resolveStyle(style, theme).url); }, [style, theme]);
+  useEffect(() => {
+    const { id, style: styleObj } = resolveStyle(style, theme);
+    if (!mapRef.current || id === appliedStyleId.current) return;
+    appliedStyleId.current = id;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mapRef.current.setStyle(styleObj as any);
+  }, [style, theme]);
   const pickStyle = (s: StyleChoice) => { setStyle(s); try { localStorage.setItem(STYLE_KEY, s); } catch { /* */ } };
 
   // Toggle a marker at the map centre.
@@ -119,7 +129,7 @@ export default function StaticMap({ lang = 'en' }: { lang?: Lang }) {
       if (!ctx) return;
       ctx.drawImage(src, 0, 0);
       // Burn in the required attribution.
-      const text = '© OpenStreetMap contributors · OpenFreeMap';
+      const text = '© OpenStreetMap contributors · © CARTO';
       ctx.font = '13px sans-serif';
       const w = ctx.measureText(text).width;
       ctx.fillStyle = 'rgba(255,255,255,0.75)';
