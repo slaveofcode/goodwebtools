@@ -9,7 +9,7 @@ import { exportPostman, exportWorkspace } from '@/tools/dev/api-client-export.li
 import { downloadService } from '@/services/download';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
-import type { Workspace, RequestDef, Collection, Folder as FolderType, Environment, ResponseSnapshot, HistoryEntry } from '@/tools/dev/api-client.types';
+import type { Workspace, RequestDef, Collection, Folder as FolderType, Environment, HistoryEntry } from '@/tools/dev/api-client.types';
 import { SAVE_INTERVAL } from '@/tools/dev/api-client.types';
 
 // ---- helpers ----
@@ -107,8 +107,7 @@ export default function ApiClient() {
       window.removeEventListener('pagehide', flushSave);
       window.removeEventListener('beforeunload', onBeforeUnload);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeEnv = workspace.envs.find(e => e.id === workspace.activeEnvId) ?? null;
   const envVars = activeEnv?.vars ?? {};
@@ -285,7 +284,7 @@ function ApiSidebar({
 
   const toggleCol = (id: string) => setOpenCols(prev => {
     const s = new Set(prev);
-    s.has(id) ? s.delete(id) : s.add(id);
+    if (s.has(id)) s.delete(id); else s.add(id);
     return s;
   });
 
@@ -425,7 +424,7 @@ function RequestTree({ requests, folders, onSelect, depth }: {
       ))}
       {folders.map(f => (
         <div key={f.id}>
-          <button onClick={() => setOpenFolders(prev => { const s = new Set(prev); s.has(f.id) ? s.delete(f.id) : s.add(f.id); return s; })}
+          <button onClick={() => setOpenFolders(prev => { const s = new Set(prev); if (s.has(f.id)) s.delete(f.id); else s.add(f.id); return s; })}
             className={`flex w-full items-center gap-1 ${pl} pr-2 py-0.5 text-left text-xs font-bold text-muted-foreground hover:bg-muted`}>
             {openFolders.has(f.id) ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
             <Folder className="h-3 w-3 shrink-0" />{f.name}
