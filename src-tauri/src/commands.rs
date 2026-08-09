@@ -1029,3 +1029,64 @@ mod tests {
         assert_eq!(out.get_pixel(3, 3), &image::Rgba([5, 5, 0, 255]));
     }
 }
+
+// ---- HTTP request proxy (used by the API Client tool) ----
+
+#[derive(serde::Serialize)]
+pub struct HttpResponse {
+    pub status: u16,
+    pub status_text: String,
+    pub headers: std::collections::HashMap<String, String>,
+    pub body: String,
+    pub duration_ms: u64,
+}
+
+#[tauri::command]
+pub async fn http_request(
+    method: String,
+    url: String,
+    headers: std::collections::HashMap<String, String>,
+    body: Option<String>,
+) -> Result<HttpResponse, String> {
+    let start = std::time::Instant::now();
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(false)
+        .redirect(reqwest::redirect::Policy::limited(10))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let method_parsed = reqwest::Method::from_bytes(method.to_uppercase().as_bytes())
+        .map_err(|e| e.to_string())?;
+
+    let mut builder = client.request(method_parsed, &url);
+    for (k, v) in &headers {
+        if let (Ok(name), Ok(val)) = (
+            reqwest::header::HeaderName::from_bytes(k.as_bytes()),
+            reqwest::header::HeaderValue::from_str(v),
+        ) {
+            builder = builder.header(name, val);
+        }
+    }
+    if let Some(b) = body {
+        builder = builder.body(b);
+    }
+
+    let res = builder.send().await.map_err(|e| e.to_string())?;
+    let duration_ms = start.elapsed().as_millis() as u64;
+    let status = res.status().as_u16();
+    let status_text = res.status().canonical_reason().unwrap_or("").to_string();
+    let mut resp_headers = std::collections::HashMap::new();
+    for (k, v) in res.headers() {
+        if let Ok(val) = v.to_str() {
+            resp_headers.insert(k.as_str().to_string(), val.to_string());
+        }
+    }
+    let body_str = res.text().await.map_err(|e| e.to_string())?;
+    Ok(HttpResponse {
+        status,
+        status_text,
+        headers: resp_headers,
+        body: body_str,
+        duration_ms,
+    })
+}
