@@ -1492,6 +1492,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'What if my chosen shortcut is already taken?', a: 'The tool reports whether registration succeeds or fails. If a system shortcut or another app already holds the combination, registration will fail and you will see an error — choose a different combination.' },
     ],
   },
+  'api-client': {
+    title: 'Free API Client Tool — Import Postman, Insomnia & Swagger',
+    description: 'A free browser-based REST API client. Import Postman collections, Insomnia workspaces, Swagger/OpenAPI specs or HAR files and fire requests instantly — no account, no install, no vendor lock-in.',
+    intro: 'This free API Client lets you import your existing Postman collections, Insomnia workspaces, Swagger/OpenAPI specs or browser HAR archives and execute REST API requests directly in your browser — or with full CORS bypass in the GoodWebTools desktop app. Environment variables, cross-request token chaining, and per-request response history are all included. Your workspace auto-saves locally and never leaves your device.',
+    howTo: [
+      'Click "Import" and select a Postman JSON, Insomnia JSON, OpenAPI YAML/JSON, or HAR file — the collection populates instantly.',
+      'Click any request in the sidebar to open it. Edit the URL, method, headers, body, or auth as needed.',
+      'Set an environment (e.g. "dev" with base_url and token variables) and reference them with {{variable_name}} anywhere in the request.',
+      'Click "Send". The response appears below with status, timing, headers, and formatted body. Right-click a collection to export back to Postman, Insomnia, or OpenAPI.',
+    ],
+    faqs: [
+      { q: 'Is my API data uploaded to a server?', a: 'No. All request execution, collection parsing, and workspace storage happen locally in your browser or desktop app. Your API keys, tokens, and payloads never leave your device.' },
+      { q: 'Why does it say "Browser mode — CORS restrictions apply"?', a: 'Browsers block cross-origin requests to APIs that don\'t explicitly allow them — this is a browser security policy called CORS. Install the GoodWebTools desktop app to send requests to any API without CORS restrictions, exactly like Postman or Insomnia.' },
+      { q: 'Which import formats are supported?', a: 'Postman Collection v2.1 (JSON), Insomnia Export v4 (JSON), OpenAPI/Swagger 2.0 and 3.x (JSON or YAML), and HAR (HTTP Archive from browser DevTools). Collections are auto-detected — just drop the file.' },
+      { q: 'Can I export my work back to Postman or Insomnia?', a: 'Yes. Click the download icon on any collection in the sidebar to export it as Postman v2.1. Use "Export workspace" in the toolbar to save everything as a GWT Workspace JSON for full backup.' },
+      { q: 'How does auto-save work?', a: 'Your workspace is saved to your browser\'s localStorage automatically — 30 seconds after your last change. An amber "Unsaved" chip appears while changes are pending; click it to save immediately. Your work is restored exactly as you left it when you return.' },
+    ],
+  },
 };
 
 const id: Record<string, ToolSeoContent> = {
@@ -2978,6 +2996,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah hotkey terdaftar secara permanen?', a: 'Tidak. Hotkey hanya aktif saat Anda berada di halaman ini di dalam aplikasi desktop. Hotkey otomatis dibatalkan pendaftarannya saat Anda berpindah halaman.' },
       { q: 'Modifier apa saja yang didukung?', a: 'Ctrl, Shift, Alt, dan Meta (tombol Windows / Cmd) semuanya didukung dalam kombinasi apa pun, beserta huruf, angka, atau tombol fungsi apa pun.' },
       { q: 'Bagaimana jika pintasan yang saya pilih sudah digunakan?', a: 'Tool melaporkan apakah pendaftaran berhasil atau gagal. Jika pintasan sistem atau aplikasi lain sudah menggunakan kombinasi tersebut, pendaftaran akan gagal dan Anda akan melihat pesan error — pilih kombinasi yang berbeda.' },
+    ],
+  },
+  'api-client': {
+    title: 'Tool API Client Gratis — Import Postman, Insomnia & Swagger',
+    description: 'Tool REST API client gratis berbasis browser. Import koleksi Postman, workspace Insomnia, spesifikasi Swagger/OpenAPI, atau berkas HAR dan kirim request seketika — tanpa akun, tanpa instalasi, tanpa vendor lock-in.',
+    intro: 'Tool API Client gratis ini memungkinkan Anda mengimpor koleksi Postman, workspace Insomnia, spesifikasi Swagger/OpenAPI, atau arsip HAR browser dan menjalankan REST API request langsung di browser — atau dengan bypass CORS penuh di aplikasi desktop GoodWebTools. Variabel environment, token chaining antar request, dan riwayat respons per-request semuanya tersedia. Workspace Anda tersimpan otomatis secara lokal dan tidak pernah meninggalkan perangkat Anda.',
+    howTo: [
+      'Klik "Import" dan pilih berkas Postman JSON, Insomnia JSON, OpenAPI YAML/JSON, atau HAR — koleksi langsung tampil.',
+      'Klik request mana pun di sidebar untuk membukanya. Edit URL, method, header, body, atau auth sesuai kebutuhan.',
+      'Buat environment (mis. "dev" dengan variabel base_url dan token) dan referensikan dengan {{nama_variabel}} di mana saja dalam request.',
+      'Klik "Send". Respons muncul di bawah dengan status, waktu, header, dan body terformat. Klik ikon unduh di koleksi untuk mengekspor kembali ke Postman, Insomnia, atau OpenAPI.',
+    ],
+    faqs: [
+      { q: 'Apakah data API saya diunggah ke server?', a: 'Tidak. Semua eksekusi request, parsing koleksi, dan penyimpanan workspace terjadi secara lokal di browser atau aplikasi desktop Anda. API key, token, dan payload Anda tidak pernah meninggalkan perangkat Anda.' },
+      { q: 'Mengapa ada tulisan "Browser mode — CORS restrictions apply"?', a: 'Browser memblokir request lintas-origin ke API yang tidak mengizinkannya secara eksplisit — ini adalah kebijakan keamanan browser bernama CORS. Instal aplikasi desktop GoodWebTools untuk mengirim request ke API mana pun tanpa batasan CORS, persis seperti Postman atau Insomnia.' },
+      { q: 'Format import apa saja yang didukung?', a: 'Postman Collection v2.1 (JSON), Insomnia Export v4 (JSON), OpenAPI/Swagger 2.0 dan 3.x (JSON atau YAML), dan HAR (HTTP Archive dari DevTools browser). Koleksi dideteksi otomatis — cukup pilih berkasnya.' },
+      { q: 'Bisakah saya mengekspor pekerjaan kembali ke Postman atau Insomnia?', a: 'Ya. Klik ikon unduh pada koleksi di sidebar untuk mengekspornya sebagai Postman v2.1. Gunakan "Export workspace" di toolbar untuk menyimpan semuanya sebagai GWT Workspace JSON untuk backup lengkap.' },
+      { q: 'Bagaimana auto-save bekerja?', a: 'Workspace Anda disimpan ke localStorage browser secara otomatis — 30 detik setelah perubahan terakhir. Chip amber "Unsaved" muncul selama perubahan belum tersimpan; klik untuk menyimpan seketika. Pekerjaan Anda dipulihkan persis seperti yang Anda tinggalkan saat kembali.' },
     ],
   },
 };

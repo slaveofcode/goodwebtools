@@ -50,6 +50,7 @@ fn main() {
             commands::check_permissions,
             commands::mark_first_run_complete,
             commands::open_system_preferences,
+            commands::http_request,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
