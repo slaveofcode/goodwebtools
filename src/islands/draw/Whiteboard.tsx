@@ -1,4 +1,19 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react';
+
+// Builds a fingerprint that distinguishes scenes even when getSceneVersion
+// returns the same sum for two different element sets (e.g. two separate
+// one-element drawings each at version 1).  Combines version sum + element
+// IDs + file IDs so any real scene change is reliably detected.
+function computeSceneKey(
+  elements: readonly unknown[],
+  files: Record<string, unknown> | undefined,
+  getVersion: (els: readonly unknown[]) => number,
+): string {
+  const ver = getVersion(elements);
+  const ids = (elements as { id?: string }[]).map(e => e.id ?? '').join('\0');
+  const fk = Object.keys(files ?? {}).sort().join('\0');
+  return `${ver}|${ids}|${fk}`;
+}
 import { Maximize2, Minimize2, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { loadScene, saveScene, type WhiteboardScene } from '@/tools/draw/whiteboard.store';
@@ -104,12 +119,12 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
   const dirty = useRef(false);
   const ready = useRef(false);
   const sceneVersionOf = useRef<(els: readonly unknown[]) => number>(() => 0);
-  const savedVersion = useRef<number | null>(null);
+  const savedKey = useRef<string | null>(null);
 
   const flushSave = () => {
     if (!latestScene.current || !dirty.current) return;
     dirty.current = false;
-    savedVersion.current = sceneVersionOf.current(latestScene.current.elements);
+    savedKey.current = computeSceneKey(latestScene.current.elements, latestScene.current.files, sceneVersionOf.current);
     setCountdown(0); // back to the "Saved" state; countdown stops
     void saveScene(latestScene.current);
   };
@@ -124,11 +139,11 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
       appState: { viewBackgroundColor: appState?.viewBackgroundColor },
       files,
     };
-    const version = sceneVersionOf.current(elements);
+    const key = computeSceneKey(elements, files, sceneVersionOf.current);
     // Baseline on the first change (restored scene) and during warm-up.
-    if (savedVersion.current === null || !ready.current) { savedVersion.current = version; return; }
-    // Only a genuine element change starts the countdown.
-    if (version !== savedVersion.current && !dirty.current) {
+    if (savedKey.current === null || !ready.current) { savedKey.current = key; return; }
+    // Only a genuine element or file change starts the countdown.
+    if (key !== savedKey.current && !dirty.current) {
       dirty.current = true;
       setCountdown(SAVE_INTERVAL);
     }
@@ -172,6 +187,16 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
         // getSceneVersion changes only on real element edits, not on cursor /
         // selection / hover onChange noise — so we can tell "actually changed".
         sceneVersionOf.current = m.getSceneVersion as (els: readonly unknown[]) => number;
+        // Rebase savedKey now that we have the real getSceneVersion — the
+        // default () => 0 would produce a stale key that mismatches on the
+        // next onChange even when nothing actually changed.
+        if (latestScene.current) {
+          savedKey.current = computeSceneKey(
+            latestScene.current.elements,
+            latestScene.current.files,
+            sceneVersionOf.current,
+          );
+        }
         setExcalidraw(() => m.Excalidraw);
       })
       .catch(() => { if (alive) setFailed(true); });

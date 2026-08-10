@@ -225,7 +225,7 @@ export const tools: ToolDef[] = [
   },
   {
     id: 'spreadsheet-viewer',
-    name: 'Spreadsheet Viewer',
+    name: 'Spreadsheet/CSV Viewer',
     category: 'Documents',
     route: '/tools/spreadsheet-viewer',
     keywords: ['spreadsheet', 'excel', 'xlsx', 'xls', 'ods', 'csv', 'viewer', 'open', 'read', 'sheet', 'opendocument', 'calc'],

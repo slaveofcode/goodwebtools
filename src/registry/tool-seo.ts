@@ -127,7 +127,7 @@ const en: Record<string, ToolSeoContent> = {
     ],
   },
   'spreadsheet-viewer': {
-    title: 'Free Spreadsheet Viewer — Open XLSX, ODS & CSV',
+    title: 'Free Spreadsheet/CSV Viewer — Open XLSX, ODS & CSV',
     description: 'A free spreadsheet viewer to open Excel (.xlsx/.xls), OpenDocument (.ods) and CSV files in your browser — every sheet as a table. 100% private; nothing is uploaded.',
     intro: 'This free spreadsheet viewer opens Excel, OpenDocument and CSV files right in your browser and shows every sheet as a clean, scrollable table — no Excel, Google Sheets or account needed. The file is read on your device and never uploaded.',
     howTo: [
@@ -827,9 +827,9 @@ const en: Record<string, ToolSeoContent> = {
     ],
   },
   'image-watermark': {
-    title: 'Free Image Watermark Tool — Stamp Text on Photos',
-    description: 'A free online image watermark tool to stamp custom text across any photo — 100% private. Your image is processed in your browser and never uploaded.',
-    intro: 'This free image watermark tool lets you drop or paste an image and stamp your own text across it — diagonal, tiled, or in the corner — with control over size, opacity and color. Everything runs on your device, so your images never leave your browser.',
+    title: 'Free Image Watermark Tool — Stamp Text on Photos & KTP',
+    description: 'A free online image watermark tool to stamp custom text on any photo or ID card (KTP) — 100% private. Your image is processed in your browser and never uploaded.',
+    intro: 'This free image watermark tool lets you drop or paste an image and stamp your own text across it — diagonal, tiled, or in the corner — with control over size, opacity and color. Works great for watermarking KTP, SIM, passport scans, and any photo. Everything runs on your device, so your images never leave your browser.',
     howTo: [
       'Drop or paste an image, or click to browse for one.',
       'Type your watermark text and choose a layout: Diagonal, Tiled or Corner.',
@@ -841,6 +841,7 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'What watermark layouts can I choose?', a: 'Three: Diagonal across the image, Tiled repeating over the whole picture, or a single Corner stamp in the bottom-right.' },
       { q: 'Can I control how the watermark looks?', a: 'Yes. You can set the text, pick any color, and use sliders to adjust its scale and opacity so it\'s as subtle or bold as you want.' },
       { q: 'What format is the watermarked image saved in?', a: 'The download keeps your image\'s original format where possible, so a JPEG stays a JPEG and a PNG stays a PNG.' },
+      { q: 'Can I use this to watermark a KTP or ID card photo?', a: 'Yes. Drop in a scan or photo of your KTP, SIM, passport or any identity document, type your watermark text (e.g. "COPY" or your name), pick Diagonal or Tiled layout, set the opacity, and download. Everything stays on your device — nothing is uploaded.' },
     ],
   },
   'image-stamp': {
@@ -1633,7 +1634,7 @@ const id: Record<string, ToolSeoContent> = {
     ],
   },
   'spreadsheet-viewer': {
-    title: 'Penampil Spreadsheet Gratis — Buka XLSX, ODS & CSV',
+    title: 'Penampil Spreadsheet/CSV Gratis — Buka XLSX, ODS & CSV',
     description: 'Penampil spreadsheet gratis untuk membuka berkas Excel (.xlsx/.xls), OpenDocument (.ods), dan CSV di browser — setiap lembar sebagai tabel. 100% privat; tidak ada yang diunggah.',
     intro: 'Penampil spreadsheet gratis ini membuka berkas Excel, OpenDocument, dan CSV langsung di browser Anda serta menampilkan setiap lembar sebagai tabel yang rapi dan dapat digulir — tanpa Excel, Google Sheets, atau akun. Berkas dibaca di perangkat Anda dan tidak pernah diunggah.',
     howTo: [
@@ -2333,9 +2334,9 @@ const id: Record<string, ToolSeoContent> = {
     ],
   },
   'image-watermark': {
-    title: 'Tool Watermark Gambar Gratis — Stempel Teks di Foto',
-    description: 'Tool watermark gambar daring gratis untuk menstempel teks khusus pada foto apa pun — 100% privat. Gambar Anda diproses di browser dan tidak pernah diunggah.',
-    intro: 'Tool watermark gambar gratis ini memungkinkan Anda menjatuhkan atau menempelkan gambar dan menstempel teks Anda sendiri di atasnya — diagonal, berulang, atau di sudut — dengan kontrol atas ukuran, opasitas, dan warna. Semuanya berjalan di perangkat Anda, jadi gambar Anda tidak pernah meninggalkan browser.',
+    title: 'Tool Watermark Gambar Gratis — Watermark KTP, Foto & Dokumen',
+    description: 'Tool watermark gambar daring gratis untuk menstempel teks khusus pada foto, KTP, SIM, atau dokumen apa pun — 100% privat. Gambar Anda diproses di browser dan tidak pernah diunggah.',
+    intro: 'Tool watermark gambar gratis ini memungkinkan Anda menjatuhkan atau menempelkan gambar dan menstempel teks Anda sendiri di atasnya — diagonal, berulang, atau di sudut — dengan kontrol atas ukuran, opasitas, dan warna. Cocok untuk watermark KTP, SIM, paspor, dan foto lainnya. Semuanya berjalan di perangkat Anda, jadi gambar Anda tidak pernah meninggalkan browser.',
     howTo: [
       'Jatuhkan atau tempelkan gambar, atau klik untuk menelusurinya.',
       'Ketik teks watermark Anda dan pilih tata letak: Diagonal, Tiled, atau Corner.',
@@ -2347,6 +2348,7 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Tata letak watermark apa saja yang bisa saya pilih?', a: 'Tiga: Diagonal melintang di gambar, Tiled berulang di seluruh gambar, atau satu stempel Corner di kanan bawah.' },
       { q: 'Bisakah saya mengontrol tampilan watermark?', a: 'Ya. Anda dapat mengatur teks, memilih warna apa pun, dan menggunakan penggeser untuk menyesuaikan skala dan opasitasnya agar sesamar atau setebal yang Anda inginkan.' },
       { q: 'Dalam format apa gambar berwatermark disimpan?', a: 'Unduhan mempertahankan format asli gambar Anda jika memungkinkan, jadi JPEG tetap JPEG dan PNG tetap PNG.' },
+      { q: 'Bisakah tool ini digunakan untuk watermark KTP?', a: 'Ya. Unggah scan atau foto KTP, SIM, paspor, atau dokumen identitas lainnya, ketik teks watermark (misalnya "COPY" atau nama Anda), pilih tata letak Diagonal atau Tiled, atur opasitasnya, lalu unduh hasilnya. Semua diproses di perangkat Anda — tidak ada yang diunggah.' },
     ],
   },
   'image-stamp': {
