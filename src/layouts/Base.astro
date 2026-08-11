@@ -157,6 +157,22 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
       document.addEventListener('astro:page-load', revealEmails);
     </script>
 
+    <!-- Google Ads tag: fires immediately on production hostnames only. -->
+    <script is:inline define:vars={{ gaHosts: GA_ALLOWED_HOSTS }}>
+      if (gaHosts.indexOf(location.hostname) !== -1) {
+        (function () {
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18373579775';
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+          window.gtag('js', new Date());
+          window.gtag('config', 'AW-18373579775');
+        })();
+      }
+    </script>
+
     <!-- Google Analytics (GDPR): loads only when configured AND consent granted. -->
     <script is:inline define:vars={{ gaId: GA_ID, gaHosts: GA_ALLOWED_HOSTS }}>
       (function () {
