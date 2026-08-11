@@ -169,6 +169,12 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
           window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
           window.gtag('js', new Date());
           window.gtag('config', 'AW-18373579775');
+          // Page-view conversion — fire on first load and on every SPA navigation.
+          function fireConversion() {
+            window.gtag('event', 'conversion', { send_to: 'AW-18373579775/4BVPCOXG99wcEP-nmrlE' });
+          }
+          fireConversion();
+          document.addEventListener('astro:page-load', fireConversion);
         })();
       }
     </script>
