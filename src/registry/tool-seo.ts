@@ -59,6 +59,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it show capture groups?', a: 'Yes. Each match lists its numbered capture groups ($1, $2, …) and any named groups, along with the match position in the text.' },
     ],
   },
+  'qris-decoder': {
+    title: 'Free QRIS Decoder — Read Merchant, NMID, City & Amount',
+    description: 'Decode an Indonesian QRIS (EMVCo) code online: paste the payload or drop a QR image to see the merchant name, NMID, city, amount, MCC and CRC. Runs in your browser — nothing is uploaded.',
+    intro: 'This free QRIS decoder reads the EMVCo QR Code payload behind an Indonesian QRIS and shows what it contains: the merchant name, National Merchant ID (NMID), merchant city, transaction amount, category (MCC), currency, whether it is a static or dynamic code, and whether the CRC checksum is valid. Paste the payload text or drop a QR image — decoding happens entirely on your device, so the code is never uploaded.',
+    howTo: [
+      'Paste the QRIS payload (it starts with 00020101…), or drop/paste a QR image to decode it.',
+      'Read the summary: merchant name, NMID, city, amount, category and code type.',
+      'Check the CRC badge to confirm the code’s checksum is valid.',
+      'Expand the full TLV breakdown to inspect every EMVCo tag and nested field.',
+    ],
+    faqs: [
+      { q: 'What is NMID in a QRIS code?', a: 'NMID (National Merchant ID) is the unique national identifier assigned to a QRIS merchant. It lives inside the merchant-account template of the EMVCo payload, and this tool extracts and labels it for you.' },
+      { q: 'Is my QRIS code uploaded anywhere?', a: 'No. Both the QR image decoding and the payload parsing run entirely in your browser, so your QRIS code never leaves your device.' },
+      { q: 'What does the CRC check tell me?', a: 'QRIS codes end with a CRC-16 checksum. The tool recomputes it from the payload and compares — a valid CRC means the code was read correctly and has not been altered.' },
+      { q: 'Can it read the QR from a photo or screenshot?', a: 'Yes. Drop or paste a QRIS QR image and the tool decodes it to the payload first, then parses the fields — no need to type the string by hand.' },
+      { q: 'What is the difference between a static and dynamic QRIS?', a: 'A static QRIS (initiation method 11) has no fixed amount — the payer types it in. A dynamic QRIS (12) encodes a specific amount, usually generated per transaction. The decoder shows which one you have.' },
+    ],
+  },
   'compare-lists': {
     title: 'Compare Two Lists — Merge, Dedupe & Diff Lines',
     description: 'Compare two lists of lines online: merge and remove duplicates, subtract one list from another, or find common lines. Free, private and instant — nothing is uploaded.',
@@ -1618,6 +1636,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah pola atau data uji saya dikirim ke server?', a: 'Tidak. Semuanya berjalan lokal di browser Anda, jadi aman untuk menguji log, email, atau teks sensitif lainnya.' },
       { q: 'Apa arti flag-nya?', a: 'g = global (cari semua), i = abaikan huruf besar/kecil, m = multiline (^ dan $ per baris), s = dotall (titik mencocokkan baris baru), u = unicode, y = sticky. Aktifkan dan sorotan langsung diperbarui.' },
       { q: 'Apakah menampilkan capture group?', a: 'Ya. Setiap kecocokan menampilkan capture group bernomor ($1, $2, …) dan grup bernama, beserta posisi kecocokan dalam teks.' },
+    ],
+  },
+  'qris-decoder': {
+    title: 'Tool Decode QRIS Gratis — Baca Merchant, NMID, Kota & Nominal',
+    description: 'Decode kode QRIS (EMVCo) Indonesia online: tempel payload atau letakkan gambar QR untuk melihat nama merchant, NMID, kota, nominal, MCC, dan CRC. Berjalan di browser Anda — tidak ada yang diunggah.',
+    intro: 'Tool decode QRIS gratis ini membaca payload EMVCo QR Code di balik QRIS Indonesia dan menampilkan isinya: nama merchant, National Merchant ID (NMID), kota merchant, nominal transaksi, kategori (MCC), mata uang, apakah kode bersifat statis atau dinamis, serta apakah checksum CRC valid. Tempel teks payload atau letakkan gambar QR — proses decode terjadi sepenuhnya di perangkat Anda, jadi kode tidak pernah diunggah.',
+    howTo: [
+      'Tempel payload QRIS (diawali 00020101…), atau letakkan/tempel gambar QR untuk mendekodenya.',
+      'Baca ringkasan: nama merchant, NMID, kota, nominal, kategori, dan tipe kode.',
+      'Periksa badge CRC untuk memastikan checksum kode valid.',
+      'Buka rincian TLV lengkap untuk memeriksa setiap tag EMVCo dan field bersarang.',
+    ],
+    faqs: [
+      { q: 'Apa itu NMID pada kode QRIS?', a: 'NMID (National Merchant ID) adalah identitas nasional unik yang diberikan kepada merchant QRIS. NMID berada di dalam template merchant-account pada payload EMVCo, dan tool ini mengekstrak serta memberi labelnya untuk Anda.' },
+      { q: 'Apakah kode QRIS saya diunggah?', a: 'Tidak. Baik decode gambar QR maupun parsing payload berjalan sepenuhnya di browser Anda, jadi kode QRIS Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Apa arti pemeriksaan CRC?', a: 'Kode QRIS diakhiri checksum CRC-16. Tool menghitung ulang dari payload lalu membandingkannya — CRC yang valid berarti kode terbaca dengan benar dan tidak diubah.' },
+      { q: 'Bisakah membaca QR dari foto atau tangkapan layar?', a: 'Ya. Letakkan atau tempel gambar QR QRIS dan tool akan mendekodenya menjadi payload terlebih dahulu, lalu mem-parsing field-nya — tanpa perlu mengetik string secara manual.' },
+      { q: 'Apa beda QRIS statis dan dinamis?', a: 'QRIS statis (metode inisiasi 11) tidak memiliki nominal tetap — pembayar mengetiknya sendiri. QRIS dinamis (12) memuat nominal tertentu, biasanya dibuat per transaksi. Decoder menunjukkan tipe yang Anda miliki.' },
     ],
   },
   'compare-lists': {
