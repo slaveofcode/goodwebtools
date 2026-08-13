@@ -41,6 +41,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it validate or run my query?', a: 'No. It only formats the text for readability; it does not execute, validate or connect to any database.' },
     ],
   },
+  'regex-tester': {
+    title: 'Free Regex Tester — Test Regular Expressions Online',
+    description: 'A free online regex tester with live match highlighting, capture groups and flags. Get the equivalent code for JavaScript, Python, PHP, Java, Go, C# and Ruby. Runs in your browser — nothing is uploaded.',
+    intro: 'This free regex tester lets you build and debug regular expressions against your own sample text, with matches highlighted live as you type. Inspect numbered and named capture groups, toggle flags, and copy the equivalent code for the language you actually use — JavaScript, Python, PHP (PCRE), Java, Go, C#/.NET or Ruby — with warnings when a pattern behaves differently in that flavor. Matching runs entirely on your device.',
+    howTo: [
+      'Type your regular expression and toggle the flags you need (g, i, m, s, u, y).',
+      'Paste the text you want to test against — matches highlight instantly.',
+      'Check the match list for capture groups, named groups and positions.',
+      'Pick a language to copy ready-to-use code, and read the flavor notes for cross-language gotchas.',
+    ],
+    faqs: [
+      { q: 'Which regex engine does the tester use?', a: 'Matching runs on your browser\'s native JavaScript regular-expression engine, so results are instant and your data never leaves your device. For other languages we generate the equivalent code and warn about syntax that behaves differently.' },
+      { q: 'Does it support Python, Java, Go and PHP regex?', a: 'Yes — pick your language to get an idiomatic code snippet (Python re, PHP PCRE, Java Pattern, Go regexp, C# Regex, Ruby) with the flags mapped correctly, plus notes on differences like Go\'s lack of lookbehind or Python\'s (?P<name>) group syntax.' },
+      { q: 'Are my patterns or test data sent to a server?', a: 'No. Everything runs locally in your browser, so it is safe to test against private logs, emails or other sensitive text.' },
+      { q: 'What do the flags mean?', a: 'g = global (find all), i = ignore case, m = multiline (^ and $ per line), s = dotall (dot matches newlines), u = unicode, y = sticky. Toggle them and the highlighting updates instantly.' },
+      { q: 'Does it show capture groups?', a: 'Yes. Each match lists its numbered capture groups ($1, $2, …) and any named groups, along with the match position in the text.' },
+    ],
+  },
   'compare-lists': {
     title: 'Compare Two Lists — Merge, Dedupe & Diff Lines',
     description: 'Compare two lists of lines online: merge and remove duplicates, subtract one list from another, or find common lines. Free, private and instant — nothing is uploaded.',
@@ -1564,6 +1582,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Dialek SQL apa saja yang didukung?', a: 'Standard SQL ditambah PostgreSQL, MySQL, MariaDB, SQLite, SQL Server (T-SQL), Oracle (PL/SQL), BigQuery, Snowflake, Redshift, Spark, DuckDB, ClickHouse, Db2, Hive, dan Trino.' },
       { q: 'Bisakah membuat kata kunci huruf besar atau kecil?', a: 'Ya — pilih BESAR untuk mengapitalkan kata kunci seperti SELECT dan FROM, kecil untuk membuatnya huruf kecil, atau Biarkan agar tetap seperti aslinya.' },
       { q: 'Apakah memvalidasi atau menjalankan kueri saya?', a: 'Tidak. Ini hanya memformat teks agar mudah dibaca; tidak menjalankan, memvalidasi, atau terhubung ke basis data apa pun.' },
+    ],
+  },
+  'regex-tester': {
+    title: 'Tool Regex Tester Gratis — Uji Regular Expression Online',
+    description: 'Tool regex tester online gratis dengan sorotan kecocokan langsung, capture group, dan flag. Dapatkan kode setara untuk JavaScript, Python, PHP, Java, Go, C#, dan Ruby. Berjalan di browser Anda — tidak ada yang diunggah.',
+    intro: 'Tool regex tester gratis ini membantu Anda menyusun dan men-debug ekspresi reguler terhadap teks contoh Anda sendiri, dengan kecocokan disorot langsung saat Anda mengetik. Periksa capture group bernomor dan bernama, aktifkan flag, dan salin kode setara untuk bahasa yang Anda pakai — JavaScript, Python, PHP (PCRE), Java, Go, C#/.NET, atau Ruby — lengkap dengan peringatan bila sebuah pola berperilaku berbeda di flavor tersebut. Pencocokan berjalan sepenuhnya di perangkat Anda.',
+    howTo: [
+      'Ketik ekspresi reguler Anda dan aktifkan flag yang diperlukan (g, i, m, s, u, y).',
+      'Tempel teks yang ingin diuji — kecocokan langsung tersorot.',
+      'Lihat daftar kecocokan untuk capture group, grup bernama, dan posisinya.',
+      'Pilih bahasa untuk menyalin kode siap pakai, dan baca catatan flavor untuk perbedaan antarbahasa.',
+    ],
+    faqs: [
+      { q: 'Mesin regex apa yang dipakai tool ini?', a: 'Pencocokan berjalan pada mesin ekspresi reguler JavaScript bawaan browser Anda, jadi hasilnya instan dan data Anda tidak pernah meninggalkan perangkat. Untuk bahasa lain, kami menghasilkan kode setara dan memperingatkan sintaks yang berperilaku berbeda.' },
+      { q: 'Apakah mendukung regex Python, Java, Go, dan PHP?', a: 'Ya — pilih bahasa Anda untuk mendapatkan snippet kode idiomatik (Python re, PHP PCRE, Java Pattern, Go regexp, C# Regex, Ruby) dengan flag yang dipetakan dengan benar, ditambah catatan perbedaan seperti Go yang tidak mendukung lookbehind atau sintaks grup (?P<name>) di Python.' },
+      { q: 'Apakah pola atau data uji saya dikirim ke server?', a: 'Tidak. Semuanya berjalan lokal di browser Anda, jadi aman untuk menguji log, email, atau teks sensitif lainnya.' },
+      { q: 'Apa arti flag-nya?', a: 'g = global (cari semua), i = abaikan huruf besar/kecil, m = multiline (^ dan $ per baris), s = dotall (titik mencocokkan baris baru), u = unicode, y = sticky. Aktifkan dan sorotan langsung diperbarui.' },
+      { q: 'Apakah menampilkan capture group?', a: 'Ya. Setiap kecocokan menampilkan capture group bernomor ($1, $2, …) dan grup bernama, beserta posisi kecocokan dalam teks.' },
     ],
   },
   'compare-lists': {
