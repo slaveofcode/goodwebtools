@@ -707,6 +707,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does the converter work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded it keeps converting images with no internet connection.' },
     ],
   },
+  'image-heic-to-jpg': {
+    title: 'Free HEIC to JPG Converter — Open iPhone Photos Anywhere',
+    description: 'Convert Apple HEIC/HEIF photos to JPG right in your browser. Batch-convert a whole camera roll and download as a ZIP. Nothing is uploaded — everything runs on your device.',
+    intro: 'Every iPhone shoots HEIC by default, and most Windows apps, websites and older software still cannot open it. This free HEIC to JPG converter decodes your .heic and .heif photos with libheif compiled to WebAssembly and re-encodes them as universally-supported JPG. Drop a whole batch, pick a quality, and download each JPG or all of them as one ZIP — your photos never leave your browser.',
+    howTo: [
+      'Drop one or many .heic / .heif photos, or click to browse for them.',
+      'Drag the JPG quality slider to balance file size against sharpness (92% is a good default).',
+      'Click Convert — every photo is decoded and re-encoded on your device.',
+      'Download each JPG individually, or grab the whole batch as a single ZIP.',
+    ],
+    faqs: [
+      { q: 'What is a HEIC file and why can\'t I open it?', a: 'HEIC (High Efficiency Image Container) is the format iPhones and iPads use to store photos more compactly than JPG. Many Windows programs, websites and older apps do not support it, which is why converting to JPG makes the photo open everywhere.' },
+      { q: 'Are my photos uploaded to a server?', a: 'No. Decoding and conversion run entirely in your browser using libheif compiled to WebAssembly, so your photos stay on your device and are never uploaded.' },
+      { q: 'Can I convert many HEIC photos at once?', a: 'Yes. Drop as many .heic or .heif files as you like, convert them in one go, and download them individually or all together as a single ZIP archive.' },
+      { q: 'Does it work on Windows, Mac, and Android?', a: 'Yes. It runs in any modern browser on any operating system — no iPhone or Apple software required to open the photos.' },
+      { q: 'Will converting lose photo quality?', a: 'JPG is a lossy format, but at a high quality setting the difference is hard to see. Use the quality slider to keep more detail, or lower it for smaller files.' },
+    ],
+  },
   'image-viewer': {
     title: 'Free Image Viewer Tool — Dimensions & EXIF',
     description: 'A free online tool to view any image and read its dimensions, type, EXIF orientation, GPS and ICO sizes. Runs in your browser — images are never uploaded.',
@@ -2212,6 +2230,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Ke format apa saja saya bisa mengonversi?', a: 'PNG, JPEG, WebP, GIF, favicon ICO multi-ukuran (16, 32, dan 48px), dan SVG yang menyematkan gambar. AVIF juga ditawarkan bila browser Anda dapat mengodenya.' },
       { q: 'Apa fungsi penggeser kualitas?', a: 'Untuk format lossy seperti JPEG, WebP, dan AVIF, penggeser mengatur kompresi dari 10% hingga 100% — lebih rendah menghasilkan berkas lebih kecil, lebih tinggi mempertahankan lebih banyak detail. PNG bersifat lossless dan mengabaikannya.' },
       { q: 'Apakah konverter bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat, konversi gambar tetap berjalan tanpa koneksi internet.' },
+    ],
+  },
+  'image-heic-to-jpg': {
+    title: 'Konverter HEIC ke JPG Gratis — Buka Foto iPhone di Mana Saja',
+    description: 'Konversi foto HEIC/HEIF Apple ke JPG langsung di browser Anda. Konversi sekaligus satu album kamera dan unduh sebagai ZIP. Tidak ada yang diunggah — semuanya berjalan di perangkat Anda.',
+    intro: 'Setiap iPhone memotret dalam format HEIC secara bawaan, dan sebagian besar aplikasi Windows, situs web, serta perangkat lunak lama masih belum bisa membukanya. Tool konverter HEIC ke JPG gratis ini mendekode foto .heic dan .heif Anda dengan libheif yang dikompilasi ke WebAssembly, lalu mengodenya ulang sebagai JPG yang didukung di mana saja. Jatuhkan banyak file sekaligus, pilih kualitas, dan unduh tiap JPG atau semuanya sebagai satu ZIP — foto Anda tidak pernah meninggalkan browser.',
+    howTo: [
+      'Jatuhkan satu atau banyak foto .heic / .heif, atau klik untuk menjelajah.',
+      'Geser penggeser kualitas JPG untuk menyeimbangkan ukuran berkas dan ketajaman (92% adalah default yang baik).',
+      'Klik Convert — setiap foto didekode dan dikodekan ulang di perangkat Anda.',
+      'Unduh tiap JPG satu per satu, atau ambil seluruh batch sebagai satu file ZIP.',
+    ],
+    faqs: [
+      { q: 'Apa itu file HEIC dan mengapa saya tidak bisa membukanya?', a: 'HEIC (High Efficiency Image Container) adalah format yang dipakai iPhone dan iPad untuk menyimpan foto lebih ringkas daripada JPG. Banyak program Windows, situs web, dan aplikasi lama tidak mendukungnya, sehingga mengonversi ke JPG membuat foto bisa dibuka di mana saja.' },
+      { q: 'Apakah foto saya diunggah ke server?', a: 'Tidak. Pendekodean dan konversi berjalan sepenuhnya di browser Anda menggunakan libheif yang dikompilasi ke WebAssembly, jadi foto Anda tetap di perangkat dan tidak pernah diunggah.' },
+      { q: 'Bisakah saya mengonversi banyak foto HEIC sekaligus?', a: 'Ya. Jatuhkan sebanyak mungkin file .heic atau .heif, konversi sekaligus, dan unduh satu per satu atau semuanya sebagai satu arsip ZIP.' },
+      { q: 'Apakah bekerja di Windows, Mac, dan Android?', a: 'Ya. Berjalan di browser modern mana pun di sistem operasi apa pun — tanpa perlu iPhone atau perangkat lunak Apple untuk membuka foto.' },
+      { q: 'Apakah konversi menurunkan kualitas foto?', a: 'JPG adalah format lossy, tetapi pada pengaturan kualitas tinggi perbedaannya sulit terlihat. Gunakan penggeser kualitas untuk mempertahankan lebih banyak detail, atau turunkan untuk berkas yang lebih kecil.' },
     ],
   },
   'image-viewer': {

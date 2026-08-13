@@ -477,6 +477,17 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
+    id: 'image-heic-to-jpg',
+    name: 'HEIC to JPG',
+    category: 'Image',
+    route: '/tools/image-heic-to-jpg',
+    keywords: ['heic', 'heif', 'jpg', 'jpeg', 'convert', 'iphone', 'photo', 'apple'],
+    icon: ImageDown,
+    summary: 'Convert iPhone HEIC/HEIF photos to JPG',
+    load: () => import('@/islands/image/HeicToJpg'),
+    status: 'beta'
+  },
+  {
     id: 'image-viewer',
     name: 'Image Viewer & Metadata',
     category: 'Image',
