@@ -86,6 +86,7 @@
     "fflate": "^0.8.3",
     "gifenc": "^1.0.3",
     "hash-wasm": "^4.12.0",
+    "heic-to": "^1.5.2",
     "highlight.js": "^11.11.1",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
