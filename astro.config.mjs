@@ -133,6 +133,8 @@ export default defineConfig({
           '**/epubjs*.js',
           '**/jszip*.js',
           '**/html2canvas*.js',
+          '**/heic-to*.js',
+          '**/libheif*.js',
           'og/*.png',
         ],
         runtimeCaching: [
