@@ -725,6 +725,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does the converter work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded it keeps converting images with no internet connection.' },
     ],
   },
+  'pas-foto': {
+    title: 'Free Pas Foto Maker — 2x3, 3x4 & 4x6 ID Photos to Print',
+    description: 'Make a print-ready pas foto (ID photo) online: remove the background, set a red, blue or white color, choose 2x3, 3x4 or 4x6 cm, and download a PDF tiled for printing. Runs in your browser — nothing is uploaded.',
+    intro: 'This free pas foto maker turns a normal portrait into a print-ready ID photo. It removes the background on your device, replaces it with the red, blue or white you need, frames the photo to a standard 2x3, 3x4 or 4x6 cm size, and lays out multiple copies on a 4R photo sheet or A4 page as a PDF you can print at a photo shop or at home. Your photo never leaves your browser.',
+    howTo: [
+      'Drop or paste a clear, front-facing portrait photo.',
+      'Keep “Remove background” on and pick a background color — red, blue, white or custom.',
+      'Choose the size (2x3, 3x4 or 4x6 cm) and use zoom and position to frame the face.',
+      'Pick a print sheet (4R or A4) and click Generate — download the PDF and print it.',
+    ],
+    faqs: [
+      { q: 'What are the standard pas foto sizes?', a: 'The common Indonesian sizes are 2x3, 3x4 and 4x6 centimetres. This tool renders each at 300 DPI so the print is sharp, and tiles as many copies as fit on the sheet.' },
+      { q: 'Can I set a red or blue background?', a: 'Yes. The background is removed automatically and replaced with red, blue or white presets, or any custom color you pick — the usual requirement for ID and document photos.' },
+      { q: 'Are my photos uploaded anywhere?', a: 'No. Background removal and layout run entirely in your browser using on-device models, so your photo stays private and is never uploaded.' },
+      { q: 'How do I print it?', a: 'Download the generated PDF and print it at 100% scale (no “fit to page”) on 4R photo paper or A4. The thin gray borders are cut guides for trimming each photo.' },
+      { q: 'What if the background removal looks off?', a: 'Use a clear, well-lit, front-facing photo with the subject separated from the background. You can also turn off background removal to keep the original and just crop and lay it out.' },
+    ],
+  },
   'image-heic-to-jpg': {
     title: 'Free HEIC to JPG Converter — Open iPhone Photos Anywhere',
     description: 'Convert Apple HEIC/HEIF photos to JPG right in your browser. Batch-convert a whole camera roll and download as a ZIP. Nothing is uploaded — everything runs on your device.',
@@ -2266,6 +2284,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Ke format apa saja saya bisa mengonversi?', a: 'PNG, JPEG, WebP, GIF, favicon ICO multi-ukuran (16, 32, dan 48px), dan SVG yang menyematkan gambar. AVIF juga ditawarkan bila browser Anda dapat mengodenya.' },
       { q: 'Apa fungsi penggeser kualitas?', a: 'Untuk format lossy seperti JPEG, WebP, dan AVIF, penggeser mengatur kompresi dari 10% hingga 100% — lebih rendah menghasilkan berkas lebih kecil, lebih tinggi mempertahankan lebih banyak detail. PNG bersifat lossless dan mengabaikannya.' },
       { q: 'Apakah konverter bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat, konversi gambar tetap berjalan tanpa koneksi internet.' },
+    ],
+  },
+  'pas-foto': {
+    title: 'Tool Pas Foto Gratis — Buat Pas Foto 2x3, 3x4 & 4x6 Siap Cetak',
+    description: 'Buat pas foto siap cetak online: hapus latar belakang, atur warna merah, biru, atau putih, pilih ukuran 2x3, 3x4, atau 4x6 cm, dan unduh PDF yang sudah disusun untuk dicetak. Berjalan di browser Anda — tidak ada yang diunggah.',
+    intro: 'Tool pas foto gratis ini mengubah foto potret biasa menjadi pas foto siap cetak. Latar belakang dihapus di perangkat Anda, diganti dengan warna merah, biru, atau putih sesuai kebutuhan, foto dibingkai ke ukuran standar 2x3, 3x4, atau 4x6 cm, lalu beberapa salinan disusun dalam satu lembar 4R atau A4 sebagai PDF yang bisa Anda cetak di studio foto atau di rumah. Foto Anda tidak pernah meninggalkan browser.',
+    howTo: [
+      'Letakkan atau tempel foto potret menghadap depan yang jelas.',
+      'Biarkan “Hapus latar belakang” aktif dan pilih warna latar — merah, biru, putih, atau kustom.',
+      'Pilih ukuran (2x3, 3x4, atau 4x6 cm) lalu gunakan zoom dan posisi untuk membingkai wajah.',
+      'Pilih lembar cetak (4R atau A4) dan klik Buat — unduh PDF-nya lalu cetak.',
+    ],
+    faqs: [
+      { q: 'Apa saja ukuran pas foto standar?', a: 'Ukuran umum di Indonesia adalah 2x3, 3x4, dan 4x6 sentimeter. Tool ini merender setiap ukuran pada 300 DPI agar hasil cetak tajam, dan menyusun sebanyak mungkin salinan yang muat dalam lembar.' },
+      { q: 'Bisakah mengatur latar merah atau biru?', a: 'Ya. Latar belakang dihapus otomatis dan diganti dengan preset merah, biru, atau putih, atau warna kustom pilihan Anda — sesuai kebutuhan umum foto identitas dan dokumen.' },
+      { q: 'Apakah foto saya diunggah ke suatu tempat?', a: 'Tidak. Penghapusan latar belakang dan penyusunan berjalan sepenuhnya di browser Anda menggunakan model di perangkat, jadi foto Anda tetap privat dan tidak pernah diunggah.' },
+      { q: 'Bagaimana cara mencetaknya?', a: 'Unduh PDF yang dibuat lalu cetak pada skala 100% (tanpa “fit to page”) di kertas foto 4R atau A4. Garis abu-abu tipis adalah panduan potong untuk memotong tiap foto.' },
+      { q: 'Bagaimana jika penghapusan latar kurang rapi?', a: 'Gunakan foto yang jelas, terang, menghadap depan, dengan subjek terpisah dari latar. Anda juga bisa mematikan penghapusan latar untuk mempertahankan foto asli dan hanya memotong serta menyusunnya.' },
     ],
   },
   'image-heic-to-jpg': {
