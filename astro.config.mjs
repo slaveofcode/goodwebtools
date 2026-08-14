@@ -137,6 +137,7 @@ export default defineConfig({
           '**/libheif*.js',
           '**/terser*.js',
           '**/csso*.js',
+          '**/zxing*.js',
           'og/*.png',
         ],
         runtimeCaching: [
