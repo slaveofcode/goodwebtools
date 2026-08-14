@@ -48,6 +48,35 @@ export function cmToPt(cm: number): number {
   return cm * CM_TO_PT;
 }
 
+/**
+ * Framing guide proportions for an ID/passport-style photo, as fractions of
+ * the frame height (crown/chin) and width (head oval). Roughly the ICAO/
+ * passport convention: the head fills most of the frame, with a little
+ * headroom above the crown. Guides are advisory — shown on the preview only.
+ */
+export const HEAD_GUIDE = { crown: 0.08, chin: 0.85, widthRatio: 0.52 };
+
+/** Guide geometry (crown/chin lines + centered head oval) for a W×H frame. */
+export function headGuideBox(w: number, h: number): {
+  crownY: number;
+  chinY: number;
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+} {
+  const crownY = HEAD_GUIDE.crown * h;
+  const chinY = HEAD_GUIDE.chin * h;
+  return {
+    crownY,
+    chinY,
+    cx: w / 2,
+    cy: (crownY + chinY) / 2,
+    rx: (HEAD_GUIDE.widthRatio * w) / 2,
+    ry: (chinY - crownY) / 2,
+  };
+}
+
 /** Pixel dimensions of one photo at the given print DPI. */
 export function photoPx(wCm: number, hCm: number, dpi: number = DPI): { w: number; h: number } {
   return {

@@ -13,6 +13,7 @@ import {
   cmToPt,
   photoPx,
   sheetLayout,
+  headGuideBox,
   type PhotoSize,
   type Sheet,
 } from '@/tools/image/pas-foto.lib';
@@ -20,6 +21,8 @@ import type { Lang } from '@/i18n/config';
 
 const GAP_CM = 0.2;
 const MARGIN_CM = 0.3;
+// Framing-guide geometry in a 0–100 viewBox (drawn only on the preview).
+const GUIDE = headGuideBox(100, 100);
 const BG_PRESETS = [
   { color: '#e02424', label: 'Merah' },
   { color: '#1e50e0', label: 'Biru' },
@@ -45,6 +48,8 @@ const TR: Record<Lang, {
   genFailed: string;
   copies: (n: number) => string;
   reset: string;
+  guide: string;
+  guideHint: string;
 }> = {
   en: {
     intro: 'Make a print-ready ID photo (pas foto): remove the background, pick a color and size, and download a PDF that tiles copies onto a photo sheet — ready to print. Everything runs in your browser.',
@@ -65,6 +70,8 @@ const TR: Record<Lang, {
     genFailed: 'Could not generate the PDF.',
     copies: (n) => `${n} copies per sheet`,
     reset: 'Clear',
+    guide: 'Show framing guide',
+    guideHint: 'Align the crown and chin to the dashed lines for a passport-style crop.',
   },
   id: {
     intro: 'Buat pas foto siap cetak: hapus latar belakang, pilih warna dan ukuran, lalu unduh PDF berisi banyak salinan dalam satu lembar foto — siap dicetak. Semuanya berjalan di browser Anda.',
@@ -85,6 +92,8 @@ const TR: Record<Lang, {
     genFailed: 'Tidak dapat membuat PDF.',
     copies: (n) => `${n} salinan per lembar`,
     reset: 'Bersihkan',
+    guide: 'Tampilkan panduan bingkai',
+    guideHint: 'Sejajarkan puncak kepala dan dagu ke garis putus-putus untuk hasil gaya paspor.',
   },
 };
 
@@ -98,6 +107,7 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
   const [sheet, setSheet] = useState<Sheet>(SHEETS[0]); // 4R
   const [zoom, setZoom] = useState(1);
   const [offsetY, setOffsetY] = useState(0); // -0.5 .. 0.5 of frame height
+  const [showGuide, setShowGuide] = useState(true);
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState('');
   const [percent, setPercent] = useState(0);
@@ -276,8 +286,34 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
           {/* Preview */}
           <div className="space-y-2">
             <div className="flex justify-center border-2 border-border bg-muted p-3">
-              <canvas ref={previewRef} className="h-auto max-h-[60vh] w-auto border border-border" />
+              <div className="relative inline-block border border-border">
+                <canvas ref={previewRef} className="block h-auto max-h-[60vh] w-auto" />
+                {showGuide && (
+                  <svg
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    className="pointer-events-none absolute inset-0 h-full w-full"
+                  >
+                    {/* Dark halo behind, light line on top → visible on any background. */}
+                    <g fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={1.4}>
+                      <line x1={0} y1={GUIDE.crownY} x2={100} y2={GUIDE.crownY} />
+                      <line x1={0} y1={GUIDE.chinY} x2={100} y2={GUIDE.chinY} />
+                      <ellipse cx={GUIDE.cx} cy={GUIDE.cy} rx={GUIDE.rx} ry={GUIDE.ry} />
+                    </g>
+                    <g fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth={0.5} strokeDasharray="2 2">
+                      <line x1={0} y1={GUIDE.crownY} x2={100} y2={GUIDE.crownY} />
+                      <line x1={0} y1={GUIDE.chinY} x2={100} y2={GUIDE.chinY} />
+                      <ellipse cx={GUIDE.cx} cy={GUIDE.cy} rx={GUIDE.rx} ry={GUIDE.ry} />
+                    </g>
+                  </svg>
+                )}
+              </div>
             </div>
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" checked={showGuide} onChange={e => setShowGuide(e.target.checked)} className="h-4 w-4 accent-accent" />
+              {t.guide}
+            </label>
+            {showGuide && <p className="text-xs text-muted-foreground">{t.guideHint}</p>}
             <label className="block space-y-1 text-sm">
               <span className="flex justify-between font-semibold"><span>{t.zoom}</span><span>{zoom.toFixed(2)}×</span></span>
               <input type="range" min={0.5} max={2} step={0.01} value={zoom}

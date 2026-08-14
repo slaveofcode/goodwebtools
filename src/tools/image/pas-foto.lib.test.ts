@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cmToPt, photoPx, sheetLayout, PHOTO_SIZES, SHEETS } from './pas-foto.lib';
+import { cmToPt, photoPx, sheetLayout, headGuideBox, PHOTO_SIZES, SHEETS } from './pas-foto.lib';
 
 describe('cmToPt', () => {
   it('converts cm to PDF points', () => {
@@ -47,6 +47,24 @@ describe('sheetLayout', () => {
     const l = sheetLayout(30, 40, 10.16, 15.24, 0.2, 0.3);
     expect(l.count).toBe(0);
     expect(l.positions).toHaveLength(0);
+  });
+});
+
+describe('headGuideBox', () => {
+  it('places crown, chin and a centered head oval for a 100x100 frame', () => {
+    const g = headGuideBox(100, 100);
+    expect(g.crownY).toBeCloseTo(8, 5);
+    expect(g.chinY).toBeCloseTo(85, 5);
+    expect(g.cx).toBeCloseTo(50, 5);
+    expect(g.rx).toBeCloseTo(26, 5); // widthRatio 0.52 → diameter 52 → radius 26
+    expect(g.ry).toBeCloseTo(38.5, 5); // (85-8)/2
+    expect(g.cy).toBeCloseTo(46.5, 5); // (8+85)/2
+  });
+
+  it('scales with the frame size', () => {
+    const g = headGuideBox(300, 400);
+    expect(g.crownY).toBeCloseTo(32, 5); // 0.08 * 400
+    expect(g.cx).toBeCloseTo(150, 5);
   });
 });
 
