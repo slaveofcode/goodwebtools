@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -287,6 +287,39 @@ export const tools: ToolDef[] = [
     icon: Presentation,
     summary: 'Open and read PowerPoint slides in your browser',
     load: () => import('@/islands/documents/PptxViewer'),
+    status: 'beta'
+  },
+  {
+    id: 'nik-decoder',
+    name: 'NIK / KTP Decoder',
+    category: 'Dev',
+    route: '/tools/nik-decoder',
+    keywords: ['nik', 'ktp', 'decode', 'validate', 'cek nik', 'indonesia', 'identity', 'birthdate', 'province'],
+    icon: SquareUser,
+    summary: 'Validate an Indonesian NIK and decode province, birth date & gender',
+    load: () => import('@/islands/dev/NikDecoder'),
+    status: 'beta'
+  },
+  {
+    id: 'terbilang',
+    name: 'Terbilang (Number to Words)',
+    category: 'Dev',
+    route: '/tools/terbilang',
+    keywords: ['terbilang', 'number to words', 'angka', 'kwitansi', 'invoice', 'rupiah', 'spell', 'indonesia'],
+    icon: WholeWord,
+    summary: 'Convert numbers to Indonesian words for invoices & cheques',
+    load: () => import('@/islands/dev/Terbilang'),
+    status: 'beta'
+  },
+  {
+    id: 'ppn-pph-calculator',
+    name: 'PPN & PPh Calculator',
+    category: 'Dev',
+    route: '/tools/ppn-pph-calculator',
+    keywords: ['ppn', 'pph', 'pajak', 'vat', 'tax', 'invoice', 'faktur', 'withholding', 'indonesia'],
+    icon: Percent,
+    summary: 'Calculate Indonesian PPN (VAT) and PPh withholding on invoices',
+    load: () => import('@/islands/dev/TaxCalculator'),
     status: 'beta'
   },
   {
