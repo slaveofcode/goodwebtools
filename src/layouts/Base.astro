@@ -169,8 +169,15 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
           window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
           window.gtag('js', new Date());
           window.gtag('config', 'AW-18373579775');
-          // Page-view conversion — fire on first load and on every SPA navigation.
+          // Page-view conversion — count once per visit. The listener stays on
+          // astro:page-load so a first navigation still fires, but the
+          // sessionStorage flag stops a single visitor browsing multiple tools
+          // from registering a conversion per SPA route change.
           function fireConversion() {
+            try {
+              if (sessionStorage.getItem('gwt-ads-conv')) return;
+              sessionStorage.setItem('gwt-ads-conv', '1');
+            } catch (e) { /* private mode: fall through and fire */ }
             window.gtag('event', 'conversion', { send_to: 'AW-18373579775/4BVPCOXG99wcEP-nmrlE' });
           }
           fireConversion();
