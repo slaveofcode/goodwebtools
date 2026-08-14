@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -210,6 +210,83 @@ export const tools: ToolDef[] = [
     icon: Wallet,
     summary: 'Decode a QRIS payment code — merchant, NMID, city, amount',
     load: () => import('@/islands/dev/QrisDecoder'),
+    status: 'beta'
+  },
+  {
+    id: 'hash-text',
+    name: 'Hash Text',
+    category: 'Dev',
+    route: '/tools/hash-text',
+    keywords: ['hash', 'text', 'md5', 'sha', 'sha256', 'sha512', 'crc32', 'checksum', 'digest'],
+    icon: Hash,
+    summary: 'MD5, SHA-1/256/512 and CRC32 hashes of any text',
+    load: () => import('@/islands/dev/HashText'),
+    status: 'beta'
+  },
+  {
+    id: 'cidr-calculator',
+    name: 'CIDR Calculator',
+    category: 'Dev',
+    route: '/tools/cidr-calculator',
+    keywords: ['cidr', 'subnet', 'netmask', 'ip', 'ipv4', 'network', 'broadcast', 'calculator'],
+    icon: Network,
+    summary: 'IPv4 subnet calculator — network, broadcast, mask, host range',
+    load: () => import('@/islands/dev/CidrCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'minifier',
+    name: 'HTML/CSS/JS Minifier',
+    category: 'Dev',
+    route: '/tools/minifier',
+    keywords: ['minify', 'minifier', 'html', 'css', 'js', 'javascript', 'compress', 'uglify'],
+    icon: Minimize2,
+    summary: 'Minify HTML, CSS and JavaScript in your browser',
+    load: () => import('@/islands/dev/Minifier'),
+    status: 'beta'
+  },
+  {
+    id: 'subtitle-editor',
+    name: 'Subtitle Editor (SRT/VTT)',
+    category: 'Media',
+    route: '/tools/subtitle-editor',
+    keywords: ['subtitle', 'srt', 'vtt', 'webvtt', 'caption', 'convert', 'retime', 'editor'],
+    icon: Subtitles,
+    summary: 'Edit, retime and convert SRT and WebVTT subtitles',
+    load: () => import('@/islands/media/SubtitleEditor'),
+    status: 'beta'
+  },
+  {
+    id: 'voice-recorder',
+    name: 'Voice Recorder',
+    category: 'Media',
+    route: '/tools/voice-recorder',
+    keywords: ['voice', 'recorder', 'audio', 'microphone', 'record', 'mic', 'dictaphone'],
+    icon: Mic,
+    summary: 'Record microphone audio and download it',
+    load: () => import('@/islands/media/VoiceRecorder'),
+    status: 'beta'
+  },
+  {
+    id: 'pdf-extract-images',
+    name: 'Extract Images from PDF',
+    category: 'PDF',
+    route: '/tools/pdf-extract-images',
+    keywords: ['pdf', 'extract', 'images', 'image', 'pictures', 'embedded', 'export'],
+    icon: FileImage,
+    summary: 'Pull embedded images out of a PDF',
+    load: () => import('@/islands/pdf/PdfExtractImages'),
+    status: 'beta'
+  },
+  {
+    id: 'pptx-viewer',
+    name: 'PPTX Viewer',
+    category: 'Documents',
+    route: '/tools/pptx-viewer',
+    keywords: ['pptx', 'powerpoint', 'slides', 'presentation', 'viewer', 'open', 'office'],
+    icon: Presentation,
+    summary: 'Open and read PowerPoint slides in your browser',
+    load: () => import('@/islands/documents/PptxViewer'),
     status: 'beta'
   },
   {
