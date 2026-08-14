@@ -115,7 +115,8 @@
     "turndown": "^7.2.4",
     "upscaler": "^1.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.0",
+    "zxing-wasm": "^3.1.2"
   },
   "devDependencies": {
     "@fontsource/space-grotesk": "^5.3.0",

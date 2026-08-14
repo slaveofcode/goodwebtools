@@ -4,6 +4,7 @@ import { copyFileSync, mkdirSync, cpSync, existsSync } from 'node:fs';
 
 mkdirSync('public/libarchive', { recursive: true });
 copyFileSync('node_modules/mupdf/dist/mupdf-wasm.wasm', 'public/mupdf-wasm.wasm');
+copyFileSync('node_modules/zxing-wasm/dist/reader/zxing_reader.wasm', 'public/zxing_reader.wasm');
 copyFileSync('node_modules/libarchive.js/dist/worker-bundle.js', 'public/libarchive/worker-bundle.js');
 copyFileSync('node_modules/libarchive.js/dist/libarchive.wasm', 'public/libarchive/libarchive.wasm');
 
