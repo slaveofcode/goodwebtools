@@ -135,6 +135,8 @@ export default defineConfig({
           '**/html2canvas*.js',
           '**/heic-to*.js',
           '**/libheif*.js',
+          '**/terser*.js',
+          '**/csso*.js',
           'og/*.png',
         ],
         runtimeCaching: [
