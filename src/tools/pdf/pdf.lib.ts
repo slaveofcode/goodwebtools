@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
+import { pageNumberXY, placementToPdfRect, type PageNumberOptions, type SignPlacement } from './layout.lib';
 
 // Loading/parsing existing PDFs is handled by the mupdf engine (in a worker) —
 // it parses the wide range of real-world PDFs that pdf-lib's parser rejects.
@@ -150,6 +151,56 @@ export async function buildWatermarkPreview(
   const font = await out.embedFont(StandardFonts.HelveticaBold);
   out.getPages().forEach(page => drawWatermark(page, font, text, options));
   return out.save();
+}
+
+/**
+ * Rebuild a PDF with pages in `order` (0-indexed; omit an index to drop that
+ * page), optionally stamping page numbers.
+ */
+export async function organizePdf(
+  file: File,
+  order: number[],
+  pageNumbers?: PageNumberOptions,
+): Promise<Blob> {
+  const src = await loadViaMupdf(file);
+  const out = await PDFDocument.create();
+  const pages = await out.copyPages(src, order);
+  pages.forEach(page => out.addPage(page));
+
+  if (pageNumbers?.enabled) {
+    const font = await out.embedFont(StandardFonts.Helvetica);
+    out.getPages().forEach((page, i) => {
+      const { width, height } = page.getSize();
+      const label = String(pageNumbers.startAt + i);
+      const textWidth = font.widthOfTextAtSize(label, pageNumbers.fontSize);
+      const { x, y } = pageNumberXY(pageNumbers.position, width, height, textWidth, pageNumbers.fontSize, pageNumbers.margin);
+      page.drawText(label, { x, y, size: pageNumbers.fontSize, font, color: rgb(0, 0, 0) });
+    });
+  }
+  return toBlob(await out.save());
+}
+
+/** Stamp a signature PNG onto the given page placements. */
+export async function signPdf(
+  file: File,
+  signaturePng: Uint8Array,
+  placements: SignPlacement[],
+): Promise<Blob> {
+  const src = await loadViaMupdf(file);
+  const out = await PDFDocument.create();
+  const pages = await out.copyPages(src, src.getPageIndices());
+  pages.forEach(page => out.addPage(page));
+
+  const img = await out.embedPng(signaturePng);
+  const aspect = img.width / img.height;
+  const docPages = out.getPages();
+  for (const placement of placements) {
+    const page = docPages[placement.pageIndex];
+    if (!page) continue;
+    const { width, height } = page.getSize();
+    page.drawImage(img, placementToPdfRect(placement, width, height, aspect));
+  }
+  return toBlob(await out.save());
 }
 
 /** Build a PDF from images (one image per page, page sized to the image). */

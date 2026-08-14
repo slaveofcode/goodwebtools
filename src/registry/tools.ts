@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -353,6 +353,39 @@ export const tools: ToolDef[] = [
     icon: Brush,
     summary: 'Clean up text — trim, strip HTML, remove line breaks, dedupe & sort',
     load: () => import('@/islands/dev/TextCleanup'),
+    status: 'beta'
+  },
+  {
+    id: 'favicon-generator',
+    name: 'Favicon Generator',
+    category: 'Image',
+    route: '/tools/favicon-generator',
+    keywords: ['favicon', 'generator', 'ico', 'apple touch icon', 'manifest', 'website icon', 'png'],
+    icon: AppWindow,
+    summary: 'Turn an image into a favicon set (ICO, PNGs, manifest)',
+    load: () => import('@/islands/image/FaviconGenerator'),
+    status: 'beta'
+  },
+  {
+    id: 'pdf-organize',
+    name: 'Organize PDF',
+    category: 'PDF',
+    route: '/tools/pdf-organize',
+    keywords: ['organize pdf', 'reorder pages', 'rearrange', 'delete pages', 'page numbers', 'sort pdf'],
+    icon: ListOrdered,
+    summary: 'Drag to reorder or delete PDF pages and add page numbers',
+    load: () => import('@/islands/pdf/PdfOrganize'),
+    status: 'beta'
+  },
+  {
+    id: 'pdf-sign',
+    name: 'Sign PDF',
+    category: 'PDF',
+    route: '/tools/pdf-sign',
+    keywords: ['sign pdf', 'esign', 'signature', 'e-signature', 'sign document', 'draw signature'],
+    icon: FileSignature,
+    summary: 'Draw or upload a signature and place it on a PDF',
+    load: () => import('@/islands/pdf/PdfSign'),
     status: 'beta'
   },
   {
