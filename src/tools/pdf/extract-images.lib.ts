@@ -91,23 +91,43 @@ export async function extractPdfImages(data: ArrayBuffer | Uint8Array): Promise<
     pdfjs.OPS.paintImageXObjectRepeat,
   ]);
 
+  // A throwaway canvas used only to force pdf.js to decode each page's images
+  // into page.objs — with the worker, getOperatorList() alone does not.
+  const renderCanvas = document.createElement('canvas');
+  const renderCtx = renderCanvas.getContext('2d');
+
   const results: ExtractedImage[] = [];
   const seen = new Set<string>();
   try {
     for (let p = 1; p <= pdf.numPages; p++) {
       const page = await pdf.getPage(p);
       const ops = await page.getOperatorList();
+
+      const names: string[] = [];
       for (let i = 0; i < ops.fnArray.length; i++) {
         if (!imageOps.has(ops.fnArray[i])) continue;
         const name = ops.argsArray[i]?.[0];
-        if (typeof name !== 'string' || seen.has(name)) continue;
+        if (typeof name === 'string' && !seen.has(name) && !names.includes(name)) names.push(name);
+      }
+      if (names.length === 0) continue;
+
+      // Render the page (at a modest scale) so pdf.js decodes its image
+      // XObjects and populates page.objs; the objects hold full-resolution data.
+      if (renderCtx) {
+        const base = page.getViewport({ scale: 1 });
+        const scale = Math.min(1, 1200 / Math.max(base.width, base.height, 1));
+        const viewport = page.getViewport({ scale });
+        renderCanvas.width = Math.max(1, Math.floor(viewport.width));
+        renderCanvas.height = Math.max(1, Math.floor(viewport.height));
+        await page.render({ canvasContext: renderCtx, viewport, canvas: renderCanvas }).promise;
+      }
+
+      for (const name of names) {
         seen.add(name);
         const obj = await resolveObj(page, name);
         if (!obj) continue;
         const rendered = await objToBlob(obj);
-        if (rendered) {
-          results.push({ name: `image-${results.length + 1}.png`, ...rendered });
-        }
+        if (rendered) results.push({ name: `image-${results.length + 1}.png`, ...rendered });
       }
     }
   } finally {
