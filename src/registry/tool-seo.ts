@@ -182,7 +182,7 @@ const en: Record<string, ToolSeoContent> = {
   'pptx-viewer': {
     title: 'Free PPTX Viewer — Open PowerPoint Slides Online',
     description: 'Open and read PowerPoint (.pptx) slides in your browser — text and images, slide by slide. The file is never uploaded.',
-    intro: 'This free PPTX viewer opens PowerPoint presentations and shows each slide’s text and images, slide by slide, without PowerPoint or an account. It is a lightweight text-and-image viewer (not a pixel-perfect renderer) and runs entirely in your browser, so your file is never uploaded.',
+    intro: 'This free PPTX viewer opens PowerPoint presentations and renders each slide with its real layout — shapes, text and images in their actual positions — without PowerPoint or an account. It is a lightweight viewer (charts, SmartArt and effects are not rendered) and runs entirely in your browser, so your file is never uploaded.',
     howTo: [
       'Drop a .pptx file, or click to browse.',
       'The presentation opens on your device.',
@@ -1879,7 +1879,7 @@ const id: Record<string, ToolSeoContent> = {
   'pptx-viewer': {
     title: 'Penampil PPTX Gratis — Buka Slide PowerPoint Online',
     description: 'Buka dan baca slide PowerPoint (.pptx) di browser Anda — teks dan gambar, slide demi slide. File tidak pernah diunggah.',
-    intro: 'Tool penampil PPTX gratis ini membuka presentasi PowerPoint dan menampilkan teks serta gambar tiap slide, slide demi slide, tanpa PowerPoint atau akun. Ini penampil teks-dan-gambar ringan (bukan renderer presisi piksel) dan berjalan sepenuhnya di browser Anda, jadi file Anda tidak pernah diunggah.',
+    intro: 'Tool penampil PPTX gratis ini membuka presentasi PowerPoint dan merender tiap slide dengan tata letak aslinya — bentuk, teks, dan gambar pada posisi sebenarnya — tanpa PowerPoint atau akun. Ini penampil ringan (chart, SmartArt, dan efek tidak dirender) dan berjalan sepenuhnya di browser Anda, jadi file Anda tidak pernah diunggah.',
     howTo: [
       'Letakkan berkas .pptx, atau klik untuk memilih.',
       'Presentasi terbuka di perangkat Anda.',
