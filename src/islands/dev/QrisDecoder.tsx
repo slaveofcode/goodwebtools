@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import jsQR from 'jsqr';
+import { decodeQrFromFile } from '@/tools/image/qr-decode.lib';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { TextArea } from '@/components/ui/TextArea';
 import { Alert } from '@/components/ui/Alert';
@@ -23,18 +23,6 @@ const EXAMPLE_BASE =
   '62070703A01' +
   '6304';
 const EXAMPLE = EXAMPLE_BASE + crc16(EXAMPLE_BASE);
-
-async function decodeImage(file: File): Promise<string | null> {
-  const bitmap = await createImageBitmap(file);
-  const canvas = document.createElement('canvas');
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  ctx.drawImage(bitmap, 0, 0);
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  return jsQR(img.data, img.width, img.height)?.data ?? null;
-}
 
 const TR: Record<Lang, {
   intro: string;
@@ -167,7 +155,7 @@ export default function QrisDecoder({ lang = 'en' }: { lang?: Lang }) {
     setImgError('');
     if (files.length === 0) return;
     try {
-      const decoded = await decodeImage(files[0]);
+      const decoded = await decodeQrFromFile(files[0]);
       if (decoded) setPayload(decoded);
       else setImgError(t.noQrFound);
     } catch {

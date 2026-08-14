@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import jsQR from 'jsqr';
+import { decodeQrFromFile } from '@/tools/image/qr-decode.lib';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { Alert } from '@/components/ui/Alert';
@@ -29,19 +29,6 @@ const TR: Record<Lang, {
   },
 };
 
-async function decodeImage(file: File): Promise<string | null> {
-  const bitmap = await createImageBitmap(file);
-  const canvas = document.createElement('canvas');
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  ctx.drawImage(bitmap, 0, 0);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const result = jsQR(imageData.data, imageData.width, imageData.height);
-  return result?.data ?? null;
-}
-
 export default function QrRead({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
   const [value, setValue] = useState('');
@@ -52,7 +39,7 @@ export default function QrRead({ lang = 'en' }: { lang?: Lang }) {
     setValue('');
     if (files.length === 0) return;
     try {
-      const decoded = await decodeImage(files[0]);
+      const decoded = await decodeQrFromFile(files[0]);
       if (decoded) {
         setValue(decoded);
       } else {
