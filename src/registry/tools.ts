@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -320,6 +320,39 @@ export const tools: ToolDef[] = [
     icon: Percent,
     summary: 'Calculate Indonesian PPN (VAT) and PPh withholding on invoices',
     load: () => import('@/islands/dev/TaxCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'word-counter',
+    name: 'Word Counter',
+    category: 'Dev',
+    route: '/tools/word-counter',
+    keywords: ['word counter', 'character count', 'count words', 'letters', 'sentences', 'reading time', 'text'],
+    icon: Baseline,
+    summary: 'Count words, characters, sentences & reading time',
+    load: () => import('@/islands/dev/WordCounter'),
+    status: 'beta'
+  },
+  {
+    id: 'case-converter',
+    name: 'Case Converter',
+    category: 'Dev',
+    route: '/tools/case-converter',
+    keywords: ['case converter', 'uppercase', 'lowercase', 'title case', 'camelcase', 'snake_case', 'kebab-case', 'text'],
+    icon: CaseSensitive,
+    summary: 'Convert text between UPPER, lower, Title, camel, snake & kebab case',
+    load: () => import('@/islands/dev/CaseConverter'),
+    status: 'beta'
+  },
+  {
+    id: 'text-cleanup',
+    name: 'Text Cleanup',
+    category: 'Dev',
+    route: '/tools/text-cleanup',
+    keywords: ['text cleaner', 'remove line breaks', 'remove blank lines', 'trim', 'strip html', 'remove accents', 'dedupe lines', 'sort lines'],
+    icon: Brush,
+    summary: 'Clean up text — trim, strip HTML, remove line breaks, dedupe & sort',
+    load: () => import('@/islands/dev/TextCleanup'),
     status: 'beta'
   },
   {

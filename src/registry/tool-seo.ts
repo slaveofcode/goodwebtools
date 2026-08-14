@@ -247,6 +247,55 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Is this official tax advice?', a: 'No. It is a calculation helper. Always confirm the correct rates and articles for your situation with a tax professional.' },
     ],
   },
+  'word-counter': {
+    title: 'Free Word Counter — Count Words, Characters & Reading Time',
+    description: 'A free online word counter: count words, characters (with and without spaces), sentences, paragraphs, lines and reading time as you type. Runs in your browser — nothing is uploaded.',
+    intro: 'This free word counter counts words, characters (with and without spaces), sentences, paragraphs, lines and estimated reading time live as you type or paste. It runs entirely in your browser, so your text is never uploaded — safe for drafts, essays and confidential writing.',
+    howTo: [
+      'Type or paste your text into the box.',
+      'Watch the word and character counts update instantly.',
+      'Check sentences, paragraphs, lines and reading time.',
+    ],
+    faqs: [
+      { q: 'Is my text uploaded to a server?', a: 'No. All counting happens locally in your browser, so your text never leaves your device.' },
+      { q: 'How is reading time estimated?', a: 'Reading time is based on about 200 words per minute, a common average for silent reading.' },
+      { q: 'How are words counted?', a: 'Words are runs of non-whitespace characters separated by spaces, tabs or line breaks — the same way most editors count them.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so the counter keeps working with no internet connection.' },
+    ],
+  },
+  'case-converter': {
+    title: 'Free Case Converter — UPPERCASE, lowercase, Title & camelCase',
+    description: 'Convert text between UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, kebab-case and CONSTANT_CASE. Free and in your browser.',
+    intro: 'This free case converter changes your text between UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, kebab-case and CONSTANT_CASE. Everything runs in your browser, so your text is never uploaded.',
+    howTo: [
+      'Type or paste your text.',
+      'Click the case you want — UPPER, lower, Title, camel, snake, kebab and more.',
+      'Copy the converted result.',
+    ],
+    faqs: [
+      { q: 'Is my text uploaded?', a: 'No. The conversion runs entirely in your browser; nothing is sent to a server.' },
+      { q: 'What is the difference between camelCase and PascalCase?', a: 'Both join words with no spaces; camelCase starts lowercase (myVariableName) while PascalCase capitalises the first letter too (MyVariableName).' },
+      { q: 'Does snake_case handle spaces and hyphens?', a: 'Yes. The converter splits your text into words on spaces, hyphens, underscores and camelCase boundaries before rejoining in the chosen style.' },
+      { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps working with no connection once loaded.' },
+    ],
+  },
+  'text-cleanup': {
+    title: 'Free Text Cleaner — Remove Line Breaks, Blank Lines & HTML',
+    description: 'Clean up messy text online: trim whitespace, collapse spaces, remove blank lines or line breaks, strip HTML, remove accents, and dedupe or sort lines. Runs in your browser.',
+    intro: 'This free text cleaner tidies messy text: trim each line, collapse repeated spaces, remove blank lines or line breaks, strip HTML tags, remove accents, and remove duplicate or sort lines. Pick the operations you want and it runs entirely in your browser.',
+    howTo: [
+      'Paste your messy text into the box.',
+      'Tick the cleanup operations you want to apply.',
+      'The cleaned text updates live on the right.',
+      'Copy or download the result.',
+    ],
+    faqs: [
+      { q: 'Is my text uploaded?', a: 'No. Every cleanup operation runs locally in your browser; your text never leaves your device.' },
+      { q: 'Can I combine several operations?', a: 'Yes. Tick as many as you like — they are applied in order, so you can trim, collapse spaces and remove blank lines in one pass.' },
+      { q: 'What does "strip HTML" do?', a: 'It removes HTML tags like <b> or <p>, leaving just the readable text.' },
+      { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps working with no connection once loaded.' },
+    ],
+  },
   'compare-lists': {
     title: 'Compare Two Lists — Merge, Dedupe & Diff Lines',
     description: 'Compare two lists of lines online: merge and remove duplicates, subtract one list from another, or find common lines. Free, private and instant — nothing is uploaded.',
@@ -1994,6 +2043,55 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bagaimana PPh dihitung?', a: 'PPh dipotong dari dasar (DPP) sesuai tarif jenis yang dipilih — mis. 2% untuk jasa PPh 23 atau 10% untuk sewa PPh 4(2). Vendor menerima total invoice dikurangi PPh.' },
       { q: 'Bisakah memisahkan harga yang sudah termasuk PPN?', a: 'Ya. Centang “nominal sudah termasuk PPN” dan tool memisahkan dasar dan PPN dari nilai bruto.' },
       { q: 'Apakah ini nasihat pajak resmi?', a: 'Bukan. Ini tool bantu hitung. Selalu konfirmasi tarif dan pasal yang benar untuk situasi Anda dengan profesional pajak.' },
+    ],
+  },
+  'word-counter': {
+    title: 'Penghitung Kata Gratis — Hitung Kata, Karakter & Waktu Baca',
+    description: 'Penghitung kata online gratis: hitung kata, karakter (dengan dan tanpa spasi), kalimat, paragraf, baris, dan waktu baca saat Anda mengetik. Berjalan di browser Anda — tidak ada yang diunggah.',
+    intro: 'Tool penghitung kata gratis ini menghitung kata, karakter (dengan dan tanpa spasi), kalimat, paragraf, baris, dan perkiraan waktu baca secara langsung saat Anda mengetik atau menempel. Berjalan sepenuhnya di browser Anda, jadi teks tidak pernah diunggah — aman untuk draf, esai, dan tulisan rahasia.',
+    howTo: [
+      'Ketik atau tempel teks Anda ke dalam kotak.',
+      'Lihat jumlah kata dan karakter diperbarui seketika.',
+      'Periksa kalimat, paragraf, baris, dan waktu baca.',
+    ],
+    faqs: [
+      { q: 'Apakah teks saya diunggah ke server?', a: 'Tidak. Semua penghitungan terjadi lokal di browser Anda, jadi teks tidak pernah meninggalkan perangkat.' },
+      { q: 'Bagaimana waktu baca diperkirakan?', a: 'Waktu baca didasarkan pada sekitar 200 kata per menit, rata-rata umum untuk membaca dalam hati.' },
+      { q: 'Bagaimana kata dihitung?', a: 'Kata adalah rangkaian karakter non-spasi yang dipisahkan oleh spasi, tab, atau jeda baris — sama seperti kebanyakan editor menghitungnya.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi penghitung tetap berjalan tanpa koneksi internet.' },
+    ],
+  },
+  'case-converter': {
+    title: 'Konverter Case Gratis — UPPERCASE, lowercase, Title & camelCase',
+    description: 'Ubah teks antara UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, kebab-case, dan CONSTANT_CASE. Gratis dan di browser Anda.',
+    intro: 'Tool konverter case gratis ini mengubah teks Anda antara UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, kebab-case, dan CONSTANT_CASE. Semuanya berjalan di browser Anda, jadi teks tidak pernah diunggah.',
+    howTo: [
+      'Ketik atau tempel teks Anda.',
+      'Klik case yang Anda inginkan — UPPER, lower, Title, camel, snake, kebab, dan lainnya.',
+      'Salin hasil konversinya.',
+    ],
+    faqs: [
+      { q: 'Apakah teks saya diunggah?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda; tidak ada yang dikirim ke server.' },
+      { q: 'Apa beda camelCase dan PascalCase?', a: 'Keduanya menggabungkan kata tanpa spasi; camelCase diawali huruf kecil (myVariableName) sedangkan PascalCase juga mengapitalkan huruf pertama (MyVariableName).' },
+      { q: 'Apakah snake_case menangani spasi dan tanda hubung?', a: 'Ya. Konverter memecah teks menjadi kata pada spasi, tanda hubung, garis bawah, dan batas camelCase sebelum menggabungkannya dalam gaya yang dipilih.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat.' },
+    ],
+  },
+  'text-cleanup': {
+    title: 'Pembersih Teks Gratis — Hapus Jeda Baris, Baris Kosong & HTML',
+    description: 'Bersihkan teks berantakan online: rapikan spasi, gabungkan spasi, hapus baris kosong atau jeda baris, hapus HTML, hapus aksen, serta hapus duplikat atau urutkan baris. Berjalan di browser Anda.',
+    intro: 'Tool pembersih teks gratis ini merapikan teks berantakan: rapikan tiap baris, gabungkan spasi berulang, hapus baris kosong atau jeda baris, hapus tag HTML, hapus aksen, serta hapus baris duplikat atau urutkan baris. Pilih operasi yang Anda inginkan dan semuanya berjalan di browser Anda.',
+    howTo: [
+      'Tempel teks berantakan Anda ke dalam kotak.',
+      'Centang operasi pembersihan yang ingin diterapkan.',
+      'Teks bersih diperbarui langsung di sebelah kanan.',
+      'Salin atau unduh hasilnya.',
+    ],
+    faqs: [
+      { q: 'Apakah teks saya diunggah?', a: 'Tidak. Setiap operasi pembersihan berjalan lokal di browser Anda; teks tidak pernah meninggalkan perangkat.' },
+      { q: 'Bisakah menggabungkan beberapa operasi?', a: 'Ya. Centang sebanyak yang Anda mau — diterapkan berurutan, jadi Anda bisa merapikan, menggabungkan spasi, dan menghapus baris kosong dalam satu langkah.' },
+      { q: 'Apa fungsi "hapus tag HTML"?', a: 'Menghapus tag HTML seperti <b> atau <p>, menyisakan hanya teks yang dapat dibaca.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat.' },
     ],
   },
   'compare-lists': {
