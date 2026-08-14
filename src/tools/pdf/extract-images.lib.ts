@@ -38,10 +38,18 @@ async function objToBlob(obj: PdfImageObj): Promise<{ blob: Blob; width: number;
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  if (obj.bitmap) {
-    canvas.width = obj.bitmap.width;
-    canvas.height = obj.bitmap.height;
-    ctx.drawImage(obj.bitmap, 0, 0);
+  const drawable = obj.bitmap as CanvasImageSource | undefined;
+  const w = obj.width || (drawable as { width?: number })?.width || 0;
+  const h = obj.height || (drawable as { height?: number })?.height || 0;
+
+  if (drawable && w && h) {
+    canvas.width = w;
+    canvas.height = h;
+    try {
+      ctx.drawImage(drawable, 0, 0, w, h);
+    } catch {
+      return null; // e.g. a detached ImageBitmap
+    }
   } else if (obj.data && obj.width && obj.height) {
     const { width, height, data } = obj;
     const pixels = width * height;
@@ -79,8 +87,10 @@ function resolveObj(page: { objs: { has(n: string): boolean; get(n: string, cb?:
 
 /** Extract every embedded raster image from the PDF bytes. */
 export async function extractPdfImages(data: ArrayBuffer | Uint8Array): Promise<ExtractedImage[]> {
-  const pdfjs = await import('pdfjs-dist');
-  const PdfjsWorker = (await import('pdfjs-dist/build/pdf.worker.min.mjs?worker')).default;
+  // Use the legacy build: it polyfills newer JS (e.g. Uint8Array.prototype.toHex,
+  // which pdf.js's default build assumes) so extraction works on older browsers.
+  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const PdfjsWorker = (await import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?worker')).default;
   const worker = new PdfjsWorker();
   pdfjs.GlobalWorkerOptions.workerPort = worker;
 
