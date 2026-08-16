@@ -217,6 +217,52 @@ const api = {
       doc.destroy?.();
     }
   },
+
+  /**
+   * True redaction: for each box, add a Redact annotation at its rectangle, then
+   * applyRedactions so mupdf physically removes the covered text, images and line
+   * art (not just paints over it) and burns a black box in its place. Boxes are
+   * given as page-relative ratios with a top-left origin (as drawn on screen).
+   */
+  async redact(
+    bytes: Uint8Array,
+    boxes: { pageIndex: number; x: number; y: number; w: number; h: number }[],
+  ): Promise<Uint8Array> {
+    const mupdf = await loadMupdf();
+    const doc = open(mupdf, bytes);
+    try {
+      const total = doc.countPages();
+      const byPage = new Map<number, typeof boxes>();
+      for (const b of boxes) {
+        if (b.pageIndex < 0 || b.pageIndex >= total || b.w <= 0 || b.h <= 0) continue;
+        const list = byPage.get(b.pageIndex) ?? [];
+        list.push(b);
+        byPage.set(b.pageIndex, list);
+      }
+      for (const [pageIndex, list] of byPage) {
+        const page: any = doc.loadPage(pageIndex);
+        const [x0, y0, x1, y1] = page.getBounds();
+        const pw = x1 - x0;
+        const ph = y1 - y0;
+        for (const b of list) {
+          const rx0 = x0 + b.x * pw;
+          const rx1 = x0 + (b.x + b.w) * pw;
+          // Screen y is top-down; PDF y is bottom-up, so flip against the top edge (y1).
+          const ryTop = y1 - b.y * ph;
+          const ryBottom = y1 - (b.y + b.h) * ph;
+          const annot = page.createAnnotation('Redact');
+          annot.setRect([rx0, ryBottom, rx1, ryTop]);
+          annot.update?.();
+        }
+        // black_boxes=true, image=REMOVE(1), line_art=REMOVE_IF_TOUCHED(2), text=REMOVE(0)
+        page.applyRedactions(true, 1, 2, 0);
+      }
+      // Garbage-collect so the removed content can't linger in the file.
+      return transfer(save(doc, 'garbage=compact'));
+    } finally {
+      doc.destroy?.();
+    }
+  },
 };
 
 export type MupdfApi = typeof api;
