@@ -1454,6 +1454,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Can I use this to watermark a KTP or ID card photo?', a: 'Yes. Drop in a scan or photo of your KTP, SIM, passport or any identity document, type your watermark text (e.g. "COPY" or your name), pick Diagonal or Tiled layout, set the opacity, and download. Everything stays on your device — nothing is uploaded.' },
     ],
   },
+  'color-blindness-sim': {
+    title: 'Color Blindness Simulator — Preview Protanopia, Deuteranopia, Tritanopia',
+    description: 'See how an image or design looks with colour-vision deficiencies — protanopia, deuteranopia, tritanopia and more — side by side with the original. Free, in your browser.',
+    intro: 'This free colour blindness simulator shows how your image or design appears to people with colour-vision deficiencies. Drop an image and compare the original with protanopia, deuteranopia, tritanopia (and their milder anomalous forms) plus full achromatopsia, side by side. Use it to check that charts, maps and UI stay readable for everyone. Everything runs in your browser.',
+    howTo: [
+      'Drop or paste an image (a chart, design or screenshot).',
+      'Pick a colour-vision deficiency to simulate.',
+      'Compare the original and simulated views side by side.',
+      'Download the simulated image if you need it.',
+    ],
+    faqs: [
+      { q: 'Which types can I simulate?', a: 'Protanopia, deuteranopia and tritanopia (the three dichromacies), their milder anomalous versions, and achromatopsia (no colour at all).' },
+      { q: 'Is my image uploaded?', a: 'No. The simulation runs on a canvas in your browser, so your image never leaves your device.' },
+      { q: 'How accurate is it?', a: 'It uses the widely used dichromacy approximation matrices. They are a strong guide for design review, not a medical diagnostic.' },
+      { q: 'Why does this matter for accessibility?', a: 'About 1 in 12 men has some colour-vision deficiency. Simulating it helps ensure charts, maps and status colours are distinguishable without relying on colour alone.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the simulator works with no internet connection.' },
+    ],
+  },
   'meme-generator': {
     title: 'Free Meme Generator — Add Top & Bottom Text to Images',
     description: 'Make a meme in seconds: drop an image, add top and bottom captions in the classic bold outlined style, and download the PNG. Free and private — nothing is uploaded.',
@@ -3606,6 +3624,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah saya mengontrol tampilan watermark?', a: 'Ya. Anda dapat mengatur teks, memilih warna apa pun, dan menggunakan penggeser untuk menyesuaikan skala dan opasitasnya agar sesamar atau setebal yang Anda inginkan.' },
       { q: 'Dalam format apa gambar berwatermark disimpan?', a: 'Unduhan mempertahankan format asli gambar Anda jika memungkinkan, jadi JPEG tetap JPEG dan PNG tetap PNG.' },
       { q: 'Bisakah tool ini digunakan untuk watermark KTP?', a: 'Ya. Unggah scan atau foto KTP, SIM, paspor, atau dokumen identitas lainnya, ketik teks watermark (misalnya "COPY" atau nama Anda), pilih tata letak Diagonal atau Tiled, atur opasitasnya, lalu unduh hasilnya. Semua diproses di perangkat Anda — tidak ada yang diunggah.' },
+    ],
+  },
+  'color-blindness-sim': {
+    title: 'Simulator Buta Warna — Pratinjau Protanopia, Deuteranopia, Tritanopia',
+    description: 'Lihat bagaimana gambar atau desain tampak dengan defisiensi penglihatan warna — protanopia, deuteranopia, tritanopia, dan lainnya — berdampingan dengan aslinya. Gratis, di browser.',
+    intro: 'Simulator buta warna gratis ini menunjukkan bagaimana gambar atau desain Anda tampak bagi penyandang defisiensi penglihatan warna. Letakkan gambar dan bandingkan aslinya dengan protanopia, deuteranopia, tritanopia (serta versi ringannya) plus achromatopsia penuh, berdampingan. Gunakan untuk memastikan grafik, peta, dan UI tetap terbaca oleh semua orang. Semuanya berjalan di browser Anda.',
+    howTo: [
+      'Letakkan atau tempel gambar (grafik, desain, atau tangkapan layar).',
+      'Pilih jenis defisiensi penglihatan warna untuk disimulasikan.',
+      'Bandingkan tampilan asli dan simulasi berdampingan.',
+      'Unduh gambar hasil simulasi bila diperlukan.',
+    ],
+    faqs: [
+      { q: 'Jenis apa saja yang bisa disimulasikan?', a: 'Protanopia, deuteranopia, dan tritanopia (tiga dikromasi), versi anomali yang lebih ringan, serta achromatopsia (tanpa warna sama sekali).' },
+      { q: 'Apakah gambar saya diunggah?', a: 'Tidak. Simulasi berjalan di canvas dalam browser Anda, jadi gambar tidak pernah meninggalkan perangkat.' },
+      { q: 'Seberapa akurat?', a: 'Menggunakan matriks aproksimasi dikromasi yang umum dipakai. Ini panduan kuat untuk tinjauan desain, bukan diagnosis medis.' },
+      { q: 'Mengapa ini penting untuk aksesibilitas?', a: 'Sekitar 1 dari 12 pria memiliki defisiensi penglihatan warna. Simulasi membantu memastikan grafik, peta, dan warna status dapat dibedakan tanpa hanya mengandalkan warna.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat simulator bekerja tanpa koneksi internet.' },
     ],
   },
   'meme-generator': {
