@@ -1,5 +1,6 @@
 import './mupdf-setup'; // must run before mupdf loads its wasm
 import * as Comlink from 'comlink';
+import { boxToRect } from './redact.lib';
 
 // mupdf's high-level object typings don't fully cover the low-level PDFObject
 // get/put/asNumber usage below, so a few casts to `any` keep it pragmatic.
@@ -243,17 +244,12 @@ const api = {
       }
       for (const [pageIndex, list] of byPage) {
         const page: any = doc.loadPage(pageIndex);
-        const [x0, y0, x1, y1] = page.getBounds();
-        const pw = x1 - x0;
-        const ph = y1 - y0;
+        const bounds = page.getBounds() as [number, number, number, number];
         for (const b of list) {
-          const rx0 = x0 + b.x * pw;
-          const rx1 = x0 + (b.x + b.w) * pw;
-          // Screen y is top-down; PDF y is bottom-up, so flip against the top edge (y1).
-          const ryTop = y1 - b.y * ph;
-          const ryBottom = y1 - (b.y + b.h) * ph;
+          // mupdf page space is top-left origin (y-down), matching the preview,
+          // so map the box directly with no vertical flip.
           const annot = page.createAnnotation('Redact');
-          annot.setRect([rx0, ryBottom, rx1, ryTop]);
+          annot.setRect(boxToRect(b, bounds));
           annot.update?.();
         }
         // black_boxes=true, image=REMOVE(1), line_art=REMOVE_IF_TOUCHED(2), text=REMOVE(0)
