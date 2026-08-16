@@ -562,6 +562,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
     ],
   },
+  'eml-viewer': {
+    title: 'Free EML Viewer — Open .eml Email Files Online (No Outlook)',
+    description: 'Open and read .eml email files in your browser — sender, subject, body and attachments — without Outlook or any account. The email is parsed on your device and never uploaded.',
+    intro: 'Someone forwarded you a .eml file and you don’t have Outlook? This free EML viewer opens email files (RFC 822 / .eml, exported from Outlook, Apple Mail, Thunderbird or Gmail) right in your browser. It shows the sender, recipients, subject, date, the message body and any attachments you can download. The email — often confidential — is parsed entirely on your device and never uploaded, and its HTML is shown in a sandbox so nothing can run.',
+    howTo: [
+      'Drop your .eml file to open it.',
+      'Read the header (From, To, Subject, Date) and the message body.',
+      'Download any attachments you need.',
+      'Open another email any time.',
+    ],
+    faqs: [
+      { q: 'Is my email uploaded?', a: 'No. The .eml file is parsed in your browser, so its contents and attachments never leave your device — important for confidential mail.' },
+      { q: 'Do I need Outlook or an account?', a: 'No. This viewer opens standard .eml (RFC 822) files with no software and no sign-up.' },
+      { q: 'Is it safe to open an email’s HTML?', a: 'Yes. The message is rendered in a sandboxed frame with scripts disabled, so tracking pixels and scripts in the email cannot run.' },
+      { q: 'Can it open .msg (Outlook) files?', a: 'Not yet — .msg uses a different (compound) format. Export or save the message as .eml and open that instead.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the viewer works with no internet connection.' },
+    ],
+  },
   'gedcom-viewer': {
     title: 'Free GEDCOM Viewer — Open a Family Tree (.ged) File Online',
     description: 'Open and browse a GEDCOM (.ged) family-tree file privately in your browser — search people and see parents, spouses and children. No sign-up, nothing uploaded.',
@@ -2803,6 +2821,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'eml-viewer': {
+    title: 'Penampil EML Gratis — Buka Berkas Email .eml Online (Tanpa Outlook)',
+    description: 'Buka dan baca berkas email .eml di browser Anda — pengirim, subjek, isi, dan lampiran — tanpa Outlook atau akun. Email diurai di perangkat dan tidak pernah diunggah.',
+    intro: 'Ada yang meneruskan berkas .eml dan Anda tidak punya Outlook? Penampil EML gratis ini membuka berkas email (RFC 822 / .eml, hasil ekspor Outlook, Apple Mail, Thunderbird, atau Gmail) langsung di browser Anda. Menampilkan pengirim, penerima, subjek, tanggal, isi pesan, dan lampiran yang bisa diunduh. Email — yang sering rahasia — diurai sepenuhnya di perangkat Anda dan tidak pernah diunggah, dan HTML-nya ditampilkan dalam sandbox sehingga tidak ada yang bisa berjalan.',
+    howTo: [
+      'Letakkan berkas .eml Anda untuk membukanya.',
+      'Baca header (Dari, Ke, Subjek, Tanggal) dan isi pesan.',
+      'Unduh lampiran yang Anda perlukan.',
+      'Buka email lain kapan saja.',
+    ],
+    faqs: [
+      { q: 'Apakah email saya diunggah?', a: 'Tidak. Berkas .eml diurai di browser Anda, jadi isinya dan lampiran tidak pernah meninggalkan perangkat — penting untuk surat rahasia.' },
+      { q: 'Apakah perlu Outlook atau akun?', a: 'Tidak. Penampil ini membuka berkas .eml (RFC 822) standar tanpa software dan tanpa pendaftaran.' },
+      { q: 'Apakah aman membuka HTML email?', a: 'Ya. Pesan dirender dalam frame sandbox dengan skrip dinonaktifkan, sehingga pixel pelacak dan skrip di email tidak bisa berjalan.' },
+      { q: 'Bisakah membuka berkas .msg (Outlook)?', a: 'Belum — .msg memakai format (compound) berbeda. Ekspor atau simpan pesan sebagai .eml lalu buka itu.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat penampil bekerja tanpa koneksi internet.' },
     ],
   },
   'gedcom-viewer': {
