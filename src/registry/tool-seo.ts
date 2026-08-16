@@ -367,6 +367,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the calculator works with no internet connection.' },
     ],
   },
+  'wheel-spinner': {
+    title: 'Wheel Spinner — Random Name Picker & Decision Wheel',
+    description: 'Spin a wheel of names to pick a winner at random — for giveaways, classrooms, or deciding who goes first. Add your entries and spin. Free, in your browser.',
+    intro: 'This free wheel spinner picks a name or option at random. Type your entries (one per line), hit Spin, and watch the wheel land on a winner — perfect for giveaways, choosing who goes first, team assignments or settling a decision. Everything runs in your browser, so it works offline and nothing is uploaded.',
+    howTo: [
+      'Type your entries in the box, one per line.',
+      'Click Spin and let the wheel slow to a stop.',
+      'Read the highlighted winner under the pointer.',
+      'Spin again as many times as you like.',
+    ],
+    faqs: [
+      { q: 'Is the result really random?', a: 'Yes. Each spin uses your browser’s random generator to choose where the wheel stops, so every entry has an equal chance.' },
+      { q: 'How many entries can I add?', a: 'As many as you like — labels are trimmed to fit each slice on the wheel.' },
+      { q: 'Is anything uploaded?', a: 'No. The wheel runs entirely in your browser; your entries never leave your device.' },
+      { q: 'Can I use it for giveaways?', a: 'Yes. Add each participant on its own line and spin to draw a winner fairly in front of your audience.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the wheel works with no internet connection.' },
+    ],
+  },
   'kpr-calculator': {
     title: 'KPR & Mortgage Calculator — Monthly Installment & Amortisation',
     description: 'Calculate your monthly home-loan (KPR) installment from the property price, down payment, interest rate and tenor. See total interest and a full amortisation table. Free, in your browser.',
@@ -2483,6 +2501,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apa itu weton dan neptu?', a: 'Weton adalah perpaduan Jawa antara siklus 7 hari dengan siklus pasaran 5 hari (Legi, Pahing, Pon, Wage, Kliwon) — misalnya “Jumat Legi”. Neptu adalah nilai angka tiap bagian; jumlahnya dipakai dalam tradisi Jawa.' },
       { q: 'Bisakah menghitung usia pada tanggal lampau atau mendatang?', a: 'Bisa. Ubah kolom “Usia pada tanggal” ke tanggal mana pun untuk melihat usia, total, dan weton relatif terhadap hari itu.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat kalkulator bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'wheel-spinner': {
+    title: 'Roda Putar — Pemilih Nama Acak & Roda Keputusan',
+    description: 'Putar roda berisi nama untuk memilih pemenang secara acak — untuk giveaway, kelas, atau menentukan giliran. Tambahkan entri lalu putar. Gratis, di browser Anda.',
+    intro: 'Roda putar gratis ini memilih nama atau opsi secara acak. Ketik entri Anda (satu per baris), tekan Putar, dan lihat roda berhenti di pemenang — cocok untuk giveaway, menentukan giliran, pembagian tim, atau mengambil keputusan. Semuanya berjalan di browser Anda, jadi bekerja offline dan tidak ada yang diunggah.',
+    howTo: [
+      'Ketik entri Anda di kotak, satu per baris.',
+      'Klik Putar dan biarkan roda melambat hingga berhenti.',
+      'Baca pemenang yang tersorot di bawah penunjuk.',
+      'Putar lagi sebanyak yang Anda mau.',
+    ],
+    faqs: [
+      { q: 'Apakah hasilnya benar-benar acak?', a: 'Ya. Setiap putaran memakai generator acak browser Anda untuk menentukan berhentinya roda, jadi setiap entri berpeluang sama.' },
+      { q: 'Berapa banyak entri yang bisa ditambahkan?', a: 'Sebanyak yang Anda mau — label dipangkas agar pas di tiap irisan roda.' },
+      { q: 'Apakah ada yang diunggah?', a: 'Tidak. Roda berjalan sepenuhnya di browser Anda; entri Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Bisakah dipakai untuk giveaway?', a: 'Bisa. Tambahkan tiap peserta di barisnya sendiri dan putar untuk mengundi pemenang secara adil di depan audiens.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat roda bekerja tanpa koneksi internet.' },
     ],
   },
   'kpr-calculator': {
