@@ -45,4 +45,25 @@ describe('Tool Registry', () => {
   it('returns nothing for a nonsense query', () => {
     expect(searchTools('zzzznotarealtool')).toHaveLength(0);
   });
+
+  it('matches inflected / stemmed queries', () => {
+    // The original bug: "signed" did not surface the Sign PDF tool.
+    expect(searchTools('signed').some(t => t.id === 'pdf-sign')).toBe(true);
+    expect(searchTools('sign').some(t => t.id === 'pdf-sign')).toBe(true);
+    // plural / gerund forms should still match
+    expect(searchTools('images').some(t => t.category === 'Image')).toBe(true);
+    expect(searchTools('converting').some(t => t.id === 'image-convert')).toBe(true);
+  });
+
+  it('handles multi-word queries and abbreviations', () => {
+    const signPdf = searchTools('sign pdf');
+    expect(signPdf.some(t => t.id === 'pdf-sign')).toBe(true);
+    // abbreviation keyword match
+    expect(searchTools('css').some(t => t.id === 'minifier')).toBe(true);
+  });
+
+  it('ranks the most relevant tool first', () => {
+    expect(searchTools('sign pdf')[0].id).toBe('pdf-sign');
+    expect(searchTools('word counter')[0].id).toBe('word-counter');
+  });
 });

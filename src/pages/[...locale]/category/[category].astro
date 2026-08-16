@@ -2,7 +2,7 @@
 import { ChevronRight } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
 import { tools } from '@/registry/tools';
-import { categories, categoryColors, catDescription, categorySlug } from '@/registry/categories';
+import { categories, categoryColors, catDescription, categorySlug, categoryFaqs, categoryNotes } from '@/registry/categories';
 import { SITE_URL, SITE_NAME } from '@/config';
 import type { Category } from '@/types/tool';
 import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
@@ -43,13 +43,38 @@ const itemListJsonLd = {
     url: new URL(localizePath(t2.route, lang), SITE_URL).href,
   })),
 };
+
+const faqs = categoryFaqs(category, lang);
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
+const note = categoryNotes[category];
+// Other category hubs, for internal linking / crawlability.
+const otherCategories = categories.filter(
+  c => c !== category && tools.some(t2 => t2.category === c && !t2.desktopOnly),
+);
+// Keyword-rich meta: category + every tool name in it.
+const keywords = [
+  `${category.toLowerCase()} tools`,
+  `free ${category.toLowerCase()} tools`,
+  `online ${category.toLowerCase()} tools`,
+  ...categoryTools.map(t2 => t2.name.toLowerCase()),
+  'browser', 'privacy', 'no upload', 'free',
+];
 ---
 
 <Base
   title={t(lang, 'category.freePrivate', { category })}
   description={description}
-  keywords={[`${category.toLowerCase()} tools`, 'free', 'online', 'browser', 'privacy', 'no upload']}
-  jsonLd={[breadcrumbJsonLd, itemListJsonLd]}
+  keywords={keywords}
+  jsonLd={[breadcrumbJsonLd, itemListJsonLd, faqJsonLd]}
   lang={lang}
   localized
 >
@@ -71,6 +96,7 @@ const itemListJsonLd = {
         <span class="text-sm font-bold text-muted-foreground">({categoryTools.length})</span>
       </div>
       <p class="max-w-3xl text-muted-foreground">{description}</p>
+      {note && <p class="mt-2 max-w-3xl text-sm text-muted-foreground">{note}</p>}
     </header>
 
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -89,5 +115,37 @@ const itemListJsonLd = {
         );
       })}
     </div>
+
+    <section class="mt-12 max-w-3xl">
+      <h2 class="mb-4 text-2xl font-bold uppercase tracking-tight">{t(lang, 'tool.faq')}</h2>
+      <div class="flex flex-col gap-2">
+        {faqs.map(f => (
+          <details class="group border-2 border-border bg-muted">
+            <summary class="cursor-pointer list-none px-4 py-3 font-bold [&::-webkit-details-marker]:hidden">
+              <span class="flex items-center justify-between gap-2">
+                <span>{f.q}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
+              </span>
+            </summary>
+            <p class="border-t-2 border-border px-4 py-3 text-muted-foreground">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <nav aria-label={t(lang, 'category.other')} class="mt-12">
+      <h2 class="mb-3 text-sm font-bold uppercase tracking-wide text-muted-foreground">{t(lang, 'category.other')}</h2>
+      <ul class="flex flex-wrap gap-2">
+        {otherCategories.map(c => (
+          <li>
+            <a href={localizePath(`/category/${categorySlug(c)}`, lang)}
+              class="inline-flex items-center gap-1.5 border-2 border-border bg-muted px-3 py-1.5 text-sm font-bold shadow-brutal-sm press-brutal">
+              <span class={`inline-block h-3 w-3 border border-border ${categoryColors[c]}`} />
+              {t(lang, 'category.heading', { category: c })}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   </main>
 </Base>
