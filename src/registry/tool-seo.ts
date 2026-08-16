@@ -313,6 +313,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps generating favicons with no connection once loaded.' },
     ],
   },
+  'compress-to-size': {
+    title: 'Compress JPG, PNG & PDF to a Target Size (100 KB, 500 KB) — Free',
+    description: 'Compress an image or PDF to an exact target file size — 100 KB, 200 KB, 500 KB or any size you set. Perfect for upload limits. Runs in your browser; nothing is uploaded.',
+    intro: 'Need a photo under 100 KB or a PDF under 500 KB for a form upload? This free tool compresses a JPG, PNG, WebP or PDF down to the file size you choose. For images it searches the best quality (and downscales if needed) to just fit your target; for PDFs it compresses losslessly first, then flattens to images only if it must to reach the size. Everything runs on your device, so your file is never uploaded.',
+    howTo: [
+      'Drop or paste an image (JPG/PNG/WebP) or a PDF.',
+      'Pick a target size — 100 KB, 500 KB, 1 MB, or type your own.',
+      'For images, choose JPG or WebP output.',
+      'Click Compress, then download the file that fits your size limit.',
+    ],
+    faqs: [
+      { q: 'Is my file uploaded to a server?', a: 'No. All compression happens in your browser using the canvas and on-device PDF engine, so your image or PDF never leaves your device — safe for IDs, certificates and confidential documents.' },
+      { q: 'How do I compress a JPG to 100 KB?', a: 'Drop the JPG, choose the 100 KB preset (or type it), and click Compress. The tool searches the highest quality that fits 100 KB and downscales only if needed, then gives you the file to download.' },
+      { q: 'How do I compress a PDF to a target size?', a: 'Drop the PDF and pick a target. It first compresses losslessly (keeping selectable text); if that is still too big, it flattens pages to images at lower resolution until it fits — the usual way to hit a strict PDF size limit.' },
+      { q: 'What if it can’t reach my target?', a: 'If the target is smaller than what is achievable, the tool returns the smallest version it could make and tells you — just pick a slightly larger target.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded it keeps compressing with no internet connection.' },
+    ],
+  },
   'pdf-organize': {
     title: 'Free Organize PDF — Reorder, Delete Pages & Add Page Numbers',
     description: 'Organize a PDF in your browser: drag to reorder pages, delete pages, and add page numbers, then download. Nothing is uploaded.',
@@ -2161,6 +2179,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'File apa saja yang saya dapatkan?', a: 'favicon.ico (16/32/48), PNG favicon-16/32/48, apple-touch-icon (180px), PNG android-chrome 192 dan 512, site.webmanifest, dan snippet HTML.' },
       { q: 'Gambar seperti apa yang sebaiknya dipakai?', a: 'Gambar persegi minimal 512×512 paling bagus agar ikon terbesar tetap tajam. Desain sederhana berkontras tinggi paling terbaca pada 16px.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap membuat favicon tanpa koneksi setelah dimuat.' },
+    ],
+  },
+  'compress-to-size': {
+    title: 'Kompres JPG, PNG & PDF ke Ukuran Target (100 KB, 500 KB) — Gratis',
+    description: 'Kompres gambar atau PDF ke ukuran file tepat — 100 KB, 200 KB, 500 KB, atau ukuran apa pun. Pas untuk batas unggah CPNS, SNBP, dan beasiswa. Berjalan di browser; tidak ada yang diunggah.',
+    intro: 'Butuh foto di bawah 100 KB atau PDF di bawah 500 KB untuk unggahan formulir? Tool gratis ini mengompres JPG, PNG, WebP, atau PDF hingga ukuran file yang Anda pilih. Untuk gambar, tool mencari kualitas terbaik (dan memperkecil bila perlu) agar pas dengan target; untuk PDF, dikompres lossless dulu, lalu diratakan menjadi gambar hanya bila perlu untuk mencapai ukuran. Semuanya berjalan di perangkat Anda, jadi file tidak pernah diunggah.',
+    howTo: [
+      'Letakkan atau tempel gambar (JPG/PNG/WebP) atau PDF.',
+      'Pilih ukuran target — 100 KB, 500 KB, 1 MB, atau ketik sendiri.',
+      'Untuk gambar, pilih keluaran JPG atau WebP.',
+      'Klik Kompres, lalu unduh file yang sesuai batas ukuran Anda.',
+    ],
+    faqs: [
+      { q: 'Apakah file saya diunggah ke server?', a: 'Tidak. Semua kompresi terjadi di browser Anda menggunakan canvas dan mesin PDF di perangkat, jadi gambar atau PDF Anda tidak pernah meninggalkan perangkat — aman untuk KTP, ijazah, dan dokumen rahasia.' },
+      { q: 'Bagaimana cara kompres JPG ke 100 KB?', a: 'Letakkan JPG, pilih preset 100 KB (atau ketik), lalu klik Kompres. Tool mencari kualitas tertinggi yang pas dengan 100 KB dan hanya memperkecil bila perlu, lalu memberi file untuk diunduh.' },
+      { q: 'Bagaimana cara kompres PDF ke ukuran target?', a: 'Letakkan PDF dan pilih target. Tool mengompres lossless dulu (mempertahankan teks yang bisa diseleksi); bila masih terlalu besar, halaman diratakan menjadi gambar pada resolusi lebih rendah hingga pas — cara umum untuk mencapai batas ukuran PDF yang ketat.' },
+      { q: 'Bagaimana jika target tidak tercapai?', a: 'Jika target lebih kecil dari yang bisa dicapai, tool mengembalikan versi terkecil yang bisa dibuat dan memberi tahu Anda — cukup pilih target sedikit lebih besar.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tetap bisa mengompres tanpa koneksi internet.' },
     ],
   },
   'pdf-organize': {
