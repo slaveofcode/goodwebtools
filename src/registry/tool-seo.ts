@@ -916,6 +916,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Why is my color showing as invalid?', a: 'The input has to be a valid hex code like #rrggbb or an rgb(r, g, b) value. Check for a missing # or a typo, and the tool will convert it once the format is right.' },
     ],
   },
+  'contrast-checker': {
+    title: 'WCAG Contrast Checker — Color Contrast Ratio (AA & AAA)',
+    description: 'Check colour contrast between text and background against WCAG 2.1. See the contrast ratio and AA/AAA pass or fail for normal and large text. Free, in your browser.',
+    intro: 'This free WCAG contrast checker measures the colour contrast between text and its background so your designs stay readable and accessible. Pick a text colour and a background colour to see the exact contrast ratio, a live preview, and whether it meets WCAG 2.1 AA and AAA for both normal and large text. Everything runs in your browser.',
+    howTo: [
+      'Choose your text colour and background colour (swatch or hex).',
+      'Read the contrast ratio and the live preview.',
+      'Check the AA / AAA pass or fail badges for normal and large text.',
+      'Use Swap to try the reverse, and adjust until it passes.',
+    ],
+    faqs: [
+      { q: 'What contrast ratio do I need?', a: 'WCAG 2.1 AA needs 4.5:1 for normal text and 3:1 for large text; AAA needs 7:1 and 4.5:1 respectively. Large text is roughly 18pt+ (or 14pt+ bold).' },
+      { q: 'How is the ratio calculated?', a: 'It uses the WCAG relative-luminance formula on both colours, then (lighter + 0.05) / (darker + 0.05), giving a value from 1:1 to 21:1.' },
+      { q: 'Is anything uploaded?', a: 'No. The check runs entirely in your browser; your colours never leave your device.' },
+      { q: 'What is the difference between AA and AAA?', a: 'AA is the common legal and practical baseline; AAA is the strictest level for enhanced accessibility. Aim for AA at minimum, AAA where you can.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the checker works with no internet connection.' },
+    ],
+  },
   'pdf-merge': {
     title: 'Free Merge PDF Tool — Combine PDFs Online',
     description: 'A free online tool to merge multiple PDFs into a single file, in any order — 100% private. Your PDFs are combined in your browser and never uploaded.',
@@ -2890,6 +2908,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah ada yang dikirim ke server?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda dengan JavaScript, jadi tidak ada nilai warna atau data yang meninggalkan perangkat Anda.' },
       { q: 'Bisakah saya memilih warna alih-alih mengetiknya?', a: 'Ya. Klik kotak warna untuk membuka pemilih warna sistem Anda, dan nilai HEX, RGB, serta HSL akan diperbarui sesuai pilihan Anda.' },
       { q: 'Mengapa warna saya ditampilkan sebagai tidak valid?', a: 'Masukan harus berupa kode hex yang valid seperti #rrggbb atau nilai rgb(r, g, b). Periksa apakah ada # yang hilang atau salah ketik, dan konversi akan dilakukan begitu formatnya benar.' },
+    ],
+  },
+  'contrast-checker': {
+    title: 'Pemeriksa Kontras WCAG — Rasio Kontras Warna (AA & AAA)',
+    description: 'Periksa kontras warna antara teks dan latar terhadap WCAG 2.1. Lihat rasio kontras dan lolos/gagal AA/AAA untuk teks normal dan besar. Gratis, di browser Anda.',
+    intro: 'Pemeriksa kontras WCAG gratis ini mengukur kontras warna antara teks dan latarnya agar desain Anda tetap mudah dibaca dan aksesibel. Pilih warna teks dan warna latar untuk melihat rasio kontras yang tepat, pratinjau langsung, serta apakah memenuhi WCAG 2.1 AA dan AAA untuk teks normal maupun besar. Semuanya berjalan di browser Anda.',
+    howTo: [
+      'Pilih warna teks dan warna latar Anda (swatch atau hex).',
+      'Baca rasio kontras dan pratinjau langsung.',
+      'Cek badge lolos/gagal AA / AAA untuk teks normal dan besar.',
+      'Gunakan Tukar untuk mencoba kebalikannya, dan sesuaikan hingga lolos.',
+    ],
+    faqs: [
+      { q: 'Rasio kontras berapa yang saya butuhkan?', a: 'WCAG 2.1 AA butuh 4,5:1 untuk teks normal dan 3:1 untuk teks besar; AAA butuh 7:1 dan 4,5:1. Teks besar kira-kira 18pt+ (atau 14pt+ tebal).' },
+      { q: 'Bagaimana rasio dihitung?', a: 'Menggunakan rumus luminansi relatif WCAG pada kedua warna, lalu (lebih terang + 0,05) / (lebih gelap + 0,05), menghasilkan nilai dari 1:1 hingga 21:1.' },
+      { q: 'Apakah ada yang diunggah?', a: 'Tidak. Pemeriksaan berjalan sepenuhnya di browser Anda; warna Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Apa beda AA dan AAA?', a: 'AA adalah baseline umum secara hukum dan praktik; AAA adalah level paling ketat untuk aksesibilitas lebih tinggi. Targetkan minimal AA, dan AAA bila memungkinkan.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pemeriksa bekerja tanpa koneksi internet.' },
     ],
   },
   'pdf-merge': {
