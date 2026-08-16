@@ -247,6 +247,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Is this official tax advice?', a: 'No. It is a calculation helper. Always confirm the correct rates and articles for your situation with a tax professional.' },
     ],
   },
+  'invoice-generator': {
+    title: 'Free Invoice Generator — Make an Invoice PDF Online',
+    description: 'Create a clean, professional invoice and save it as PDF. Add your details, line items, tax (PPN) and a discount, with an Indonesian amount-in-words. Free, in your browser.',
+    intro: 'This free invoice generator lets you make a professional invoice in minutes and save it as a PDF. Fill in your business and client details, add line items with quantities and prices, apply a discount and tax (PPN), and add notes — the totals update live and, for rupiah invoices, the amount in words (terbilang) is filled in automatically. Everything is generated in your browser; nothing is uploaded.',
+    howTo: [
+      'Pick a currency and fill in your details and the client’s.',
+      'Add line items with a description, quantity and unit price.',
+      'Set the discount and tax (PPN) percentages, and add any notes.',
+      'Click Print / Save as PDF and choose “Save as PDF”.',
+    ],
+    faqs: [
+      { q: 'Is my invoice data uploaded?', a: 'No. The invoice is built entirely in your browser and never leaves your device — safe for client and pricing details.' },
+      { q: 'How do I save it as a PDF?', a: 'Click Print / Save as PDF; in the print dialog choose “Save as PDF” as the destination (or print to paper).' },
+      { q: 'Does it handle Indonesian PPN and terbilang?', a: 'Yes. Set the PPN percentage (11% by default) and, for IDR invoices, the total is spelled out in Indonesian words automatically.' },
+      { q: 'Which currencies are supported?', a: 'IDR, USD, EUR, GBP, SGD and MYR, each formatted with the right symbol and grouping.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the generator works with no internet connection.' },
+    ],
+  },
   'word-counter': {
     title: 'Free Word Counter — Count Words, Characters & Reading Time',
     description: 'A free online word counter: count words, characters (with and without spaces), sentences, paragraphs, lines and reading time as you type. Runs in your browser — nothing is uploaded.',
@@ -2274,6 +2292,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bagaimana PPh dihitung?', a: 'PPh dipotong dari dasar (DPP) sesuai tarif jenis yang dipilih — mis. 2% untuk jasa PPh 23 atau 10% untuk sewa PPh 4(2). Vendor menerima total invoice dikurangi PPh.' },
       { q: 'Bisakah memisahkan harga yang sudah termasuk PPN?', a: 'Ya. Centang “nominal sudah termasuk PPN” dan tool memisahkan dasar dan PPN dari nilai bruto.' },
       { q: 'Apakah ini nasihat pajak resmi?', a: 'Bukan. Ini tool bantu hitung. Selalu konfirmasi tarif dan pasal yang benar untuk situasi Anda dengan profesional pajak.' },
+    ],
+  },
+  'invoice-generator': {
+    title: 'Pembuat Invoice Gratis — Buat Invoice PDF Online',
+    description: 'Buat invoice profesional yang rapi dan simpan sebagai PDF. Tambahkan detail Anda, item, pajak (PPN), dan diskon, lengkap dengan terbilang rupiah. Gratis, di browser.',
+    intro: 'Pembuat invoice gratis ini memungkinkan Anda membuat invoice profesional dalam hitungan menit dan menyimpannya sebagai PDF. Isi detail bisnis dan klien, tambahkan item beserta jumlah dan harga, terapkan diskon dan pajak (PPN), serta tambahkan catatan — total diperbarui langsung dan, untuk invoice rupiah, terbilang diisi otomatis. Semuanya dibuat di browser Anda; tidak ada yang diunggah.',
+    howTo: [
+      'Pilih mata uang dan isi detail Anda serta klien.',
+      'Tambahkan item dengan deskripsi, jumlah, dan harga satuan.',
+      'Atur persentase diskon dan pajak (PPN), lalu tambahkan catatan.',
+      'Klik Cetak / Simpan PDF dan pilih “Simpan sebagai PDF”.',
+    ],
+    faqs: [
+      { q: 'Apakah data invoice saya diunggah?', a: 'Tidak. Invoice dibuat sepenuhnya di browser Anda dan tidak pernah meninggalkan perangkat — aman untuk detail klien dan harga.' },
+      { q: 'Bagaimana menyimpannya sebagai PDF?', a: 'Klik Cetak / Simpan PDF; pada dialog cetak, pilih “Simpan sebagai PDF” sebagai tujuan (atau cetak ke kertas).' },
+      { q: 'Apakah mendukung PPN dan terbilang Indonesia?', a: 'Ya. Atur persentase PPN (default 11%) dan, untuk invoice IDR, total ditulis dalam terbilang secara otomatis.' },
+      { q: 'Mata uang apa saja yang didukung?', a: 'IDR, USD, EUR, GBP, SGD, dan MYR, masing-masing dengan simbol dan pemisah yang tepat.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pembuat invoice bekerja tanpa koneksi internet.' },
     ],
   },
   'word-counter': {

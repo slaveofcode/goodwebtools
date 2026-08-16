@@ -642,6 +642,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'invoice-generator',
+    name: 'Invoice Generator',
+    category: 'Dev',
+    route: '/tools/invoice-generator',
+    keywords: ['invoice', 'invoice generator', 'faktur', 'kwitansi', 'billing', 'tax', 'ppn', 'receipt', 'buat invoice', 'pdf invoice'],
+    icon: FileText,
+    summary: 'Create a printable invoice with tax (PPN) and save as PDF',
+    load: () => import('@/islands/dev/InvoiceGenerator'),
+    status: 'beta'
+  },
+  {
     id: 'pdf-merge',
     name: 'Merge PDFs',
     category: 'PDF',
