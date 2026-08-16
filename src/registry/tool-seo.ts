@@ -562,6 +562,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
     ],
   },
+  'gedcom-viewer': {
+    title: 'Free GEDCOM Viewer — Open a Family Tree (.ged) File Online',
+    description: 'Open and browse a GEDCOM (.ged) family-tree file privately in your browser — search people and see parents, spouses and children. No sign-up, nothing uploaded.',
+    intro: 'This free GEDCOM viewer opens a family-tree file (.ged) exported from genealogy software and lets you browse it without a paid subscription. Search individuals, and click anyone to see their parents, spouse and children. Your file — which often contains personal family data — is read entirely in your browser and never uploaded.',
+    howTo: [
+      'Drop your .ged (GEDCOM) file to open it.',
+      'Search or scroll the list of people.',
+      'Click a person to see their birth/death, parents, spouse and children.',
+      'Click any related name to jump to that person.',
+    ],
+    faqs: [
+      { q: 'Is my family tree uploaded?', a: 'No. The GEDCOM file is parsed in your browser, so your family data never leaves your device — important for personal genealogy records.' },
+      { q: 'Do I need a genealogy subscription?', a: 'No. This viewer opens standard .ged files with no account and no sign-up.' },
+      { q: 'What does it show?', a: 'Individuals with their names, sex, birth and death dates/places, plus family links — parents, spouse and children.' },
+      { q: 'Which GEDCOM versions work?', a: 'It reads the common line-based GEDCOM format (INDI and FAM records) exported by most genealogy programs.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the viewer works with no internet connection.' },
+    ],
+  },
   'pdf-booklet': {
     title: 'PDF Booklet Imposition — Print & Fold a Saddle-Stitch Booklet',
     description: 'Rearrange a PDF into booklet (saddle-stitch) order: print double-sided, fold in half, and the pages read in sequence. Two-up imposition, free and in your browser.',
@@ -2768,6 +2786,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'gedcom-viewer': {
+    title: 'Penampil GEDCOM Gratis — Buka Berkas Silsilah (.ged) Online',
+    description: 'Buka dan telusuri berkas silsilah keluarga GEDCOM (.ged) secara privat di browser Anda — cari orang dan lihat orang tua, pasangan, dan anak. Tanpa daftar, tidak ada yang diunggah.',
+    intro: 'Penampil GEDCOM gratis ini membuka berkas silsilah keluarga (.ged) hasil ekspor dari software genealogi dan memungkinkan Anda menelusurinya tanpa langganan berbayar. Cari individu, dan klik siapa pun untuk melihat orang tua, pasangan, dan anak mereka. Berkas Anda — yang sering memuat data keluarga pribadi — dibaca sepenuhnya di browser dan tidak pernah diunggah.',
+    howTo: [
+      'Letakkan berkas .ged (GEDCOM) Anda untuk membukanya.',
+      'Cari atau gulir daftar orang.',
+      'Klik seseorang untuk melihat kelahiran/wafat, orang tua, pasangan, dan anak.',
+      'Klik nama terkait mana pun untuk lompat ke orang itu.',
+    ],
+    faqs: [
+      { q: 'Apakah silsilah saya diunggah?', a: 'Tidak. Berkas GEDCOM diurai di browser Anda, jadi data keluarga Anda tidak pernah meninggalkan perangkat — penting untuk catatan genealogi pribadi.' },
+      { q: 'Apakah perlu langganan genealogi?', a: 'Tidak. Penampil ini membuka berkas .ged standar tanpa akun dan tanpa pendaftaran.' },
+      { q: 'Apa yang ditampilkan?', a: 'Individu beserta nama, jenis kelamin, tanggal/tempat lahir dan wafat, plus tautan keluarga — orang tua, pasangan, dan anak.' },
+      { q: 'Versi GEDCOM apa yang didukung?', a: 'Membaca format GEDCOM berbasis baris yang umum (record INDI dan FAM) hasil ekspor sebagian besar program genealogi.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat penampil bekerja tanpa koneksi internet.' },
     ],
   },
   'pdf-booklet': {
