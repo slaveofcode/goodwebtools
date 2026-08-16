@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -290,6 +290,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'gedcom-viewer',
+    name: 'GEDCOM Viewer',
+    category: 'Documents',
+    route: '/tools/gedcom-viewer',
+    keywords: ['gedcom', 'ged', 'family tree', 'genealogy', 'ancestry', 'silsilah', 'keluarga', 'family history'],
+    icon: Users,
+    summary: 'Open and browse a GEDCOM family-tree file privately',
+    load: () => import('@/islands/documents/GedcomViewer'),
+    status: 'beta'
+  },
+  {
     id: 'nik-decoder',
     name: 'NIK / KTP Decoder',
     category: 'Dev',
@@ -375,6 +386,17 @@ export const tools: ToolDef[] = [
     icon: Shrink,
     summary: 'Compress an image or PDF to a target file size (e.g. 100 KB)',
     load: () => import('@/islands/files/CompressToSize'),
+    status: 'beta'
+  },
+  {
+    id: 'emergency-medical-card',
+    name: 'Emergency Medical Card',
+    category: 'Files',
+    route: '/tools/emergency-medical-card',
+    keywords: ['emergency', 'medical card', 'ice', 'in case of emergency', 'allergies', 'blood type', 'medical id', 'kartu medis', 'darurat', 'qr'],
+    icon: HeartPulse,
+    summary: 'Make a printable emergency medical card with a QR code',
+    load: () => import('@/islands/dev/EmergencyCard'),
     status: 'beta'
   },
   {
@@ -507,6 +529,17 @@ export const tools: ToolDef[] = [
     icon: Tags,
     summary: 'Remove hidden author, dates and XMP metadata from a PDF',
     load: () => import('@/islands/pdf/PdfScrubMetadata'),
+    status: 'beta'
+  },
+  {
+    id: 'pdf-booklet',
+    name: 'PDF Booklet Imposition',
+    category: 'PDF',
+    route: '/tools/pdf-booklet',
+    keywords: ['booklet', 'imposition', 'saddle stitch', 'zine', 'print booklet', 'fold', '2-up', 'signature', 'buku lipat'],
+    icon: BookCopy,
+    summary: 'Rearrange PDF pages to print and fold into a booklet',
+    load: () => import('@/islands/pdf/BookletImposition'),
     status: 'beta'
   },
   {
@@ -683,6 +716,17 @@ export const tools: ToolDef[] = [
     icon: Accessibility,
     summary: 'Check text/background colour contrast against WCAG AA & AAA',
     load: () => import('@/islands/dev/ContrastChecker'),
+    status: 'beta'
+  },
+  {
+    id: 'braille-converter',
+    name: 'Braille Converter',
+    category: 'Dev',
+    route: '/tools/braille-converter',
+    keywords: ['braille', 'braille converter', 'text to braille', 'grade 1', 'unicode braille', 'accessibility', 'huruf braille'],
+    icon: Grip,
+    summary: 'Convert text to Grade 1 Unicode braille',
+    load: () => import('@/islands/dev/BrailleConverter'),
     status: 'beta'
   },
   {
@@ -958,6 +1002,17 @@ export const tools: ToolDef[] = [
     icon: Sticker,
     summary: 'Add classic top/bottom captions to an image',
     load: () => import('@/islands/image/MemeGenerator'),
+    status: 'beta'
+  },
+  {
+    id: 'color-blindness-sim',
+    name: 'Color Blindness Simulator',
+    category: 'Image',
+    route: '/tools/color-blindness-sim',
+    keywords: ['color blindness', 'colour blind', 'protanopia', 'deuteranopia', 'tritanopia', 'accessibility', 'a11y', 'cvd', 'simulator', 'buta warna'],
+    icon: Glasses,
+    summary: 'Preview an image as seen with colour-vision deficiencies',
+    load: () => import('@/islands/image/ColorBlindSim'),
     status: 'beta'
   },
   {

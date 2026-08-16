@@ -349,6 +349,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded it keeps compressing with no internet connection.' },
     ],
   },
+  'emergency-medical-card': {
+    title: 'Emergency Medical Card Maker — Free Printable ICE Card with QR',
+    description: 'Create a printable emergency medical (ICE) card for your wallet — allergies, blood type, conditions and contacts, encoded in a QR that works with no signal. Free, private.',
+    intro: 'This free emergency medical card maker creates a wallet-sized ICE (In Case of Emergency) card. Fill in your blood type, allergies, medical conditions, medications and emergency contacts, and a QR code is generated containing everything, so a responder can read it even with no signal. Print it for your wallet or bag. It works with no account and nothing is uploaded — your health data stays on your device.',
+    howTo: [
+      'Fill in your name, blood type, allergies, conditions and medications.',
+      'Add one or more emergency contacts.',
+      'Check the live card preview and its QR code.',
+      'Click Print / Save as PDF and keep a copy in your wallet.',
+    ],
+    faqs: [
+      { q: 'Is my health information uploaded?', a: 'No. The card and QR are generated entirely in your browser; your medical details never leave your device.' },
+      { q: 'Does the QR code need internet to read?', a: 'No. The QR contains the information itself as plain text, so any scanner shows it offline — no app or signal required.' },
+      { q: 'What should I put on it?', a: 'The essentials a first responder needs fast: blood type, serious allergies, key conditions, current medications, and who to call.' },
+      { q: 'How do I save it as a PDF?', a: 'Click Print / Save as PDF and choose “Save as PDF” in the print dialog, or print it straight to paper.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the card maker works with no internet connection.' },
+    ],
+  },
   'age-calculator': {
     title: 'Age Calculator + Javanese Weton & Neptu — Free',
     description: 'Work out your exact age in years, months and days, total months/weeks/days/hours, the weekday you were born, next birthday, plus your Javanese weton and neptu. Runs in your browser.',
@@ -542,6 +560,42 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Can the redaction be undone?', a: 'No. Because the content is deleted from the file, it cannot be recovered from the output. Keep your original and check the redacted copy before sharing.' },
       { q: 'Does it redact images as well as text?', a: 'Yes. Anything under a box — text, images and line/vector art — is removed, and a black rectangle is burned in its place.' },
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
+    ],
+  },
+  'gedcom-viewer': {
+    title: 'Free GEDCOM Viewer — Open a Family Tree (.ged) File Online',
+    description: 'Open and browse a GEDCOM (.ged) family-tree file privately in your browser — search people and see parents, spouses and children. No sign-up, nothing uploaded.',
+    intro: 'This free GEDCOM viewer opens a family-tree file (.ged) exported from genealogy software and lets you browse it without a paid subscription. Search individuals, and click anyone to see their parents, spouse and children. Your file — which often contains personal family data — is read entirely in your browser and never uploaded.',
+    howTo: [
+      'Drop your .ged (GEDCOM) file to open it.',
+      'Search or scroll the list of people.',
+      'Click a person to see their birth/death, parents, spouse and children.',
+      'Click any related name to jump to that person.',
+    ],
+    faqs: [
+      { q: 'Is my family tree uploaded?', a: 'No. The GEDCOM file is parsed in your browser, so your family data never leaves your device — important for personal genealogy records.' },
+      { q: 'Do I need a genealogy subscription?', a: 'No. This viewer opens standard .ged files with no account and no sign-up.' },
+      { q: 'What does it show?', a: 'Individuals with their names, sex, birth and death dates/places, plus family links — parents, spouse and children.' },
+      { q: 'Which GEDCOM versions work?', a: 'It reads the common line-based GEDCOM format (INDI and FAM records) exported by most genealogy programs.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the viewer works with no internet connection.' },
+    ],
+  },
+  'pdf-booklet': {
+    title: 'PDF Booklet Imposition — Print & Fold a Saddle-Stitch Booklet',
+    description: 'Rearrange a PDF into booklet (saddle-stitch) order: print double-sided, fold in half, and the pages read in sequence. Two-up imposition, free and in your browser.',
+    intro: 'This free PDF booklet imposition tool reorders your pages so a home printer can produce a foldable booklet or zine. It places two pages on each side of a sheet in saddle-stitch order and pads to a multiple of four with blank pages, so when you print double-sided and fold the stack in half, everything reads in the right order. Everything runs in your browser; nothing is uploaded.',
+    howTo: [
+      'Drop your PDF to load it and see the sheet count.',
+      'Click Make booklet to impose the pages two-up.',
+      'Download the booklet PDF.',
+      'Print it double-sided (flip on the short edge) and fold in half.',
+    ],
+    faqs: [
+      { q: 'What is saddle-stitch imposition?', a: 'It reorders pages so that, printed two-up double-sided and folded down the middle, the booklet reads 1, 2, 3, … in order. Page counts are padded to a multiple of four with blanks.' },
+      { q: 'How should I print it?', a: 'Print double-sided, flipping on the short edge, at 100% scale. Each output sheet is landscape with two pages side by side; fold the whole stack in half.' },
+      { q: 'Is my PDF uploaded?', a: 'No. The imposition is done in your browser with an on-device PDF library, so your file never leaves your device.' },
+      { q: 'Does it handle any page count?', a: 'Yes. If your document is not a multiple of four, blank pages are added so the fold works out correctly.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the tool works with no internet connection.' },
     ],
   },
   'pdf-scrub-metadata': {
@@ -1023,6 +1077,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Why is my color showing as invalid?', a: 'The input has to be a valid hex code like #rrggbb or an rgb(r, g, b) value. Check for a missing # or a typo, and the tool will convert it once the format is right.' },
     ],
   },
+  'braille-converter': {
+    title: 'Free Braille Converter — Text to Grade 1 Unicode Braille',
+    description: 'Convert text to Grade 1 (uncontracted) Unicode braille — letters, numbers and punctuation, with capital and number signs. Copy or download. Free, in your browser.',
+    intro: 'This free braille converter turns text into Grade 1 (uncontracted) Unicode braille. It maps letters, digits and common punctuation to braille cells and adds the capital and number indicators, so you can copy the braille or download it as a text file. Everything runs in your browser; nothing is uploaded.',
+    howTo: [
+      'Type or paste your text.',
+      'The Grade 1 braille appears instantly below.',
+      'Copy the braille, or download it as a .txt file.',
+    ],
+    faqs: [
+      { q: 'What kind of braille is this?', a: 'Uncontracted Grade 1 English braille, output as Unicode braille cells (the U+2800 block). Each letter, digit and punctuation mark maps to its cell, with capital and number signs.' },
+      { q: 'Does it do contracted Grade 2 braille?', a: 'No. Grade 2 uses hundreds of contractions and is not produced here; this tool is Grade 1 (letter-for-letter).' },
+      { q: 'Can I produce a BRF file for an embosser?', a: 'Not currently — the output is Unicode braille text for on-screen use and copying, not an embosser-ready BRF file.' },
+      { q: 'Is my text uploaded?', a: 'No. The conversion runs entirely in your browser; your text never leaves your device.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the converter works with no internet connection.' },
+    ],
+  },
   'barcode-generator': {
     title: 'Free Barcode Generator — Code 128, EAN, UPC & More (PNG/SVG)',
     description: 'Generate barcodes online — Code 128, EAN-13, EAN-8, UPC, Code 39, ITF and more — and download as PNG or SVG. Free and private; everything renders in your browser.',
@@ -1452,6 +1523,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Can I control how the watermark looks?', a: 'Yes. You can set the text, pick any color, and use sliders to adjust its scale and opacity so it\'s as subtle or bold as you want.' },
       { q: 'What format is the watermarked image saved in?', a: 'The download keeps your image\'s original format where possible, so a JPEG stays a JPEG and a PNG stays a PNG.' },
       { q: 'Can I use this to watermark a KTP or ID card photo?', a: 'Yes. Drop in a scan or photo of your KTP, SIM, passport or any identity document, type your watermark text (e.g. "COPY" or your name), pick Diagonal or Tiled layout, set the opacity, and download. Everything stays on your device — nothing is uploaded.' },
+    ],
+  },
+  'color-blindness-sim': {
+    title: 'Color Blindness Simulator — Preview Protanopia, Deuteranopia, Tritanopia',
+    description: 'See how an image or design looks with colour-vision deficiencies — protanopia, deuteranopia, tritanopia and more — side by side with the original. Free, in your browser.',
+    intro: 'This free colour blindness simulator shows how your image or design appears to people with colour-vision deficiencies. Drop an image and compare the original with protanopia, deuteranopia, tritanopia (and their milder anomalous forms) plus full achromatopsia, side by side. Use it to check that charts, maps and UI stay readable for everyone. Everything runs in your browser.',
+    howTo: [
+      'Drop or paste an image (a chart, design or screenshot).',
+      'Pick a colour-vision deficiency to simulate.',
+      'Compare the original and simulated views side by side.',
+      'Download the simulated image if you need it.',
+    ],
+    faqs: [
+      { q: 'Which types can I simulate?', a: 'Protanopia, deuteranopia and tritanopia (the three dichromacies), their milder anomalous versions, and achromatopsia (no colour at all).' },
+      { q: 'Is my image uploaded?', a: 'No. The simulation runs on a canvas in your browser, so your image never leaves your device.' },
+      { q: 'How accurate is it?', a: 'It uses the widely used dichromacy approximation matrices. They are a strong guide for design review, not a medical diagnostic.' },
+      { q: 'Why does this matter for accessibility?', a: 'About 1 in 12 men has some colour-vision deficiency. Simulating it helps ensure charts, maps and status colours are distinguishable without relying on colour alone.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the simulator works with no internet connection.' },
     ],
   },
   'meme-generator': {
@@ -2503,6 +2592,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tetap bisa mengompres tanpa koneksi internet.' },
     ],
   },
+  'emergency-medical-card': {
+    title: 'Pembuat Kartu Medis Darurat — Kartu ICE dengan QR, Gratis',
+    description: 'Buat kartu medis darurat (ICE) untuk dompet — alergi, golongan darah, kondisi, dan kontak, dikodekan dalam QR yang bekerja tanpa sinyal. Gratis, privat.',
+    intro: 'Pembuat kartu medis darurat gratis ini membuat kartu ICE (In Case of Emergency) seukuran dompet. Isi golongan darah, alergi, kondisi medis, obat-obatan, dan kontak darurat Anda, dan QR code dibuat berisi semuanya, sehingga penolong bisa membacanya bahkan tanpa sinyal. Cetak untuk dompet atau tas Anda. Bekerja tanpa akun dan tidak ada yang diunggah — data kesehatan Anda tetap di perangkat.',
+    howTo: [
+      'Isi nama, golongan darah, alergi, kondisi, dan obat Anda.',
+      'Tambahkan satu atau beberapa kontak darurat.',
+      'Periksa pratinjau kartu langsung beserta QR code-nya.',
+      'Klik Cetak / Simpan PDF dan simpan salinannya di dompet.',
+    ],
+    faqs: [
+      { q: 'Apakah informasi kesehatan saya diunggah?', a: 'Tidak. Kartu dan QR dibuat sepenuhnya di browser Anda; detail medis Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah QR butuh internet untuk dibaca?', a: 'Tidak. QR memuat informasinya sendiri sebagai teks biasa, jadi pemindai apa pun menampilkannya offline — tanpa aplikasi atau sinyal.' },
+      { q: 'Apa yang sebaiknya dicantumkan?', a: 'Hal penting yang perlu cepat diketahui penolong: golongan darah, alergi serius, kondisi utama, obat yang dikonsumsi, dan siapa yang dihubungi.' },
+      { q: 'Bagaimana menyimpannya sebagai PDF?', a: 'Klik Cetak / Simpan PDF dan pilih “Simpan sebagai PDF” di dialog cetak, atau cetak langsung ke kertas.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pembuat kartu bekerja tanpa koneksi internet.' },
+    ],
+  },
   'age-calculator': {
     title: 'Kalkulator Usia + Weton & Neptu Jawa — Gratis',
     description: 'Hitung usia persis dalam tahun, bulan, dan hari, total bulan/minggu/hari/jam, hari kelahiran, ulang tahun berikutnya, plus weton dan neptu Jawa Anda. Berjalan di browser.',
@@ -2696,6 +2803,42 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'gedcom-viewer': {
+    title: 'Penampil GEDCOM Gratis — Buka Berkas Silsilah (.ged) Online',
+    description: 'Buka dan telusuri berkas silsilah keluarga GEDCOM (.ged) secara privat di browser Anda — cari orang dan lihat orang tua, pasangan, dan anak. Tanpa daftar, tidak ada yang diunggah.',
+    intro: 'Penampil GEDCOM gratis ini membuka berkas silsilah keluarga (.ged) hasil ekspor dari software genealogi dan memungkinkan Anda menelusurinya tanpa langganan berbayar. Cari individu, dan klik siapa pun untuk melihat orang tua, pasangan, dan anak mereka. Berkas Anda — yang sering memuat data keluarga pribadi — dibaca sepenuhnya di browser dan tidak pernah diunggah.',
+    howTo: [
+      'Letakkan berkas .ged (GEDCOM) Anda untuk membukanya.',
+      'Cari atau gulir daftar orang.',
+      'Klik seseorang untuk melihat kelahiran/wafat, orang tua, pasangan, dan anak.',
+      'Klik nama terkait mana pun untuk lompat ke orang itu.',
+    ],
+    faqs: [
+      { q: 'Apakah silsilah saya diunggah?', a: 'Tidak. Berkas GEDCOM diurai di browser Anda, jadi data keluarga Anda tidak pernah meninggalkan perangkat — penting untuk catatan genealogi pribadi.' },
+      { q: 'Apakah perlu langganan genealogi?', a: 'Tidak. Penampil ini membuka berkas .ged standar tanpa akun dan tanpa pendaftaran.' },
+      { q: 'Apa yang ditampilkan?', a: 'Individu beserta nama, jenis kelamin, tanggal/tempat lahir dan wafat, plus tautan keluarga — orang tua, pasangan, dan anak.' },
+      { q: 'Versi GEDCOM apa yang didukung?', a: 'Membaca format GEDCOM berbasis baris yang umum (record INDI dan FAM) hasil ekspor sebagian besar program genealogi.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat penampil bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'pdf-booklet': {
+    title: 'Imposisi Booklet PDF — Cetak & Lipat Booklet Jahit-Pelana',
+    description: 'Susun ulang PDF menjadi urutan booklet (jahit-pelana): cetak bolak-balik, lipat jadi dua, dan halaman terbaca berurutan. Imposisi dua-up, gratis di browser Anda.',
+    intro: 'Tool imposisi booklet PDF gratis ini menyusun ulang halaman Anda agar printer rumahan bisa menghasilkan booklet atau zine yang dapat dilipat. Tool menempatkan dua halaman pada tiap sisi lembar dalam urutan jahit-pelana dan menambah halaman kosong hingga kelipatan empat, sehingga saat dicetak bolak-balik dan tumpukan dilipat jadi dua, semuanya terbaca berurutan. Semuanya berjalan di browser Anda; tidak ada yang diunggah.',
+    howTo: [
+      'Letakkan PDF Anda untuk memuatnya dan melihat jumlah lembar.',
+      'Klik Buat booklet untuk menyusun halaman dua-up.',
+      'Unduh PDF booklet.',
+      'Cetak bolak-balik (balik pada sisi pendek) dan lipat jadi dua.',
+    ],
+    faqs: [
+      { q: 'Apa itu imposisi jahit-pelana?', a: 'Ini menyusun ulang halaman agar, dicetak dua-up bolak-balik dan dilipat di tengah, booklet terbaca 1, 2, 3, … berurutan. Jumlah halaman ditambah hingga kelipatan empat dengan halaman kosong.' },
+      { q: 'Bagaimana cara mencetaknya?', a: 'Cetak bolak-balik, balik pada sisi pendek, pada skala 100%. Tiap lembar keluaran berorientasi lanskap dengan dua halaman berdampingan; lipat seluruh tumpukan jadi dua.' },
+      { q: 'Apakah PDF saya diunggah?', a: 'Tidak. Imposisi dilakukan di browser Anda dengan pustaka PDF di perangkat, jadi berkas tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah menangani jumlah halaman apa pun?', a: 'Ya. Jika dokumen bukan kelipatan empat, halaman kosong ditambahkan agar lipatan pas.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool bekerja tanpa koneksi internet.' },
     ],
   },
   'pdf-scrub-metadata': {
@@ -3177,6 +3320,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Mengapa warna saya ditampilkan sebagai tidak valid?', a: 'Masukan harus berupa kode hex yang valid seperti #rrggbb atau nilai rgb(r, g, b). Periksa apakah ada # yang hilang atau salah ketik, dan konversi akan dilakukan begitu formatnya benar.' },
     ],
   },
+  'braille-converter': {
+    title: 'Konverter Braille Gratis — Teks ke Braille Unicode Grade 1',
+    description: 'Konversi teks ke braille Unicode Grade 1 (tanpa kontraksi) — huruf, angka, dan tanda baca, dengan tanda kapital dan angka. Salin atau unduh. Gratis, di browser Anda.',
+    intro: 'Konverter braille gratis ini mengubah teks menjadi braille Unicode Grade 1 (tanpa kontraksi). Tool memetakan huruf, angka, dan tanda baca umum ke sel braille serta menambahkan tanda kapital dan angka, sehingga Anda bisa menyalin braille-nya atau mengunduh sebagai berkas teks. Semuanya berjalan di browser Anda; tidak ada yang diunggah.',
+    howTo: [
+      'Ketik atau tempel teks Anda.',
+      'Braille Grade 1 muncul seketika di bawah.',
+      'Salin braille-nya, atau unduh sebagai berkas .txt.',
+    ],
+    faqs: [
+      { q: 'Braille jenis apa ini?', a: 'Braille Inggris Grade 1 tanpa kontraksi, dikeluarkan sebagai sel braille Unicode (blok U+2800). Tiap huruf, angka, dan tanda baca dipetakan ke selnya, dengan tanda kapital dan angka.' },
+      { q: 'Apakah menghasilkan braille Grade 2 terkontraksi?', a: 'Tidak. Grade 2 memakai ratusan kontraksi dan tidak dihasilkan di sini; tool ini Grade 1 (huruf per huruf).' },
+      { q: 'Bisakah membuat berkas BRF untuk embosser?', a: 'Belum — keluarannya adalah teks braille Unicode untuk tampilan layar dan penyalinan, bukan berkas BRF siap embosser.' },
+      { q: 'Apakah teks saya diunggah?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda; teks Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat konverter bekerja tanpa koneksi internet.' },
+    ],
+  },
   'barcode-generator': {
     title: 'Pembuat Barcode Gratis — Code 128, EAN, UPC & Lainnya (PNG/SVG)',
     description: 'Buat barcode online — Code 128, EAN-13, EAN-8, UPC, Code 39, ITF, dan lainnya — lalu unduh sebagai PNG atau SVG. Gratis dan privat; semuanya dirender di browser Anda.',
@@ -3606,6 +3766,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah saya mengontrol tampilan watermark?', a: 'Ya. Anda dapat mengatur teks, memilih warna apa pun, dan menggunakan penggeser untuk menyesuaikan skala dan opasitasnya agar sesamar atau setebal yang Anda inginkan.' },
       { q: 'Dalam format apa gambar berwatermark disimpan?', a: 'Unduhan mempertahankan format asli gambar Anda jika memungkinkan, jadi JPEG tetap JPEG dan PNG tetap PNG.' },
       { q: 'Bisakah tool ini digunakan untuk watermark KTP?', a: 'Ya. Unggah scan atau foto KTP, SIM, paspor, atau dokumen identitas lainnya, ketik teks watermark (misalnya "COPY" atau nama Anda), pilih tata letak Diagonal atau Tiled, atur opasitasnya, lalu unduh hasilnya. Semua diproses di perangkat Anda — tidak ada yang diunggah.' },
+    ],
+  },
+  'color-blindness-sim': {
+    title: 'Simulator Buta Warna — Pratinjau Protanopia, Deuteranopia, Tritanopia',
+    description: 'Lihat bagaimana gambar atau desain tampak dengan defisiensi penglihatan warna — protanopia, deuteranopia, tritanopia, dan lainnya — berdampingan dengan aslinya. Gratis, di browser.',
+    intro: 'Simulator buta warna gratis ini menunjukkan bagaimana gambar atau desain Anda tampak bagi penyandang defisiensi penglihatan warna. Letakkan gambar dan bandingkan aslinya dengan protanopia, deuteranopia, tritanopia (serta versi ringannya) plus achromatopsia penuh, berdampingan. Gunakan untuk memastikan grafik, peta, dan UI tetap terbaca oleh semua orang. Semuanya berjalan di browser Anda.',
+    howTo: [
+      'Letakkan atau tempel gambar (grafik, desain, atau tangkapan layar).',
+      'Pilih jenis defisiensi penglihatan warna untuk disimulasikan.',
+      'Bandingkan tampilan asli dan simulasi berdampingan.',
+      'Unduh gambar hasil simulasi bila diperlukan.',
+    ],
+    faqs: [
+      { q: 'Jenis apa saja yang bisa disimulasikan?', a: 'Protanopia, deuteranopia, dan tritanopia (tiga dikromasi), versi anomali yang lebih ringan, serta achromatopsia (tanpa warna sama sekali).' },
+      { q: 'Apakah gambar saya diunggah?', a: 'Tidak. Simulasi berjalan di canvas dalam browser Anda, jadi gambar tidak pernah meninggalkan perangkat.' },
+      { q: 'Seberapa akurat?', a: 'Menggunakan matriks aproksimasi dikromasi yang umum dipakai. Ini panduan kuat untuk tinjauan desain, bukan diagnosis medis.' },
+      { q: 'Mengapa ini penting untuk aksesibilitas?', a: 'Sekitar 1 dari 12 pria memiliki defisiensi penglihatan warna. Simulasi membantu memastikan grafik, peta, dan warna status dapat dibedakan tanpa hanya mengandalkan warna.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat simulator bekerja tanpa koneksi internet.' },
     ],
   },
   'meme-generator': {
