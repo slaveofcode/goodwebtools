@@ -385,6 +385,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the timer works with no internet connection.' },
     ],
   },
+  'typing-test': {
+    title: 'Free Typing Speed Test — Words Per Minute (WPM) & Accuracy',
+    description: 'Test your typing speed and accuracy online. The timer starts on your first keystroke and shows live words-per-minute and accuracy. Free, private — nothing is uploaded.',
+    intro: 'Find out how fast you type. Start typing the sample text and this free typing test measures your speed in words per minute (WPM) and your accuracy in real time. The timer begins on your first keystroke and stops when you finish the passage. Everything runs in your browser — no sign-up and nothing uploaded.',
+    howTo: [
+      'Start typing the sample text shown above the box.',
+      'The timer starts automatically on your first keystroke.',
+      'Watch your live WPM and accuracy as you go.',
+      'Finish the passage, then hit Try again or New text.',
+    ],
+    faqs: [
+      { q: 'How is WPM calculated?', a: 'A “word” is the standard five characters. WPM is your correctly typed characters divided by five, per minute — so accuracy directly affects your score.' },
+      { q: 'Is my typing sent anywhere?', a: 'No. The test runs entirely in your browser; what you type never leaves your device.' },
+      { q: 'Why is pasting disabled?', a: 'Pasting would skip the actual typing, so it is blocked to keep your score honest — type the text out.' },
+      { q: 'Can I get a different passage?', a: 'Yes. Click New text for another sample, or Try again to retype the same one.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the typing test works with no internet connection.' },
+    ],
+  },
   'pdf-organize': {
     title: 'Free Organize PDF — Reorder, Delete Pages & Add Page Numbers',
     description: 'Organize a PDF in your browser: drag to reorder pages, delete pages, and add page numbers, then download. Nothing is uploaded.',
@@ -435,6 +453,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Can the redaction be undone?', a: 'No. Because the content is deleted from the file, it cannot be recovered from the output. Keep your original and check the redacted copy before sharing.' },
       { q: 'Does it redact images as well as text?', a: 'Yes. Anything under a box — text, images and line/vector art — is removed, and a black rectangle is burned in its place.' },
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
+    ],
+  },
+  'pdf-scrub-metadata': {
+    title: 'Free PDF Metadata Scrubber — Remove Author, Dates & XMP',
+    description: 'Remove hidden metadata from a PDF — author, original file name, software, timestamps and the XMP block. See what it carries, then scrub it. Private, in your browser.',
+    intro: 'PDFs quietly carry hidden metadata: the author’s name, the original file name, the software that made it, creation and edit timestamps, and an XMP block that can hold even more. This free PDF metadata scrubber shows you exactly what a PDF contains and removes it — the document’s Info fields and its XMP stream — while leaving the pages and content untouched. Everything runs on your device; nothing is uploaded.',
+    howTo: [
+      'Drop your PDF to see the metadata it currently contains.',
+      'Review the author, dates, software and other fields found.',
+      'Click Scrub metadata & download.',
+      'Save the cleaned PDF — Info fields and the XMP block are gone.',
+    ],
+    faqs: [
+      { q: 'What metadata does it remove?', a: 'The standard document Info fields — title, author, subject, keywords, creator, producer and the creation/modification dates — plus the XMP metadata stream. Page content is not changed.' },
+      { q: 'Is my PDF uploaded?', a: 'No. Reading and scrubbing run entirely in your browser with an on-device PDF engine, so your file never leaves your device.' },
+      { q: 'Why does removing metadata matter?', a: 'Metadata can leak your real name, your computer’s user or file path, the software you use, and when a document was created or edited — details you may not want to share.' },
+      { q: 'Does it change how the PDF looks?', a: 'No. Only metadata is removed; the pages, text and images stay exactly the same.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the scrubber works with no internet connection.' },
     ],
   },
   'compare-lists': {
@@ -896,6 +932,41 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Is anything sent to a server?', a: 'No. The conversion runs entirely in your browser with JavaScript, so no color values or data ever leave your device.' },
       { q: 'Can I pick a color instead of typing one?', a: 'Yes. Click the swatch to open your system color picker, and the HEX, RGB and HSL values update to match your selection.' },
       { q: 'Why is my color showing as invalid?', a: 'The input has to be a valid hex code like #rrggbb or an rgb(r, g, b) value. Check for a missing # or a typo, and the tool will convert it once the format is right.' },
+    ],
+  },
+  'contrast-checker': {
+    title: 'WCAG Contrast Checker — Color Contrast Ratio (AA & AAA)',
+    description: 'Check colour contrast between text and background against WCAG 2.1. See the contrast ratio and AA/AAA pass or fail for normal and large text. Free, in your browser.',
+    intro: 'This free WCAG contrast checker measures the colour contrast between text and its background so your designs stay readable and accessible. Pick a text colour and a background colour to see the exact contrast ratio, a live preview, and whether it meets WCAG 2.1 AA and AAA for both normal and large text. Everything runs in your browser.',
+    howTo: [
+      'Choose your text colour and background colour (swatch or hex).',
+      'Read the contrast ratio and the live preview.',
+      'Check the AA / AAA pass or fail badges for normal and large text.',
+      'Use Swap to try the reverse, and adjust until it passes.',
+    ],
+    faqs: [
+      { q: 'What contrast ratio do I need?', a: 'WCAG 2.1 AA needs 4.5:1 for normal text and 3:1 for large text; AAA needs 7:1 and 4.5:1 respectively. Large text is roughly 18pt+ (or 14pt+ bold).' },
+      { q: 'How is the ratio calculated?', a: 'It uses the WCAG relative-luminance formula on both colours, then (lighter + 0.05) / (darker + 0.05), giving a value from 1:1 to 21:1.' },
+      { q: 'Is anything uploaded?', a: 'No. The check runs entirely in your browser; your colours never leave your device.' },
+      { q: 'What is the difference between AA and AAA?', a: 'AA is the common legal and practical baseline; AAA is the strictest level for enhanced accessibility. Aim for AA at minimum, AAA where you can.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the checker works with no internet connection.' },
+    ],
+  },
+  'url-cleaner': {
+    title: 'URL Tracking Stripper — Remove utm_, fbclid & gclid from Links',
+    description: 'Clean tracking parameters from any link — utm_*, fbclid, gclid, si and more. Paste one or many URLs, or upload a CSV, and copy the clean versions. Private, in your browser.',
+    intro: 'Shared links are often stuffed with tracking parameters — utm_source, fbclid, gclid, si and dozens more — that reveal where you found the link and let it be tracked. This tool strips them out while keeping the parts that actually matter (the path, real query parameters and the page anchor). Paste a single link or many (one per line), or upload a CSV/TXT for bulk cleaning, then copy the results. Everything runs in your browser.',
+    howTo: [
+      'Paste one or more URLs, one per line — or upload a .csv/.txt.',
+      'See each cleaned URL and exactly which parameters were removed.',
+      'Copy a single result, or use Copy all clean URLs for the batch.',
+    ],
+    faqs: [
+      { q: 'Which parameters get removed?', a: 'Common tracking families and click IDs: utm_* and mtm_/pk_ campaign tags, plus fbclid, gclid, dclid, msclkid, igshid, mc_eid, si, ref and many more — while normal parameters like id or q are kept.' },
+      { q: 'Is my list of links uploaded?', a: 'No. Cleaning runs entirely in your browser; your URLs and any uploaded file never leave your device.' },
+      { q: 'Can I clean a whole spreadsheet of links?', a: 'Yes. Export your sheet to CSV (or TXT) and upload it — every cell that looks like a URL is pulled out and cleaned in bulk.' },
+      { q: 'Will it break my links?', a: 'No. Only known tracking parameters are removed; the path, remaining query parameters and the #fragment are preserved, so the link still works.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the stripper works with no internet connection.' },
     ],
   },
   'pdf-merge': {
@@ -1721,6 +1792,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Why does the first run take a while?', a: 'The AI model is downloaded and cached on first use, and larger or \'Better\' models are slower — especially on phones. After the initial download it loads from cache, and transcription runs locally on your device.' },
     ],
   },
+  'text-to-speech': {
+    title: 'Free Text to Speech — Read Any Text Aloud Online',
+    description: 'Convert text to speech in your browser using built-in voices. Choose a voice, adjust speed and pitch, and listen instantly. Free, private — nothing is uploaded.',
+    intro: 'This free text-to-speech tool reads any text aloud using the natural voices already built into your browser and operating system. Paste or type your text, choose a voice and language, tune the speed and pitch, and press Speak. It runs entirely on your device, so your text is never uploaded.',
+    howTo: [
+      'Type or paste the text you want read aloud.',
+      'Pick a voice (voices available depend on your browser and OS).',
+      'Adjust the speed and pitch to taste.',
+      'Press Speak — use Pause, Resume or Stop as needed.',
+    ],
+    faqs: [
+      { q: 'Is my text sent to a server?', a: 'No. Speech is generated by your browser’s built-in speech engine, so your text stays on your device and nothing is uploaded.' },
+      { q: 'Can I download the audio as an MP3?', a: 'Not here — browser speech synthesis plays audio but does not expose a downloadable file. This tool is for listening; for a recordable file you would need a different, server-based service.' },
+      { q: 'Why do I see different voices than someone else?', a: 'The available voices come from your browser and operating system, so the list varies by device. Chrome, Edge, macOS and iOS each ship their own set.' },
+      { q: 'Does it support languages other than English?', a: 'Yes. Any language your system provides a voice for will appear in the list — including Indonesian on many devices. Pick a matching voice for the best result.' },
+      { q: 'Does it work offline?', a: 'The built-in system voices generally work offline; some browsers stream certain higher-quality voices, which then need a connection.' },
+    ],
+  },
   'video-convert': {
     title: 'Free Video Converter Tool — Convert & Compress',
     description: 'A free online video converter tool to convert, compress, trim, or resize video to MP4, WebM, or MOV. Runs in your browser — nothing is uploaded.',
@@ -2325,6 +2414,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat timer bekerja tanpa koneksi internet.' },
     ],
   },
+  'typing-test': {
+    title: 'Tes Kecepatan Mengetik Gratis — Kata Per Menit (KPM) & Akurasi',
+    description: 'Uji kecepatan dan akurasi mengetik Anda online. Timer dimulai pada ketukan pertama dan menampilkan kata per menit serta akurasi langsung. Gratis, privat — tidak ada yang diunggah.',
+    intro: 'Cari tahu seberapa cepat Anda mengetik. Mulai ketik teks contoh dan tes mengetik gratis ini mengukur kecepatan Anda dalam kata per menit (KPM) dan akurasi secara langsung. Timer dimulai pada ketukan pertama dan berhenti saat Anda menyelesaikan teks. Semuanya berjalan di browser Anda — tanpa pendaftaran dan tidak ada yang diunggah.',
+    howTo: [
+      'Mulai ketik teks contoh yang ditampilkan di atas kotak.',
+      'Timer mulai otomatis pada ketukan pertama Anda.',
+      'Perhatikan KPM dan akurasi langsung saat mengetik.',
+      'Selesaikan teksnya, lalu tekan Coba lagi atau Teks baru.',
+    ],
+    faqs: [
+      { q: 'Bagaimana KPM dihitung?', a: 'Satu “kata” adalah lima karakter standar. KPM adalah karakter yang diketik dengan benar dibagi lima, per menit — jadi akurasi langsung memengaruhi skor Anda.' },
+      { q: 'Apakah ketikan saya dikirim ke mana pun?', a: 'Tidak. Tes berjalan sepenuhnya di browser Anda; apa yang Anda ketik tidak pernah meninggalkan perangkat.' },
+      { q: 'Mengapa menempel dinonaktifkan?', a: 'Menempel akan melewati proses mengetik sebenarnya, jadi diblokir agar skor Anda jujur — ketik teksnya.' },
+      { q: 'Bisakah mendapat teks berbeda?', a: 'Bisa. Klik Teks baru untuk contoh lain, atau Coba lagi untuk mengetik ulang yang sama.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tes mengetik bekerja tanpa koneksi internet.' },
+    ],
+  },
   'pdf-organize': {
     title: 'Organize PDF Gratis — Susun Ulang, Hapus Halaman & Nomor Halaman',
     description: 'Susun PDF di browser Anda: seret untuk menyusun ulang halaman, hapus halaman, dan tambahkan nomor halaman, lalu unduh. Tidak ada yang diunggah.',
@@ -2375,6 +2482,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'pdf-scrub-metadata': {
+    title: 'Pembersih Metadata PDF Gratis — Hapus Penulis, Tanggal & XMP',
+    description: 'Hapus metadata tersembunyi dari PDF — penulis, nama berkas asli, software, timestamp, dan blok XMP. Lihat isinya, lalu bersihkan. Privat, di browser Anda.',
+    intro: 'PDF diam-diam membawa metadata tersembunyi: nama penulis, nama berkas asli, software pembuatnya, timestamp pembuatan dan penyuntingan, serta blok XMP yang bisa memuat lebih banyak lagi. Pembersih metadata PDF gratis ini menunjukkan persis apa yang dimuat PDF dan menghapusnya — kolom Info dokumen dan aliran XMP-nya — sambil membiarkan halaman dan konten utuh. Semuanya berjalan di perangkat Anda; tidak ada yang diunggah.',
+    howTo: [
+      'Letakkan PDF Anda untuk melihat metadata yang saat ini dimuat.',
+      'Tinjau penulis, tanggal, software, dan kolom lain yang ditemukan.',
+      'Klik Bersihkan metadata & unduh.',
+      'Simpan PDF yang sudah bersih — kolom Info dan blok XMP hilang.',
+    ],
+    faqs: [
+      { q: 'Metadata apa saja yang dihapus?', a: 'Kolom Info dokumen standar — judul, penulis, subjek, kata kunci, aplikasi pembuat, produser, serta tanggal pembuatan/modifikasi — plus aliran metadata XMP. Konten halaman tidak diubah.' },
+      { q: 'Apakah PDF saya diunggah?', a: 'Tidak. Pembacaan dan pembersihan berjalan sepenuhnya di browser Anda dengan mesin PDF di perangkat, jadi berkas tidak pernah meninggalkan perangkat.' },
+      { q: 'Mengapa menghapus metadata itu penting?', a: 'Metadata bisa membocorkan nama asli Anda, pengguna atau path berkas komputer Anda, software yang Anda pakai, serta kapan dokumen dibuat atau diedit — detail yang mungkin tak ingin Anda bagikan.' },
+      { q: 'Apakah mengubah tampilan PDF?', a: 'Tidak. Hanya metadata yang dihapus; halaman, teks, dan gambar tetap sama persis.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pembersih bekerja tanpa koneksi internet.' },
     ],
   },
   'compare-lists': {
@@ -2836,6 +2961,41 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah ada yang dikirim ke server?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda dengan JavaScript, jadi tidak ada nilai warna atau data yang meninggalkan perangkat Anda.' },
       { q: 'Bisakah saya memilih warna alih-alih mengetiknya?', a: 'Ya. Klik kotak warna untuk membuka pemilih warna sistem Anda, dan nilai HEX, RGB, serta HSL akan diperbarui sesuai pilihan Anda.' },
       { q: 'Mengapa warna saya ditampilkan sebagai tidak valid?', a: 'Masukan harus berupa kode hex yang valid seperti #rrggbb atau nilai rgb(r, g, b). Periksa apakah ada # yang hilang atau salah ketik, dan konversi akan dilakukan begitu formatnya benar.' },
+    ],
+  },
+  'contrast-checker': {
+    title: 'Pemeriksa Kontras WCAG — Rasio Kontras Warna (AA & AAA)',
+    description: 'Periksa kontras warna antara teks dan latar terhadap WCAG 2.1. Lihat rasio kontras dan lolos/gagal AA/AAA untuk teks normal dan besar. Gratis, di browser Anda.',
+    intro: 'Pemeriksa kontras WCAG gratis ini mengukur kontras warna antara teks dan latarnya agar desain Anda tetap mudah dibaca dan aksesibel. Pilih warna teks dan warna latar untuk melihat rasio kontras yang tepat, pratinjau langsung, serta apakah memenuhi WCAG 2.1 AA dan AAA untuk teks normal maupun besar. Semuanya berjalan di browser Anda.',
+    howTo: [
+      'Pilih warna teks dan warna latar Anda (swatch atau hex).',
+      'Baca rasio kontras dan pratinjau langsung.',
+      'Cek badge lolos/gagal AA / AAA untuk teks normal dan besar.',
+      'Gunakan Tukar untuk mencoba kebalikannya, dan sesuaikan hingga lolos.',
+    ],
+    faqs: [
+      { q: 'Rasio kontras berapa yang saya butuhkan?', a: 'WCAG 2.1 AA butuh 4,5:1 untuk teks normal dan 3:1 untuk teks besar; AAA butuh 7:1 dan 4,5:1. Teks besar kira-kira 18pt+ (atau 14pt+ tebal).' },
+      { q: 'Bagaimana rasio dihitung?', a: 'Menggunakan rumus luminansi relatif WCAG pada kedua warna, lalu (lebih terang + 0,05) / (lebih gelap + 0,05), menghasilkan nilai dari 1:1 hingga 21:1.' },
+      { q: 'Apakah ada yang diunggah?', a: 'Tidak. Pemeriksaan berjalan sepenuhnya di browser Anda; warna Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Apa beda AA dan AAA?', a: 'AA adalah baseline umum secara hukum dan praktik; AAA adalah level paling ketat untuk aksesibilitas lebih tinggi. Targetkan minimal AA, dan AAA bila memungkinkan.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pemeriksa bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'url-cleaner': {
+    title: 'Penghapus Pelacak URL — Hapus utm_, fbclid & gclid dari Tautan',
+    description: 'Bersihkan parameter pelacak dari tautan apa pun — utm_*, fbclid, gclid, si, dan lainnya. Tempel satu atau banyak URL, atau unggah CSV, lalu salin versi bersihnya. Privat, di browser.',
+    intro: 'Tautan yang dibagikan sering dipenuhi parameter pelacak — utm_source, fbclid, gclid, si, dan puluhan lainnya — yang mengungkap dari mana Anda menemukan tautan dan memungkinkan pelacakan. Tool ini menghapusnya sambil mempertahankan bagian yang benar-benar penting (path, parameter query asli, dan anchor halaman). Tempel satu tautan atau banyak (satu per baris), atau unggah CSV/TXT untuk pembersihan massal, lalu salin hasilnya. Semuanya berjalan di browser Anda.',
+    howTo: [
+      'Tempel satu atau beberapa URL, satu per baris — atau unggah .csv/.txt.',
+      'Lihat setiap URL bersih dan parameter mana yang dihapus.',
+      'Salin satu hasil, atau gunakan Salin semua URL bersih untuk seluruhnya.',
+    ],
+    faqs: [
+      { q: 'Parameter apa saja yang dihapus?', a: 'Keluarga pelacak umum dan click ID: utm_* serta tag kampanye mtm_/pk_, plus fbclid, gclid, dclid, msclkid, igshid, mc_eid, si, ref, dan banyak lagi — sementara parameter normal seperti id atau q tetap dipertahankan.' },
+      { q: 'Apakah daftar tautan saya diunggah?', a: 'Tidak. Pembersihan berjalan sepenuhnya di browser Anda; URL dan berkas yang diunggah tidak pernah meninggalkan perangkat.' },
+      { q: 'Bisakah membersihkan satu spreadsheet penuh tautan?', a: 'Bisa. Ekspor sheet Anda ke CSV (atau TXT) dan unggah — setiap sel yang tampak seperti URL diambil dan dibersihkan sekaligus.' },
+      { q: 'Apakah akan merusak tautan saya?', a: 'Tidak. Hanya parameter pelacak yang diketahui yang dihapus; path, parameter query lainnya, dan #fragment dipertahankan, jadi tautan tetap berfungsi.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat penghapus bekerja tanpa koneksi internet.' },
     ],
   },
   'pdf-merge': {
@@ -3659,6 +3819,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah ini mentranskripsi bahasa selain English?', a: 'Ya. Pilih salah satu model multibahasa dan pilih bahasa yang diucapkan — Indonesia, Melayu, Jepang, Spanyol, dan banyak lagi — untuk akurasi terbaik. Deteksi otomatis juga tersedia.' },
       { q: 'Bisakah saya mengekspor subtitle?', a: 'Ya. Buka tab Subtitles dan unduh berkas SRT atau VTT dengan timestamp, atau ambil teks biasa (.txt) atau versi dengan timestamp sebagai gantinya.' },
       { q: 'Mengapa penggunaan pertama memakan waktu?', a: 'Model AI diunduh dan disimpan di cache pada penggunaan pertama, dan model yang lebih besar atau \'Better\' lebih lambat — terutama di ponsel. Setelah unduhan awal, ia dimuat dari cache, dan transkripsi berjalan secara lokal di perangkat Anda.' },
+    ],
+  },
+  'text-to-speech': {
+    title: 'Text to Speech Gratis — Bacakan Teks Apa Pun Online',
+    description: 'Ubah teks menjadi suara di browser Anda memakai voice bawaan. Pilih voice, atur kecepatan dan nada, lalu dengarkan seketika. Gratis, privat — tidak ada yang diunggah.',
+    intro: 'Tool text-to-speech gratis ini membacakan teks apa pun dengan suara alami yang sudah ada di browser dan sistem operasi Anda. Tempel atau ketik teks, pilih voice dan bahasa, atur kecepatan dan nada, lalu tekan Bacakan. Berjalan sepenuhnya di perangkat Anda, jadi teks Anda tidak pernah diunggah.',
+    howTo: [
+      'Ketik atau tempel teks yang ingin dibacakan.',
+      'Pilih voice (voice yang tersedia bergantung pada browser dan OS Anda).',
+      'Atur kecepatan dan nada sesuai selera.',
+      'Tekan Bacakan — gunakan Jeda, Lanjut, atau Hentikan sesuai kebutuhan.',
+    ],
+    faqs: [
+      { q: 'Apakah teks saya dikirim ke server?', a: 'Tidak. Suara dihasilkan oleh mesin suara bawaan browser Anda, jadi teks tetap di perangkat dan tidak ada yang diunggah.' },
+      { q: 'Bisakah mengunduh audionya sebagai MP3?', a: 'Tidak di sini — sintesis suara browser memutar audio tetapi tidak menyediakan berkas yang bisa diunduh. Tool ini untuk mendengarkan; untuk berkas yang bisa direkam Anda perlu layanan berbasis server yang berbeda.' },
+      { q: 'Mengapa voice saya berbeda dari orang lain?', a: 'Voice yang tersedia berasal dari browser dan sistem operasi Anda, jadi daftarnya berbeda tiap perangkat. Chrome, Edge, macOS, dan iOS masing-masing punya set sendiri.' },
+      { q: 'Apakah mendukung bahasa selain English?', a: 'Ya. Bahasa apa pun yang sistem Anda sediakan voice-nya akan muncul di daftar — termasuk Indonesia di banyak perangkat. Pilih voice yang sesuai untuk hasil terbaik.' },
+      { q: 'Apakah bekerja offline?', a: 'Voice sistem bawaan umumnya bekerja offline; sebagian browser mengalirkan voice berkualitas lebih tinggi tertentu, yang lalu membutuhkan koneksi.' },
     ],
   },
   'video-convert': {

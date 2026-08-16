@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -411,6 +411,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'typing-test',
+    name: 'Typing Speed Test',
+    category: 'Calculators',
+    route: '/tools/typing-test',
+    keywords: ['typing test', 'typing speed', 'wpm', 'words per minute', 'typing accuracy', 'tes mengetik', 'kecepatan mengetik', 'keyboard'],
+    icon: Gauge,
+    summary: 'Measure your typing speed (WPM) and accuracy',
+    load: () => import('@/islands/calculators/TypingTest'),
+    status: 'beta'
+  },
+  {
     id: 'pdf-organize',
     name: 'Organize PDF',
     category: 'PDF',
@@ -441,6 +452,17 @@ export const tools: ToolDef[] = [
     icon: Highlighter,
     summary: 'Permanently remove sensitive text and images from a PDF',
     load: () => import('@/islands/pdf/PdfRedact'),
+    status: 'beta'
+  },
+  {
+    id: 'pdf-scrub-metadata',
+    name: 'PDF Metadata Scrubber',
+    category: 'PDF',
+    route: '/tools/pdf-scrub-metadata',
+    keywords: ['pdf metadata', 'remove metadata', 'scrub metadata', 'author', 'strip metadata', 'xmp', 'privacy', 'clean pdf', 'metadata pdf'],
+    icon: Tags,
+    summary: 'Remove hidden author, dates and XMP metadata from a PDF',
+    load: () => import('@/islands/pdf/PdfScrubMetadata'),
     status: 'beta'
   },
   {
@@ -596,6 +618,28 @@ export const tools: ToolDef[] = [
     summary: 'Pick or Convert colors between HEX, RGB, and HSL',
     load: () => import('@/islands/dev/ColorConvert'),
     status: 'stable'
+  },
+  {
+    id: 'contrast-checker',
+    name: 'WCAG Contrast Checker',
+    category: 'Dev',
+    route: '/tools/contrast-checker',
+    keywords: ['contrast', 'wcag', 'accessibility', 'a11y', 'color contrast', 'aa', 'aaa', 'contrast ratio', 'kontras', 'aksesibilitas'],
+    icon: Accessibility,
+    summary: 'Check text/background colour contrast against WCAG AA & AAA',
+    load: () => import('@/islands/dev/ContrastChecker'),
+    status: 'beta'
+  },
+  {
+    id: 'url-cleaner',
+    name: 'URL Tracking Stripper',
+    category: 'Dev',
+    route: '/tools/url-cleaner',
+    keywords: ['url', 'tracking', 'utm', 'fbclid', 'gclid', 'clean url', 'remove tracking', 'strip parameters', 'privacy', 'share link'],
+    icon: Link2Off,
+    summary: 'Remove utm_, fbclid, gclid and other tracking parameters from links',
+    load: () => import('@/islands/dev/UrlStripper'),
+    status: 'beta'
   },
   {
     id: 'pdf-merge',
@@ -1134,6 +1178,17 @@ export const tools: ToolDef[] = [
     icon: Mic,
     summary: 'Transcribe speech to text on-device (Whisper), with SRT/VTT export',
     load: () => import('@/islands/media/VoiceToText'),
+    status: 'beta'
+  },
+  {
+    id: 'text-to-speech',
+    name: 'Text to Speech',
+    category: 'Media',
+    route: '/tools/text-to-speech',
+    keywords: ['text to speech', 'tts', 'read aloud', 'speak text', 'voice', 'narrate', 'teks ke suara', 'baca teks', 'speech synthesis'],
+    icon: Speech,
+    summary: 'Read text aloud with your browser’s built-in voices',
+    load: () => import('@/islands/media/TextToSpeech'),
     status: 'beta'
   },
   {
