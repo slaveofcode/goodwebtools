@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -430,6 +430,28 @@ export const tools: ToolDef[] = [
     icon: Home,
     summary: 'Calculate monthly home-loan installments and amortisation',
     load: () => import('@/islands/calculators/KprCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'zakat-calculator',
+    name: 'Zakat Calculator',
+    category: 'Calculators',
+    route: '/tools/zakat-calculator',
+    keywords: ['zakat', 'kalkulator zakat', 'zakat maal', 'zakat penghasilan', 'nisab', 'kalkulator zakat mal', 'sedekah', 'islam'],
+    icon: HeartHandshake,
+    summary: 'Calculate zakat maal and zakat penghasilan (2.5%)',
+    load: () => import('@/islands/calculators/ZakatCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'thr-calculator',
+    name: 'THR Calculator',
+    category: 'Calculators',
+    route: '/tools/thr-calculator',
+    keywords: ['thr', 'tunjangan hari raya', 'kalkulator thr', 'holiday allowance', 'thr proporsional', 'gaji', 'karyawan', 'lebaran'],
+    icon: Gift,
+    summary: 'Calculate THR (holiday allowance), full or prorated',
+    load: () => import('@/islands/calculators/ThrCalculator'),
     status: 'beta'
   },
   {
