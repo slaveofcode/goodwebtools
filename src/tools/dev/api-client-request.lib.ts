@@ -1,5 +1,5 @@
 import { isTauri } from '@/services/platform';
-import type { RequestDef, ResponseSnapshot } from './api-client.types';
+import type { RequestDef, ResponseSnapshot, SentRequestSummary } from './api-client.types';
 
 export function buildFetchInit(req: RequestDef): { url: string; init: RequestInit } {
   const headers: Record<string, string> = {};
@@ -41,15 +41,7 @@ export function buildFetchInit(req: RequestDef): { url: string; init: RequestIni
   return { url, init: { method: req.method, headers, body } };
 }
 
-export interface SentRequestSummary {
-  method: string;
-  /** Final URL with query params appended. */
-  url: string;
-  /** All outgoing headers, including auth and content-type. */
-  headers: [string, string][];
-  /** The request body as sent, or null if none. */
-  body: string | null;
-}
+export type { SentRequestSummary };
 
 /**
  * Describe the actual outgoing request (after variable substitution has been

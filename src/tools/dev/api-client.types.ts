@@ -22,12 +22,24 @@ export type VarSource =
 
 export type VarBinding = { name: string; source: VarSource };
 
+export type SentRequestSummary = {
+  method: string;
+  /** Final URL with query params appended. */
+  url: string;
+  /** All outgoing headers, including auth and content-type. */
+  headers: [string, string][];
+  /** The request body as sent, or null if none. */
+  body: string | null;
+};
+
 export type ResponseSnapshot = {
   status: number;
   statusText: string;
   headers: Record<string, string>;
   body: string;
   durationMs: number;
+  /** The exact request that produced this response (variables resolved). */
+  sentRequest?: SentRequestSummary;
 };
 
 export const MAX_REQUEST_RESPONSES = 5;
