@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -400,6 +400,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'pomodoro-timer',
+    name: 'Pomodoro Timer',
+    category: 'Calculators',
+    route: '/tools/pomodoro-timer',
+    keywords: ['pomodoro', 'timer', 'focus timer', 'productivity', 'countdown', 'study timer', 'work break', 'timer pomodoro', 'fokus'],
+    icon: Timer,
+    summary: 'A configurable Pomodoro focus timer with breaks',
+    load: () => import('@/islands/calculators/TimerPomodoro'),
+    status: 'beta'
+  },
+  {
     id: 'pdf-organize',
     name: 'Organize PDF',
     category: 'PDF',
@@ -419,6 +430,17 @@ export const tools: ToolDef[] = [
     icon: FileSignature,
     summary: 'Draw or upload a signature and place it on a PDF',
     load: () => import('@/islands/pdf/PdfSign'),
+    status: 'beta'
+  },
+  {
+    id: 'pdf-redact',
+    name: 'Redact PDF',
+    category: 'PDF',
+    route: '/tools/pdf-redact',
+    keywords: ['redact pdf', 'redaction', 'black out', 'remove text', 'hide sensitive', 'censor pdf', 'sensor pdf', 'blackout', 'privacy'],
+    icon: Highlighter,
+    summary: 'Permanently remove sensitive text and images from a PDF',
+    load: () => import('@/islands/pdf/PdfRedact'),
     status: 'beta'
   },
   {
