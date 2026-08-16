@@ -58,10 +58,9 @@ export default function PdfRedact({ lang = 'en' }: { lang?: Lang }) {
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const nextId = useRef(1);
 
-  useEffect(() => () => {
-    rendererRef.current?.destroy();
-    if (pageUrl) URL.revokeObjectURL(pageUrl);
-  }, [pageUrl]);
+  // Tear down the renderer only on unmount. (Depending on pageUrl here would run
+  // this cleanup on every page change and destroy the renderer mid-session.)
+  useEffect(() => () => rendererRef.current?.destroy(), []);
 
   const renderPage = async (renderer: PdfRenderer, n: number) => {
     const page = await renderer.renderPage(n, 1.4);
