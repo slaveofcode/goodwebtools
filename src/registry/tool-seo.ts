@@ -562,6 +562,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
     ],
   },
+  'pdf-booklet': {
+    title: 'PDF Booklet Imposition — Print & Fold a Saddle-Stitch Booklet',
+    description: 'Rearrange a PDF into booklet (saddle-stitch) order: print double-sided, fold in half, and the pages read in sequence. Two-up imposition, free and in your browser.',
+    intro: 'This free PDF booklet imposition tool reorders your pages so a home printer can produce a foldable booklet or zine. It places two pages on each side of a sheet in saddle-stitch order and pads to a multiple of four with blank pages, so when you print double-sided and fold the stack in half, everything reads in the right order. Everything runs in your browser; nothing is uploaded.',
+    howTo: [
+      'Drop your PDF to load it and see the sheet count.',
+      'Click Make booklet to impose the pages two-up.',
+      'Download the booklet PDF.',
+      'Print it double-sided (flip on the short edge) and fold in half.',
+    ],
+    faqs: [
+      { q: 'What is saddle-stitch imposition?', a: 'It reorders pages so that, printed two-up double-sided and folded down the middle, the booklet reads 1, 2, 3, … in order. Page counts are padded to a multiple of four with blanks.' },
+      { q: 'How should I print it?', a: 'Print double-sided, flipping on the short edge, at 100% scale. Each output sheet is landscape with two pages side by side; fold the whole stack in half.' },
+      { q: 'Is my PDF uploaded?', a: 'No. The imposition is done in your browser with an on-device PDF library, so your file never leaves your device.' },
+      { q: 'Does it handle any page count?', a: 'Yes. If your document is not a multiple of four, blank pages are added so the fold works out correctly.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the tool works with no internet connection.' },
+    ],
+  },
   'pdf-scrub-metadata': {
     title: 'Free PDF Metadata Scrubber — Remove Author, Dates & XMP',
     description: 'Remove hidden metadata from a PDF — author, original file name, software, timestamps and the XMP block. See what it carries, then scrub it. Private, in your browser.',
@@ -2750,6 +2768,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'pdf-booklet': {
+    title: 'Imposisi Booklet PDF — Cetak & Lipat Booklet Jahit-Pelana',
+    description: 'Susun ulang PDF menjadi urutan booklet (jahit-pelana): cetak bolak-balik, lipat jadi dua, dan halaman terbaca berurutan. Imposisi dua-up, gratis di browser Anda.',
+    intro: 'Tool imposisi booklet PDF gratis ini menyusun ulang halaman Anda agar printer rumahan bisa menghasilkan booklet atau zine yang dapat dilipat. Tool menempatkan dua halaman pada tiap sisi lembar dalam urutan jahit-pelana dan menambah halaman kosong hingga kelipatan empat, sehingga saat dicetak bolak-balik dan tumpukan dilipat jadi dua, semuanya terbaca berurutan. Semuanya berjalan di browser Anda; tidak ada yang diunggah.',
+    howTo: [
+      'Letakkan PDF Anda untuk memuatnya dan melihat jumlah lembar.',
+      'Klik Buat booklet untuk menyusun halaman dua-up.',
+      'Unduh PDF booklet.',
+      'Cetak bolak-balik (balik pada sisi pendek) dan lipat jadi dua.',
+    ],
+    faqs: [
+      { q: 'Apa itu imposisi jahit-pelana?', a: 'Ini menyusun ulang halaman agar, dicetak dua-up bolak-balik dan dilipat di tengah, booklet terbaca 1, 2, 3, … berurutan. Jumlah halaman ditambah hingga kelipatan empat dengan halaman kosong.' },
+      { q: 'Bagaimana cara mencetaknya?', a: 'Cetak bolak-balik, balik pada sisi pendek, pada skala 100%. Tiap lembar keluaran berorientasi lanskap dengan dua halaman berdampingan; lipat seluruh tumpukan jadi dua.' },
+      { q: 'Apakah PDF saya diunggah?', a: 'Tidak. Imposisi dilakukan di browser Anda dengan pustaka PDF di perangkat, jadi berkas tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah menangani jumlah halaman apa pun?', a: 'Ya. Jika dokumen bukan kelipatan empat, halaman kosong ditambahkan agar lipatan pas.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool bekerja tanpa koneksi internet.' },
     ],
   },
   'pdf-scrub-metadata': {
