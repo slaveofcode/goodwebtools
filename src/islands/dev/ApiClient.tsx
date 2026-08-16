@@ -9,7 +9,7 @@ import { exportPostman, exportWorkspace } from '@/tools/dev/api-client-export.li
 import { downloadService } from '@/services/download';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
-import type { Workspace, RequestDef, Collection, Folder as FolderType, Environment, HistoryEntry } from '@/tools/dev/api-client.types';
+import type { Workspace, RequestDef, Collection, Folder as FolderType, Environment, HistoryEntry, ResponseSnapshot } from '@/tools/dev/api-client.types';
 import { SAVE_INTERVAL } from '@/tools/dev/api-client.types';
 
 // ---- helpers ----
@@ -138,7 +138,12 @@ export default function ApiClient() {
     try {
       const allReqs = allRequests(workspace);
       const substituted = substituteRequest(activeRequest, allReqs, envVars);
-      const res = await executeRequest(substituted);
+      // Freeze exactly what we sent onto the response so the Request tab shows
+      // the real outgoing request even if the environment changes later.
+      const res: ResponseSnapshot = {
+        ...(await executeRequest(substituted)),
+        sentRequest: summarizeSentRequest(substituted),
+      };
       mutate(w => {
         const updatedReq = pushResponseToRequest(activeRequest, res);
         let updatedW = updateRequestInWorkspace(w, updatedReq);
@@ -686,38 +691,48 @@ function ApiRequestPane({ request, sending, onSend, onUpdate, sendError, allReqs
                   </tbody>
                 </table>
               )}
-              {resTab === 'request' && (
-                <div className="flex flex-col gap-3 text-xs">
-                  <p className="text-muted-foreground">The request that was sent, with <code className="font-mono">{'{{variables}}'}</code> resolved from the active environment.</p>
-                  <div className="flex items-start gap-2">
-                    <span className={`shrink-0 rounded px-1 py-px text-[10px] font-bold ${methodBadge(sent.method)}`}>{sent.method}</span>
-                    <span className="min-w-0 flex-1 break-all font-mono">{sent.url}</span>
-                  </div>
-                  <div>
-                    <div className="mb-1 font-bold uppercase tracking-wide text-muted-foreground">Headers</div>
-                    {sent.headers.length === 0
-                      ? <p className="text-muted-foreground italic">(none)</p>
-                      : (
-                        <table className="w-full">
-                          <tbody>
-                            {sent.headers.map(([k, v]) => (
-                              <tr key={k} className="border-b border-border">
-                                <td className="py-0.5 pr-3 font-bold text-muted-foreground">{k}</td>
-                                <td className="break-all py-0.5 font-mono">{v}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
-                  </div>
-                  {sent.body != null && (
-                    <div>
-                      <div className="mb-1 font-bold uppercase tracking-wide text-muted-foreground">Body</div>
-                      <pre className="whitespace-pre-wrap break-all border border-border bg-muted p-2 font-mono">{prettyBody(sent.body)}</pre>
+              {resTab === 'request' && (() => {
+                // Prefer the request frozen at send time; fall back to the live
+                // resolution for responses saved before this was recorded.
+                const shown = response.sentRequest ?? sent;
+                const frozen = !!response.sentRequest;
+                return (
+                  <div className="flex flex-col gap-3 text-xs">
+                    <p className="text-muted-foreground">
+                      {frozen
+                        ? 'The exact request that produced this response, with variables resolved.'
+                        : 'The request as it resolves now (this response predates request capture).'}
+                    </p>
+                    <div className="flex items-start gap-2">
+                      <span className={`shrink-0 rounded px-1 py-px text-[10px] font-bold ${methodBadge(shown.method)}`}>{shown.method}</span>
+                      <span className="min-w-0 flex-1 break-all font-mono">{shown.url}</span>
                     </div>
-                  )}
-                </div>
-              )}
+                    <div>
+                      <div className="mb-1 font-bold uppercase tracking-wide text-muted-foreground">Headers</div>
+                      {shown.headers.length === 0
+                        ? <p className="text-muted-foreground italic">(none)</p>
+                        : (
+                          <table className="w-full">
+                            <tbody>
+                              {shown.headers.map(([k, v]) => (
+                                <tr key={k} className="border-b border-border">
+                                  <td className="py-0.5 pr-3 font-bold text-muted-foreground">{k}</td>
+                                  <td className="break-all py-0.5 font-mono">{v}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                    </div>
+                    {shown.body != null && (
+                      <div>
+                        <div className="mb-1 font-bold uppercase tracking-wide text-muted-foreground">Body</div>
+                        <pre className="whitespace-pre-wrap break-all border border-border bg-muted p-2 font-mono">{prettyBody(shown.body)}</pre>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
               {resTab === 'history' && (
                 request.responseHistory.length === 0
                   ? <p className="text-xs text-muted-foreground">No response history yet.</p>
