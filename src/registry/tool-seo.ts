@@ -385,6 +385,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the timer works with no internet connection.' },
     ],
   },
+  'typing-test': {
+    title: 'Free Typing Speed Test — Words Per Minute (WPM) & Accuracy',
+    description: 'Test your typing speed and accuracy online. The timer starts on your first keystroke and shows live words-per-minute and accuracy. Free, private — nothing is uploaded.',
+    intro: 'Find out how fast you type. Start typing the sample text and this free typing test measures your speed in words per minute (WPM) and your accuracy in real time. The timer begins on your first keystroke and stops when you finish the passage. Everything runs in your browser — no sign-up and nothing uploaded.',
+    howTo: [
+      'Start typing the sample text shown above the box.',
+      'The timer starts automatically on your first keystroke.',
+      'Watch your live WPM and accuracy as you go.',
+      'Finish the passage, then hit Try again or New text.',
+    ],
+    faqs: [
+      { q: 'How is WPM calculated?', a: 'A “word” is the standard five characters. WPM is your correctly typed characters divided by five, per minute — so accuracy directly affects your score.' },
+      { q: 'Is my typing sent anywhere?', a: 'No. The test runs entirely in your browser; what you type never leaves your device.' },
+      { q: 'Why is pasting disabled?', a: 'Pasting would skip the actual typing, so it is blocked to keep your score honest — type the text out.' },
+      { q: 'Can I get a different passage?', a: 'Yes. Click New text for another sample, or Try again to retype the same one.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the typing test works with no internet connection.' },
+    ],
+  },
   'pdf-organize': {
     title: 'Free Organize PDF — Reorder, Delete Pages & Add Page Numbers',
     description: 'Organize a PDF in your browser: drag to reorder pages, delete pages, and add page numbers, then download. Nothing is uploaded.',
@@ -2323,6 +2341,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah ada peringatan saat sesi berakhir?', a: 'Ya. Timer berbunyi singkat di akhir tiap fase dan menampilkan fase berikutnya dengan warna tersendiri.' },
       { q: 'Apakah timer tetap akurat jika saya pindah tab?', a: 'Ya. Timer melacak waktu akhir sebenarnya, jadi hitungan mundur tetap akurat meski browser membatasi tab latar belakang.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat timer bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'typing-test': {
+    title: 'Tes Kecepatan Mengetik Gratis — Kata Per Menit (KPM) & Akurasi',
+    description: 'Uji kecepatan dan akurasi mengetik Anda online. Timer dimulai pada ketukan pertama dan menampilkan kata per menit serta akurasi langsung. Gratis, privat — tidak ada yang diunggah.',
+    intro: 'Cari tahu seberapa cepat Anda mengetik. Mulai ketik teks contoh dan tes mengetik gratis ini mengukur kecepatan Anda dalam kata per menit (KPM) dan akurasi secara langsung. Timer dimulai pada ketukan pertama dan berhenti saat Anda menyelesaikan teks. Semuanya berjalan di browser Anda — tanpa pendaftaran dan tidak ada yang diunggah.',
+    howTo: [
+      'Mulai ketik teks contoh yang ditampilkan di atas kotak.',
+      'Timer mulai otomatis pada ketukan pertama Anda.',
+      'Perhatikan KPM dan akurasi langsung saat mengetik.',
+      'Selesaikan teksnya, lalu tekan Coba lagi atau Teks baru.',
+    ],
+    faqs: [
+      { q: 'Bagaimana KPM dihitung?', a: 'Satu “kata” adalah lima karakter standar. KPM adalah karakter yang diketik dengan benar dibagi lima, per menit — jadi akurasi langsung memengaruhi skor Anda.' },
+      { q: 'Apakah ketikan saya dikirim ke mana pun?', a: 'Tidak. Tes berjalan sepenuhnya di browser Anda; apa yang Anda ketik tidak pernah meninggalkan perangkat.' },
+      { q: 'Mengapa menempel dinonaktifkan?', a: 'Menempel akan melewati proses mengetik sebenarnya, jadi diblokir agar skor Anda jujur — ketik teksnya.' },
+      { q: 'Bisakah mendapat teks berbeda?', a: 'Bisa. Klik Teks baru untuk contoh lain, atau Coba lagi untuk mengetik ulang yang sama.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tes mengetik bekerja tanpa koneksi internet.' },
     ],
   },
   'pdf-organize': {
