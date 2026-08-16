@@ -1543,6 +1543,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Can I use this to watermark a KTP or ID card photo?', a: 'Yes. Drop in a scan or photo of your KTP, SIM, passport or any identity document, type your watermark text (e.g. "COPY" or your name), pick Diagonal or Tiled layout, set the opacity, and download. Everything stays on your device — nothing is uploaded.' },
     ],
   },
+  'scan-deskew': {
+    title: 'Scan Deskew & Crop — Straighten a Photo of a Document',
+    description: 'Turn a phone photo of a document into a flat, straight scan. Drag the four corners and the perspective is corrected and cropped. Free, private — nothing is uploaded.',
+    intro: 'This free deskew tool turns a skewed phone photo of a document, receipt or whiteboard into a flat, straight scan. Drag the four corner handles onto the document’s corners and it corrects the perspective and crops to just the page — perfect to run before OCR or the Pas Foto maker. Everything runs in your browser; your photo is never uploaded.',
+    howTo: [
+      'Drop or paste a photo of the document.',
+      'Drag each of the four corners onto a corner of the page.',
+      'Click Straighten to correct the perspective and crop.',
+      'Download the flattened scan (PNG).',
+    ],
+    faqs: [
+      { q: 'Is my photo uploaded?', a: 'No. The perspective correction runs on a canvas in your browser, so your photo never leaves your device.' },
+      { q: 'How do I get the best result?', a: 'Place each corner handle exactly on a corner of the document, and make sure the whole page is in the photo with some contrast against the background.' },
+      { q: 'Does it auto-detect the document edges?', a: 'You place the four corners yourself, which is reliable across lighting and backgrounds; the tool then does the perspective maths and crop.' },
+      { q: 'What can I use it for?', a: 'Flattening receipts, forms, book pages or whiteboards — a great first step before OCR or before making an ID photo.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the tool works with no internet connection.' },
+    ],
+  },
   'color-blindness-sim': {
     title: 'Color Blindness Simulator — Preview Protanopia, Deuteranopia, Tritanopia',
     description: 'See how an image or design looks with colour-vision deficiencies — protanopia, deuteranopia, tritanopia and more — side by side with the original. Free, in your browser.',
@@ -3802,6 +3820,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah saya mengontrol tampilan watermark?', a: 'Ya. Anda dapat mengatur teks, memilih warna apa pun, dan menggunakan penggeser untuk menyesuaikan skala dan opasitasnya agar sesamar atau setebal yang Anda inginkan.' },
       { q: 'Dalam format apa gambar berwatermark disimpan?', a: 'Unduhan mempertahankan format asli gambar Anda jika memungkinkan, jadi JPEG tetap JPEG dan PNG tetap PNG.' },
       { q: 'Bisakah tool ini digunakan untuk watermark KTP?', a: 'Ya. Unggah scan atau foto KTP, SIM, paspor, atau dokumen identitas lainnya, ketik teks watermark (misalnya "COPY" atau nama Anda), pilih tata letak Diagonal atau Tiled, atur opasitasnya, lalu unduh hasilnya. Semua diproses di perangkat Anda — tidak ada yang diunggah.' },
+    ],
+  },
+  'scan-deskew': {
+    title: 'Luruskan & Potong Pindaian — Ratakan Foto Dokumen',
+    description: 'Ubah foto dokumen dari ponsel menjadi pindaian rata dan lurus. Seret empat sudut dan perspektif dikoreksi lalu dipotong. Gratis, privat — tidak ada yang diunggah.',
+    intro: 'Tool deskew gratis ini mengubah foto dokumen, struk, atau papan tulis yang miring menjadi pindaian rata dan lurus. Seret empat pegangan sudut ke sudut dokumen dan tool mengoreksi perspektif serta memotong hanya halamannya — pas dijalankan sebelum OCR atau Pas Foto. Semuanya berjalan di browser Anda; foto Anda tidak pernah diunggah.',
+    howTo: [
+      'Letakkan atau tempel foto dokumen.',
+      'Seret tiap dari empat sudut ke sudut halaman.',
+      'Klik Luruskan untuk mengoreksi perspektif dan memotong.',
+      'Unduh pindaian yang sudah rata (PNG).',
+    ],
+    faqs: [
+      { q: 'Apakah foto saya diunggah?', a: 'Tidak. Koreksi perspektif berjalan di canvas dalam browser Anda, jadi foto tidak pernah meninggalkan perangkat.' },
+      { q: 'Bagaimana hasil terbaiknya?', a: 'Letakkan tiap pegangan sudut tepat di sudut dokumen, dan pastikan seluruh halaman ada di foto dengan kontras terhadap latar.' },
+      { q: 'Apakah mendeteksi tepi dokumen otomatis?', a: 'Anda menempatkan empat sudut sendiri, yang andal di berbagai pencahayaan dan latar; tool lalu melakukan perhitungan perspektif dan pemotongan.' },
+      { q: 'Bisa dipakai untuk apa?', a: 'Meratakan struk, formulir, halaman buku, atau papan tulis — langkah awal yang bagus sebelum OCR atau membuat pas foto.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool bekerja tanpa koneksi internet.' },
     ],
   },
   'color-blindness-sim': {
