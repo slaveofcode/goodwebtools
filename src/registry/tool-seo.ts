@@ -367,6 +367,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the converter works with no internet connection.' },
     ],
   },
+  'pomodoro-timer': {
+    title: 'Free Online Pomodoro Timer — Focus Timer with Breaks',
+    description: 'A free Pomodoro focus timer: work in focused sessions with short and long breaks, fully adjustable. Beeps at each phase and runs in your browser — nothing to install.',
+    intro: 'Stay focused with the Pomodoro technique: work in focused sessions separated by short breaks, with a longer break every few rounds. Adjust the focus and break lengths to suit you, and the timer beeps and rolls into the next phase automatically. It runs entirely in your browser — no sign-up, no install.',
+    howTo: [
+      'Set your focus, short-break and long-break lengths (defaults 25 / 5 / 15).',
+      'Press Start to begin a focus session.',
+      'When it beeps, take the break — the timer advances automatically.',
+      'Use Skip to jump ahead or Reset to start over.',
+    ],
+    faqs: [
+      { q: 'Is this Pomodoro timer free?', a: 'Yes — completely free, with no account, no install and no limits.' },
+      { q: 'What are the default Pomodoro lengths?', a: '25 minutes of focus, a 5-minute short break, and a 15-minute long break every 4 focus sessions. You can change all of these.' },
+      { q: 'Will it alert me when a session ends?', a: 'Yes. It plays a short beep at the end of each phase and shows the next phase with its own colour.' },
+      { q: 'Does the timer keep time if I switch tabs?', a: 'Yes. It tracks the real end time, so the countdown stays accurate even if the browser throttles background tabs.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the timer works with no internet connection.' },
+    ],
+  },
   'pdf-organize': {
     title: 'Free Organize PDF — Reorder, Delete Pages & Add Page Numbers',
     description: 'Organize a PDF in your browser: drag to reorder pages, delete pages, and add page numbers, then download. Nothing is uploaded.',
@@ -399,6 +417,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Can I sign more than one page?', a: 'Yes. Position the signature and add it to each page you need; all placements are applied when you download.' },
       { q: 'Can I upload an existing signature image?', a: 'Yes. Upload a PNG (ideally with a transparent background) instead of drawing, and place it the same way.' },
       { q: 'Is a drawn signature legally binding?', a: 'A drawn or image signature is a simple electronic signature. Whether it is legally sufficient depends on your jurisdiction and the document; check local requirements for important agreements.' },
+    ],
+  },
+  'pdf-redact': {
+    title: 'Free Redact PDF — Permanently Black Out Text & Images',
+    description: 'Redact a PDF in your browser: draw boxes over sensitive text and images and the content underneath is permanently removed — not just covered. Private, nothing uploaded.',
+    intro: 'This free Redact PDF tool permanently removes sensitive information from a PDF. Draw a box over any text, image or graphic you want to hide and the content underneath is deleted from the file — unlike a black rectangle drawn on top, it cannot be copied out or uncovered later. Everything runs in your browser using an on-device PDF engine, so your confidential document is never uploaded.',
+    howTo: [
+      'Drop your PDF to open it.',
+      'Drag on the page to draw a box over anything you want to redact.',
+      'Add boxes across pages; remove any box with its × button.',
+      'Click Redact & download, then verify the output before sharing.',
+    ],
+    faqs: [
+      { q: 'Is this true redaction or just a black box on top?', a: 'True redaction. The tool adds redaction annotations and applies them, so the underlying text, images and vector art are physically removed from the PDF — you cannot copy the text out or delete the box to reveal it.' },
+      { q: 'Is my document uploaded to a server?', a: 'No. Redaction runs entirely in your browser with an on-device PDF engine, so your file never leaves your device — essential for confidential documents.' },
+      { q: 'Can the redaction be undone?', a: 'No. Because the content is deleted from the file, it cannot be recovered from the output. Keep your original and check the redacted copy before sharing.' },
+      { q: 'Does it redact images as well as text?', a: 'Yes. Anything under a box — text, images and line/vector art — is removed, and a black rectangle is burned in its place.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
     ],
   },
   'compare-lists': {
@@ -2271,6 +2307,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat konverter bekerja tanpa koneksi internet.' },
     ],
   },
+  'pomodoro-timer': {
+    title: 'Timer Pomodoro Online Gratis — Timer Fokus dengan Istirahat',
+    description: 'Timer fokus Pomodoro gratis: bekerja dalam sesi fokus dengan istirahat singkat dan panjang, bisa disesuaikan. Berbunyi tiap fase dan berjalan di browser — tanpa instalasi.',
+    intro: 'Tetap fokus dengan teknik Pomodoro: bekerja dalam sesi fokus yang dipisah istirahat singkat, dengan istirahat panjang setiap beberapa ronde. Sesuaikan durasi fokus dan istirahat, dan timer akan berbunyi lalu lanjut ke fase berikutnya otomatis. Berjalan sepenuhnya di browser Anda — tanpa pendaftaran, tanpa instalasi.',
+    howTo: [
+      'Atur durasi fokus, istirahat singkat, dan istirahat panjang (default 25 / 5 / 15).',
+      'Tekan Mulai untuk memulai sesi fokus.',
+      'Saat berbunyi, ambil istirahat — timer lanjut otomatis.',
+      'Gunakan Lewati untuk maju atau Atur ulang untuk mengulang.',
+    ],
+    faqs: [
+      { q: 'Apakah timer Pomodoro ini gratis?', a: 'Ya — sepenuhnya gratis, tanpa akun, tanpa instalasi, tanpa batas.' },
+      { q: 'Berapa durasi Pomodoro default?', a: 'Fokus 25 menit, istirahat singkat 5 menit, dan istirahat panjang 15 menit setiap 4 sesi fokus. Semua bisa diubah.' },
+      { q: 'Apakah ada peringatan saat sesi berakhir?', a: 'Ya. Timer berbunyi singkat di akhir tiap fase dan menampilkan fase berikutnya dengan warna tersendiri.' },
+      { q: 'Apakah timer tetap akurat jika saya pindah tab?', a: 'Ya. Timer melacak waktu akhir sebenarnya, jadi hitungan mundur tetap akurat meski browser membatasi tab latar belakang.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat timer bekerja tanpa koneksi internet.' },
+    ],
+  },
   'pdf-organize': {
     title: 'Organize PDF Gratis — Susun Ulang, Hapus Halaman & Nomor Halaman',
     description: 'Susun PDF di browser Anda: seret untuk menyusun ulang halaman, hapus halaman, dan tambahkan nomor halaman, lalu unduh. Tidak ada yang diunggah.',
@@ -2303,6 +2357,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah menandatangani lebih dari satu halaman?', a: 'Ya. Posisikan tanda tangan dan tambahkan ke tiap halaman yang diperlukan; semua penempatan diterapkan saat Anda mengunduh.' },
       { q: 'Bisakah mengunggah gambar tanda tangan yang sudah ada?', a: 'Ya. Unggah PNG (idealnya berlatar transparan) alih-alih menggambar, dan tempatkan dengan cara yang sama.' },
       { q: 'Apakah tanda tangan gambar sah secara hukum?', a: 'Tanda tangan gambar adalah tanda tangan elektronik sederhana. Keabsahannya bergantung pada yurisdiksi dan dokumen Anda; periksa ketentuan setempat untuk perjanjian penting.' },
+    ],
+  },
+  'pdf-redact': {
+    title: 'Redact PDF Gratis — Hapus Permanen Teks & Gambar Sensitif',
+    description: 'Sensor PDF di browser Anda: gambar kotak di atas teks dan gambar sensitif dan konten di baliknya dihapus permanen — bukan sekadar ditutup. Privat, tidak ada yang diunggah.',
+    intro: 'Tool Redact PDF gratis ini menghapus permanen informasi sensitif dari PDF. Gambar kotak di atas teks, gambar, atau grafik yang ingin disembunyikan dan konten di baliknya dihapus dari berkas — tidak seperti kotak hitam yang digambar di atas, konten ini tidak bisa disalin atau dibuka kembali. Semuanya berjalan di browser Anda memakai mesin PDF di perangkat, jadi dokumen rahasia Anda tidak pernah diunggah.',
+    howTo: [
+      'Letakkan PDF Anda untuk membukanya.',
+      'Seret pada halaman untuk menggambar kotak di atas apa pun yang ingin disensor.',
+      'Tambahkan kotak di berbagai halaman; hapus kotak mana pun dengan tombol ×.',
+      'Klik Sensor & unduh, lalu periksa hasilnya sebelum dibagikan.',
+    ],
+    faqs: [
+      { q: 'Apakah ini sensor sejati atau sekadar kotak hitam di atas?', a: 'Sensor sejati. Tool menambahkan anotasi redaksi dan menerapkannya, sehingga teks, gambar, dan grafik vektor di baliknya benar-benar dihapus dari PDF — Anda tidak bisa menyalin teksnya atau menghapus kotak untuk membukanya.' },
+      { q: 'Apakah dokumen saya diunggah ke server?', a: 'Tidak. Sensor berjalan sepenuhnya di browser Anda dengan mesin PDF di perangkat, jadi berkas tidak pernah meninggalkan perangkat — penting untuk dokumen rahasia.' },
+      { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
+      { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
     ],
   },
   'compare-lists': {

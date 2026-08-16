@@ -79,3 +79,20 @@ export async function protectPdf(file: File, password: string): Promise<Blob> {
 export async function unlockPdf(file: File, password: string): Promise<Blob> {
   return toBlob(await engine().unlock(await bytesOf(file), password));
 }
+
+/** A redaction rectangle as page-relative ratios with a top-left origin. */
+export interface RedactBox {
+  pageIndex: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/**
+ * True redaction — mupdf physically removes the text/images/line-art under each
+ * box and burns a black rectangle in its place (not a removable overlay).
+ */
+export async function redactPdf(file: File, boxes: RedactBox[]): Promise<Blob> {
+  return toBlob(await engine().redact(await bytesOf(file), boxes));
+}
