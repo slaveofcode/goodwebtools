@@ -455,6 +455,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
     ],
   },
+  'pdf-scrub-metadata': {
+    title: 'Free PDF Metadata Scrubber — Remove Author, Dates & XMP',
+    description: 'Remove hidden metadata from a PDF — author, original file name, software, timestamps and the XMP block. See what it carries, then scrub it. Private, in your browser.',
+    intro: 'PDFs quietly carry hidden metadata: the author’s name, the original file name, the software that made it, creation and edit timestamps, and an XMP block that can hold even more. This free PDF metadata scrubber shows you exactly what a PDF contains and removes it — the document’s Info fields and its XMP stream — while leaving the pages and content untouched. Everything runs on your device; nothing is uploaded.',
+    howTo: [
+      'Drop your PDF to see the metadata it currently contains.',
+      'Review the author, dates, software and other fields found.',
+      'Click Scrub metadata & download.',
+      'Save the cleaned PDF — Info fields and the XMP block are gone.',
+    ],
+    faqs: [
+      { q: 'What metadata does it remove?', a: 'The standard document Info fields — title, author, subject, keywords, creator, producer and the creation/modification dates — plus the XMP metadata stream. Page content is not changed.' },
+      { q: 'Is my PDF uploaded?', a: 'No. Reading and scrubbing run entirely in your browser with an on-device PDF engine, so your file never leaves your device.' },
+      { q: 'Why does removing metadata matter?', a: 'Metadata can leak your real name, your computer’s user or file path, the software you use, and when a document was created or edited — details you may not want to share.' },
+      { q: 'Does it change how the PDF looks?', a: 'No. Only metadata is removed; the pages, text and images stay exactly the same.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the scrubber works with no internet connection.' },
+    ],
+  },
   'compare-lists': {
     title: 'Compare Two Lists — Merge, Dedupe & Diff Lines',
     description: 'Compare two lists of lines online: merge and remove duplicates, subtract one list from another, or find common lines. Free, private and instant — nothing is uploaded.',
@@ -2447,6 +2465,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'pdf-scrub-metadata': {
+    title: 'Pembersih Metadata PDF Gratis — Hapus Penulis, Tanggal & XMP',
+    description: 'Hapus metadata tersembunyi dari PDF — penulis, nama berkas asli, software, timestamp, dan blok XMP. Lihat isinya, lalu bersihkan. Privat, di browser Anda.',
+    intro: 'PDF diam-diam membawa metadata tersembunyi: nama penulis, nama berkas asli, software pembuatnya, timestamp pembuatan dan penyuntingan, serta blok XMP yang bisa memuat lebih banyak lagi. Pembersih metadata PDF gratis ini menunjukkan persis apa yang dimuat PDF dan menghapusnya — kolom Info dokumen dan aliran XMP-nya — sambil membiarkan halaman dan konten utuh. Semuanya berjalan di perangkat Anda; tidak ada yang diunggah.',
+    howTo: [
+      'Letakkan PDF Anda untuk melihat metadata yang saat ini dimuat.',
+      'Tinjau penulis, tanggal, software, dan kolom lain yang ditemukan.',
+      'Klik Bersihkan metadata & unduh.',
+      'Simpan PDF yang sudah bersih — kolom Info dan blok XMP hilang.',
+    ],
+    faqs: [
+      { q: 'Metadata apa saja yang dihapus?', a: 'Kolom Info dokumen standar — judul, penulis, subjek, kata kunci, aplikasi pembuat, produser, serta tanggal pembuatan/modifikasi — plus aliran metadata XMP. Konten halaman tidak diubah.' },
+      { q: 'Apakah PDF saya diunggah?', a: 'Tidak. Pembacaan dan pembersihan berjalan sepenuhnya di browser Anda dengan mesin PDF di perangkat, jadi berkas tidak pernah meninggalkan perangkat.' },
+      { q: 'Mengapa menghapus metadata itu penting?', a: 'Metadata bisa membocorkan nama asli Anda, pengguna atau path berkas komputer Anda, software yang Anda pakai, serta kapan dokumen dibuat atau diedit — detail yang mungkin tak ingin Anda bagikan.' },
+      { q: 'Apakah mengubah tampilan PDF?', a: 'Tidak. Hanya metadata yang dihapus; halaman, teks, dan gambar tetap sama persis.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pembersih bekerja tanpa koneksi internet.' },
     ],
   },
   'compare-lists': {

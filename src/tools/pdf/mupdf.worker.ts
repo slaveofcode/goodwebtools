@@ -44,6 +44,8 @@ function save(doc: any, options = ''): Uint8Array {
 
 const transfer = (bytes: Uint8Array) => Comlink.transfer(bytes, [bytes.buffer]);
 
+const METADATA_KEYS = ['Title', 'Author', 'Subject', 'Keywords', 'Creator', 'Producer', 'CreationDate', 'ModDate'];
+
 const api = {
   async normalize(bytes: Uint8Array): Promise<Uint8Array> {
     const mupdf = await loadMupdf();
@@ -259,6 +261,43 @@ const api = {
       }
       // Garbage-collect so the removed content can't linger in the file.
       return transfer(save(doc, 'garbage=compact'));
+    } finally {
+      doc.destroy?.();
+    }
+  },
+
+  /** Read the document Info metadata (author, title, dates, …) without changing it. */
+  async readMetadata(bytes: Uint8Array): Promise<Record<string, string>> {
+    const mupdf = await loadMupdf();
+    const doc = open(mupdf, bytes);
+    try {
+      const out: Record<string, string> = {};
+      for (const k of METADATA_KEYS) {
+        const v = doc.getMetaData(`info:${k}`);
+        if (v && String(v).trim()) out[k] = String(v);
+      }
+      return out;
+    } finally {
+      doc.destroy?.();
+    }
+  },
+
+  /**
+   * Strip all standard Info metadata (author, title, creator, producer, subject,
+   * keywords, creation/mod dates). Returns the cleaned bytes and what was removed.
+   * The XMP stream is dropped separately by the client via pdf-lib.
+   */
+  async scrubMetadata(bytes: Uint8Array): Promise<{ bytes: Uint8Array; removed: Record<string, string> }> {
+    const mupdf = await loadMupdf();
+    const doc = open(mupdf, bytes);
+    try {
+      const removed: Record<string, string> = {};
+      for (const k of METADATA_KEYS) {
+        const v = doc.getMetaData(`info:${k}`);
+        if (v && String(v).trim()) removed[k] = String(v);
+        doc.setMetaData(`info:${k}`, '');
+      }
+      return { bytes: save(doc, 'garbage=compact,sanitize=yes'), removed };
     } finally {
       doc.destroy?.();
     }

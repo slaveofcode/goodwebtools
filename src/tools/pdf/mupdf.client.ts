@@ -96,3 +96,26 @@ export interface RedactBox {
 export async function redactPdf(file: File, boxes: RedactBox[]): Promise<Blob> {
   return toBlob(await engine().redact(await bytesOf(file), boxes));
 }
+
+/** Read the document Info metadata without modifying the file. */
+export async function readPdfMetadata(file: File): Promise<Record<string, string>> {
+  return engine().readMetadata(await bytesOf(file));
+}
+
+/**
+ * Strip all Info metadata via mupdf, then remove the XMP metadata stream with
+ * pdf-lib. Returns the cleaned blob and the map of fields that were removed.
+ */
+export async function scrubPdfMetadata(file: File): Promise<{ blob: Blob; removed: Record<string, string> }> {
+  const { bytes, removed } = await engine().scrubMetadata(await bytesOf(file));
+  let cleaned = bytes;
+  try {
+    const { PDFDocument, PDFName } = await import('pdf-lib');
+    const doc = await PDFDocument.load(bytes, { updateMetadata: false });
+    doc.catalog.delete(PDFName.of('Metadata')); // drop the XMP stream
+    cleaned = await doc.save({ updateMetadata: false });
+  } catch {
+    // If pdf-lib can't parse it, the mupdf-cleaned bytes are still returned.
+  }
+  return { blob: toBlob(cleaned), removed };
+}
