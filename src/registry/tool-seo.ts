@@ -1454,6 +1454,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Can I use this to watermark a KTP or ID card photo?', a: 'Yes. Drop in a scan or photo of your KTP, SIM, passport or any identity document, type your watermark text (e.g. "COPY" or your name), pick Diagonal or Tiled layout, set the opacity, and download. Everything stays on your device — nothing is uploaded.' },
     ],
   },
+  'meme-generator': {
+    title: 'Free Meme Generator — Add Top & Bottom Text to Images',
+    description: 'Make a meme in seconds: drop an image, add top and bottom captions in the classic bold outlined style, and download the PNG. Free and private — nothing is uploaded.',
+    intro: 'This free meme generator turns any picture into a classic meme. Drop or paste an image, type your top and bottom captions, and the bold white-with-black-outline caption style is applied automatically, wrapping to fit. Adjust the text size and download the finished PNG. Everything runs in your browser, so your images never leave your device.',
+    howTo: [
+      'Drop or paste an image, or click to browse.',
+      'Type the top and bottom captions.',
+      'Adjust the text size if needed.',
+      'Click Download meme to save the PNG.',
+    ],
+    faqs: [
+      { q: 'Is my image uploaded?', a: 'No. The meme is drawn on a canvas in your browser, so your image never leaves your device.' },
+      { q: 'What caption style is used?', a: 'The classic meme look — bold uppercase text in white with a black outline, wrapped to fit the image width.' },
+      { q: 'Can I use my own photo?', a: 'Yes. Any JPG, PNG or WebP works — drop it in or paste from the clipboard.' },
+      { q: 'What format is the meme saved in?', a: 'It downloads as a PNG, which keeps the text crisp.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the meme generator works with no internet connection.' },
+    ],
+  },
   'image-stamp': {
     title: 'Free Image Stamp Tool — Mark CONFIDENTIAL & PAID',
     description: 'A free online image stamp tool to add CONFIDENTIAL, PAID and other marks to a photo — 100% private. The image is stamped in your browser and never uploaded.',
@@ -3588,6 +3606,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah saya mengontrol tampilan watermark?', a: 'Ya. Anda dapat mengatur teks, memilih warna apa pun, dan menggunakan penggeser untuk menyesuaikan skala dan opasitasnya agar sesamar atau setebal yang Anda inginkan.' },
       { q: 'Dalam format apa gambar berwatermark disimpan?', a: 'Unduhan mempertahankan format asli gambar Anda jika memungkinkan, jadi JPEG tetap JPEG dan PNG tetap PNG.' },
       { q: 'Bisakah tool ini digunakan untuk watermark KTP?', a: 'Ya. Unggah scan atau foto KTP, SIM, paspor, atau dokumen identitas lainnya, ketik teks watermark (misalnya "COPY" atau nama Anda), pilih tata letak Diagonal atau Tiled, atur opasitasnya, lalu unduh hasilnya. Semua diproses di perangkat Anda — tidak ada yang diunggah.' },
+    ],
+  },
+  'meme-generator': {
+    title: 'Pembuat Meme Gratis — Tambah Teks Atas & Bawah pada Gambar',
+    description: 'Buat meme dalam hitungan detik: letakkan gambar, tambahkan teks atas dan bawah dengan gaya tebal bergaris klasik, lalu unduh PNG. Gratis dan privat — tidak ada yang diunggah.',
+    intro: 'Pembuat meme gratis ini mengubah gambar apa pun menjadi meme klasik. Letakkan atau tempel gambar, ketik teks atas dan bawah, dan gaya teks putih-bergaris-hitam yang tebal diterapkan otomatis, membungkus agar pas. Sesuaikan ukuran teks dan unduh PNG hasilnya. Semuanya berjalan di browser Anda, jadi gambar Anda tidak pernah meninggalkan perangkat.',
+    howTo: [
+      'Letakkan atau tempel gambar, atau klik untuk memilih.',
+      'Ketik teks atas dan bawah.',
+      'Sesuaikan ukuran teks bila perlu.',
+      'Klik Unduh meme untuk menyimpan PNG.',
+    ],
+    faqs: [
+      { q: 'Apakah gambar saya diunggah?', a: 'Tidak. Meme digambar di canvas dalam browser Anda, jadi gambar Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Gaya teks apa yang dipakai?', a: 'Tampilan meme klasik — teks kapital tebal berwarna putih dengan garis luar hitam, dibungkus agar pas dengan lebar gambar.' },
+      { q: 'Bisakah memakai foto saya sendiri?', a: 'Bisa. JPG, PNG, atau WebP apa pun bisa — letakkan atau tempel dari clipboard.' },
+      { q: 'Dalam format apa meme disimpan?', a: 'Diunduh sebagai PNG, agar teksnya tetap tajam.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pembuat meme bekerja tanpa koneksi internet.' },
     ],
   },
   'image-stamp': {
