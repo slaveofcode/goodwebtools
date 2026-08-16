@@ -1,7 +1,35 @@
 import { describe, it, expect } from 'vitest';
-import { buildFetchInit } from './api-client-request.lib';
+import { buildFetchInit, summarizeSentRequest } from './api-client-request.lib';
 import { defaultRequestDef } from './api-client-store.lib';
 import type { RequestDef } from './api-client.types';
+
+describe('summarizeSentRequest', () => {
+  it('summarizes the resolved outgoing request incl. auth, params and body', () => {
+    const req: RequestDef = {
+      ...defaultRequestDef(),
+      method: 'POST',
+      url: 'https://api.example.com/objects',
+      params: [{ key: 'page', value: '2', enabled: true }],
+      headers: [{ key: 'X-Trace', value: 'abc', enabled: true }],
+      auth: { type: 'bearer', token: 'RESOLVED_KEY' },
+      body: { mode: 'json', content: '{"a":1}' },
+    };
+    const s = summarizeSentRequest(req);
+    expect(s.method).toBe('POST');
+    expect(s.url).toContain('page=2');
+    const headerMap = Object.fromEntries(s.headers);
+    expect(headerMap['Authorization']).toBe('Bearer RESOLVED_KEY');
+    expect(headerMap['Content-Type']).toBe('application/json');
+    expect(headerMap['X-Trace']).toBe('abc');
+    expect(s.body).toBe('{"a":1}');
+  });
+
+  it('reports no body for a GET', () => {
+    const s = summarizeSentRequest({ ...defaultRequestDef(), method: 'GET', url: 'https://x.dev/' });
+    expect(s.body).toBeNull();
+    expect(s.headers.length).toBe(0);
+  });
+});
 
 describe('buildFetchInit', () => {
   it('builds GET with no body', () => {

@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Check, Upload, Download, Plus, Folder, History, Key, Trash2, ChevronDown, ChevronRight, Send, RefreshCw, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Check, Upload, Download, Plus, Folder, History, Key, Trash2, ChevronDown, ChevronRight, Send, RefreshCw, X, Info, Pencil } from 'lucide-react';
 import { isTauri } from '@/services/platform';
 import { loadWorkspace, saveWorkspace, defaultRequestDef, pushResponseToRequest, addToHistory } from '@/tools/dev/api-client-store.lib';
 import { substituteRequest, applyCapture } from '@/tools/dev/api-client-env.lib';
-import { executeRequest } from '@/tools/dev/api-client-request.lib';
+import { executeRequest, summarizeSentRequest } from '@/tools/dev/api-client-request.lib';
 import { detectAndParse } from '@/tools/dev/api-client-import.lib';
 import { exportPostman, exportWorkspace } from '@/tools/dev/api-client-export.lib';
 import { downloadService } from '@/services/download';
@@ -221,6 +221,7 @@ export default function ApiClient() {
             mutate(w => ({ ...w, envs: [...w.envs, env], activeEnvId: env.id }));
           }}
           onUpdateEnvVars={(id, vars) => mutate(w => ({ ...w, envs: w.envs.map(e => e.id === id ? { ...e, vars } : e) }))}
+          onRenameEnv={(id, name) => mutate(w => ({ ...w, envs: w.envs.map(e => e.id === id ? { ...e, name } : e) }))}
         />
 
         {/* Right pane */}
@@ -265,7 +266,7 @@ function ImportButton({ onImport }: { onImport: (f: File) => void }) {
 
 function ApiSidebar({
   workspace, onSelectRequest, onNewRequest, onSelectCollection,
-  onSelectEnv, onDeleteCollection, onExportCollection, onAddEnv, onUpdateEnvVars,
+  onSelectEnv, onDeleteCollection, onExportCollection, onAddEnv, onUpdateEnvVars, onRenameEnv,
 }: {
   workspace: Workspace;
   onSelectRequest: (id: string) => void;
@@ -276,11 +277,14 @@ function ApiSidebar({
   onExportCollection: (col: Collection) => void;
   onAddEnv: () => void;
   onUpdateEnvVars: (id: string, vars: Record<string, string>) => void;
+  onRenameEnv: (id: string, name: string) => void;
 }) {
   const [tab, setTab] = useState<'collections' | 'history'>('collections');
   const [openCols, setOpenCols] = useState<Set<string>>(new Set());
   const [editingEnvId, setEditingEnvId] = useState<string | null>(null);
   const [envDraft, setEnvDraft] = useState('');
+  const [envNameDraft, setEnvNameDraft] = useState('');
+  const [showEnvHelp, setShowEnvHelp] = useState(false);
 
   const toggleCol = (id: string) => setOpenCols(prev => {
     const s = new Set(prev);
@@ -293,6 +297,7 @@ function ApiSidebar({
   const startEditEnv = () => {
     if (!activeEnv) return;
     setEnvDraft(Object.entries(activeEnv.vars).map(([k, v]) => `${k}=${v}`).join('\n'));
+    setEnvNameDraft(activeEnv.name);
     setEditingEnvId(activeEnv.id);
   };
 
@@ -304,6 +309,8 @@ function ApiSidebar({
       if (eq > 0) vars[line.slice(0, eq).trim()] = line.slice(eq + 1).trim();
     });
     onUpdateEnvVars(editingEnvId, vars);
+    const name = envNameDraft.trim();
+    if (name) onRenameEnv(editingEnvId, name);
     setEditingEnvId(null);
   };
 
@@ -329,22 +336,30 @@ function ApiSidebar({
           {workspace.collections.length === 0 && (
             <p className="p-3 text-xs text-muted-foreground">Import a collection to get started.</p>
           )}
-          {workspace.collections.map(col => (
-            <div key={col.id}>
-              <div className="flex cursor-pointer items-center gap-1 px-2 py-1 font-bold hover:bg-muted"
-                onClick={() => { toggleCol(col.id); onSelectCollection(col.id); }}>
-                {openCols.has(col.id) ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
-                <span className="min-w-0 flex-1 truncate text-xs">{col.name}</span>
-                <button title="Export as Postman" onClick={e => { e.stopPropagation(); onExportCollection(col); }}
-                  className="text-muted-foreground hover:text-foreground"><Download className="h-3 w-3" /></button>
-                <button title="Delete" onClick={e => { e.stopPropagation(); onDeleteCollection(col.id); }}
-                  className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+          {workspace.collections.map(col => {
+            const count = allRequestsInCol(col).length;
+            const isActiveCol = workspace.activeCollectionId === col.id;
+            return (
+              <div key={col.id} className="border-b border-border/60">
+                <div className={`group flex cursor-pointer items-center gap-1.5 px-2 py-1.5 hover:bg-muted ${isActiveCol ? 'bg-muted/50' : ''}`}
+                  onClick={() => { toggleCol(col.id); onSelectCollection(col.id); }}>
+                  {openCols.has(col.id) ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                  <Folder className="h-3.5 w-3.5 shrink-0 text-accent" />
+                  <span className="min-w-0 flex-1 truncate text-xs font-bold">{col.name}</span>
+                  <span className="shrink-0 rounded-full bg-border/60 px-1.5 text-[10px] font-bold text-muted-foreground">{count}</span>
+                  <button title="Export as Postman" onClick={e => { e.stopPropagation(); onExportCollection(col); }}
+                    className="shrink-0 text-muted-foreground opacity-0 hover:text-foreground group-hover:opacity-100"><Download className="h-3 w-3" /></button>
+                  <button title="Delete" onClick={e => { e.stopPropagation(); onDeleteCollection(col.id); }}
+                    className="shrink-0 text-muted-foreground opacity-0 hover:text-destructive group-hover:opacity-100"><Trash2 className="h-3 w-3" /></button>
+                </div>
+                {openCols.has(col.id) && (
+                  count === 0
+                    ? <p className="px-2 py-1.5 pl-8 text-[11px] italic text-muted-foreground">No requests yet</p>
+                    : <RequestTree requests={col.requests} folders={col.folders} onSelect={onSelectRequest} depth={1} activeId={workspace.activeRequestId} />
+                )}
               </div>
-              {openCols.has(col.id) && (
-                <RequestTree requests={col.requests} folders={col.folders} onSelect={onSelectRequest} depth={1} />
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -371,26 +386,45 @@ function ApiSidebar({
       <div className="border-t-2 border-border p-2">
         <div className="mb-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
           <Key className="h-3.5 w-3.5" /> Env
+          <button onClick={() => setShowEnvHelp(v => !v)} title="How environments work"
+            aria-pressed={showEnvHelp}
+            className={`ml-auto ${showEnvHelp ? 'text-accent' : 'text-muted-foreground hover:text-foreground'}`}>
+            <Info className="h-3.5 w-3.5" />
+          </button>
         </div>
-        <div className="flex gap-1">
+        {showEnvHelp && (
+          <div className="mb-2 border border-border bg-muted/60 p-2 text-xs leading-relaxed text-muted-foreground">
+            An <b className="text-foreground">environment</b> holds variables you can reuse across requests.
+            Add them as <code className="font-mono">KEY=value</code> (one per line), then reference any of them
+            with <code className="font-mono">{'{{KEY}}'}</code> in the URL, params, headers, body or auth —
+            they’re substituted when you press Send. Switch environments (e.g. dev/prod) from the dropdown to
+            swap all values at once.
+          </div>
+        )}
+        <div className="flex items-center gap-1">
           <select value={workspace.activeEnvId ?? ''} onChange={e => onSelectEnv(e.target.value)}
-            className="flex-1 border border-border bg-muted px-1.5 py-1 text-xs">
+            className="min-w-0 flex-1 border border-border bg-muted px-1.5 py-1 text-xs">
             <option value="">None</option>
             {workspace.envs.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
           </select>
-          <button onClick={onAddEnv} title="Add environment" className="text-muted-foreground hover:text-foreground">
+          <button onClick={onAddEnv} title="Add environment" className="shrink-0 text-muted-foreground hover:text-foreground">
             <Plus className="h-4 w-4" />
           </button>
           {activeEnv && (
-            <button onClick={startEditEnv} title="Edit variables" className="text-xs text-muted-foreground hover:text-foreground underline">
-              Edit
+            <button onClick={startEditEnv} title="Rename & edit variables" className="shrink-0 text-muted-foreground hover:text-foreground">
+              <Pencil className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
         {editingEnvId && activeEnv && (
           <div className="mt-1 flex flex-col gap-1">
-            <p className="text-xs text-muted-foreground">One KEY=value per line</p>
+            <label className="text-xs font-bold text-muted-foreground">Name</label>
+            <input value={envNameDraft} onChange={e => setEnvNameDraft(e.target.value)}
+              placeholder="Environment name"
+              className="w-full border border-border bg-muted px-1.5 py-1 text-xs outline-none" />
+            <label className="mt-1 text-xs font-bold text-muted-foreground">Variables — one KEY=value per line</label>
             <textarea value={envDraft} onChange={e => setEnvDraft(e.target.value)}
+              placeholder={'apikey=abc123\nbaseUrl=https://api.example.com'}
               className="h-24 w-full resize-none border border-border bg-muted p-1 font-mono text-xs outline-none" />
             <div className="flex gap-1">
               <Button variant="primary" onClick={saveEnvDraft} className="text-xs py-0.5 px-2">Save</Button>
@@ -405,32 +439,48 @@ function ApiSidebar({
 
 // ---- RequestTree (recursive) ----
 
-function RequestTree({ requests, folders, onSelect, depth }: {
+function methodBadge(m: string): string {
+  const map: Record<string, string> = {
+    GET: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400',
+    POST: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400',
+    PUT: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+    PATCH: 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400',
+    DELETE: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
+  };
+  return map[m] ?? 'bg-border/60 text-muted-foreground';
+}
+
+function RequestTree({ requests, folders, onSelect, depth, activeId }: {
   requests: RequestDef[];
   folders: FolderType[];
   onSelect: (id: string) => void;
   depth: number;
+  activeId: string | null;
 }) {
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set());
-  const pl = `pl-${Math.min(depth * 3, 12)}`;
+  const indent = { paddingLeft: `${Math.min(depth, 4) * 0.75 + 0.5}rem` };
   return (
     <div>
-      {requests.map(r => (
-        <button key={r.id} onClick={() => onSelect(r.id)}
-          className={`flex w-full items-center gap-1.5 ${pl} pr-2 py-0.5 text-left hover:bg-muted`}>
-          <span className={`w-10 shrink-0 text-xs font-bold ${methodColor(r.method)}`}>{r.method}</span>
-          <span className="min-w-0 flex-1 truncate text-xs">{r.name}</span>
-        </button>
-      ))}
+      {requests.map(r => {
+        const active = r.id === activeId;
+        return (
+          <button key={r.id} onClick={() => onSelect(r.id)} style={indent}
+            className={`flex w-full items-center gap-2 pr-2 py-1 text-left ${active ? 'border-l-2 border-accent bg-accent/10 font-semibold' : 'border-l-2 border-transparent hover:bg-muted'}`}>
+            <span className={`shrink-0 rounded px-1 py-px text-[9px] font-bold leading-tight ${methodBadge(r.method)}`}>{r.method}</span>
+            <span className="min-w-0 flex-1 truncate text-xs">{r.name || 'Untitled'}</span>
+          </button>
+        );
+      })}
       {folders.map(f => (
         <div key={f.id}>
           <button onClick={() => setOpenFolders(prev => { const s = new Set(prev); if (s.has(f.id)) s.delete(f.id); else s.add(f.id); return s; })}
-            className={`flex w-full items-center gap-1 ${pl} pr-2 py-0.5 text-left text-xs font-bold text-muted-foreground hover:bg-muted`}>
+            style={indent}
+            className="flex w-full items-center gap-1 pr-2 py-1 text-left text-xs font-bold text-muted-foreground hover:bg-muted">
             {openFolders.has(f.id) ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
             <Folder className="h-3 w-3 shrink-0" />{f.name}
           </button>
           {openFolders.has(f.id) && (
-            <RequestTree requests={f.requests} folders={f.folders} onSelect={onSelect} depth={depth + 1} />
+            <RequestTree requests={f.requests} folders={f.folders} onSelect={onSelect} depth={depth + 1} activeId={activeId} />
           )}
         </div>
       ))}
@@ -457,7 +507,12 @@ function ApiRequestPane({ request, sending, onSend, onUpdate, sendError, allReqs
   envVars: Record<string, string>;
 }) {
   const [reqTab, setReqTab] = useState<'params' | 'headers' | 'body' | 'auth'>('body');
-  const [resTab, setResTab] = useState<'body' | 'headers' | 'history'>('body');
+  const [resTab, setResTab] = useState<'body' | 'headers' | 'request' | 'history'>('body');
+  // The actual outgoing request with {{variables}} resolved — what Send transmits.
+  const sent = useMemo(
+    () => summarizeSentRequest(substituteRequest(request, allReqs, envVars)),
+    [request, allReqs, envVars],
+  );
   const [splitPct, setSplitPct] = useState(45);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -606,8 +661,9 @@ function ApiRequestPane({ request, sending, onSend, onUpdate, sendError, allReqs
               <span className="text-xs text-muted-foreground">{response.durationMs}ms</span>
               <span className="text-xs text-muted-foreground">{(new TextEncoder().encode(response.body).byteLength / 1024).toFixed(1)} KB</span>
               <div className="ml-auto flex">
-                {(['body', 'headers', 'history'] as const).map(t => (
+                {(['body', 'headers', 'request', 'history'] as const).map(t => (
                   <button key={t} onClick={() => setResTab(t)}
+                    title={t === 'request' ? 'The request that was sent (variables resolved)' : undefined}
                     className={`px-2 py-1 text-xs font-bold uppercase tracking-wide ${resTab === t ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted'}`}>
                     {t}
                   </button>
@@ -629,6 +685,38 @@ function ApiRequestPane({ request, sending, onSend, onUpdate, sendError, allReqs
                     ))}
                   </tbody>
                 </table>
+              )}
+              {resTab === 'request' && (
+                <div className="flex flex-col gap-3 text-xs">
+                  <p className="text-muted-foreground">The request that was sent, with <code className="font-mono">{'{{variables}}'}</code> resolved from the active environment.</p>
+                  <div className="flex items-start gap-2">
+                    <span className={`shrink-0 rounded px-1 py-px text-[10px] font-bold ${methodBadge(sent.method)}`}>{sent.method}</span>
+                    <span className="min-w-0 flex-1 break-all font-mono">{sent.url}</span>
+                  </div>
+                  <div>
+                    <div className="mb-1 font-bold uppercase tracking-wide text-muted-foreground">Headers</div>
+                    {sent.headers.length === 0
+                      ? <p className="text-muted-foreground italic">(none)</p>
+                      : (
+                        <table className="w-full">
+                          <tbody>
+                            {sent.headers.map(([k, v]) => (
+                              <tr key={k} className="border-b border-border">
+                                <td className="py-0.5 pr-3 font-bold text-muted-foreground">{k}</td>
+                                <td className="break-all py-0.5 font-mono">{v}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                  </div>
+                  {sent.body != null && (
+                    <div>
+                      <div className="mb-1 font-bold uppercase tracking-wide text-muted-foreground">Body</div>
+                      <pre className="whitespace-pre-wrap break-all border border-border bg-muted p-2 font-mono">{prettyBody(sent.body)}</pre>
+                    </div>
+                  )}
+                </div>
               )}
               {resTab === 'history' && (
                 request.responseHistory.length === 0

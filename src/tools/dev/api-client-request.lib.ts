@@ -41,6 +41,31 @@ export function buildFetchInit(req: RequestDef): { url: string; init: RequestIni
   return { url, init: { method: req.method, headers, body } };
 }
 
+export interface SentRequestSummary {
+  method: string;
+  /** Final URL with query params appended. */
+  url: string;
+  /** All outgoing headers, including auth and content-type. */
+  headers: [string, string][];
+  /** The request body as sent, or null if none. */
+  body: string | null;
+}
+
+/**
+ * Describe the actual outgoing request (after variable substitution has been
+ * applied to `req`) so the UI can show exactly what was/will be sent.
+ */
+export function summarizeSentRequest(req: RequestDef): SentRequestSummary {
+  const { url, init } = buildFetchInit(req);
+  const headers = Object.entries((init.headers ?? {}) as Record<string, string>);
+  return {
+    method: req.method,
+    url,
+    headers,
+    body: init.body != null ? String(init.body) : null,
+  };
+}
+
 export async function executeRequest(req: RequestDef): Promise<ResponseSnapshot> {
   const { url, init } = buildFetchInit(req);
   const start = performance.now();
