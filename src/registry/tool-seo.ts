@@ -331,6 +331,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded it keeps compressing with no internet connection.' },
     ],
   },
+  'age-calculator': {
+    title: 'Age Calculator + Javanese Weton & Neptu — Free',
+    description: 'Work out your exact age in years, months and days, total months/weeks/days/hours, the weekday you were born, next birthday, plus your Javanese weton and neptu. Runs in your browser.',
+    intro: 'Enter your date of birth to see your exact age — years, months and days — along with totals (months, weeks, days, hours), the day of the week you were born, and how long until your next birthday. It also computes your Javanese weton (the pairing of the weekday with the 5-day pasaran cycle) and its neptu. Everything is calculated on your device; nothing is uploaded.',
+    howTo: [
+      'Pick your date of birth.',
+      'Leave “Age at date” on today, or set another date to compare.',
+      'Read your exact age, totals and next birthday.',
+      'Check your weton (e.g. Jumat Legi) and neptu below.',
+    ],
+    faqs: [
+      { q: 'Is my birth date uploaded anywhere?', a: 'No. The calculation runs entirely in your browser with plain date math — your date of birth never leaves your device.' },
+      { q: 'How is the exact age calculated?', a: 'It counts full calendar years, then months, then days (borrowing across months and leap years), so the result matches how you would say your age out loud.' },
+      { q: 'What is a weton and neptu?', a: 'A weton is the Javanese pairing of the 7-day week with the 5-day pasaran cycle (Legi, Pahing, Pon, Wage, Kliwon) — for example “Jumat Legi”. Neptu is the numeric value of each part; their sum is used in Javanese tradition.' },
+      { q: 'Can I calculate age at a past or future date?', a: 'Yes. Change the “Age at date” field to any date to see the age, totals and weton relative to that day.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the calculator works with no internet connection.' },
+    ],
+  },
   'pdf-organize': {
     title: 'Free Organize PDF — Reorder, Delete Pages & Add Page Numbers',
     description: 'Organize a PDF in your browser: drag to reorder pages, delete pages, and add page numbers, then download. Nothing is uploaded.',
@@ -2197,6 +2215,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bagaimana cara kompres PDF ke ukuran target?', a: 'Letakkan PDF dan pilih target. Tool mengompres lossless dulu (mempertahankan teks yang bisa diseleksi); bila masih terlalu besar, halaman diratakan menjadi gambar pada resolusi lebih rendah hingga pas — cara umum untuk mencapai batas ukuran PDF yang ketat.' },
       { q: 'Bagaimana jika target tidak tercapai?', a: 'Jika target lebih kecil dari yang bisa dicapai, tool mengembalikan versi terkecil yang bisa dibuat dan memberi tahu Anda — cukup pilih target sedikit lebih besar.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tetap bisa mengompres tanpa koneksi internet.' },
+    ],
+  },
+  'age-calculator': {
+    title: 'Kalkulator Usia + Weton & Neptu Jawa — Gratis',
+    description: 'Hitung usia persis dalam tahun, bulan, dan hari, total bulan/minggu/hari/jam, hari kelahiran, ulang tahun berikutnya, plus weton dan neptu Jawa Anda. Berjalan di browser.',
+    intro: 'Masukkan tanggal lahir untuk melihat usia persis Anda — tahun, bulan, dan hari — beserta total (bulan, minggu, hari, jam), hari kelahiran Anda, dan berapa lama menuju ulang tahun berikutnya. Tool ini juga menghitung weton Jawa Anda (perpaduan hari dengan siklus pasaran 5 hari) dan neptunya. Semua dihitung di perangkat Anda; tidak ada yang diunggah.',
+    howTo: [
+      'Pilih tanggal lahir Anda.',
+      'Biarkan “Usia pada tanggal” di hari ini, atau set tanggal lain untuk membandingkan.',
+      'Lihat usia persis, total, dan ulang tahun berikutnya.',
+      'Cek weton Anda (mis. Jumat Legi) dan neptu di bawah.',
+    ],
+    faqs: [
+      { q: 'Apakah tanggal lahir saya diunggah?', a: 'Tidak. Perhitungan berjalan sepenuhnya di browser Anda dengan aritmetika tanggal biasa — tanggal lahir Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Bagaimana usia persis dihitung?', a: 'Tool menghitung tahun penuh, lalu bulan, lalu hari (dengan pinjam antar bulan dan tahun kabisat), sehingga hasilnya sesuai cara Anda menyebut umur.' },
+      { q: 'Apa itu weton dan neptu?', a: 'Weton adalah perpaduan Jawa antara siklus 7 hari dengan siklus pasaran 5 hari (Legi, Pahing, Pon, Wage, Kliwon) — misalnya “Jumat Legi”. Neptu adalah nilai angka tiap bagian; jumlahnya dipakai dalam tradisi Jawa.' },
+      { q: 'Bisakah menghitung usia pada tanggal lampau atau mendatang?', a: 'Bisa. Ubah kolom “Usia pada tanggal” ke tanggal mana pun untuk melihat usia, total, dan weton relatif terhadap hari itu.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat kalkulator bekerja tanpa koneksi internet.' },
     ],
   },
   'pdf-organize': {
