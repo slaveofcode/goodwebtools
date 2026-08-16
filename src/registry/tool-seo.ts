@@ -1005,6 +1005,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Why is my color showing as invalid?', a: 'The input has to be a valid hex code like #rrggbb or an rgb(r, g, b) value. Check for a missing # or a typo, and the tool will convert it once the format is right.' },
     ],
   },
+  'barcode-generator': {
+    title: 'Free Barcode Generator — Code 128, EAN, UPC & More (PNG/SVG)',
+    description: 'Generate barcodes online — Code 128, EAN-13, EAN-8, UPC, Code 39, ITF and more — and download as PNG or SVG. Free and private; everything renders in your browser.',
+    intro: 'This free barcode generator creates retail and logistics barcodes — Code 128, EAN-13, EAN-8, UPC-A, Code 39, ITF-14, MSI, Codabar and Pharmacode — right in your browser. Pick a symbology, type your value, and download a crisp PNG or a scalable SVG. Nothing is uploaded.',
+    howTo: [
+      'Choose a barcode format (e.g. Code 128 or EAN-13).',
+      'Type the value to encode — the hint shows the required length/characters.',
+      'Toggle the human-readable text if you want it under the bars.',
+      'Download the barcode as PNG or SVG.',
+    ],
+    faqs: [
+      { q: 'Which barcode types are supported?', a: 'Code 128, EAN-13, EAN-8, UPC-A, Code 39, ITF-14, MSI, Codabar and Pharmacode.' },
+      { q: 'Is my data uploaded?', a: 'No. Barcodes are rendered entirely in your browser, so your values never leave your device.' },
+      { q: 'Can I download a vector (SVG) barcode?', a: 'Yes. Download as SVG for print or further editing, or PNG for quick use.' },
+      { q: 'Why does EAN-13 need a specific length?', a: 'Retail symbologies encode a fixed number of digits (12–13 for EAN-13) plus a check digit that is added automatically, so the value must match that length.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the generator works with no internet connection.' },
+    ],
+  },
   'contrast-checker': {
     title: 'WCAG Contrast Checker — Color Contrast Ratio (AA & AAA)',
     description: 'Check colour contrast between text and background against WCAG 2.1. See the contrast ratio and AA/AAA pass or fail for normal and large text. Free, in your browser.',
@@ -3103,6 +3121,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah ada yang dikirim ke server?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda dengan JavaScript, jadi tidak ada nilai warna atau data yang meninggalkan perangkat Anda.' },
       { q: 'Bisakah saya memilih warna alih-alih mengetiknya?', a: 'Ya. Klik kotak warna untuk membuka pemilih warna sistem Anda, dan nilai HEX, RGB, serta HSL akan diperbarui sesuai pilihan Anda.' },
       { q: 'Mengapa warna saya ditampilkan sebagai tidak valid?', a: 'Masukan harus berupa kode hex yang valid seperti #rrggbb atau nilai rgb(r, g, b). Periksa apakah ada # yang hilang atau salah ketik, dan konversi akan dilakukan begitu formatnya benar.' },
+    ],
+  },
+  'barcode-generator': {
+    title: 'Pembuat Barcode Gratis — Code 128, EAN, UPC & Lainnya (PNG/SVG)',
+    description: 'Buat barcode online — Code 128, EAN-13, EAN-8, UPC, Code 39, ITF, dan lainnya — lalu unduh sebagai PNG atau SVG. Gratis dan privat; semuanya dirender di browser Anda.',
+    intro: 'Pembuat barcode gratis ini membuat barcode ritel dan logistik — Code 128, EAN-13, EAN-8, UPC-A, Code 39, ITF-14, MSI, Codabar, dan Pharmacode — langsung di browser Anda. Pilih simbologi, ketik nilai, lalu unduh PNG yang tajam atau SVG yang skalabel. Tidak ada yang diunggah.',
+    howTo: [
+      'Pilih format barcode (mis. Code 128 atau EAN-13).',
+      'Ketik nilai yang akan dikodekan — petunjuk menampilkan panjang/karakter yang diperlukan.',
+      'Aktifkan teks yang bisa dibaca bila ingin tampil di bawah bar.',
+      'Unduh barcode sebagai PNG atau SVG.',
+    ],
+    faqs: [
+      { q: 'Jenis barcode apa saja yang didukung?', a: 'Code 128, EAN-13, EAN-8, UPC-A, Code 39, ITF-14, MSI, Codabar, dan Pharmacode.' },
+      { q: 'Apakah data saya diunggah?', a: 'Tidak. Barcode dirender sepenuhnya di browser Anda, jadi nilai Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Bisakah mengunduh barcode vektor (SVG)?', a: 'Bisa. Unduh sebagai SVG untuk cetak atau pengeditan lanjutan, atau PNG untuk pemakaian cepat.' },
+      { q: 'Mengapa EAN-13 butuh panjang tertentu?', a: 'Simbologi ritel mengodekan jumlah digit tetap (12–13 untuk EAN-13) plus check digit yang ditambahkan otomatis, jadi nilainya harus sesuai panjang itu.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pembuat bekerja tanpa koneksi internet.' },
     ],
   },
   'contrast-checker': {
