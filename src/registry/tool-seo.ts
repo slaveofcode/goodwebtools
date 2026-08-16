@@ -562,6 +562,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
     ],
   },
+  'dicom-viewer': {
+    title: 'Free DICOM Viewer — Open .dcm Medical Images (MRI, CT, X-ray)',
+    description: 'Open a DICOM (.dcm) medical image from a hospital CD or USB and view it in your browser, with window/level controls. Private — your scan is never uploaded.',
+    intro: 'Hospitals often hand you your MRI, CT or X-ray on a CD or USB with no easy way to open it — and uploading a personal medical scan to a random website is exactly what you should not do. This free DICOM viewer opens uncompressed .dcm images right in your browser, with window/level (brightness/contrast) controls, so your scan never leaves your device.',
+    howTo: [
+      'Drop your .dcm (DICOM) file to open it.',
+      'View the image with the modality and size shown.',
+      'Adjust the brightness (window center) and contrast (window width).',
+      'Open another file any time.',
+    ],
+    faqs: [
+      { q: 'Is my medical scan uploaded?', a: 'No. The DICOM file is parsed and rendered entirely in your browser, so your scan never leaves your device — which matters a lot for medical data.' },
+      { q: 'What are window and level?', a: 'They set the brightness (window center) and contrast (window width) used to map the scan’s wide value range onto the screen — the same controls radiologists use.' },
+      { q: 'Which DICOM files are supported?', a: 'Uncompressed Little-Endian images (grayscale and RGB), the common case for many exports. Compressed DICOM (JPEG/JPEG 2000/RLE) is detected and reported as not yet supported.' },
+      { q: 'Can it show a whole series?', a: 'It opens a single .dcm image at a time. Open each file individually.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the viewer works with no internet connection.' },
+    ],
+  },
   'eml-viewer': {
     title: 'Free EML Viewer — Open .eml Email Files Online (No Outlook)',
     description: 'Open and read .eml email files in your browser — sender, subject, body and attachments — without Outlook or any account. The email is parsed on your device and never uploaded.',
@@ -2839,6 +2857,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'dicom-viewer': {
+    title: 'Penampil DICOM Gratis — Buka Citra Medis .dcm (MRI, CT, Rontgen)',
+    description: 'Buka citra medis DICOM (.dcm) dari CD atau USB rumah sakit dan lihat di browser, dengan kontrol window/level. Privat — pindaian Anda tidak pernah diunggah.',
+    intro: 'Rumah sakit sering memberi Anda MRI, CT, atau rontgen dalam CD atau USB tanpa cara mudah membukanya — dan mengunggah pindaian medis pribadi ke situs sembarangan justru tidak boleh dilakukan. Penampil DICOM gratis ini membuka citra .dcm tanpa kompresi langsung di browser Anda, dengan kontrol window/level (kecerahan/kontras), jadi pindaian Anda tidak pernah meninggalkan perangkat.',
+    howTo: [
+      'Letakkan berkas .dcm (DICOM) Anda untuk membukanya.',
+      'Lihat citra beserta modalitas dan ukurannya.',
+      'Atur kecerahan (window center) dan kontras (window width).',
+      'Buka berkas lain kapan saja.',
+    ],
+    faqs: [
+      { q: 'Apakah pindaian medis saya diunggah?', a: 'Tidak. Berkas DICOM diurai dan dirender sepenuhnya di browser Anda, jadi pindaian tidak pernah meninggalkan perangkat — sangat penting untuk data medis.' },
+      { q: 'Apa itu window dan level?', a: 'Keduanya mengatur kecerahan (window center) dan kontras (window width) untuk memetakan rentang nilai pindaian yang lebar ke layar — kontrol yang sama dipakai radiolog.' },
+      { q: 'Berkas DICOM apa yang didukung?', a: 'Citra Little-Endian tanpa kompresi (grayscale dan RGB), kasus umum untuk banyak ekspor. DICOM terkompresi (JPEG/JPEG 2000/RLE) dideteksi dan dilaporkan belum didukung.' },
+      { q: 'Bisakah menampilkan satu seri penuh?', a: 'Membuka satu citra .dcm setiap kali. Buka tiap berkas satu per satu.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat penampil bekerja tanpa koneksi internet.' },
     ],
   },
   'eml-viewer': {
