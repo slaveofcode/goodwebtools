@@ -11,6 +11,7 @@ export const categories: Category[] = [
   'Media',
   'Network',
   'Maps',
+  'Calculators',
   'Legacy',
   'Playground'
 ];
@@ -25,6 +26,7 @@ export const categoryColors: Record<Category, string> = {
   Media: 'bg-pink-500',
   Network: 'bg-cyan-500',
   Maps: 'bg-emerald-500',
+  Calculators: 'bg-lime-500',
   Legacy: 'bg-indigo-500',
   Playground: 'bg-orange-500'
 };
@@ -61,6 +63,7 @@ export const categoryDescriptionsId: Record<Category, string> = {
   Media: 'Utilitas audio dan video privat — konversi, pangkas, rekam, dan transkripsi media sepenuhnya di perangkat Anda. Rekaman Anda tidak pernah meninggalkan browser.',
   Network: 'Tool peer-to-peer yang menghubungkan dua perangkat secara langsung untuk mentransfer berkas atau berkomunikasi — data Anda mengalir antar perangkat, bukan melalui server.',
   Maps: 'Tool pemetaan sumber terbuka — konversi koordinat, jelajahi dan ekspor peta, serta lihat berkas GeoJSON, GPX, dan KML. Dibangun di atas data peta terbuka, berjalan di browser Anda.',
+  Calculators: 'Tool kalkulator sehari-hari yang berjalan di browser Anda — hitung usia dan weton, konversi satuan, serta hitung KPR, zakat, dan THR. Semua perhitungan terjadi di perangkat Anda.',
   Legacy: 'Titipkan pesan dan kata sandi penting untuk keluarga — dienkripsi di perangkat Anda dan hanya bisa dibuka saat waktunya tiba. Tidak ada yang diunggah ke server.',
   Playground: 'Playground interaktif dan eksperimen untuk menjelajah dan belajar — semuanya berjalan di sisi klien di browser Anda.',
 };
@@ -76,6 +79,7 @@ const categoryFacts: Record<Category, { en: { noun: string; actions: string }; i
   Media: { en: { noun: 'recordings', actions: 'converting, trimming, recording and transcribing' }, id: { noun: 'rekaman', actions: 'mengonversi, memangkas, merekam, dan mentranskripsi' } },
   Network: { en: { noun: 'files', actions: 'transferring files and communicating device to device' }, id: { noun: 'berkas', actions: 'mentransfer berkas dan berkomunikasi antar perangkat' } },
   Maps: { en: { noun: 'map data', actions: 'converting coordinates and viewing GeoJSON, GPX and KML' }, id: { noun: 'data peta', actions: 'mengonversi koordinat dan melihat GeoJSON, GPX, dan KML' } },
+  Calculators: { en: { noun: 'numbers', actions: 'calculating age and weton, converting units and working out finances' }, id: { noun: 'angka', actions: 'menghitung usia dan weton, mengonversi satuan, dan menghitung keuangan' } },
   Legacy: { en: { noun: 'messages', actions: 'encrypting messages and passwords for your family' }, id: { noun: 'pesan', actions: 'mengenkripsi pesan dan kata sandi untuk keluarga' } },
   Playground: { en: { noun: 'inputs', actions: 'experimenting and learning interactively' }, id: { noun: 'input', actions: 'bereksperimen dan belajar secara interaktif' } },
 };
@@ -110,6 +114,7 @@ export const categoryDescriptions: Record<Category, string> = {
   Media: 'Private audio and video utilities — convert, trim, record and transcribe media entirely on your device using on-device processing. Your recordings never leave your browser.',
   Network: 'Peer-to-peer tools that connect two devices directly to transfer files or communicate — your data flows device to device, not through a server.',
   Maps: 'Open-source mapping tools — convert coordinates, explore and export maps, and view GeoJSON, GPX and KML files. Built on open map data, running in your browser.',
+  Calculators: 'Everyday calculators that run in your browser — work out age and Javanese weton, convert units, and calculate mortgage, zakat and THR. Every calculation happens on your device.',
   Legacy: 'Entrust messages and important passwords to your family — encrypted on your device and openable only when the time comes. Nothing is uploaded to any server.',
   Playground: 'Interactive playgrounds and experiments to explore and learn — all running client-side in your browser.',
 };
