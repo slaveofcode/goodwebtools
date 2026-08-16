@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -422,6 +422,50 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'kpr-calculator',
+    name: 'KPR / Mortgage Calculator',
+    category: 'Calculators',
+    route: '/tools/kpr-calculator',
+    keywords: ['kpr', 'mortgage', 'cicilan', 'home loan', 'kalkulator kpr', 'angsuran', 'amortization', 'installment', 'bunga', 'pinjaman'],
+    icon: Home,
+    summary: 'Calculate monthly home-loan installments and amortisation',
+    load: () => import('@/islands/calculators/KprCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'zakat-calculator',
+    name: 'Zakat Calculator',
+    category: 'Calculators',
+    route: '/tools/zakat-calculator',
+    keywords: ['zakat', 'kalkulator zakat', 'zakat maal', 'zakat penghasilan', 'nisab', 'kalkulator zakat mal', 'sedekah', 'islam'],
+    icon: HeartHandshake,
+    summary: 'Calculate zakat maal and zakat penghasilan (2.5%)',
+    load: () => import('@/islands/calculators/ZakatCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'thr-calculator',
+    name: 'THR Calculator',
+    category: 'Calculators',
+    route: '/tools/thr-calculator',
+    keywords: ['thr', 'tunjangan hari raya', 'kalkulator thr', 'holiday allowance', 'thr proporsional', 'gaji', 'karyawan', 'lebaran'],
+    icon: Gift,
+    summary: 'Calculate THR (holiday allowance), full or prorated',
+    load: () => import('@/islands/calculators/ThrCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'wheel-spinner',
+    name: 'Wheel Spinner / Random Picker',
+    category: 'Games',
+    route: '/tools/wheel-spinner',
+    keywords: ['wheel', 'spinner', 'random picker', 'wheel of names', 'random name', 'giveaway', 'decision', 'roda putar', 'undian', 'pemilih acak'],
+    icon: Disc3,
+    summary: 'Spin a wheel to pick a name or option at random',
+    load: () => import('@/islands/games/WheelSpinner'),
+    status: 'beta'
+  },
+  {
     id: 'pdf-organize',
     name: 'Organize PDF',
     category: 'PDF',
@@ -587,6 +631,17 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
+    id: 'barcode-generator',
+    name: 'Barcode Generator',
+    category: 'Dev',
+    route: '/tools/barcode-generator',
+    keywords: ['barcode', 'code 128', 'ean', 'ean13', 'upc', 'code 39', 'itf', 'generate barcode', 'buat barcode'],
+    icon: Barcode,
+    summary: 'Generate Code 128, EAN, UPC and other barcodes as PNG/SVG',
+    load: () => import('@/islands/image/BarcodeGenerator'),
+    status: 'beta'
+  },
+  {
     id: 'timestamp',
     name: 'Timestamp Converter',
     category: 'Dev',
@@ -639,6 +694,17 @@ export const tools: ToolDef[] = [
     icon: Link2Off,
     summary: 'Remove utm_, fbclid, gclid and other tracking parameters from links',
     load: () => import('@/islands/dev/UrlStripper'),
+    status: 'beta'
+  },
+  {
+    id: 'invoice-generator',
+    name: 'Invoice Generator',
+    category: 'Dev',
+    route: '/tools/invoice-generator',
+    keywords: ['invoice', 'invoice generator', 'faktur', 'kwitansi', 'billing', 'tax', 'ppn', 'receipt', 'buat invoice', 'pdf invoice'],
+    icon: FileText,
+    summary: 'Create a printable invoice with tax (PPN) and save as PDF',
+    load: () => import('@/islands/dev/InvoiceGenerator'),
     status: 'beta'
   },
   {
@@ -882,6 +948,17 @@ export const tools: ToolDef[] = [
     summary: 'Add a text watermark to an image',
     load: () => import('@/islands/image/ImageWatermark'),
     status: 'stable'
+  },
+  {
+    id: 'meme-generator',
+    name: 'Meme Generator',
+    category: 'Image',
+    route: '/tools/meme-generator',
+    keywords: ['meme', 'meme generator', 'caption', 'top text', 'bottom text', 'impact', 'buat meme', 'image macro'],
+    icon: Sticker,
+    summary: 'Add classic top/bottom captions to an image',
+    load: () => import('@/islands/image/MemeGenerator'),
+    status: 'beta'
   },
   {
     id: 'image-stamp',

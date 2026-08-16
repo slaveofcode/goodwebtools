@@ -92,6 +92,7 @@
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "idb": "^8.0.0",
+    "jsbarcode": "^3.12.3",
     "jsqr": "^1.4.0",
     "libarchive.js": "^2.0.2",
     "lucide-react": "^0.294.0",
