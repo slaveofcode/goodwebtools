@@ -1077,6 +1077,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Why is my color showing as invalid?', a: 'The input has to be a valid hex code like #rrggbb or an rgb(r, g, b) value. Check for a missing # or a typo, and the tool will convert it once the format is right.' },
     ],
   },
+  'braille-converter': {
+    title: 'Free Braille Converter — Text to Grade 1 Unicode Braille',
+    description: 'Convert text to Grade 1 (uncontracted) Unicode braille — letters, numbers and punctuation, with capital and number signs. Copy or download. Free, in your browser.',
+    intro: 'This free braille converter turns text into Grade 1 (uncontracted) Unicode braille. It maps letters, digits and common punctuation to braille cells and adds the capital and number indicators, so you can copy the braille or download it as a text file. Everything runs in your browser; nothing is uploaded.',
+    howTo: [
+      'Type or paste your text.',
+      'The Grade 1 braille appears instantly below.',
+      'Copy the braille, or download it as a .txt file.',
+    ],
+    faqs: [
+      { q: 'What kind of braille is this?', a: 'Uncontracted Grade 1 English braille, output as Unicode braille cells (the U+2800 block). Each letter, digit and punctuation mark maps to its cell, with capital and number signs.' },
+      { q: 'Does it do contracted Grade 2 braille?', a: 'No. Grade 2 uses hundreds of contractions and is not produced here; this tool is Grade 1 (letter-for-letter).' },
+      { q: 'Can I produce a BRF file for an embosser?', a: 'Not currently — the output is Unicode braille text for on-screen use and copying, not an embosser-ready BRF file.' },
+      { q: 'Is my text uploaded?', a: 'No. The conversion runs entirely in your browser; your text never leaves your device.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the converter works with no internet connection.' },
+    ],
+  },
   'barcode-generator': {
     title: 'Free Barcode Generator — Code 128, EAN, UPC & More (PNG/SVG)',
     description: 'Generate barcodes online — Code 128, EAN-13, EAN-8, UPC, Code 39, ITF and more — and download as PNG or SVG. Free and private; everything renders in your browser.',
@@ -3301,6 +3318,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah ada yang dikirim ke server?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda dengan JavaScript, jadi tidak ada nilai warna atau data yang meninggalkan perangkat Anda.' },
       { q: 'Bisakah saya memilih warna alih-alih mengetiknya?', a: 'Ya. Klik kotak warna untuk membuka pemilih warna sistem Anda, dan nilai HEX, RGB, serta HSL akan diperbarui sesuai pilihan Anda.' },
       { q: 'Mengapa warna saya ditampilkan sebagai tidak valid?', a: 'Masukan harus berupa kode hex yang valid seperti #rrggbb atau nilai rgb(r, g, b). Periksa apakah ada # yang hilang atau salah ketik, dan konversi akan dilakukan begitu formatnya benar.' },
+    ],
+  },
+  'braille-converter': {
+    title: 'Konverter Braille Gratis — Teks ke Braille Unicode Grade 1',
+    description: 'Konversi teks ke braille Unicode Grade 1 (tanpa kontraksi) — huruf, angka, dan tanda baca, dengan tanda kapital dan angka. Salin atau unduh. Gratis, di browser Anda.',
+    intro: 'Konverter braille gratis ini mengubah teks menjadi braille Unicode Grade 1 (tanpa kontraksi). Tool memetakan huruf, angka, dan tanda baca umum ke sel braille serta menambahkan tanda kapital dan angka, sehingga Anda bisa menyalin braille-nya atau mengunduh sebagai berkas teks. Semuanya berjalan di browser Anda; tidak ada yang diunggah.',
+    howTo: [
+      'Ketik atau tempel teks Anda.',
+      'Braille Grade 1 muncul seketika di bawah.',
+      'Salin braille-nya, atau unduh sebagai berkas .txt.',
+    ],
+    faqs: [
+      { q: 'Braille jenis apa ini?', a: 'Braille Inggris Grade 1 tanpa kontraksi, dikeluarkan sebagai sel braille Unicode (blok U+2800). Tiap huruf, angka, dan tanda baca dipetakan ke selnya, dengan tanda kapital dan angka.' },
+      { q: 'Apakah menghasilkan braille Grade 2 terkontraksi?', a: 'Tidak. Grade 2 memakai ratusan kontraksi dan tidak dihasilkan di sini; tool ini Grade 1 (huruf per huruf).' },
+      { q: 'Bisakah membuat berkas BRF untuk embosser?', a: 'Belum — keluarannya adalah teks braille Unicode untuk tampilan layar dan penyalinan, bukan berkas BRF siap embosser.' },
+      { q: 'Apakah teks saya diunggah?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda; teks Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat konverter bekerja tanpa koneksi internet.' },
     ],
   },
   'barcode-generator': {
