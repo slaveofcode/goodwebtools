@@ -349,6 +349,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the calculator works with no internet connection.' },
     ],
   },
+  'unit-converter': {
+    title: 'Free Unit Converter — Length, Weight, Temperature & More',
+    description: 'Convert between units of length, mass, temperature, area, volume, speed, time and digital storage — km to miles, kg to lb, °C to °F and more. Instant, in your browser.',
+    intro: 'A fast, accurate unit converter for everyday measurements — length, mass, temperature, area, volume, speed, time and digital storage. Pick a category, type a value, and read the converted result instantly. All conversions run in your browser with no rounding surprises; nothing is uploaded.',
+    howTo: [
+      'Choose a category (length, mass, temperature, …).',
+      'Type the value you want to convert.',
+      'Pick the “from” and “to” units.',
+      'Read the result instantly, or hit Swap to reverse the direction.',
+    ],
+    faqs: [
+      { q: 'Is anything uploaded?', a: 'No. The converter runs entirely in your browser — your values never leave your device.' },
+      { q: 'How do I convert km to miles or kg to lb?', a: 'Pick the Length or Mass category, type your value, then set the units (e.g. km → mi, or kg → lb). The result updates as you type.' },
+      { q: 'How is temperature handled?', a: 'Temperature uses proper affine conversions, so 100 °C correctly gives 212 °F and 0 °C gives 273.15 K — not a naive multiply.' },
+      { q: 'Does it cover both metric (1000) and binary (1024) data sizes?', a: 'Yes. Digital storage includes both decimal units (KB, MB, GB = 1000) and binary units (KiB, MiB, GiB = 1024).' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the converter works with no internet connection.' },
+    ],
+  },
   'pdf-organize': {
     title: 'Free Organize PDF — Reorder, Delete Pages & Add Page Numbers',
     description: 'Organize a PDF in your browser: drag to reorder pages, delete pages, and add page numbers, then download. Nothing is uploaded.',
@@ -2233,6 +2251,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apa itu weton dan neptu?', a: 'Weton adalah perpaduan Jawa antara siklus 7 hari dengan siklus pasaran 5 hari (Legi, Pahing, Pon, Wage, Kliwon) — misalnya “Jumat Legi”. Neptu adalah nilai angka tiap bagian; jumlahnya dipakai dalam tradisi Jawa.' },
       { q: 'Bisakah menghitung usia pada tanggal lampau atau mendatang?', a: 'Bisa. Ubah kolom “Usia pada tanggal” ke tanggal mana pun untuk melihat usia, total, dan weton relatif terhadap hari itu.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat kalkulator bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'unit-converter': {
+    title: 'Konverter Satuan Gratis — Panjang, Berat, Suhu & Lainnya',
+    description: 'Konversi antar satuan panjang, massa, suhu, luas, volume, kecepatan, waktu, dan penyimpanan digital — km ke mil, kg ke lb, °C ke °F, dan lainnya. Seketika, di browser.',
+    intro: 'Konverter satuan yang cepat dan akurat untuk pengukuran sehari-hari — panjang, massa, suhu, luas, volume, kecepatan, waktu, dan penyimpanan digital. Pilih kategori, ketik nilai, dan lihat hasil konversi seketika. Semua konversi berjalan di browser Anda tanpa kejutan pembulatan; tidak ada yang diunggah.',
+    howTo: [
+      'Pilih kategori (panjang, massa, suhu, …).',
+      'Ketik nilai yang ingin dikonversi.',
+      'Pilih satuan “dari” dan “ke”.',
+      'Lihat hasilnya seketika, atau tekan Tukar untuk membalik arah.',
+    ],
+    faqs: [
+      { q: 'Apakah ada yang diunggah?', a: 'Tidak. Konverter berjalan sepenuhnya di browser Anda — nilai Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Bagaimana konversi km ke mil atau kg ke lb?', a: 'Pilih kategori Panjang atau Massa, ketik nilai, lalu set satuannya (mis. km → mi, atau kg → lb). Hasil diperbarui saat Anda mengetik.' },
+      { q: 'Bagaimana suhu ditangani?', a: 'Suhu memakai konversi afin yang benar, sehingga 100 °C tepat menjadi 212 °F dan 0 °C menjadi 273,15 K — bukan sekadar perkalian.' },
+      { q: 'Apakah mencakup ukuran data desimal (1000) dan biner (1024)?', a: 'Ya. Penyimpanan digital mencakup satuan desimal (KB, MB, GB = 1000) dan biner (KiB, MiB, GiB = 1024).' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat konverter bekerja tanpa koneksi internet.' },
     ],
   },
   'pdf-organize': {
