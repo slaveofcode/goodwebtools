@@ -1219,27 +1219,68 @@ export function searchTools(query: string): ToolDef[] {
     .map(({ tool }) => tool);
 }
 
+/** Split text into lowercase word tokens (letters/digits). */
+function tokenize(text: string): string[] {
+  return text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+/**
+ * Crude English stemmer — strips common inflection suffixes so "signed" →
+ * "sign", "images" → "image", "converting" → "convert". Only strips when the
+ * stem stays at least 3 chars, to avoid mangling short words.
+ */
+function stem(word: string): string {
+  if (word.length <= 3) return word;
+  if (word.endsWith('ies') && word.length > 4) return word.slice(0, -3) + 'y';
+  for (const suffix of ['ing', 'ed', 'es', 's']) {
+    if (word.endsWith(suffix) && word.length - suffix.length >= 3) return word.slice(0, -suffix.length);
+  }
+  return word;
+}
+
+/** Score how well one query token matches a set of field tokens (0 = no match). */
+function tokenScore(q: string, qStem: string, fieldTokens: string[], weight: number): number {
+  let best = 0;
+  for (const t of fieldTokens) {
+    if (t === q) return weight; // exact — can't do better
+    // Prefix either way ("sig"→"sign", "signed"→"sign") when the shorter side is meaningful.
+    if ((t.startsWith(q) || q.startsWith(t)) && Math.min(t.length, q.length) >= 3) {
+      best = Math.max(best, weight * 0.85);
+      continue;
+    }
+    if (stem(t) === qStem) best = Math.max(best, weight * 0.7);
+  }
+  return best;
+}
+
 function calculateScore(tool: ToolDef, query: string): number {
+  const queryTokens = tokenize(query);
+  if (queryTokens.length === 0) return 0;
+
+  const nameTokens = tokenize(tool.name);
+  const keywordTokens = tool.keywords.flatMap(tokenize);
+  const summaryTokens = tokenize(tool.summary);
+  const categoryTokens = tokenize(tool.category);
+
+  // Every query token must match somewhere (AND) so multi-word queries narrow.
   let score = 0;
+  for (const q of queryTokens) {
+    const qStem = stem(q);
+    const best = Math.max(
+      tokenScore(q, qStem, nameTokens, 100),
+      tokenScore(q, qStem, keywordTokens, 80),
+      tokenScore(q, qStem, summaryTokens, 30),
+      tokenScore(q, qStem, categoryTokens, 20),
+    );
+    if (best === 0) return 0;
+    score += best;
+  }
 
-  const lowerName = tool.name.toLowerCase();
-  const lowerSummary = tool.summary.toLowerCase();
-  const lowerCategory = tool.category.toLowerCase();
-
-  // Exact name match
-  if (lowerName === query) score += 200;
-  // Name contains query
-  if (lowerName.includes(query)) score += 100;
-
-  // Keywords match
-  if (tool.keywords.some(k => k.toLowerCase() === query)) score += 150;
-  if (tool.keywords.some(k => k.toLowerCase().includes(query))) score += 50;
-
-  // Summary/description match (including subtitle)
-  if (lowerSummary.includes(query)) score += 30;
-
-  // Category match
-  if (lowerCategory.includes(query)) score += 20;
+  // Bonuses that reward tighter matches.
+  const q = query.toLowerCase().trim();
+  if (tool.name.toLowerCase() === q) score += 200;
+  else if (tool.name.toLowerCase().includes(q)) score += 60;
+  if (`${tool.name} ${tool.keywords.join(' ')} ${tool.summary}`.toLowerCase().includes(q)) score += 40;
 
   return score;
 }

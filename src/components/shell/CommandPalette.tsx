@@ -50,6 +50,7 @@ export function CommandPalette() {
     <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setOpen(false)}>
       <div className="container mx-auto px-4 pt-[20vh]">
         <Command
+          shouldFilter={false}
           className="mx-auto max-w-2xl border-[3px] border-border bg-background shadow-brutal-lg"
           onClick={e => e.stopPropagation()}
         >
