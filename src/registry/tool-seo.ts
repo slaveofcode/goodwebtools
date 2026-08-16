@@ -349,6 +349,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded it keeps compressing with no internet connection.' },
     ],
   },
+  'emergency-medical-card': {
+    title: 'Emergency Medical Card Maker — Free Printable ICE Card with QR',
+    description: 'Create a printable emergency medical (ICE) card for your wallet — allergies, blood type, conditions and contacts, encoded in a QR that works with no signal. Free, private.',
+    intro: 'This free emergency medical card maker creates a wallet-sized ICE (In Case of Emergency) card. Fill in your blood type, allergies, medical conditions, medications and emergency contacts, and a QR code is generated containing everything, so a responder can read it even with no signal. Print it for your wallet or bag. It works with no account and nothing is uploaded — your health data stays on your device.',
+    howTo: [
+      'Fill in your name, blood type, allergies, conditions and medications.',
+      'Add one or more emergency contacts.',
+      'Check the live card preview and its QR code.',
+      'Click Print / Save as PDF and keep a copy in your wallet.',
+    ],
+    faqs: [
+      { q: 'Is my health information uploaded?', a: 'No. The card and QR are generated entirely in your browser; your medical details never leave your device.' },
+      { q: 'Does the QR code need internet to read?', a: 'No. The QR contains the information itself as plain text, so any scanner shows it offline — no app or signal required.' },
+      { q: 'What should I put on it?', a: 'The essentials a first responder needs fast: blood type, serious allergies, key conditions, current medications, and who to call.' },
+      { q: 'How do I save it as a PDF?', a: 'Click Print / Save as PDF and choose “Save as PDF” in the print dialog, or print it straight to paper.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the card maker works with no internet connection.' },
+    ],
+  },
   'age-calculator': {
     title: 'Age Calculator + Javanese Weton & Neptu — Free',
     description: 'Work out your exact age in years, months and days, total months/weeks/days/hours, the weekday you were born, next birthday, plus your Javanese weton and neptu. Runs in your browser.',
@@ -2519,6 +2537,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bagaimana cara kompres PDF ke ukuran target?', a: 'Letakkan PDF dan pilih target. Tool mengompres lossless dulu (mempertahankan teks yang bisa diseleksi); bila masih terlalu besar, halaman diratakan menjadi gambar pada resolusi lebih rendah hingga pas — cara umum untuk mencapai batas ukuran PDF yang ketat.' },
       { q: 'Bagaimana jika target tidak tercapai?', a: 'Jika target lebih kecil dari yang bisa dicapai, tool mengembalikan versi terkecil yang bisa dibuat dan memberi tahu Anda — cukup pilih target sedikit lebih besar.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tetap bisa mengompres tanpa koneksi internet.' },
+    ],
+  },
+  'emergency-medical-card': {
+    title: 'Pembuat Kartu Medis Darurat — Kartu ICE dengan QR, Gratis',
+    description: 'Buat kartu medis darurat (ICE) untuk dompet — alergi, golongan darah, kondisi, dan kontak, dikodekan dalam QR yang bekerja tanpa sinyal. Gratis, privat.',
+    intro: 'Pembuat kartu medis darurat gratis ini membuat kartu ICE (In Case of Emergency) seukuran dompet. Isi golongan darah, alergi, kondisi medis, obat-obatan, dan kontak darurat Anda, dan QR code dibuat berisi semuanya, sehingga penolong bisa membacanya bahkan tanpa sinyal. Cetak untuk dompet atau tas Anda. Bekerja tanpa akun dan tidak ada yang diunggah — data kesehatan Anda tetap di perangkat.',
+    howTo: [
+      'Isi nama, golongan darah, alergi, kondisi, dan obat Anda.',
+      'Tambahkan satu atau beberapa kontak darurat.',
+      'Periksa pratinjau kartu langsung beserta QR code-nya.',
+      'Klik Cetak / Simpan PDF dan simpan salinannya di dompet.',
+    ],
+    faqs: [
+      { q: 'Apakah informasi kesehatan saya diunggah?', a: 'Tidak. Kartu dan QR dibuat sepenuhnya di browser Anda; detail medis Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah QR butuh internet untuk dibaca?', a: 'Tidak. QR memuat informasinya sendiri sebagai teks biasa, jadi pemindai apa pun menampilkannya offline — tanpa aplikasi atau sinyal.' },
+      { q: 'Apa yang sebaiknya dicantumkan?', a: 'Hal penting yang perlu cepat diketahui penolong: golongan darah, alergi serius, kondisi utama, obat yang dikonsumsi, dan siapa yang dihubungi.' },
+      { q: 'Bagaimana menyimpannya sebagai PDF?', a: 'Klik Cetak / Simpan PDF dan pilih “Simpan sebagai PDF” di dialog cetak, atau cetak langsung ke kertas.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pembuat kartu bekerja tanpa koneksi internet.' },
     ],
   },
   'age-calculator': {
