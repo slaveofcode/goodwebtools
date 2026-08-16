@@ -21,6 +21,7 @@ const en: Dict = {
   'category.heading': '{category} Tools',
   'category.freePrivate': '{category} Tools — Free & Private',
   'category.clickInfo': '{n} feature · click one to see its properties. ',
+  'category.other': 'Other tool categories',
   'lang.switch': 'Language',
 };
 
@@ -38,6 +39,7 @@ const id: Dict = {
   'category.heading': 'Tool {category}',
   'category.freePrivate': 'Tool {category} — Gratis & Privat',
   'category.clickInfo': '{n} fitur · klik salah satu untuk melihat propertinya. ',
+  'category.other': 'Kategori tool lainnya',
   'lang.switch': 'Bahasa',
 };
 
