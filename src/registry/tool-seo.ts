@@ -952,6 +952,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the checker works with no internet connection.' },
     ],
   },
+  'url-cleaner': {
+    title: 'URL Tracking Stripper — Remove utm_, fbclid & gclid from Links',
+    description: 'Clean tracking parameters from any link — utm_*, fbclid, gclid, si and more. Paste one or many URLs, or upload a CSV, and copy the clean versions. Private, in your browser.',
+    intro: 'Shared links are often stuffed with tracking parameters — utm_source, fbclid, gclid, si and dozens more — that reveal where you found the link and let it be tracked. This tool strips them out while keeping the parts that actually matter (the path, real query parameters and the page anchor). Paste a single link or many (one per line), or upload a CSV/TXT for bulk cleaning, then copy the results. Everything runs in your browser.',
+    howTo: [
+      'Paste one or more URLs, one per line — or upload a .csv/.txt.',
+      'See each cleaned URL and exactly which parameters were removed.',
+      'Copy a single result, or use Copy all clean URLs for the batch.',
+    ],
+    faqs: [
+      { q: 'Which parameters get removed?', a: 'Common tracking families and click IDs: utm_* and mtm_/pk_ campaign tags, plus fbclid, gclid, dclid, msclkid, igshid, mc_eid, si, ref and many more — while normal parameters like id or q are kept.' },
+      { q: 'Is my list of links uploaded?', a: 'No. Cleaning runs entirely in your browser; your URLs and any uploaded file never leave your device.' },
+      { q: 'Can I clean a whole spreadsheet of links?', a: 'Yes. Export your sheet to CSV (or TXT) and upload it — every cell that looks like a URL is pulled out and cleaned in bulk.' },
+      { q: 'Will it break my links?', a: 'No. Only known tracking parameters are removed; the path, remaining query parameters and the #fragment are preserved, so the link still works.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the stripper works with no internet connection.' },
+    ],
+  },
   'pdf-merge': {
     title: 'Free Merge PDF Tool — Combine PDFs Online',
     description: 'A free online tool to merge multiple PDFs into a single file, in any order — 100% private. Your PDFs are combined in your browser and never uploaded.',
@@ -2962,6 +2979,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah ada yang diunggah?', a: 'Tidak. Pemeriksaan berjalan sepenuhnya di browser Anda; warna Anda tidak pernah meninggalkan perangkat.' },
       { q: 'Apa beda AA dan AAA?', a: 'AA adalah baseline umum secara hukum dan praktik; AAA adalah level paling ketat untuk aksesibilitas lebih tinggi. Targetkan minimal AA, dan AAA bila memungkinkan.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pemeriksa bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'url-cleaner': {
+    title: 'Penghapus Pelacak URL — Hapus utm_, fbclid & gclid dari Tautan',
+    description: 'Bersihkan parameter pelacak dari tautan apa pun — utm_*, fbclid, gclid, si, dan lainnya. Tempel satu atau banyak URL, atau unggah CSV, lalu salin versi bersihnya. Privat, di browser.',
+    intro: 'Tautan yang dibagikan sering dipenuhi parameter pelacak — utm_source, fbclid, gclid, si, dan puluhan lainnya — yang mengungkap dari mana Anda menemukan tautan dan memungkinkan pelacakan. Tool ini menghapusnya sambil mempertahankan bagian yang benar-benar penting (path, parameter query asli, dan anchor halaman). Tempel satu tautan atau banyak (satu per baris), atau unggah CSV/TXT untuk pembersihan massal, lalu salin hasilnya. Semuanya berjalan di browser Anda.',
+    howTo: [
+      'Tempel satu atau beberapa URL, satu per baris — atau unggah .csv/.txt.',
+      'Lihat setiap URL bersih dan parameter mana yang dihapus.',
+      'Salin satu hasil, atau gunakan Salin semua URL bersih untuk seluruhnya.',
+    ],
+    faqs: [
+      { q: 'Parameter apa saja yang dihapus?', a: 'Keluarga pelacak umum dan click ID: utm_* serta tag kampanye mtm_/pk_, plus fbclid, gclid, dclid, msclkid, igshid, mc_eid, si, ref, dan banyak lagi — sementara parameter normal seperti id atau q tetap dipertahankan.' },
+      { q: 'Apakah daftar tautan saya diunggah?', a: 'Tidak. Pembersihan berjalan sepenuhnya di browser Anda; URL dan berkas yang diunggah tidak pernah meninggalkan perangkat.' },
+      { q: 'Bisakah membersihkan satu spreadsheet penuh tautan?', a: 'Bisa. Ekspor sheet Anda ke CSV (atau TXT) dan unggah — setiap sel yang tampak seperti URL diambil dan dibersihkan sekaligus.' },
+      { q: 'Apakah akan merusak tautan saya?', a: 'Tidak. Hanya parameter pelacak yang diketahui yang dihapus; path, parameter query lainnya, dan #fragment dipertahankan, jadi tautan tetap berfungsi.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat penghapus bekerja tanpa koneksi internet.' },
     ],
   },
   'pdf-merge': {
