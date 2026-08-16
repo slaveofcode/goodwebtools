@@ -1842,10 +1842,11 @@ const en: Record<string, ToolSeoContent> = {
     howTo: [
       'Click "Import" and select a Postman JSON, Insomnia JSON, OpenAPI YAML/JSON, or HAR file — the collection populates instantly.',
       'Click any request in the sidebar to open it. Edit the URL, method, headers, body, or auth as needed.',
-      'Set an environment (e.g. "dev" with base_url and token variables) and reference them with {{variable_name}} anywhere in the request.',
-      'Click "Send". The response appears below with status, timing, headers, and formatted body. Right-click a collection to export back to Postman, Insomnia, or OpenAPI.',
+      'Add an environment (the + next to ENV), give it a name, and set variables as KEY=value (one per line). Reference any of them with {{variable_name}} in the URL, params, headers, body or auth — they are substituted when you send.',
+      'Click "Send". The response appears below with status, timing, headers, and formatted body. Open the "Request" tab to see exactly what was sent with variables resolved. Right-click a collection to export back to Postman, Insomnia, or OpenAPI.',
     ],
     faqs: [
+      { q: 'How do I check exactly what request was sent?', a: 'After sending, open the "Request" tab in the response panel to see the final method, URL, headers (including auth) and body with every {{variable}} resolved — so you can confirm the outgoing request is what you expected. The History tab in the sidebar also lists every request you have sent.' },
       { q: 'Is my API data uploaded to a server?', a: 'No. All request execution, collection parsing, and workspace storage happen locally in your browser or desktop app. Your API keys, tokens, and payloads never leave your device.' },
       { q: 'Why does it say "Browser mode — CORS restrictions apply"?', a: 'Browsers block cross-origin requests to APIs that don\'t explicitly allow them — this is a browser security policy called CORS. Install the GoodWebTools desktop app to send requests to any API without CORS restrictions, exactly like Postman or Insomnia.' },
       { q: 'Which import formats are supported?', a: 'Postman Collection v2.1 (JSON), Insomnia Export v4 (JSON), OpenAPI/Swagger 2.0 and 3.x (JSON or YAML), and HAR (HTTP Archive from browser DevTools). Collections are auto-detected — just drop the file.' },
@@ -3691,10 +3692,11 @@ const id: Record<string, ToolSeoContent> = {
     howTo: [
       'Klik "Import" dan pilih berkas Postman JSON, Insomnia JSON, OpenAPI YAML/JSON, atau HAR — koleksi langsung tampil.',
       'Klik request mana pun di sidebar untuk membukanya. Edit URL, method, header, body, atau auth sesuai kebutuhan.',
-      'Buat environment (mis. "dev" dengan variabel base_url dan token) dan referensikan dengan {{nama_variabel}} di mana saja dalam request.',
-      'Klik "Send". Respons muncul di bawah dengan status, waktu, header, dan body terformat. Klik ikon unduh di koleksi untuk mengekspor kembali ke Postman, Insomnia, atau OpenAPI.',
+      'Tambahkan environment (ikon + di sebelah ENV), beri nama, dan isi variabel sebagai KEY=value (satu per baris). Referensikan dengan {{nama_variabel}} di URL, params, header, body, atau auth — nilainya disubstitusi saat Anda mengirim.',
+      'Klik "Send". Respons muncul di bawah dengan status, waktu, header, dan body terformat. Buka tab "Request" untuk melihat persis apa yang dikirim dengan variabel yang sudah diselesaikan. Klik ikon unduh di koleksi untuk mengekspor kembali ke Postman, Insomnia, atau OpenAPI.',
     ],
     faqs: [
+      { q: 'Bagaimana cara memeriksa persis request apa yang dikirim?', a: 'Setelah mengirim, buka tab "Request" di panel respons untuk melihat method, URL, header (termasuk auth), dan body akhir dengan setiap {{variabel}} yang sudah diselesaikan — sehingga Anda bisa memastikan request keluar sesuai harapan. Tab History di sidebar juga mencatat setiap request yang pernah Anda kirim.' },
       { q: 'Apakah data API saya diunggah ke server?', a: 'Tidak. Semua eksekusi request, parsing koleksi, dan penyimpanan workspace terjadi secara lokal di browser atau aplikasi desktop Anda. API key, token, dan payload Anda tidak pernah meninggalkan perangkat Anda.' },
       { q: 'Mengapa ada tulisan "Browser mode — CORS restrictions apply"?', a: 'Browser memblokir request lintas-origin ke API yang tidak mengizinkannya secara eksplisit — ini adalah kebijakan keamanan browser bernama CORS. Instal aplikasi desktop GoodWebTools untuk mengirim request ke API mana pun tanpa batasan CORS, persis seperti Postman atau Insomnia.' },
       { q: 'Format import apa saja yang didukung?', a: 'Postman Collection v2.1 (JSON), Insomnia Export v4 (JSON), OpenAPI/Swagger 2.0 dan 3.x (JSON atau YAML), dan HAR (HTTP Archive dari DevTools browser). Koleksi dideteksi otomatis — cukup pilih berkasnya.' },
