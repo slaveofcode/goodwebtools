@@ -576,6 +576,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'pdf-to-excel',
+    name: 'PDF to Excel (CSV)',
+    category: 'PDF',
+    route: '/tools/pdf-to-excel',
+    keywords: ['pdf to excel', 'pdf to csv', 'extract table', 'pdf table', 'spreadsheet', 'convert', 'pdf ke excel', 'tabel pdf'],
+    icon: FileSpreadsheet,
+    summary: 'Extract PDF tables and text into a CSV for Excel (best effort)',
+    load: () => import('@/islands/pdf/PdfToExcel'),
+    status: 'beta'
+  },
+  {
     id: 'pdf-booklet',
     name: 'PDF Booklet Imposition',
     category: 'PDF',
