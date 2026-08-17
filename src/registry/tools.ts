@@ -290,6 +290,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'pptx-to-pdf',
+    name: 'PPTX to PDF',
+    category: 'Documents',
+    route: '/tools/pptx-to-pdf',
+    keywords: ['pptx to pdf', 'powerpoint to pdf', 'ppt to pdf', 'convert', 'slides to pdf', 'presentation', 'pptx ke pdf'],
+    icon: FileOutput,
+    summary: 'Convert PowerPoint slides (.pptx) to a PDF',
+    load: () => import('@/islands/documents/PptxToPdf'),
+    status: 'beta'
+  },
+  {
     id: 'gedcom-viewer',
     name: 'GEDCOM Viewer',
     category: 'Documents',
@@ -1365,6 +1376,17 @@ export const tools: ToolDef[] = [
     icon: Speech,
     summary: 'Read text aloud with your browser’s built-in voices',
     load: () => import('@/islands/media/TextToSpeech'),
+    status: 'beta'
+  },
+  {
+    id: 'live-captions',
+    name: 'Live Captions',
+    category: 'Media',
+    route: '/tools/live-captions',
+    keywords: ['live captions', 'captions', 'subtitles', 'speech to text', 'accessibility', 'hard of hearing', 'teks langsung', 'transkrip langsung'],
+    icon: Subtitles,
+    summary: 'Large live captions of spoken speech (uses browser speech recognition)',
+    load: () => import('@/islands/media/LiveCaptions'),
     status: 'beta'
   },
   {

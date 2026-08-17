@@ -562,6 +562,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
     ],
   },
+  'pptx-to-pdf': {
+    title: 'Free PPTX to PDF — Convert PowerPoint to PDF Online',
+    description: 'Convert a PowerPoint (.pptx) to PDF in your browser — one slide per page with real positions, text and images. Free and private; nothing is uploaded.',
+    intro: 'This free PPTX-to-PDF converter turns a PowerPoint presentation into a PDF, one slide per page, laid out with each slide’s real geometry — text, images and positions. It runs entirely in your browser, so your presentation is never uploaded. Slides are rendered to images, so the resulting PDF looks like the slides (the text is not selectable).',
+    howTo: [
+      'Drop your .pptx file to load it.',
+      'Check the slide count.',
+      'Click Convert to PDF.',
+      'Download the PDF — one slide per page.',
+    ],
+    faqs: [
+      { q: 'Is my presentation uploaded?', a: 'No. The .pptx is parsed and rendered to a PDF entirely in your browser, so it never leaves your device.' },
+      { q: 'Is the PDF text selectable?', a: 'No. Each slide is rendered to an image to preserve the layout, so the PDF is a faithful picture of the slides rather than selectable text.' },
+      { q: 'Does it keep images and layout?', a: 'Yes. Slides are laid out with their real positions, text styling and images before being placed on the page.' },
+      { q: 'Does it support .ppt (old format)?', a: 'It converts modern .pptx files. Older binary .ppt files are not supported — save them as .pptx first.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the converter works with no internet connection.' },
+    ],
+  },
   'iwork-viewer': {
     title: 'Free iWork Viewer — Open Pages, Numbers & Keynote on Windows',
     description: 'Open Apple Pages (.pages), Numbers (.numbers) and Keynote (.key) files on any device, including Windows, with no iWork or account. Private — parsed in your browser.',
@@ -2078,6 +2096,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Why does the first run take a while?', a: 'The AI model is downloaded and cached on first use, and larger or \'Better\' models are slower — especially on phones. After the initial download it loads from cache, and transcription runs locally on your device.' },
     ],
   },
+  'live-captions': {
+    title: 'Live Captions — Real-Time Speech-to-Text on a Big Screen',
+    description: 'Show large, live captions of what’s spoken — put a laptop on the table so someone hard-of-hearing can follow a meeting or conversation. Uses your browser’s speech recognition.',
+    intro: 'Live Captions turns spoken words into large, real-time text on your screen — put a laptop or phone on the table in a meeting room so someone hard-of-hearing can follow along. Please note: unlike the rest of GoodWebTools, this relies on your browser’s built-in speech recognition, which in Chrome and Edge sends microphone audio to the browser’s speech service to transcribe. It is not fully on-device, so avoid using it for sensitive conversations.',
+    howTo: [
+      'Choose the spoken language.',
+      'Click Start captions and allow microphone access.',
+      'Read the large live captions as people speak.',
+      'Click Stop when you’re done.',
+    ],
+    faqs: [
+      { q: 'Does this run fully on my device?', a: 'No — and that is different from our other tools. It uses your browser’s speech recognition, which in Chrome and Edge streams microphone audio to the browser’s online speech service (e.g. Google) to transcribe.' },
+      { q: 'Should I use it for private conversations?', a: 'No. Because audio is sent to the browser’s speech service, avoid using it for confidential or sensitive conversations.' },
+      { q: 'Which browsers work?', a: 'Chrome and Edge on desktop support live speech recognition. Safari and Firefox generally do not.' },
+      { q: 'Which languages are supported?', a: 'Several, including English, Bahasa Indonesia, Spanish, French, German, Japanese and Chinese — pick the spoken language before starting.' },
+      { q: 'Is a transcript saved?', a: 'The captions stay on screen until you clear them or leave the page; nothing is stored by us.' },
+    ],
+  },
   'text-to-speech': {
     title: 'Free Text to Speech — Read Any Text Aloud Online',
     description: 'Convert text to speech in your browser using built-in voices. Choose a voice, adjust speed and pitch, and listen instantly. Free, private — nothing is uploaded.',
@@ -2875,6 +2911,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'pptx-to-pdf': {
+    title: 'PPTX ke PDF Gratis — Konversi PowerPoint ke PDF Online',
+    description: 'Konversi PowerPoint (.pptx) ke PDF di browser Anda — satu slide per halaman dengan posisi, teks, dan gambar aslinya. Gratis dan privat; tidak ada yang diunggah.',
+    intro: 'Konverter PPTX-ke-PDF gratis ini mengubah presentasi PowerPoint menjadi PDF, satu slide per halaman, ditata sesuai geometri asli tiap slide — teks, gambar, dan posisi. Berjalan sepenuhnya di browser Anda, jadi presentasi tidak pernah diunggah. Slide dirender menjadi gambar, sehingga PDF hasilnya tampak seperti slide (teksnya tidak bisa diseleksi).',
+    howTo: [
+      'Letakkan berkas .pptx Anda untuk memuatnya.',
+      'Periksa jumlah slide.',
+      'Klik Konversi ke PDF.',
+      'Unduh PDF — satu slide per halaman.',
+    ],
+    faqs: [
+      { q: 'Apakah presentasi saya diunggah?', a: 'Tidak. Berkas .pptx diurai dan dirender menjadi PDF sepenuhnya di browser Anda, jadi tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah teks PDF bisa diseleksi?', a: 'Tidak. Tiap slide dirender menjadi gambar untuk mempertahankan tata letak, jadi PDF adalah gambar setia dari slide, bukan teks yang bisa diseleksi.' },
+      { q: 'Apakah gambar dan tata letak dipertahankan?', a: 'Ya. Slide ditata dengan posisi, gaya teks, dan gambar aslinya sebelum ditempatkan di halaman.' },
+      { q: 'Apakah mendukung .ppt (format lama)?', a: 'Mengonversi berkas .pptx modern. Berkas biner .ppt lama tidak didukung — simpan sebagai .pptx dulu.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat konverter bekerja tanpa koneksi internet.' },
     ],
   },
   'iwork-viewer': {
@@ -4391,6 +4445,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah ini mentranskripsi bahasa selain English?', a: 'Ya. Pilih salah satu model multibahasa dan pilih bahasa yang diucapkan — Indonesia, Melayu, Jepang, Spanyol, dan banyak lagi — untuk akurasi terbaik. Deteksi otomatis juga tersedia.' },
       { q: 'Bisakah saya mengekspor subtitle?', a: 'Ya. Buka tab Subtitles dan unduh berkas SRT atau VTT dengan timestamp, atau ambil teks biasa (.txt) atau versi dengan timestamp sebagai gantinya.' },
       { q: 'Mengapa penggunaan pertama memakan waktu?', a: 'Model AI diunduh dan disimpan di cache pada penggunaan pertama, dan model yang lebih besar atau \'Better\' lebih lambat — terutama di ponsel. Setelah unduhan awal, ia dimuat dari cache, dan transkripsi berjalan secara lokal di perangkat Anda.' },
+    ],
+  },
+  'live-captions': {
+    title: 'Teks Langsung (Live Captions) — Ucapan ke Teks Real-Time Layar Besar',
+    description: 'Tampilkan teks langsung berukuran besar dari yang diucapkan — letakkan laptop di meja agar penyandang gangguan pendengaran bisa mengikuti rapat. Memakai pengenalan suara browser.',
+    intro: 'Live Captions mengubah kata yang diucapkan menjadi teks besar secara real-time di layar Anda — letakkan laptop atau ponsel di meja ruang rapat agar penyandang gangguan pendengaran bisa mengikuti. Perlu diketahui: berbeda dari tool GoodWebTools lainnya, ini mengandalkan pengenalan suara bawaan browser, yang di Chrome dan Edge mengirim audio mikrofon ke layanan suara browser untuk ditranskripsi. Ini tidak sepenuhnya di perangkat, jadi hindari untuk percakapan sensitif.',
+    howTo: [
+      'Pilih bahasa yang diucapkan.',
+      'Klik Mulai teks dan izinkan akses mikrofon.',
+      'Baca teks langsung berukuran besar saat orang berbicara.',
+      'Klik Berhenti saat selesai.',
+    ],
+    faqs: [
+      { q: 'Apakah ini berjalan sepenuhnya di perangkat saya?', a: 'Tidak — dan ini berbeda dari tool kami lainnya. Ini memakai pengenalan suara browser, yang di Chrome dan Edge mengalirkan audio mikrofon ke layanan suara daring browser (mis. Google) untuk ditranskripsi.' },
+      { q: 'Apakah boleh dipakai untuk percakapan pribadi?', a: 'Tidak. Karena audio dikirim ke layanan suara browser, hindari memakainya untuk percakapan rahasia atau sensitif.' },
+      { q: 'Browser apa yang bisa?', a: 'Chrome dan Edge di desktop mendukung pengenalan suara langsung. Safari dan Firefox umumnya tidak.' },
+      { q: 'Bahasa apa yang didukung?', a: 'Beberapa, termasuk Inggris, Bahasa Indonesia, Spanyol, Prancis, Jerman, Jepang, dan Mandarin — pilih bahasa yang diucapkan sebelum memulai.' },
+      { q: 'Apakah transkrip disimpan?', a: 'Teks tetap di layar sampai Anda bersihkan atau meninggalkan halaman; tidak ada yang kami simpan.' },
     ],
   },
   'text-to-speech': {
