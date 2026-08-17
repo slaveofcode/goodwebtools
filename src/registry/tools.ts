@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -540,6 +540,28 @@ export const tools: ToolDef[] = [
     icon: Disc3,
     summary: 'Spin a wheel to pick a name or option at random',
     load: () => import('@/islands/games/WheelSpinner'),
+    status: 'beta'
+  },
+  {
+    id: '2048',
+    name: '2048 Game',
+    category: 'Games',
+    route: '/tools/2048',
+    keywords: ['2048', 'game', 'puzzle', 'tiles', 'merge', 'number game', 'cheat', 'auto solve', 'main 2048'],
+    icon: Grid3x3,
+    summary: 'Play 2048 with undo and an auto-play cheat',
+    load: () => import('@/islands/games/Game2048'),
+    status: 'beta'
+  },
+  {
+    id: 'flappy-bird',
+    name: 'Flying Bird Game',
+    category: 'Games',
+    route: '/tools/flappy-bird',
+    keywords: ['flappy bird', 'flying bird', 'game', 'arcade', 'tap game', 'burung terbang', 'game burung'],
+    icon: Bird,
+    summary: 'A flappy-bird style arcade game — tap to fly through the gaps',
+    load: () => import('@/islands/games/FlappyBird'),
     status: 'beta'
   },
   {
