@@ -154,32 +154,38 @@ export default function PdfRedact({ lang = 'en' }: { lang?: Lang }) {
           <p className="text-sm text-muted-foreground">{t.drawHint}</p>
 
           {pageUrl && (
-            <div
-              ref={pageBoxRef}
-              className="relative inline-block touch-none select-none border-2 border-border"
-              style={{ cursor: 'crosshair' }}
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-            >
-              <img src={pageUrl} alt={`page ${pageNum}`} className="block max-h-[72vh] w-auto" draggable={false} />
-              {pageBoxes.map(b => (
-                <div key={b.id}
-                  className="group absolute bg-black"
-                  style={{ left: `${b.x * 100}%`, top: `${b.y * 100}%`, width: `${b.w * 100}%`, height: `${b.h * 100}%` }}>
-                  <button
-                    onPointerDown={e => { e.stopPropagation(); }}
-                    onClick={e => { e.stopPropagation(); removeBox(b.id); }}
-                    aria-label={t.remove}
-                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center border-2 border-border bg-white text-xs font-black text-black opacity-0 group-hover:opacity-100">
-                    ×
-                  </button>
-                </div>
-              ))}
-              {draft && (
-                <div className="absolute border-2 border-dashed border-red-500 bg-red-500/30"
-                  style={{ left: draft.x, top: draft.y, width: draft.w, height: draft.h }} />
-              )}
+            /* The border lives on the outer wrapper; pageBoxRef wraps the image
+               exactly (no border/padding) so measured coordinates and the box
+               overlays line up 1:1 with the rendered page — and therefore with
+               the PDF. A border here would offset/scale the drawn boxes. */
+            <div className="inline-block border-2 border-border">
+              <div
+                ref={pageBoxRef}
+                className="relative inline-block touch-none select-none align-top"
+                style={{ cursor: 'crosshair', fontSize: 0 }}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+              >
+                <img src={pageUrl} alt={`page ${pageNum}`} className="block max-h-[72vh] w-auto max-w-full" draggable={false} />
+                {pageBoxes.map(b => (
+                  <div key={b.id}
+                    className="group absolute bg-black"
+                    style={{ left: `${b.x * 100}%`, top: `${b.y * 100}%`, width: `${b.w * 100}%`, height: `${b.h * 100}%` }}>
+                    <button
+                      onPointerDown={e => { e.stopPropagation(); }}
+                      onClick={e => { e.stopPropagation(); removeBox(b.id); }}
+                      aria-label={t.remove}
+                      className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center border-2 border-border bg-white text-xs font-black text-black opacity-0 group-hover:opacity-100">
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {draft && (
+                  <div className="absolute border-2 border-dashed border-red-500 bg-red-500/30"
+                    style={{ left: draft.x, top: draft.y, width: draft.w, height: draft.h }} />
+                )}
+              </div>
             </div>
           )}
 
