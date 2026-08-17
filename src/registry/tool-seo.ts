@@ -562,6 +562,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
     ],
   },
+  'iwork-viewer': {
+    title: 'Free iWork Viewer — Open Pages, Numbers & Keynote on Windows',
+    description: 'Open Apple Pages (.pages), Numbers (.numbers) and Keynote (.key) files on any device, including Windows, with no iWork or account. Private — parsed in your browser.',
+    intro: 'Received a .pages, .numbers or .key file and you’re on Windows (or just don’t have iWork)? This free viewer opens Apple iWork documents by reading the preview built into the file, right in your browser. Drop the file and read it as pages — no Apple device, no account, and nothing uploaded.',
+    howTo: [
+      'Drop your .pages, .numbers or .key file.',
+      'The document’s pages are rendered from its built-in preview.',
+      'Scroll through the pages.',
+      'Open another file any time.',
+    ],
+    faqs: [
+      { q: 'Is my file uploaded?', a: 'No. The iWork file is unzipped and rendered in your browser, so its contents never leave your device.' },
+      { q: 'Do I need a Mac or iWork?', a: 'No. It works on any device with a browser, including Windows and Android — no Apple software and no account.' },
+      { q: 'How does it open a proprietary Apple format?', a: 'iWork files are ZIP archives that include a built-in preview (usually a PDF). The viewer extracts and displays that preview.' },
+      { q: 'Why won’t my older file open?', a: 'Documents saved before ~2013, or exported without a preview, don’t contain the preview this viewer needs. Re-save it from a newer iWork or export to PDF.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the viewer works with no internet connection.' },
+    ],
+  },
   'dicom-viewer': {
     title: 'Free DICOM Viewer — Open .dcm Medical Images (MRI, CT, X-ray)',
     description: 'Open a DICOM (.dcm) medical image from a hospital CD or USB and view it in your browser, with window/level controls. Private — your scan is never uploaded.',
@@ -2857,6 +2875,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'iwork-viewer': {
+    title: 'Penampil iWork Gratis — Buka Pages, Numbers & Keynote di Windows',
+    description: 'Buka berkas Apple Pages (.pages), Numbers (.numbers), dan Keynote (.key) di perangkat mana pun, termasuk Windows, tanpa iWork atau akun. Privat — diurai di browser Anda.',
+    intro: 'Menerima berkas .pages, .numbers, atau .key dan Anda memakai Windows (atau tidak punya iWork)? Penampil gratis ini membuka dokumen Apple iWork dengan membaca pratinjau bawaan berkas, langsung di browser Anda. Letakkan berkas dan baca sebagai halaman — tanpa perangkat Apple, tanpa akun, dan tidak ada yang diunggah.',
+    howTo: [
+      'Letakkan berkas .pages, .numbers, atau .key Anda.',
+      'Halaman dokumen dirender dari pratinjau bawaannya.',
+      'Gulir melalui halaman.',
+      'Buka berkas lain kapan saja.',
+    ],
+    faqs: [
+      { q: 'Apakah berkas saya diunggah?', a: 'Tidak. Berkas iWork di-unzip dan dirender di browser Anda, jadi isinya tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah perlu Mac atau iWork?', a: 'Tidak. Bekerja di perangkat mana pun dengan browser, termasuk Windows dan Android — tanpa software Apple dan tanpa akun.' },
+      { q: 'Bagaimana membuka format Apple berpemilik?', a: 'Berkas iWork adalah arsip ZIP yang menyertakan pratinjau bawaan (biasanya PDF). Penampil mengekstrak dan menampilkan pratinjau itu.' },
+      { q: 'Mengapa berkas lama saya tidak terbuka?', a: 'Dokumen yang disimpan sebelum ~2013, atau diekspor tanpa pratinjau, tidak memuat pratinjau yang dibutuhkan penampil ini. Simpan ulang dari iWork terbaru atau ekspor ke PDF.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat penampil bekerja tanpa koneksi internet.' },
     ],
   },
   'dicom-viewer': {
