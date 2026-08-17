@@ -562,6 +562,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
     ],
   },
+  'doc-viewer': {
+    title: 'Free Legacy .doc Viewer — Open Old Word Files Without Word',
+    description: 'Open an old Word .doc file (pre-2007 binary format) and read its text in your browser — no Word or Office needed. Best-effort text extraction, private, nothing uploaded.',
+    intro: 'Old archives are full of legacy Word .doc files — the pre-2007 binary format, not the modern zipped .docx. This free viewer opens them and extracts the readable text right in your browser, with no Word or Office install. It reads the OLE compound file and walks the Word piece table to recover the text; it is a best-effort text extractor, so formatting, tables and images are not preserved. Your file is read on your device and never uploaded.',
+    howTo: [
+      'Drop your .doc file to open it.',
+      'Read the extracted text.',
+      'Copy it, or download it as a .txt file.',
+      'For an unusual file that won’t open, re-save it as .docx in Word/LibreOffice.',
+    ],
+    faqs: [
+      { q: 'Is my document uploaded?', a: 'No. The .doc is parsed in your browser (OLE container + Word text), so its contents never leave your device.' },
+      { q: 'Does it keep formatting and tables?', a: 'No. This is best-effort text extraction — it recovers the words in order, but not fonts, layout, tables or images.' },
+      { q: 'What about .docx?', a: 'This tool is for the old binary .doc. For modern .docx use the DOCX Viewer, which preserves formatting.' },
+      { q: 'Why did some text come out garbled or missing?', a: 'The legacy .doc format is complex and varies between Word versions. If a file doesn’t extract cleanly, open it in Word or LibreOffice and re-save as .docx.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the viewer works with no internet connection.' },
+    ],
+  },
   'pptx-to-pdf': {
     title: 'Free PPTX to PDF — Convert PowerPoint to PDF Online',
     description: 'Convert a PowerPoint (.pptx) to PDF in your browser — one slide per page with real positions, text and images. Free and private; nothing is uploaded.',
@@ -2929,6 +2947,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'doc-viewer': {
+    title: 'Penampil .doc Lama Gratis — Buka Berkas Word Lama Tanpa Word',
+    description: 'Buka berkas Word .doc lama (format biner sebelum 2007) dan baca teksnya di browser — tanpa Word atau Office. Ekstraksi teks best-effort, privat, tidak ada yang diunggah.',
+    intro: 'Arsip lama penuh berkas Word .doc lawas — format biner sebelum 2007, bukan .docx modern yang terkompresi ZIP. Penampil gratis ini membukanya dan mengekstrak teks yang terbaca langsung di browser Anda, tanpa instalasi Word atau Office. Tool membaca berkas OLE compound dan menelusuri piece table Word untuk memulihkan teks; ini ekstraktor teks best-effort, jadi format, tabel, dan gambar tidak dipertahankan. Berkas Anda dibaca di perangkat dan tidak pernah diunggah.',
+    howTo: [
+      'Letakkan berkas .doc Anda untuk membukanya.',
+      'Baca teks yang diekstrak.',
+      'Salin, atau unduh sebagai berkas .txt.',
+      'Untuk berkas tak biasa yang gagal dibuka, simpan ulang sebagai .docx di Word/LibreOffice.',
+    ],
+    faqs: [
+      { q: 'Apakah dokumen saya diunggah?', a: 'Tidak. Berkas .doc diurai di browser Anda (kontainer OLE + teks Word), jadi isinya tidak pernah meninggalkan perangkat.' },
+      { q: 'Apakah mempertahankan format dan tabel?', a: 'Tidak. Ini ekstraksi teks best-effort — memulihkan kata secara berurutan, tetapi bukan font, tata letak, tabel, atau gambar.' },
+      { q: 'Bagaimana dengan .docx?', a: 'Tool ini untuk .doc biner lama. Untuk .docx modern gunakan DOCX Viewer, yang mempertahankan format.' },
+      { q: 'Mengapa sebagian teks kacau atau hilang?', a: 'Format .doc lawas rumit dan berbeda antar versi Word. Jika berkas tidak terekstrak bersih, buka di Word atau LibreOffice dan simpan ulang sebagai .docx.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat penampil bekerja tanpa koneksi internet.' },
     ],
   },
   'pptx-to-pdf': {
