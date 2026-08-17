@@ -4,7 +4,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Alert } from '@/components/ui/Alert';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download.service';
-import { reconstruct, textDensity, type TextItem, type DocParagraph } from '@/tools/documents/pdf-docx.lib';
+import { reconstruct, reconstructBlocks, textDensity, type TextItem, type DocBlock } from '@/tools/documents/pdf-docx.lib';
 import type { Lang } from '@/i18n/config';
 
 const OCR_MIN_CHARS = 8; // pages with fewer real characters are treated as scanned
@@ -21,7 +21,7 @@ const TR: Record<Lang, {
     forceOcr: 'Force OCR (scanned PDFs)', forceOcrHint: 'Run OCR on every page instead of only pages with no selectable text.',
     reading: (p, n) => `Reading text — page ${p} of ${n}…`, ocr: (p, n) => `Reading (OCR) — page ${p} of ${n}…`, building: 'Building the Word document…',
     another: 'Convert another',
-    note: 'The .docx contains editable, reflowable text (paragraphs and headings), not a pixel-perfect copy of the PDF layout. Exact positioning, tables and columns are not preserved.',
+    note: 'The .docx has editable text: headings, paragraphs and reconstructed tables. Table detection is best-effort — complex or borderless tables and multi-column layouts may still need cleanup.',
     errRead: 'Could not open this file — is it a valid PDF?', errConvert: 'Sorry, converting this PDF failed.',
   },
   id: {
@@ -31,7 +31,7 @@ const TR: Record<Lang, {
     forceOcr: 'Paksa OCR (PDF hasil pindaian)', forceOcrHint: 'Jalankan OCR pada setiap halaman, bukan hanya halaman tanpa teks yang dapat dipilih.',
     reading: (p, n) => `Membaca teks — halaman ${p} dari ${n}…`, ocr: (p, n) => `Membaca (OCR) — halaman ${p} dari ${n}…`, building: 'Menyusun dokumen Word…',
     another: 'Konversi yang lain',
-    note: 'Berkas .docx berisi teks yang dapat diedit dan disusun ulang (paragraf dan judul), bukan salinan tata letak PDF yang sempurna. Posisi persis, tabel, dan kolom tidak dipertahankan.',
+    note: 'Berkas .docx berisi teks yang dapat diedit: judul, paragraf, dan tabel yang direkonstruksi. Deteksi tabel bersifat best-effort — tabel rumit atau tanpa garis dan tata letak multi-kolom mungkin masih perlu dirapikan.',
     errRead: 'Tidak dapat membuka berkas ini — apakah PDF yang valid?', errConvert: 'Maaf, konversi PDF ini gagal.',
   },
 };
@@ -58,7 +58,7 @@ export default function PdfToDocx({ lang = 'en' }: { lang?: Lang }) {
     try {
       const pdf = await loadingTask.promise;
       const total = pdf.numPages;
-      const pages: DocParagraph[][] = [];
+      const pages: DocBlock[][] = [];
 
       for (let p = 1; p <= total; p++) {
         const page = await pdf.getPage(p);
@@ -77,7 +77,7 @@ export default function PdfToDocx({ lang = 'en' }: { lang?: Lang }) {
           pages.push(await ocrPage(page));
         } else {
           setStatus(t.reading(p, total));
-          pages.push(reconstruct(items));
+          pages.push(reconstructBlocks(items));
         }
         page.cleanup();
         setProgress(Math.round((p / total) * 90));
@@ -133,7 +133,7 @@ export default function PdfToDocx({ lang = 'en' }: { lang?: Lang }) {
 }
 
 // Render a page to a canvas and reconstruct paragraphs from on-device OCR.
-async function ocrPage(page: import('pdfjs-dist').PDFPageProxy): Promise<DocParagraph[]> {
+async function ocrPage(page: import('pdfjs-dist').PDFPageProxy): Promise<DocBlock[]> {
   const viewport = page.getViewport({ scale: 2 });
   const canvas = document.createElement('canvas');
   canvas.width = Math.floor(viewport.width);
@@ -147,21 +147,35 @@ async function ocrPage(page: import('pdfjs-dist').PDFPageProxy): Promise<DocPara
   const engine = await getEngine();
   const lines = await engine.recognize(canvas);
   const items: TextItem[] = lines.map((l) => ({ text: l.text, x: l.box.x, y: l.box.y, width: l.box.width, height: l.box.height }));
-  return reconstruct(items);
+  // OCR gives lines, not reliable column geometry, so keep the paragraph path.
+  return reconstruct(items).map((p) => ({ type: 'paragraph', ...p }));
 }
 
-async function buildDocx(pages: DocParagraph[][]): Promise<Blob> {
-  const { Document, Packer, Paragraph, HeadingLevel } = await import('docx');
-  const children: InstanceType<typeof Paragraph>[] = [];
-  pages.forEach((paras, pageIdx) => {
-    paras.forEach((par, i) => {
-      children.push(new Paragraph({
-        text: par.text,
-        heading: par.heading === 1 ? HeadingLevel.HEADING_1 : par.heading === 2 ? HeadingLevel.HEADING_2 : undefined,
-        pageBreakBefore: pageIdx > 0 && i === 0 ? true : undefined,
-      }));
+async function buildDocx(pages: DocBlock[][]): Promise<Blob> {
+  const { Document, Packer, Paragraph, HeadingLevel, Table, TableRow, TableCell, WidthType } = await import('docx');
+  const children: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [];
+
+  pages.forEach((blocks, pageIdx) => {
+    blocks.forEach((block, i) => {
+      const first = pageIdx > 0 && i === 0;
+      if (block.type === 'table') {
+        children.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: block.rows.map((row) => new TableRow({
+            children: row.map((cell) => new TableCell({ children: [new Paragraph({ text: cell })] })),
+          })),
+        }));
+        children.push(new Paragraph({ text: '' })); // spacing after the table
+      } else {
+        children.push(new Paragraph({
+          text: block.text,
+          heading: block.heading === 1 ? HeadingLevel.HEADING_1 : block.heading === 2 ? HeadingLevel.HEADING_2 : undefined,
+          pageBreakBefore: first ? true : undefined,
+        }));
+      }
     });
   });
+
   if (children.length === 0) children.push(new Paragraph({ text: '' }));
   const doc = new Document({ sections: [{ children }] });
   return Packer.toBlob(doc);

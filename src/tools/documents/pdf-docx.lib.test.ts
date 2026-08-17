@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { groupLines, paragraphsFromLines, reconstruct, textDensity, type TextItem } from './pdf-docx.lib';
+import { groupLines, paragraphsFromLines, reconstruct, textDensity, segmentsOf, clusterColumns, reconstructBlocks, type TextItem } from './pdf-docx.lib';
 
 const item = (text: string, x: number, y: number, width: number, height = 10): TextItem => ({ text, x, y, width, height });
 
@@ -67,5 +67,54 @@ describe('reconstruct + textDensity', () => {
   it('textDensity counts non-whitespace characters (for the OCR-fallback decision)', () => {
     expect(textDensity([item('a b', 0, 0, 10), item('  ', 0, 0, 10)])).toBe(2);
     expect(textDensity([])).toBe(0);
+  });
+});
+
+describe('segmentsOf', () => {
+  it('splits a row into cells on wide column gaps but keeps words together', () => {
+    // "Name Field" as one cell (small gap), then a big gap, then "Value"
+    const items = [
+      item('Name', 10, 100, 30), item('Field', 46, 100, 30),
+      item('Value', 200, 100, 40),
+    ];
+    const segs = segmentsOf(items);
+    expect(segs.map(s => s.text)).toEqual(['Name Field', 'Value']);
+  });
+});
+
+describe('clusterColumns', () => {
+  it('groups nearby x positions into column centres', () => {
+    expect(clusterColumns([10, 11, 100, 101, 200], 5)).toEqual([10.5, 100.5, 200]);
+  });
+});
+
+describe('reconstructBlocks', () => {
+  const cell = (text: string, x: number, y: number) => item(text, x, y, 40, 10);
+
+  it('emits a table for aligned multi-column rows', () => {
+    const items: TextItem[] = [
+      cell('Item', 10, 100), cell('Q1', 200, 100), cell('Q2', 300, 100),
+      cell('Rev', 10, 120), cell('100', 200, 120), cell('150', 300, 120),
+      cell('Cost', 10, 140), cell('40', 200, 140), cell('55', 300, 140),
+    ];
+    const blocks = reconstructBlocks(items);
+    const table = blocks.find(b => b.type === 'table');
+    expect(table).toBeDefined();
+    if (table && table.type === 'table') {
+      expect(table.rows).toEqual([
+        ['Item', 'Q1', 'Q2'],
+        ['Rev', '100', '150'],
+        ['Cost', '40', '55'],
+      ]);
+    }
+  });
+
+  it('keeps ordinary prose as paragraphs', () => {
+    const items: TextItem[] = [
+      item('This is a normal sentence of text.', 10, 100, 300, 10),
+      item('Another line right below it.', 10, 118, 260, 10),
+    ];
+    const blocks = reconstructBlocks(items);
+    expect(blocks.every(b => b.type === 'paragraph')).toBe(true);
   });
 });
