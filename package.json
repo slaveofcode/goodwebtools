@@ -52,6 +52,7 @@
     "@astrojs/react": "^3.6.3",
     "@astrojs/sitemap": "^3.2.1",
     "@astrojs/tailwind": "^5.1.5",
+    "@breezystack/lamejs": "^1.2.7",
     "@dagrejs/dagre": "^3.0.0",
     "@dbml/core": "^8.3.1",
     "@excalidraw/excalidraw": "^0.18.1",
