@@ -323,6 +323,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'iwork-viewer',
+    name: 'iWork Viewer (Pages/Numbers/Keynote)',
+    category: 'Documents',
+    route: '/tools/iwork-viewer',
+    keywords: ['iwork', 'pages', 'numbers', 'keynote', 'apple', 'open pages', 'mac document', 'buka pages', 'viewer'],
+    icon: FileType2,
+    summary: 'Open Apple Pages, Numbers & Keynote files on any device',
+    load: () => import('@/islands/documents/IWorkViewer'),
+    status: 'beta'
+  },
+  {
     id: 'nik-decoder',
     name: 'NIK / KTP Decoder',
     category: 'Dev',
