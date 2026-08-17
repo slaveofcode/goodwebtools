@@ -106,12 +106,18 @@ function decodePieces(wd: Uint8Array, table: Uint8Array, pcdt: Pcdt, ccpText: nu
   return out;
 }
 
-/** Tidy extracted text: collapse runs of blank lines and trailing spaces. */
+/**
+ * Tidy extracted text. Table cells are separated by single tab marks; a run of
+ * two or more marks (a cell mark plus the row-end mark) is a row boundary, so
+ * those become line breaks. Leading tabs and blank-line runs are trimmed.
+ */
 export function cleanDocText(s: string): string {
   return s
     .replace(/\r\n?/g, '\n')
-    .replace(/[ \t]+\n/g, '\n')
     .replace(/\uFEFF/g, '')
+    .replace(/\t{2,}/g, '\n') // consecutive cell/row marks \u2192 new row
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n') // strip leading tabs/spaces on a line
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
