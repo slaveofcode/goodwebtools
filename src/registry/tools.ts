@@ -301,6 +301,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'doc-viewer',
+    name: 'Legacy .doc Viewer',
+    category: 'Documents',
+    route: '/tools/doc-viewer',
+    keywords: ['doc', 'word 97', 'legacy doc', 'old word', 'open doc', 'binary doc', 'msword', 'buka doc', 'word lama'],
+    icon: FileText,
+    summary: 'Open and read old Word .doc (pre-2007 binary) files',
+    load: () => import('@/islands/documents/DocViewer'),
+    status: 'beta'
+  },
+  {
     id: 'gedcom-viewer',
     name: 'GEDCOM Viewer',
     category: 'Documents',
