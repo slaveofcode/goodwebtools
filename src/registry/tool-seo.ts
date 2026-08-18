@@ -2611,6 +2611,40 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does the playground work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded it keeps running SQL with no internet connection.' },
     ],
   },
+  'notepad': {
+    title: 'Free Online Notepad — Autosaves in Your Browser',
+    description: 'A fast online notepad that autosaves to your browser as you type — no account, no upload. Reopen the page and your note is still there. Download as .txt.',
+    intro: 'This free online notepad loads instantly and autosaves everything you type to this browser, so your note is still here when you come back — no account and no upload. It shows a live word and character count and lets you download the note as a .txt file.',
+    howTo: [
+      'Start typing — your note saves automatically to this browser.',
+      'Watch the "Saved" indicator and the live word/character count.',
+      'Come back any time on this device and your note is still here.',
+      'Download it as a .txt or copy it whenever you need.',
+    ],
+    faqs: [
+      { q: 'Where is my note saved?', a: 'In your browser’s local storage on this device. It is never uploaded to a server, so it stays private to you.' },
+      { q: 'Will my note still be here later?', a: 'Yes, on the same device and browser — as long as you don’t clear your browser data. Download a .txt for a permanent copy.' },
+      { q: 'Is there a word count?', a: 'Yes. A live word and character count updates as you type.' },
+      { q: 'Does it work offline?', a: 'Yes. As a PWA it loads and saves with no connection once opened.' },
+    ],
+  },
+  'todo': {
+    title: 'Quick To-Do List — Autosaves in Your Browser',
+    description: 'A quick to-do list that autosaves to your browser — jot tasks, check them off and reorder them. No account, no upload; your list is still here when you return.',
+    intro: 'This quick to-do list saves to this browser automatically, so you can jot tasks, tick them off and reorder them without an account or any upload. Reopen the page on the same device and your list is exactly where you left it.',
+    howTo: [
+      'Type a task and press Enter to add it.',
+      'Tick the checkbox to mark a task done.',
+      'Reorder tasks with the up/down arrows, or delete them.',
+      'Use “Clear completed” to tidy up finished tasks.',
+    ],
+    faqs: [
+      { q: 'Where is my list stored?', a: 'In your browser’s local storage on this device — nothing is uploaded, so your tasks stay private.' },
+      { q: 'Will my tasks persist?', a: 'Yes, on the same device and browser, until you clear your browser data.' },
+      { q: 'Can I reorder tasks?', a: 'Yes. Use the up and down arrows on each task to move it, and the checkbox to mark it done.' },
+      { q: 'Does it work offline?', a: 'Yes. As a PWA it works with no connection once loaded.' },
+    ],
+  },
   'whiteboard': {
     title: 'Free Whiteboard Tool — Sketch & Diagram Online',
     description: 'A free online whiteboard tool to sketch, diagram, flowchart, and mind-map on an infinite canvas. Runs in your browser and saves locally — nothing uploaded.',
@@ -5320,6 +5354,40 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah data saya tersimpan saat menutup tab?', a: 'Jika browser Anda mendukung OPFS, basis data bertahan secara lokal di antara kunjungan, dan kueri terakhir Anda pun diingat. Jika penyimpanan permanen tidak tersedia, Anda akan melihat peringatan — ekspor basis data untuk menyimpannya.' },
       { q: 'Bisakah saya membuka berkas SQLite yang sudah ada?', a: 'Ya. Klik Open .sqlite untuk memuat berkas .sqlite, .db, atau .sqlite3, lalu langsung mengkuerinya. Anda juga dapat mengekspor basis data saat ini kapan saja.' },
       { q: 'Apakah playground ini bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah termuat ia terus menjalankan SQL tanpa koneksi internet.' },
+    ],
+  },
+  'notepad': {
+    title: 'Notepad Online Gratis — Tersimpan Otomatis di Browser',
+    description: 'Notepad online cepat yang menyimpan otomatis ke browser Anda saat mengetik — tanpa akun, tanpa unggahan. Buka lagi halaman dan catatan Anda tetap ada. Unduh sebagai .txt.',
+    intro: 'Tool notepad online gratis ini termuat seketika dan menyimpan otomatis semua yang Anda ketik ke browser ini, jadi catatan Anda tetap ada saat kembali — tanpa akun dan tanpa unggahan. Menampilkan hitungan kata dan karakter langsung serta memungkinkan Anda mengunduh catatan sebagai berkas .txt.',
+    howTo: [
+      'Mulai mengetik — catatan Anda tersimpan otomatis ke browser ini.',
+      'Perhatikan indikator "Tersimpan" dan hitungan kata/karakter langsung.',
+      'Kembali kapan saja di perangkat ini dan catatan Anda tetap ada.',
+      'Unduh sebagai .txt atau salin kapan pun Anda butuhkan.',
+    ],
+    faqs: [
+      { q: 'Di mana catatan saya disimpan?', a: 'Di penyimpanan lokal browser di perangkat ini. Tidak pernah diunggah ke server, jadi tetap privat untuk Anda.' },
+      { q: 'Apakah catatan saya masih ada nanti?', a: 'Ya, di perangkat dan browser yang sama — selama Anda tidak menghapus data browser. Unduh .txt untuk salinan permanen.' },
+      { q: 'Apakah ada hitungan kata?', a: 'Ya. Hitungan kata dan karakter langsung diperbarui saat Anda mengetik.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA termuat dan menyimpan tanpa koneksi setelah dibuka.' },
+    ],
+  },
+  'todo': {
+    title: 'Daftar To-Do Cepat — Tersimpan Otomatis di Browser',
+    description: 'Daftar to-do cepat yang menyimpan otomatis ke browser Anda — catat tugas, centang, dan atur ulang. Tanpa akun, tanpa unggahan; daftar Anda tetap ada saat kembali.',
+    intro: 'Daftar to-do cepat ini menyimpan otomatis ke browser ini, jadi Anda bisa mencatat tugas, mencentangnya, dan mengatur ulang urutannya tanpa akun atau unggahan apa pun. Buka lagi halaman di perangkat yang sama dan daftar Anda persis seperti Anda tinggalkan.',
+    howTo: [
+      'Ketik tugas lalu tekan Enter untuk menambahkannya.',
+      'Centang kotak untuk menandai tugas selesai.',
+      'Atur ulang tugas dengan panah atas/bawah, atau hapus.',
+      'Gunakan "Hapus yang selesai" untuk merapikan tugas yang beres.',
+    ],
+    faqs: [
+      { q: 'Di mana daftar saya disimpan?', a: 'Di penyimpanan lokal browser di perangkat ini — tidak ada yang diunggah, jadi tugas Anda tetap privat.' },
+      { q: 'Apakah tugas saya bertahan?', a: 'Ya, di perangkat dan browser yang sama, sampai Anda menghapus data browser.' },
+      { q: 'Bisakah mengatur ulang tugas?', a: 'Ya. Gunakan panah atas dan bawah pada tiap tugas untuk memindahkannya, dan kotak centang untuk menandai selesai.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat.' },
     ],
   },
   'whiteboard': {
