@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -265,6 +265,83 @@ export const tools: ToolDef[] = [
     icon: Mic,
     summary: 'Record microphone audio and download it',
     load: () => import('@/islands/media/VoiceRecorder'),
+    status: 'beta'
+  },
+  {
+    id: 'device-test',
+    name: 'Device Test',
+    category: 'Testers',
+    route: '/tools/device-test',
+    keywords: ['device test', 'pre-call check', 'mic camera speaker test', 'test my devices', 'video call check'],
+    icon: ListChecks,
+    summary: 'Check your mic, camera, speakers, keyboard, mouse & screen',
+    load: () => import('@/islands/testers/DeviceTest'),
+    status: 'beta'
+  },
+  {
+    id: 'mic-test',
+    name: 'Microphone Test',
+    category: 'Testers',
+    route: '/tools/mic-test',
+    keywords: ['mic test', 'microphone test', 'test my mic', 'audio input', 'is my mic working', 'level meter'],
+    icon: Mic,
+    summary: 'Test your mic with a live waveform, meter and playback',
+    load: () => import('@/islands/testers/MicTest'),
+    status: 'beta'
+  },
+  {
+    id: 'webcam-test',
+    name: 'Webcam Test',
+    category: 'Testers',
+    route: '/tools/webcam-test',
+    keywords: ['webcam test', 'camera test', 'test my camera', 'is my webcam working', 'video preview'],
+    icon: Webcam,
+    summary: 'Check your webcam picture, framing and resolution',
+    load: () => import('@/islands/testers/WebcamTest'),
+    status: 'beta'
+  },
+  {
+    id: 'speaker-test',
+    name: 'Speaker Test',
+    category: 'Testers',
+    route: '/tools/speaker-test',
+    keywords: ['speaker test', 'headphone test', 'left right channel test', 'audio test', 'stereo test', 'tone generator'],
+    icon: Volume2,
+    summary: 'Test speakers/headphones — L/R channels, tones & sweep',
+    load: () => import('@/islands/testers/SpeakerTest'),
+    status: 'beta'
+  },
+  {
+    id: 'keyboard-test',
+    name: 'Keyboard Test',
+    category: 'Testers',
+    route: '/tools/keyboard-test',
+    keywords: ['keyboard test', 'key tester', 'dead key', 'stuck key', 'is my keyboard working', 'key press test'],
+    icon: Keyboard,
+    summary: 'Find a dead or stuck key on a visual keyboard layout',
+    load: () => import('@/islands/testers/KeyboardTest'),
+    status: 'beta'
+  },
+  {
+    id: 'mouse-test',
+    name: 'Mouse Test',
+    category: 'Testers',
+    route: '/tools/mouse-test',
+    keywords: ['mouse test', 'click test', 'double click test', 'double click drift', 'scroll test', 'button test'],
+    icon: MousePointerClick,
+    summary: 'Test mouse buttons, scroll & double-click drift',
+    load: () => import('@/islands/testers/MouseTest'),
+    status: 'beta'
+  },
+  {
+    id: 'screen-test',
+    name: 'Dead Pixel Test',
+    category: 'Testers',
+    route: '/tools/screen-test',
+    keywords: ['dead pixel test', 'screen test', 'stuck pixel', 'monitor test', 'display test', 'backlight bleed'],
+    icon: Monitor,
+    summary: 'Fullscreen colour cycler to spot dead or stuck pixels',
+    load: () => import('@/islands/testers/ScreenTest'),
     status: 'beta'
   },
   {
