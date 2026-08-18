@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -551,6 +551,61 @@ export const tools: ToolDef[] = [
     icon: MonitorSmartphone,
     summary: 'See your user agent, browser, screen & viewport size and more',
     load: () => import('@/islands/dev/BrowserInfo'),
+    status: 'beta'
+  },
+  {
+    id: 'emoji-picker',
+    name: 'Emoji & Symbol Picker',
+    category: 'Dev',
+    route: '/tools/emoji-picker',
+    keywords: ['emoji picker', 'special characters', 'symbols', 'em dash', 'degree symbol', 'copy emoji', 'unicode', 'currency symbols'],
+    icon: Smile,
+    summary: 'Search and copy emoji & special characters (—, °, ±, €, ⌘)',
+    load: () => import('@/islands/dev/EmojiPicker'),
+    status: 'beta'
+  },
+  {
+    id: 'roman-numerals',
+    name: 'Roman Numeral Converter',
+    category: 'Calculators',
+    route: '/tools/roman-numerals',
+    keywords: ['roman numerals', 'roman numeral converter', 'number to roman', 'roman to number', 'MMXXVI', 'date in roman'],
+    icon: Landmark,
+    summary: 'Convert numbers to Roman numerals and back (1–3999)',
+    load: () => import('@/islands/calculators/RomanNumeral'),
+    status: 'beta'
+  },
+  {
+    id: 'percentage-calculator',
+    name: 'Percentage Calculator',
+    category: 'Calculators',
+    route: '/tools/percentage-calculator',
+    keywords: ['percentage calculator', 'tip calculator', 'discount calculator', 'percent off', 'percent change', 'split the bill'],
+    icon: Percent,
+    summary: 'Percentages, tips and discounts — split a bill, % off & change',
+    load: () => import('@/islands/calculators/PercentageCalc'),
+    status: 'beta'
+  },
+  {
+    id: 'countdown',
+    name: 'Countdown Timer',
+    category: 'Calculators',
+    route: '/tools/countdown',
+    keywords: ['countdown', 'days until', 'days until date', 'countdown timer', 'deadline', 'time until', 'date difference'],
+    icon: Hourglass,
+    summary: 'Count down to a date — days, hours, minutes & seconds left',
+    load: () => import('@/islands/calculators/Countdown'),
+    status: 'beta'
+  },
+  {
+    id: 'timezone-converter',
+    name: 'Time Zone Converter',
+    category: 'Calculators',
+    route: '/tools/timezone-converter',
+    keywords: ['timezone converter', 'time zone converter', 'meeting planner', 'world clock', 'time difference', 'convert time'],
+    icon: Globe,
+    summary: 'Convert times across zones & plan meetings across regions',
+    load: () => import('@/islands/calculators/TimezoneConverter'),
     status: 'beta'
   },
   {
