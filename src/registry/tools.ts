@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -419,6 +419,61 @@ export const tools: ToolDef[] = [
     icon: Brush,
     summary: 'Clean up text — trim, strip HTML, remove line breaks, dedupe & sort',
     load: () => import('@/islands/dev/TextCleanup'),
+    status: 'beta'
+  },
+  {
+    id: 'slugify',
+    name: 'Slugify',
+    category: 'Dev',
+    route: '/tools/slugify',
+    keywords: ['slugify', 'slug', 'url slug', 'permalink', 'seo slug', 'kebab', 'url friendly', 'text to slug'],
+    icon: Link,
+    summary: 'Turn any text or title into a clean, URL-safe slug',
+    load: () => import('@/islands/dev/Slugify'),
+    status: 'beta'
+  },
+  {
+    id: 'http-status',
+    name: 'HTTP Status Codes',
+    category: 'Dev',
+    route: '/tools/http-status',
+    keywords: ['http status code', '404', '422', '500', '301', 'status code lookup', 'response code', 'rest api'],
+    icon: ServerCog,
+    summary: 'Look up any HTTP status code — number, class or name',
+    load: () => import('@/islands/dev/HttpStatus'),
+    status: 'beta'
+  },
+  {
+    id: 'mime-lookup',
+    name: 'MIME Type Lookup',
+    category: 'Dev',
+    route: '/tools/mime-lookup',
+    keywords: ['mime type', 'content type', 'media type', 'file extension', 'mime lookup', 'application/json', 'image/png'],
+    icon: FileType2,
+    summary: 'Find the MIME type for a file extension (and vice versa)',
+    load: () => import('@/islands/dev/MimeLookup'),
+    status: 'beta'
+  },
+  {
+    id: 'lorem-ipsum',
+    name: 'Lorem Ipsum Generator',
+    category: 'Dev',
+    route: '/tools/lorem-ipsum',
+    keywords: ['lorem ipsum', 'placeholder text', 'dummy text', 'filler text', 'paragraphs', 'mockup text', 'lipsum'],
+    icon: Pilcrow,
+    summary: 'Generate placeholder Lorem Ipsum by paragraph, sentence or word',
+    load: () => import('@/islands/dev/LoremIpsum'),
+    status: 'beta'
+  },
+  {
+    id: 'browser-info',
+    name: 'What Is My Browser',
+    category: 'Dev',
+    route: '/tools/browser-info',
+    keywords: ['my user agent', 'what is my browser', 'screen size', 'viewport size', 'browser info', 'my resolution', 'device info'],
+    icon: MonitorSmartphone,
+    summary: 'See your user agent, browser, screen & viewport size and more',
+    load: () => import('@/islands/dev/BrowserInfo'),
     status: 'beta'
   },
   {
