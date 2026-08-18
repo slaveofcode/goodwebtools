@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4 } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -265,6 +265,50 @@ export const tools: ToolDef[] = [
     icon: Mic,
     summary: 'Record microphone audio and download it',
     load: () => import('@/islands/media/VoiceRecorder'),
+    status: 'beta'
+  },
+  {
+    id: 'white-noise',
+    name: 'White Noise & Rain',
+    category: 'Media',
+    route: '/tools/white-noise',
+    keywords: ['white noise', 'pink noise', 'brown noise', 'rain sounds', 'noise generator', 'focus', 'sleep sounds'],
+    icon: Waves,
+    summary: 'Generate white, pink or brown noise & rain to focus or sleep',
+    load: () => import('@/islands/media/WhiteNoise'),
+    status: 'beta'
+  },
+  {
+    id: 'ambient-generator',
+    name: 'Ambient & Binaural Generator',
+    category: 'Media',
+    route: '/tools/ambient-generator',
+    keywords: ['binaural beats', 'isochronic tones', 'ambient generator', 'focus sounds', 'alpha theta delta', 'meditation sounds'],
+    icon: AudioLines,
+    summary: 'Generate binaural & isochronic tones with a noise bed',
+    load: () => import('@/islands/media/AmbientGenerator'),
+    status: 'beta'
+  },
+  {
+    id: 'metronome',
+    name: 'Metronome',
+    category: 'Media',
+    route: '/tools/metronome',
+    keywords: ['metronome', 'bpm', 'tempo', 'beat', 'tap tempo', 'time signature', 'practice music'],
+    icon: Music4,
+    summary: 'A precise metronome with tap tempo & time signatures',
+    load: () => import('@/islands/media/Metronome'),
+    status: 'beta'
+  },
+  {
+    id: 'tuner',
+    name: 'Instrument Tuner',
+    category: 'Media',
+    route: '/tools/tuner',
+    keywords: ['tuner', 'guitar tuner', 'instrument tuner', 'chromatic tuner', 'pitch detector', 'ukulele tuner', 'violin tuner'],
+    icon: Gauge,
+    summary: 'Tune guitar, ukulele or voice with pitch & cents readout',
+    load: () => import('@/islands/media/Tuner'),
     status: 'beta'
   },
   {
