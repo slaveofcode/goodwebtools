@@ -1593,6 +1593,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the converter works with no internet connection.' },
     ],
   },
+  'barcode-scanner': {
+    title: 'Free Barcode Scanner — Scan EAN, UPC, Code 128, QR & More',
+    description: 'Scan and decode barcodes and QR codes online — EAN, UPC, Code 128/39, ITF, QR, Data Matrix, PDF417, Aztec — from your camera or an image. In your browser, nothing uploaded.',
+    intro: 'This free barcode scanner reads and decodes 1D barcodes (EAN-13, UPC-A, Code 128, Code 39, ITF and more) and 2D codes (QR, Data Matrix, PDF417, Aztec) from your camera or an uploaded image, showing the decoded value and the barcode format. Everything is decoded in your browser — nothing is uploaded.',
+    howTo: [
+      'Choose Camera to scan live, or Upload / paste to decode an image.',
+      'For camera, allow access and point a barcode at the lens — it decodes automatically.',
+      'For upload, drop or paste a photo or screenshot of the barcode.',
+      'Copy the decoded value; the detected format (e.g. EAN-13) is shown beside it.',
+    ],
+    faqs: [
+      { q: 'Which barcode formats are supported?', a: 'Common 1D formats (EAN-13/8, UPC-A/E, Code 128, Code 39, Code 93, ITF, Codabar, DataBar) and 2D formats (QR Code, Data Matrix, PDF417, Aztec).' },
+      { q: 'Is the image or camera uploaded?', a: 'No. Decoding runs entirely in your browser using an on-device engine; your camera frames and images never leave your device.' },
+      { q: 'Why can’t my camera scan on iPhone?', a: 'Some browsers lack the native BarcodeDetector; the scanner automatically falls back to an on-device wasm decoder, which is a little slower — hold the code steady and well-lit.' },
+      { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps scanning with no connection once loaded (the decoder is cached on first use).' },
+    ],
+  },
   'barcode-generator': {
     title: 'Free Barcode Generator — Code 128, EAN, UPC & More (PNG/SVG)',
     description: 'Generate barcodes online — Code 128, EAN-13, EAN-8, UPC, Code 39, ITF and more — and download as PNG or SVG. Free and private; everything renders in your browser.',
@@ -4404,6 +4421,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah membuat berkas BRF untuk embosser?', a: 'Belum — keluarannya adalah teks braille Unicode untuk tampilan layar dan penyalinan, bukan berkas BRF siap embosser.' },
       { q: 'Apakah teks saya diunggah?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda; teks Anda tidak pernah meninggalkan perangkat.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat konverter bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'barcode-scanner': {
+    title: 'Pemindai Barcode Gratis — Pindai EAN, UPC, Code 128, QR & Lainnya',
+    description: 'Pindai dan dekode barcode serta kode QR online — EAN, UPC, Code 128/39, ITF, QR, Data Matrix, PDF417, Aztec — dari kamera atau gambar. Di browser Anda, tanpa unggahan.',
+    intro: 'Tool pemindai barcode gratis ini membaca dan mendekode barcode 1D (EAN-13, UPC-A, Code 128, Code 39, ITF, dan lainnya) serta kode 2D (QR, Data Matrix, PDF417, Aztec) dari kamera atau gambar yang diunggah, menampilkan nilai hasil dekode dan format barcode-nya. Semuanya didekode di browser Anda — tidak ada yang diunggah.',
+    howTo: [
+      'Pilih Kamera untuk memindai langsung, atau Unggah / tempel untuk mendekode gambar.',
+      'Untuk kamera, izinkan akses dan arahkan barcode ke lensa — didekode otomatis.',
+      'Untuk unggah, letakkan atau tempel foto atau tangkapan layar barcode.',
+      'Salin nilai hasil dekode; format yang terdeteksi (mis. EAN-13) ditampilkan di sampingnya.',
+    ],
+    faqs: [
+      { q: 'Format barcode apa saja yang didukung?', a: 'Format 1D umum (EAN-13/8, UPC-A/E, Code 128, Code 39, Code 93, ITF, Codabar, DataBar) dan format 2D (QR Code, Data Matrix, PDF417, Aztec).' },
+      { q: 'Apakah gambar atau kamera diunggah?', a: 'Tidak. Pendekodean berjalan sepenuhnya di browser Anda memakai mesin di perangkat; frame kamera dan gambar Anda tidak pernah meninggalkan perangkat.' },
+      { q: 'Kenapa kamera saya tidak bisa memindai di iPhone?', a: 'Sebagian browser tidak punya BarcodeDetector bawaan; pemindai otomatis beralih ke dekoder wasm di perangkat, yang sedikit lebih lambat — tahan barcode agar stabil dan terang.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap memindai tanpa koneksi setelah dimuat (dekoder di-cache saat pertama dipakai).' },
     ],
   },
   'barcode-generator': {
