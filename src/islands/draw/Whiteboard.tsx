@@ -29,6 +29,7 @@ const TR: Record<Lang, {
   unsaved: string;
   saving: string;
   saved: string;
+  saveFailed: string;
   loadError: string;
   loading: string;
   descPre: string;
@@ -45,6 +46,7 @@ const TR: Record<Lang, {
     unsaved: 'Unsaved · save now',
     saving: 'Saving…',
     saved: 'Saved',
+    saveFailed: 'Save failed — export a backup',
     loadError: "Couldn't load the whiteboard. Please refresh the page.",
     loading: 'Loading whiteboard…',
     descPre: 'A full whiteboard for sketches, diagrams, flowcharts, and mind maps. Everything stays in your browser — export as PNG/SVG or a reusable ',
@@ -61,6 +63,7 @@ const TR: Record<Lang, {
     unsaved: 'Belum tersimpan · simpan sekarang',
     saving: 'Menyimpan…',
     saved: 'Tersimpan',
+    saveFailed: 'Gagal menyimpan — ekspor cadangan',
     loadError: 'Tidak dapat memuat whiteboard. Silakan muat ulang halaman.',
     loading: 'Memuat whiteboard…',
     descPre: 'Whiteboard lengkap untuk sketsa, diagram, flowchart, dan mind map. Semuanya tetap di browser Anda — ekspor sebagai PNG/SVG atau file ',
@@ -92,7 +95,7 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
   const [navBottom, setNavBottom] = useState(67);
   // Save status shown in the header. 'unsaved' → buffered edits pending a save,
   // 'saving' → a write is in flight, 'saved' → persisted.
-  const [saveState, setSaveState] = useState<'saved' | 'unsaved' | 'saving'>('saved');
+  const [saveState, setSaveState] = useState<'saved' | 'unsaved' | 'saving' | 'error'>('saved');
 
   // Optionally hide the navbar (only while expanded) for maximum canvas space.
   const [navHidden, setNavHidden] = useState(false);
@@ -138,10 +141,19 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
     saving.current = true;
     dirty.current = false;
     const scene = latestScene.current;
-    savedKey.current = computeSceneKey(scene.elements, scene.files, sceneVersionOf.current);
+    const key = computeSceneKey(scene.elements, scene.files, sceneVersionOf.current);
     setSaveState('saving');
-    await saveScene(scene);
+    const ok = await saveScene(scene);
     saving.current = false;
+    if (!ok) {
+      // The write failed — re-mark dirty so it retries, and show it honestly
+      // rather than a false "Saved". Do NOT advance savedKey, or the change
+      // would look already-saved and never retry.
+      dirty.current = true;
+      setSaveState('error');
+      return;
+    }
+    savedKey.current = key;
     // A change may have arrived during the write; only show "Saved" if still clean.
     setSaveState(dirty.current ? 'unsaved' : 'saved');
   };
@@ -247,7 +259,16 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
     return () => { window.removeEventListener('resize', measure); header.style.display = ''; };
   }, [expanded, navHidden]);
 
-  const statusIndicator = saveState === 'unsaved' ? (
+  const statusIndicator = saveState === 'error' ? (
+    <button
+      onClick={() => { dirty.current = true; void flushSave(); }}
+      title={t.saveNow}
+      className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-red-600 underline underline-offset-2 hover:text-red-700 dark:text-red-400"
+    >
+      <span className="inline-block h-2 w-2 rounded-full bg-red-500" />
+      {t.saveFailed}
+    </button>
+  ) : saveState === 'unsaved' ? (
     <button
       onClick={() => void flushSave()}
       title={t.saveNow}

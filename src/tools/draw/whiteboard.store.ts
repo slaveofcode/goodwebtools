@@ -33,11 +33,18 @@ export async function loadScene(): Promise<WhiteboardScene | null> {
   }
 }
 
-export async function saveScene(scene: WhiteboardScene): Promise<void> {
+export async function saveScene(scene: WhiteboardScene): Promise<boolean> {
   try {
-    await (await db()).put(STORE, scene, KEY);
+    // JSON round-trip guarantees a plain, structured-cloneable object before it
+    // hits IndexedDB. Excalidraw elements are JSON-serialisable (that's the
+    // .excalidraw file format), so this is lossless but avoids any rare
+    // DataCloneError from a live element object slipping through and silently
+    // failing the write. Returns whether the write actually succeeded.
+    const plain = JSON.parse(JSON.stringify(scene)) as WhiteboardScene;
+    await (await db()).put(STORE, plain, KEY);
+    return true;
   } catch {
-    /* storage unavailable / quota — best-effort */
+    return false;
   }
 }
 
