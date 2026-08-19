@@ -40,3 +40,27 @@ export async function saveScene(scene: WhiteboardScene): Promise<void> {
     /* storage unavailable / quota — best-effort */
   }
 }
+
+/** Default autosave timings (ms). Exported so the island and tests agree. */
+export const AUTOSAVE_DEBOUNCE_MS = 800;
+export const AUTOSAVE_MAX_WAIT_MS = 5000;
+
+/**
+ * Decide whether buffered changes should be flushed to storage now. Pure so it
+ * can be unit-tested; the island polls it on a short tick with live timings.
+ *
+ * Saves when the user has been idle for `debounceMs` (they paused drawing), or
+ * — so continuous drawing still persists — once changes have been pending for
+ * `maxWaitMs` regardless of idle time.
+ */
+export function shouldAutosave(opts: {
+  dirty: boolean;
+  idleMs: number;      // time since the last detected change
+  dirtyForMs: number;  // time since changes first became unsaved
+  debounceMs?: number;
+  maxWaitMs?: number;
+}): boolean {
+  const { dirty, idleMs, dirtyForMs, debounceMs = AUTOSAVE_DEBOUNCE_MS, maxWaitMs = AUTOSAVE_MAX_WAIT_MS } = opts;
+  if (!dirty) return false;
+  return idleMs >= debounceMs || dirtyForMs >= maxWaitMs;
+}
