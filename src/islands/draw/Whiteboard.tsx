@@ -16,15 +16,18 @@ function computeSceneKey(
 }
 import { Maximize2, Minimize2, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { loadScene, saveScene, type WhiteboardScene } from '@/tools/draw/whiteboard.store';
+import { loadScene, saveScene, shouldAutosave, type WhiteboardScene } from '@/tools/draw/whiteboard.store';
 import type { Lang } from '@/i18n/config';
 import '@excalidraw/excalidraw/index.css';
 
-const SAVE_INTERVAL = 30; // seconds between autosaves
+// How often the autosave poll runs. Saving itself is debounced (~0.8s idle) with
+// a hard cap (~5s) inside shouldAutosave, so drawings persist promptly.
+const POLL_MS = 400;
 
 const TR: Record<Lang, {
   saveNow: string;
-  unsavedSaveNow: (n: number) => string;
+  unsaved: string;
+  saving: string;
   saved: string;
   loadError: string;
   loading: string;
@@ -39,7 +42,8 @@ const TR: Record<Lang, {
 }> = {
   en: {
     saveNow: 'Save now',
-    unsavedSaveNow: (n) => `Unsaved · save now (${n}s)`,
+    unsaved: 'Unsaved · save now',
+    saving: 'Saving…',
     saved: 'Saved',
     loadError: "Couldn't load the whiteboard. Please refresh the page.",
     loading: 'Loading whiteboard…',
@@ -54,7 +58,8 @@ const TR: Record<Lang, {
   },
   id: {
     saveNow: 'Simpan sekarang',
-    unsavedSaveNow: (n) => `Belum tersimpan · simpan sekarang (${n}s)`,
+    unsaved: 'Belum tersimpan · simpan sekarang',
+    saving: 'Menyimpan…',
     saved: 'Tersimpan',
     loadError: 'Tidak dapat memuat whiteboard. Silakan muat ulang halaman.',
     loading: 'Memuat whiteboard…',
@@ -85,9 +90,9 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
   // Pin the expanded overlay's top to the sticky header's actual bottom so there
   // is never a gap, regardless of the header's rendered height.
   const [navBottom, setNavBottom] = useState(67);
-  // Seconds until the next autosave. 0 means nothing pending (saved / no changes),
-  // so the countdown only runs while there are unsaved changes.
-  const [countdown, setCountdown] = useState(0);
+  // Save status shown in the header. 'unsaved' → buffered edits pending a save,
+  // 'saving' → a write is in flight, 'saved' → persisted.
+  const [saveState, setSaveState] = useState<'saved' | 'unsaved' | 'saving'>('saved');
 
   // Optionally hide the navbar (only while expanded) for maximum canvas space.
   const [navHidden, setNavHidden] = useState(false);
@@ -112,21 +117,33 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
   if (typeof window !== 'undefined' && initialDataRef.current === undefined) {
     initialDataRef.current = loadScene();
   }
-  // Changes are buffered and flushed on a fixed cadence (every SAVE_INTERVAL s)
-  // rather than on every keystroke, so saving isn't constant. A short warm-up
-  // ignores Excalidraw's own init onChange so we don't count down with no edits.
+  // Changes are buffered and flushed shortly after the user pauses (debounced),
+  // rather than on every onChange, so saving isn't constant. A short warm-up
+  // ignores Excalidraw's own init onChange so we don't save with no real edits.
   const latestScene = useRef<WhiteboardScene | null>(null);
   const dirty = useRef(false);
   const ready = useRef(false);
   const sceneVersionOf = useRef<(els: readonly unknown[]) => number>(() => 0);
   const savedKey = useRef<string | null>(null);
+  // Timestamps that drive the debounce: when the last change happened, and when
+  // the scene first became dirty since the last save.
+  const lastChangeAt = useRef(0);
+  const dirtySince = useRef(0);
+  const saving = useRef(false);
 
-  const flushSave = () => {
-    if (!latestScene.current || !dirty.current) return;
+  // Persist the buffered scene now. Async and idempotent — safe to call from the
+  // poll, the "save now" button, or on tab hide. Not called from a render/updater.
+  const flushSave = async () => {
+    if (!latestScene.current || !dirty.current || saving.current) return;
+    saving.current = true;
     dirty.current = false;
-    savedKey.current = computeSceneKey(latestScene.current.elements, latestScene.current.files, sceneVersionOf.current);
-    setCountdown(0); // back to the "Saved" state; countdown stops
-    void saveScene(latestScene.current);
+    const scene = latestScene.current;
+    savedKey.current = computeSceneKey(scene.elements, scene.files, sceneVersionOf.current);
+    setSaveState('saving');
+    await saveScene(scene);
+    saving.current = false;
+    // A change may have arrived during the write; only show "Saved" if still clean.
+    setSaveState(dirty.current ? 'unsaved' : 'saved');
   };
 
   const onChange = (
@@ -142,26 +159,31 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
     const key = computeSceneKey(elements, files, sceneVersionOf.current);
     // Baseline on the first change (restored scene) and during warm-up.
     if (savedKey.current === null || !ready.current) { savedKey.current = key; return; }
-    // Only a genuine element or file change starts the countdown.
-    if (key !== savedKey.current && !dirty.current) {
-      dirty.current = true;
-      setCountdown(SAVE_INTERVAL);
+    // Only a genuine element or file change marks the scene dirty.
+    if (key !== savedKey.current) {
+      lastChangeAt.current = Date.now();
+      if (!dirty.current) {
+        dirty.current = true;
+        dirtySince.current = lastChangeAt.current;
+        setSaveState('unsaved');
+      }
     }
   };
 
   useEffect(() => {
-    // Warm-up so the initial (non-user) onChange doesn't start a countdown.
+    // Warm-up so the initial (non-user) onChange isn't treated as an edit.
     const warm = setTimeout(() => { ready.current = true; }, 1500);
-    // One shared 1-second tick drives the countdown and triggers the save at 0.
+    // Poll frequently; shouldAutosave debounces (~0.8s idle) with a ~5s hard cap
+    // so drawings persist promptly while the page is open.
     const tick = setInterval(() => {
       if (!dirty.current) return;
-      setCountdown((c) => {
-        if (c <= 1) { flushSave(); return 0; }
-        return c - 1;
-      });
-    }, 1000);
+      const now = Date.now();
+      if (shouldAutosave({ dirty: true, idleMs: now - lastChangeAt.current, dirtyForMs: now - dirtySince.current })) {
+        void flushSave();
+      }
+    }, POLL_MS);
     // Save immediately when the tab is hidden/closed so the last edits aren't lost.
-    const onHide = () => { if (document.visibilityState === 'hidden') flushSave(); };
+    const onHide = () => { if (document.visibilityState === 'hidden') void flushSave(); };
     // Warn before leaving with buffered (not-yet-saved) changes. The browser only
     // allows its own native confirmation here — a custom modal can't block a close.
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -225,18 +247,20 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
     return () => { window.removeEventListener('resize', measure); header.style.display = ''; };
   }, [expanded, navHidden]);
 
-  const statusIndicator = countdown > 0 ? (
+  const statusIndicator = saveState === 'unsaved' ? (
     <button
-      onClick={flushSave}
+      onClick={() => void flushSave()}
       title={t.saveNow}
       className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-600 underline underline-offset-2 hover:text-amber-700"
     >
       <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
-      {t.unsavedSaveNow(countdown)}
+      {t.unsaved}
     </button>
   ) : (
     <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-      <Check className="h-3.5 w-3.5" /> {t.saved}
+      {saveState === 'saving'
+        ? <><span className="inline-block h-2 w-2 animate-pulse rounded-full bg-muted-foreground" /> {t.saving}</>
+        : <><Check className="h-3.5 w-3.5" /> {t.saved}</>}
     </span>
   );
 
