@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { useExpand } from '@/hooks/useExpand';
 import { stepBird, outOfBounds, hitsPipe, type Pipe } from '@/tools/games/flappy.lib';
 import type { Lang } from '@/i18n/config';
 
@@ -6,10 +9,12 @@ const TR: Record<Lang, Record<string, string>> = {
   en: {
     intro: 'A flappy-bird style game. Click, tap or press Space to flap and fly through the gaps. How far can you get?',
     ready: 'Tap / Space to start', dead: 'Game over', best: 'Best', restart: 'Tap to restart',
+    expand: 'Expand', exit: 'Exit',
   },
   id: {
     intro: 'Game bergaya flappy bird. Klik, ketuk, atau tekan Spasi untuk mengepak dan terbang melewati celah. Sejauh apa Anda bisa?',
     ready: 'Ketuk / Spasi untuk mulai', dead: 'Permainan selesai', best: 'Terbaik', restart: 'Ketuk untuk ulang',
+    expand: 'Perbesar', exit: 'Keluar',
   },
 };
 
@@ -24,6 +29,7 @@ function initial(): GameState { return { phase: 'ready', y: H / 2, v: 0, pipes: 
 
 export default function FlappyBird({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
+  const { ref: stageRef, expanded, enter, exit } = useExpand<HTMLDivElement>();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const g = useRef<GameState>(initial());
   const [best, setBest] = useState(0);
@@ -123,23 +129,44 @@ export default function FlappyBird({ lang = 'en' }: { lang?: Lang }) {
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
-      <div className="relative mx-auto w-full max-w-[360px]">
-        <canvas
-          ref={canvasRef}
-          width={W}
-          height={H}
-          onPointerDown={e => { e.preventDefault(); flap(); }}
-          className="w-full cursor-pointer touch-none select-none border-2 border-border"
-          style={{ imageRendering: 'auto' }}
-        />
-        {phase !== 'playing' && (
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 text-center text-white">
-            <div className="rounded bg-black/60 px-4 py-2">
-              <div className="text-lg font-black">{phase === 'dead' ? t.dead : t.ready}</div>
-              {phase === 'dead' && <div className="text-sm">{t.best}: {best} · {t.restart}</div>}
+      {/* Stage: normal flow, or a fullscreen overlay (native fullscreen on
+          Android, CSS overlay fallback on iOS) for comfortable mobile play. */}
+      <div
+        ref={stageRef}
+        className={expanded
+          ? 'fixed inset-0 z-[60] flex flex-col items-center justify-center gap-3 overflow-hidden bg-background p-3'
+          : 'space-y-3'}
+      >
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="border-2 border-border px-3 py-1 text-sm"><span className="text-muted-foreground">{t.best}:</span> <span className="font-black tabular-nums">{best}</span></div>
+          <Button
+            variant="secondary"
+            onClick={e => { e.currentTarget.blur(); if (expanded) exit(); else enter(); }}
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            {expanded ? t.exit : t.expand}
+          </Button>
+        </div>
+
+        {/* Expanded: height-driven sizing; 2:3 aspect keeps width ≤ ~92vw. */}
+        <div className={expanded ? 'relative aspect-[2/3] h-[min(85vh,138vw)]' : 'relative mx-auto w-full max-w-[360px]'}>
+          <canvas
+            ref={canvasRef}
+            width={W}
+            height={H}
+            onPointerDown={e => { e.preventDefault(); flap(); }}
+            className={`cursor-pointer touch-none select-none border-2 border-border ${expanded ? 'h-full w-full' : 'w-full'}`}
+            style={{ imageRendering: 'auto' }}
+          />
+          {phase !== 'playing' && (
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 text-center text-white">
+              <div className="rounded bg-black/60 px-4 py-2">
+                <div className="text-lg font-black">{phase === 'dead' ? t.dead : t.ready}</div>
+                {phase === 'dead' && <div className="text-sm">{t.best}: {best} · {t.restart}</div>}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
