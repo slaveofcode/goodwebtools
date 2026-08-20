@@ -1,21 +1,23 @@
 import type { Category } from '@/types/tool';
 import type { Lang } from '@/i18n/config';
 
+// Homepage order: most-used first (Image, PDF, Documents, Dev), then the
+// everyday and fun categories, with the niche ones at the end.
 export const categories: Category[] = [
-  'Dev',
-  'PDF',
   'Image',
-  'Files',
+  'PDF',
   'Documents',
-  'Draw',
+  'Dev',
   'Media',
+  'Files',
+  'Calculators',
+  'Testers',
+  'Draw',
   'Network',
   'Maps',
-  'Calculators',
   'Games',
-  'Testers',
-  'Legacy',
-  'Playground'
+  'Playground',
+  'Legacy'
 ];
 
 export const categoryColors: Record<Category, string> = {
