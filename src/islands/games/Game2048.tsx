@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useExpand } from '@/hooks/useExpand';
 import { move, emptyCells, emptyGrid, hasMoves, maxTile, bestMove, type Grid, type Direction } from '@/tools/games/game2048.lib';
 import type { Lang } from '@/i18n/config';
 
@@ -7,12 +9,12 @@ const TR: Record<Lang, Record<string, string>> = {
   en: {
     intro: 'Play 2048 — combine tiles to reach 2048. Use arrow keys or swipe. Includes cheats: Undo and an Auto-play that simulates the best moves for you.',
     score: 'Score', newGame: 'New game', undo: 'Undo', auto: 'Auto-play (cheat)', stop: 'Stop', won: 'You made 2048! 🎉', over: 'Game over', keepGoing: 'Keep going',
-    hint: 'Arrow keys or swipe to move.',
+    hint: 'Arrow keys or swipe to move.', expand: 'Expand', exit: 'Exit',
   },
   id: {
     intro: 'Main 2048 — gabungkan ubin untuk mencapai 2048. Pakai tombol panah atau geser. Termasuk cheat: Urungkan dan Auto-play yang mensimulasikan langkah terbaik untuk Anda.',
     score: 'Skor', newGame: 'Main baru', undo: 'Urungkan', auto: 'Auto-play (cheat)', stop: 'Berhenti', won: 'Anda mencapai 2048! 🎉', over: 'Permainan selesai', keepGoing: 'Lanjutkan',
-    hint: 'Tombol panah atau geser untuk bergerak.',
+    hint: 'Tombol panah atau geser untuk bergerak.', expand: 'Perbesar', exit: 'Keluar',
   },
 };
 
@@ -38,6 +40,7 @@ function fresh(): Grid { return spawn(spawn(emptyGrid())); }
 
 export default function Game2048({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
+  const { ref: stageRef, expanded, enter, exit } = useExpand<HTMLDivElement>();
   const [grid, setGrid] = useState<Grid>(fresh);
   const [score, setScore] = useState(0);
   const [won, setWon] = useState(false);
@@ -107,14 +110,29 @@ export default function Game2048({ lang = 'en' }: { lang?: Lang }) {
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Stage: normal flow, or a fullscreen overlay (native fullscreen on
+          Android, CSS overlay fallback on iOS) for comfortable mobile play. */}
+      <div
+        ref={stageRef}
+        className={expanded
+          ? 'fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 overflow-hidden bg-background p-4'
+          : 'space-y-4'}
+      >
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <div className="border-2 border-border px-3 py-1 text-sm"><span className="text-muted-foreground">{t.score}:</span> <span className="font-black tabular-nums">{score}</span></div>
         <Button onClick={newGame}>{t.newGame}</Button>
         <Button variant="secondary" onClick={undo} disabled={!history.length}>{t.undo}</Button>
         <Button variant={auto ? 'ghost' : 'secondary'} onClick={() => setAuto(a => !a)}>{auto ? t.stop : t.auto}</Button>
+        <Button
+          variant="secondary"
+          onClick={e => { e.currentTarget.blur(); if (expanded) exit(); else enter(); }}
+        >
+          {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          {expanded ? t.exit : t.expand}
+        </Button>
       </div>
 
-      <div className="relative mx-auto w-full max-w-sm">
+      <div className={expanded ? 'relative w-full max-w-[min(92vw,62vh)]' : 'relative mx-auto w-full max-w-sm'}>
         <div className="grid grid-cols-4 gap-2 border-2 border-border bg-muted p-2 touch-none select-none"
           onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           {grid.flat().map((v, i) => (
@@ -133,6 +151,7 @@ export default function Game2048({ lang = 'en' }: { lang?: Lang }) {
       </div>
 
       <p className="text-center text-xs text-muted-foreground">{t.hint}</p>
+      </div>
     </div>
   );
 }
