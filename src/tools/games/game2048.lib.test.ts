@@ -79,3 +79,65 @@ describe('bestMove (cheat AI)', () => {
     expect(bestMove(stuck)).toBeNull();
   });
 });
+
+// --- Identity-tracked tiles (animation support) ---------------------------
+import { moveTiles, tilesToGrid, type Tile } from './game2048.lib';
+
+describe('moveTiles', () => {
+  const T = (id: number, value: number, r: number, c: number): Tile => ({ id, value, r, c });
+
+  it('slides a tile keeping its id', () => {
+    const res = moveTiles([T(1, 2, 0, 3)], 'left');
+    expect(res.moved).toBe(true);
+    expect(res.tiles).toEqual([{ id: 1, value: 2, r: 0, c: 0 }]);
+    expect(res.ghosts).toEqual([]);
+  });
+
+  it('merges equal tiles: survivor keeps the farther id, ghost slides to target', () => {
+    const res = moveTiles([T(1, 2, 0, 0), T(2, 2, 0, 3)], 'left');
+    expect(res.tiles).toEqual([{ id: 2, value: 4, r: 0, c: 0, justMerged: true }]);
+    expect(res.ghosts).toEqual([{ id: 1, value: 2, r: 0, c: 0 }]);
+    expect(res.gained).toBe(4);
+  });
+
+  it('merges only once per move ([2,2,2,2] → [4,4])', () => {
+    const res = moveTiles([T(1, 2, 0, 0), T(2, 2, 0, 1), T(3, 2, 0, 2), T(4, 2, 0, 3)], 'left');
+    expect(res.tiles.map(t => t.value)).toEqual([4, 4]);
+    expect(res.tiles.map(t => [t.r, t.c])).toEqual([[0, 0], [0, 1]]);
+    expect(res.ghosts).toHaveLength(2);
+    expect(res.gained).toBe(8);
+  });
+
+  it('handles all four directions', () => {
+    expect(moveTiles([T(1, 2, 0, 0)], 'right').tiles[0]).toMatchObject({ r: 0, c: 3 });
+    expect(moveTiles([T(1, 2, 3, 2)], 'up').tiles[0]).toMatchObject({ r: 0, c: 2 });
+    expect(moveTiles([T(1, 2, 0, 2)], 'down').tiles[0]).toMatchObject({ r: 3, c: 2 });
+  });
+
+  it('reports moved=false when nothing changes', () => {
+    const res = moveTiles([T(1, 2, 0, 0), T(2, 4, 0, 1)], 'left');
+    expect(res.moved).toBe(false);
+  });
+
+  it('clears isNew/justMerged flags on the next move', () => {
+    const res = moveTiles([{ ...T(1, 2, 0, 3), isNew: true, justMerged: true }], 'left');
+    expect(res.tiles[0].isNew).toBeUndefined();
+    expect(res.tiles[0].justMerged).toBeUndefined();
+  });
+
+  it('agrees with the plain-grid move()', () => {
+    const tiles = [T(1, 2, 0, 0), T(2, 2, 0, 1), T(3, 4, 1, 0), T(4, 8, 3, 3)];
+    const viaTiles = tilesToGrid(moveTiles(tiles, 'down').tiles);
+    const viaGrid = move(tilesToGrid(tiles), 'down').grid;
+    expect(viaTiles).toEqual(viaGrid);
+  });
+});
+
+describe('tilesToGrid', () => {
+  it('projects tiles onto a grid', () => {
+    const g = tilesToGrid([{ id: 1, value: 2, r: 0, c: 0 }, { id: 2, value: 8, r: 3, c: 3 }]);
+    expect(g[0][0]).toBe(2);
+    expect(g[3][3]).toBe(8);
+    expect(g[1][1]).toBe(0);
+  });
+});

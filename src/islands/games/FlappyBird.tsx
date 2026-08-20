@@ -18,7 +18,9 @@ const TR: Record<Lang, Record<string, string>> = {
   },
 };
 
-const W = 360, H = 540;
+// Logical height is fixed; logical width adapts to the container's aspect
+// ratio when expanded, so the playfield genuinely fills a phone screen.
+const H = 540, BASE_W = 360;
 const GROUND = H - 40;
 const BIRD_X = 92, R = 14;
 const GRAVITY = 1500, FLAP = -440, SPEED = 150, PIPE_W = 58, GAP = 150, SPAWN = 1.5;
@@ -31,7 +33,9 @@ export default function FlappyBird({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
   const { ref: stageRef, expanded, enter, exit } = useExpand<HTMLDivElement>();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const frameRef = useRef<HTMLDivElement | null>(null);
   const g = useRef<GameState>(initial());
+  const dims = useRef({ W: BASE_W });
   const [best, setBest] = useState(0);
   const [phase, setPhase] = useState<'ready' | 'playing' | 'dead'>('ready');
 
@@ -42,6 +46,28 @@ export default function FlappyBird({ lang = 'en' }: { lang?: Lang }) {
     s.v = FLAP;
   };
 
+  // Size the logical playfield to the container: expanded → match the screen's
+  // aspect ratio (edge-to-edge play); collapsed → the classic 360×540.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const frame = frameRef.current;
+    if (!canvas || !frame) return;
+    const apply = () => {
+      const rect = frame.getBoundingClientRect();
+      const W = expanded && rect.height > 0
+        ? Math.max(240, Math.round((H * rect.width) / rect.height))
+        : BASE_W;
+      if (W !== dims.current.W) {
+        dims.current.W = W;
+        canvas.width = W;
+      }
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(frame);
+    return () => ro.disconnect();
+  }, [expanded]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -50,6 +76,7 @@ export default function FlappyBird({ lang = 'en' }: { lang?: Lang }) {
     let last = performance.now();
 
     const draw = (s: GameState) => {
+      const W = dims.current.W;
       // sky
       ctx.fillStyle = '#7dd3fc';
       ctx.fillRect(0, 0, W, H);
@@ -92,6 +119,7 @@ export default function FlappyBird({ lang = 'en' }: { lang?: Lang }) {
       const dt = Math.min(0.032, (now - last) / 1000);
       last = now;
       const s = g.current;
+      const W = dims.current.W;
       if (s.phase === 'playing') {
         const b = stepBird(s.y, s.v, dt, GRAVITY);
         s.y = b.y; s.v = b.v;
@@ -125,37 +153,43 @@ export default function FlappyBird({ lang = 'en' }: { lang?: Lang }) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  const expandBtn = (
+    <Button
+      variant="secondary"
+      onClick={e => { e.currentTarget.blur(); if (expanded) exit(); else enter(); }}
+    >
+      {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+      {expanded ? t.exit : t.expand}
+    </Button>
+  );
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
-      {/* Stage: normal flow, or a fullscreen overlay (native fullscreen on
-          Android, CSS overlay fallback on iOS) for comfortable mobile play. */}
+      {/* Stage: normal flow, or an edge-to-edge fullscreen overlay (native
+          fullscreen on Android, CSS overlay fallback on iOS). */}
       <div
         ref={stageRef}
-        className={expanded
-          ? 'fixed inset-0 z-[60] flex flex-col items-center justify-center gap-3 overflow-hidden bg-background p-3'
-          : 'space-y-3'}
+        className={expanded ? 'fixed inset-0 z-[60] overflow-hidden bg-black' : 'space-y-3'}
       >
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <div className="border-2 border-border px-3 py-1 text-sm"><span className="text-muted-foreground">{t.best}:</span> <span className="font-black tabular-nums">{best}</span></div>
-          <Button
-            variant="secondary"
-            onClick={e => { e.currentTarget.blur(); if (expanded) exit(); else enter(); }}
-          >
-            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            {expanded ? t.exit : t.expand}
-          </Button>
-        </div>
+        {!expanded && (
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="border-2 border-border px-3 py-1 text-sm"><span className="text-muted-foreground">{t.best}:</span> <span className="font-black tabular-nums">{best}</span></div>
+            {expandBtn}
+          </div>
+        )}
 
-        {/* Expanded: height-driven sizing; 2:3 aspect keeps width ≤ ~92vw. */}
-        <div className={expanded ? 'relative aspect-[2/3] h-[min(85vh,138vw)]' : 'relative mx-auto w-full max-w-[360px]'}>
+        <div
+          ref={frameRef}
+          className={expanded ? 'absolute inset-0' : 'relative mx-auto w-full max-w-[360px]'}
+        >
           <canvas
             ref={canvasRef}
-            width={W}
+            width={BASE_W}
             height={H}
             onPointerDown={e => { e.preventDefault(); flap(); }}
-            className={`cursor-pointer touch-none select-none border-2 border-border ${expanded ? 'h-full w-full' : 'w-full'}`}
+            className={`cursor-pointer touch-none select-none ${expanded ? 'h-full w-full' : 'w-full border-2 border-border'}`}
             style={{ imageRendering: 'auto' }}
           />
           {phase !== 'playing' && (
@@ -167,6 +201,17 @@ export default function FlappyBird({ lang = 'en' }: { lang?: Lang }) {
             </div>
           )}
         </div>
+
+        {/* Floating controls while fullscreen — kept clear of the notch. */}
+        {expanded && (
+          <div
+            className="absolute left-0 right-0 top-0 flex items-center justify-between gap-3 p-3"
+            style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
+          >
+            <div className="pointer-events-none border-2 border-border bg-background/90 px-3 py-1 text-sm"><span className="text-muted-foreground">{t.best}:</span> <span className="font-black tabular-nums">{best}</span></div>
+            {expandBtn}
+          </div>
+        )}
       </div>
     </div>
   );
