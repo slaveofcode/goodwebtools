@@ -196,6 +196,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'What do delta, theta and alpha mean?', a: 'They are frequency ranges for the beat: delta is slowest (0.5–4 Hz), through theta and alpha, up to beta and gamma. Pick one as a starting point and adjust to taste.' },
     ],
   },
+  'meditation-session': {
+    title: 'Meditation Session Generator — Layered Binaural Sessions',
+    description: 'Generate full layered binaural meditation sessions — timed sequences with gliding beats, crossfades and noise beds from expired patents. Play or export WAV/MP3. Free, on your device.',
+    intro: 'This free meditation session generator synthesizes complete, timed binaural sessions — layered carrier pairs whose beat frequencies glide on a schedule, with crossfades and a noise bed — reconstructed from expired patents and tape measurements via the open-source farfield project. Everything is generated on your device: play a session live with zero bandwidth, or export it as a WAV/MP3 file. It is a sound generator, not a medical device.',
+    howTo: [
+      'Pick a session preset — from a 5-minute wake sequence to a 90-minute sleep cycle.',
+      'Put on headphones (binaural beats need one carrier per ear).',
+      'Press Play — the timeline shows the beat frequencies as the session progresses.',
+      'Optionally export the session as a WAV or MP3 file (up to 45 minutes).',
+    ],
+    faqs: [
+      { q: 'How is this different from the Ambient & Binaural Generator?', a: 'That tool plays a constant tone you tune by hand. This one plays complete timed sessions: multiple layered carrier pairs whose beats glide and crossfade over 20–90 minutes, following published session designs.' },
+      { q: 'Where do the presets come from?', a: 'The numeric parameters are ported from the open-source farfield project (Apache-2.0), which reconstructs techniques from expired patents (US 3,884,218; US 5,213,562; US 5,356,368) and spectral measurements of original tapes. No original audio is used.' },
+      { q: 'Do binaural beats actually work?', a: 'The evidence for effects on relaxation, focus or sleep is limited and mixed. This is a sound generator, not a medical device — enjoy the sessions as ambient sound and set your own expectations.' },
+      { q: 'Does it stream or use data?', a: 'No. Sessions are synthesized on your device with the Web Audio API — a 90-minute session uses zero bandwidth and works offline.' },
+      { q: 'Can I download a session?', a: 'Yes. Sessions up to 45 minutes can be rendered (faster than real time) and downloaded as WAV or MP3; longer ones are best played live.' },
+    ],
+  },
   'metronome': {
     title: 'Free Online Metronome — Tap Tempo & Time Signatures',
     description: 'A precise, sample-accurate metronome with tap tempo and time signatures that stays on beat even in a background tab. Free and in your browser.',
@@ -3024,6 +3042,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah binaural beat benar-benar bekerja?', a: 'Bukti efek pada fokus, relaksasi, atau tidur terbatas dan beragam. Tool ini generator suara, bukan perangkat medis — nikmati sebagai suara ambient dan atur ekspektasi Anda sendiri.' },
       { q: 'Apakah nge-stream atau pakai data?', a: 'Tidak. Nada dibuat di perangkat Anda dengan Web Audio API, jadi sesi berjam-jam memakai nol bandwidth dan bekerja offline.' },
       { q: 'Apa arti delta, theta, dan alpha?', a: 'Itu rentang frekuensi untuk beat: delta paling lambat (0,5–4 Hz), lalu theta dan alpha, hingga beta dan gamma. Pilih satu sebagai titik awal dan sesuaikan selera.' },
+    ],
+  },
+  'meditation-session': {
+    title: 'Generator Sesi Meditasi — Sesi Binaural Berlapis',
+    description: 'Buat sesi meditasi binaural berlapis lengkap — sekuens berjadwal dengan beat meluncur, crossfade, dan lapisan noise dari paten kedaluwarsa. Putar atau ekspor WAV/MP3. Gratis, di perangkat Anda.',
+    intro: 'Tool generator sesi meditasi gratis ini mensintesis sesi binaural lengkap yang berjadwal — pasangan carrier berlapis dengan frekuensi beat yang meluncur, crossfade, dan lapisan noise — direkonstruksi dari paten kedaluwarsa dan pengukuran kaset lewat proyek open-source farfield. Semuanya dibuat di perangkat Anda: putar sesi langsung tanpa bandwidth, atau ekspor sebagai file WAV/MP3. Ini generator suara, bukan perangkat medis.',
+    howTo: [
+      'Pilih preset sesi — dari sekuens bangun 5 menit hingga siklus tidur 90 menit.',
+      'Pakai headphone (binaural beat butuh satu carrier per telinga).',
+      'Tekan Putar — linimasa menampilkan frekuensi beat selama sesi berjalan.',
+      'Opsional ekspor sesi sebagai file WAV atau MP3 (hingga 45 menit).',
+    ],
+    faqs: [
+      { q: 'Apa bedanya dengan Generator Ambient & Binaural?', a: 'Tool itu memutar nada konstan yang Anda atur manual. Tool ini memutar sesi lengkap berjadwal: beberapa pasangan carrier berlapis yang beat-nya meluncur dan ber-crossfade selama 20–90 menit, mengikuti desain sesi yang dipublikasikan.' },
+      { q: 'Dari mana preset-nya berasal?', a: 'Parameter numeriknya diporting dari proyek open-source farfield (Apache-2.0), yang merekonstruksi teknik dari paten kedaluwarsa (US 3,884,218; US 5,213,562; US 5,356,368) dan pengukuran spektral kaset asli. Tidak ada audio asli yang dipakai.' },
+      { q: 'Apakah binaural beat benar-benar bekerja?', a: 'Bukti efek pada relaksasi, fokus, atau tidur terbatas dan beragam. Ini generator suara, bukan perangkat medis — nikmati sesinya sebagai suara ambient dan atur ekspektasi Anda sendiri.' },
+      { q: 'Apakah nge-stream atau pakai data?', a: 'Tidak. Sesi disintesis di perangkat Anda dengan Web Audio API — sesi 90 menit memakai nol bandwidth dan bekerja offline.' },
+      { q: 'Bisakah mengunduh sesi?', a: 'Ya. Sesi hingga 45 menit bisa dirender (lebih cepat dari waktu nyata) dan diunduh sebagai WAV atau MP3; yang lebih panjang paling baik diputar langsung.' },
     ],
   },
   'metronome': {
