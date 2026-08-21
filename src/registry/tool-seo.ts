@@ -865,6 +865,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the game runs with no internet connection — fitting, for this one.' },
     ],
   },
+  'onet': {
+    title: 'Onet Connect — Free Tile Matching Game Online',
+    description: 'Play Onet free in your browser: match pairs of identical tiles that a line can join with at most two turns. Three difficulties, relaxed or timed. No ads, works offline.',
+    intro: 'Onet Connect is the classic tile-matching puzzle: clear the board by pairing identical tiles that can be joined by a line with at most two turns. The line can also travel around the outside of the board, which is what makes edge tiles matchable. Pick a difficulty, play relaxed or against the clock, and use a hint or shuffle when you get stuck. Everything runs in your browser — no ads, no account.',
+    howTo: [
+      'Tap one tile, then tap a matching tile to connect them.',
+      'The connecting line may bend at most twice, and may pass around the outside of the board.',
+      'Use Hint to reveal a valid pair, or Shuffle to redeal when you are stuck.',
+      'Clear every tile to win — try Timed mode for a countdown challenge.',
+    ],
+    faqs: [
+      { q: 'What are the matching rules?', a: 'Two tiles must show the same picture and be joinable by a line that turns at most twice and passes only through empty space. The line may also route around the outside edge of the board.' },
+      { q: 'What happens when there are no moves left?', a: 'The board reshuffles automatically so you can keep playing — the remaining tiles stay in their cells, only the pictures move.' },
+      { q: 'Is there a timer?', a: 'Only if you want one. Relaxed mode has no clock; Timed mode gives you a countdown that depends on the difficulty. Your best time is saved on this device.' },
+      { q: 'Does it work on mobile?', a: 'Yes — tap tiles to select them, and use Expand for a bigger fullscreen board, which helps a lot on the harder sizes.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the game works with no internet connection.' },
+    ],
+  },
   'snake': {
     title: 'Snake Game — Play the Classic Snake Online Free',
     description: 'Play classic snake in your browser: swipe or use arrow keys, grab golden bonus food, and optionally wrap through the walls. Free, no ads, works offline.',
@@ -3803,6 +3821,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah bisa di ponsel?', a: 'Ya — ketuk untuk lompat, ketuk lagi untuk lompat ganda, dan geser ke bawah untuk menunduk. Gunakan Perbesar untuk main layar penuh.' },
       { q: 'Apakah skor saya tersimpan?', a: 'Skor terbaik disimpan lokal di browser Anda, jadi bertahan setelah muat ulang. Tidak ada yang diunggah.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat game berjalan tanpa koneksi internet — cocok untuk game yang satu ini.' },
+    ],
+  },
+  'onet': {
+    title: 'Onet Connect — Game Cocokkan Ubin Gratis Online',
+    description: 'Main Onet gratis di browser: cocokkan pasangan ubin identik yang bisa dihubungkan garis dengan maksimal dua belokan. Tiga tingkat kesulitan, santai atau berwaktu. Tanpa iklan, bekerja offline.',
+    intro: 'Onet Connect adalah puzzle cocokkan ubin klasik: bersihkan papan dengan memasangkan ubin identik yang bisa dihubungkan garis dengan maksimal dua belokan. Garisnya juga boleh lewat di luar papan — itulah yang membuat ubin di tepi tetap bisa dipasangkan. Pilih tingkat kesulitan, main santai atau berpacu dengan waktu, dan gunakan petunjuk atau acak saat buntu. Semuanya berjalan di browser Anda — tanpa iklan, tanpa akun.',
+    howTo: [
+      'Ketuk satu ubin, lalu ketuk ubin yang sama untuk menghubungkannya.',
+      'Garis penghubung boleh berbelok maksimal dua kali, dan boleh lewat di luar papan.',
+      'Gunakan Petunjuk untuk menampilkan pasangan yang valid, atau Acak saat buntu.',
+      'Habiskan semua ubin untuk menang — coba mode Berwaktu untuk tantangan hitung mundur.',
+    ],
+    faqs: [
+      { q: 'Apa aturan pencocokannya?', a: 'Dua ubin harus bergambar sama dan bisa dihubungkan garis yang berbelok maksimal dua kali serta hanya melewati ruang kosong. Garisnya juga boleh memutar lewat tepi luar papan.' },
+      { q: 'Apa yang terjadi kalau tidak ada langkah tersisa?', a: 'Papan diacak ulang otomatis agar Anda bisa terus bermain — ubin tetap di selnya, hanya gambarnya yang berpindah.' },
+      { q: 'Apakah ada timer?', a: 'Hanya jika Anda mau. Mode Santai tanpa jam; mode Berwaktu memberi hitung mundur sesuai tingkat kesulitan. Waktu terbaik Anda tersimpan di perangkat ini.' },
+      { q: 'Apakah bisa di ponsel?', a: 'Ya — ketuk ubin untuk memilih, dan gunakan Perbesar untuk papan layar penuh yang lebih besar, sangat membantu di ukuran sulit.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat game bekerja tanpa koneksi internet.' },
     ],
   },
   'snake': {
