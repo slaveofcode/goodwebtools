@@ -72,7 +72,8 @@ export default function VideoPlayer({ lang = 'en' }: { lang?: Lang }) {
     applySubs(raw, 0);
   };
 
-  useEffect(() => { if (subText) applySubs(subText, subOffset); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [subOffset]);
+  // Re-time the loaded subtitles whenever the sync offset changes.
+  useEffect(() => { if (subText) applySubs(subText, subOffset); }, [subOffset]);
   useEffect(() => () => { if (subUrl.current) URL.revokeObjectURL(subUrl.current); }, []);
 
   const play = async () => { try { await videoRef.current?.play(); } catch { /* blocked */ } };
