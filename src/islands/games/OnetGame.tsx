@@ -55,7 +55,7 @@ export default function OnetGame({ lang = 'en' }: { lang?: Lang }) {
   const [grid, setGrid] = useState<Grid>(() => emptyGrid(DIFFICULTIES[1]));
   const [ready, setReady] = useState(false);
   const [selected, setSelected] = useState<Pos | null>(null);
-  const [path, setPath] = useState<Pos[] | null>(null);
+  const [pathPx, setPathPx] = useState<{ x: number; y: number }[] | null>(null);
   const [hintPair, setHintPair] = useState<[Pos, Pos] | null>(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -67,6 +67,28 @@ export default function OnetGame({ lang = 'en' }: { lang?: Lang }) {
 
   const pathTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const gridRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * Convert board cells to pixel centres inside the grid, measured from the
+   * real cells so gaps/padding/board size can't push the line out of line.
+   * Handles the one-cell margin (r or c of -1 / rows / cols) by extrapolating
+   * from the measured cell pitch.
+   */
+  const toPixels = useCallback((pts: Pos[], cols: number): { x: number; y: number }[] | null => {
+    const el = gridRef.current;
+    const cells = el?.querySelectorAll<HTMLElement>(':scope > button');
+    if (!el || !cells || cells.length < cols + 2) return null;
+    const first = cells[0];
+    const pitchX = cells[1].offsetLeft - first.offsetLeft;
+    const pitchY = cells[cols].offsetTop - first.offsetTop;
+    const w = first.offsetWidth;
+    const h = first.offsetHeight;
+    return pts.map((p) => ({
+      x: first.offsetLeft + p.c * pitchX + w / 2,
+      y: first.offsetTop + p.r * pitchY + h / 2,
+    }));
+  }, []);
 
   useEffect(() => {
     try { setBest(JSON.parse(localStorage.getItem(BEST_KEY) ?? '{}')); } catch { /* blocked */ }
@@ -109,7 +131,7 @@ export default function OnetGame({ lang = 'en' }: { lang?: Lang }) {
     setDiff(d);
     setTimed(useTimer);
     setSelected(null);
-    setPath(null);
+    setPathPx(null);
     setHintPair(null);
     setScore(0);
     setStreak(0);
@@ -153,8 +175,8 @@ export default function OnetGame({ lang = 'en' }: { lang?: Lang }) {
     const found = findPath(grid, selected, here);
     if (!found) { setSelected(here); setStreak(0); return; }
 
-    // Show the connecting line briefly, then clear the pair.
-    setPath(found);
+    // Show the connecting line, then clear the pair once it has been seen.
+    setPathPx(toPixels(found, diff.cols));
     const cleared = removePair(grid, selected, here);
     setSelected(null);
     const nextStreak = streak + 1;
@@ -162,9 +184,9 @@ export default function OnetGame({ lang = 'en' }: { lang?: Lang }) {
     setScore((s) => s + pairScore(nextStreak));
     if (pathTimer.current) clearTimeout(pathTimer.current);
     pathTimer.current = setTimeout(() => {
-      setPath(null);
+      setPathPx(null);
       setGrid(settle(cleared, elapsed));
-    }, 240);
+    }, 420);
   };
 
   const useHint = () => {
@@ -243,6 +265,7 @@ export default function OnetGame({ lang = 'en' }: { lang?: Lang }) {
 
         <div className="relative w-full" style={{ maxWidth: expanded ? 'min(96vw, 60rem)' : '34rem' }}>
           <div
+            ref={gridRef}
             className="relative grid gap-[2px] border-2 border-border bg-muted p-[2px]"
             style={{ gridTemplateColumns: `repeat(${diff.cols}, minmax(0, 1fr))` }}
           >
@@ -271,24 +294,26 @@ export default function OnetGame({ lang = 'en' }: { lang?: Lang }) {
               }),
             )}
 
-            {/* Connecting line, drawn in cell units with a one-cell margin so
-                routes that leave the board are visible. */}
-            {path && (
-              <svg
-                className="pointer-events-none absolute"
-                style={{ left: '-8%', top: '-6%', width: '116%', height: '112%' }}
-                viewBox={`-1 -1 ${diff.cols + 2} ${diff.rows + 2}`}
-                preserveAspectRatio="none"
-              >
+            {/* Connecting line. Drawn in the grid's own pixel space (no
+                viewBox) from measured cell positions, so it lines up exactly
+                whatever the board size, gap or padding — and overflow-visible
+                lets routes that leave the board still show. */}
+            {pathPx && pathPx.length > 1 && (
+              <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
+                {/* Dark halo first so the line reads on any tile colour. */}
                 <polyline
-                  points={path.map((p) => `${p.c + 0.5},${p.r + 0.5}`).join(' ')}
-                  fill="none"
-                  stroke="rgb(74,222,128)"
-                  strokeWidth={0.14}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  vectorEffect="non-scaling-stroke"
+                  points={pathPx.map((p) => `${p.x},${p.y}`).join(' ')}
+                  fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth={9}
+                  strokeLinecap="round" strokeLinejoin="round"
                 />
+                <polyline
+                  points={pathPx.map((p) => `${p.x},${p.y}`).join(' ')}
+                  fill="none" stroke="rgb(52,211,153)" strokeWidth={5}
+                  strokeLinecap="round" strokeLinejoin="round"
+                />
+                {[pathPx[0], pathPx[pathPx.length - 1]].map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r={6} fill="rgb(52,211,153)" stroke="rgba(0,0,0,0.55)" strokeWidth={2} />
+                ))}
               </svg>
             )}
 
