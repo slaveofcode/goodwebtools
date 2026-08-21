@@ -54,9 +54,24 @@ export function cmToPt(cm: number): number {
  * passport convention: the head fills most of the frame, with a little
  * headroom above the crown. Guides are advisory — shown on the preview only.
  */
-export const HEAD_GUIDE = { crown: 0.08, chin: 0.85, widthRatio: 0.52 };
+export const HEAD_GUIDE = {
+  crown: 0.08,
+  chin: 0.85,
+  /**
+   * Head breadth ÷ crown-to-chin height for an adult (~15.5cm ÷ 23cm). The
+   * oval's width is DERIVED from its height with this ratio so the guide keeps
+   * a head shape in every photo aspect — deriving it from the frame width
+   * instead made the oval far too narrow in a 3×4 frame.
+   */
+  widthToHeight: 0.68,
+};
 
-/** Guide geometry (crown/chin lines + centered head oval) for a W×H frame. */
+/**
+ * Guide geometry (crown/chin lines + head oval) for a W×H frame.
+ * Pass the frame's REAL proportions (e.g. 300×400) — `rx` is in x-units and
+ * `ry` in y-units, so a square viewBox stretched with preserveAspectRatio
+ * would distort the oval.
+ */
 export function headGuideBox(w: number, h: number): {
   crownY: number;
   chinY: number;
@@ -67,14 +82,38 @@ export function headGuideBox(w: number, h: number): {
 } {
   const crownY = HEAD_GUIDE.crown * h;
   const chinY = HEAD_GUIDE.chin * h;
+  const ry = (chinY - crownY) / 2;
   return {
     crownY,
     chinY,
     cx: w / 2,
     cy: (crownY + chinY) / 2,
-    rx: (HEAD_GUIDE.widthRatio * w) / 2,
-    ry: (chinY - crownY) / 2,
+    rx: ry * HEAD_GUIDE.widthToHeight,
+    ry,
   };
+}
+
+/**
+ * SVG path for a head-shaped outline (an egg: widest at the temples, tapering
+ * to the chin) inside the guide box — closer to a real head than a plain
+ * ellipse, so it is easier to line yourself up with.
+ */
+export function headOutlinePath(w: number, h: number): string {
+  const g = headGuideBox(w, h);
+  const headH = g.chinY - g.crownY;
+  const hw = g.rx; // half-width at the widest point
+  // Control points in normalised head space (0 = crown, 1 = chin).
+  const x = (u: number) => g.cx + u * hw;
+  const y = (v: number) => g.crownY + v * headH;
+  const n = (v: number) => Number(v.toFixed(2));
+  return [
+    `M ${n(x(0))} ${n(y(0))}`,
+    `C ${n(x(0.72))} ${n(y(0))} ${n(x(1))} ${n(y(0.16))} ${n(x(1))} ${n(y(0.40))}`,
+    `C ${n(x(1))} ${n(y(0.64))} ${n(x(0.66))} ${n(y(0.88))} ${n(x(0))} ${n(y(1))}`,
+    `C ${n(x(-0.66))} ${n(y(0.88))} ${n(x(-1))} ${n(y(0.64))} ${n(x(-1))} ${n(y(0.40))}`,
+    `C ${n(x(-1))} ${n(y(0.16))} ${n(x(-0.72))} ${n(y(0))} ${n(x(0))} ${n(y(0))}`,
+    'Z',
+  ].join(' ');
 }
 
 /** Pixel dimensions of one photo at the given print DPI. */

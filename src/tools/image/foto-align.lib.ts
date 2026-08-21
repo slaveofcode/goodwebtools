@@ -11,20 +11,23 @@ import { HEAD_GUIDE } from './pas-foto.lib';
 export interface FaceBox { x: number; y: number; w: number; h: number }
 
 /**
- * MediaPipe's short-range detector returns a box tight around the face
- * (roughly brow line to chin). A passport crop measures crown-to-chin, which
- * is taller — this factor converts one to the other, and the crown sits above
- * the box top by the difference.
+ * Where the head actually sits relative to MediaPipe's (square) face box.
+ *
+ * Calibrated against a real detection rather than guessed: on a sample photo
+ * the detector returned a 436px box while the true crown-to-chin height was
+ * ~521px, with the chin sitting slightly ABOVE the box bottom. The earlier
+ * 1.4 factor overestimated the head by ~17%, which made the tool report
+ * "framing looks good" while the subject was still too far from the camera.
  */
-export const HEAD_TO_FACE = 1.4;
+export const CHIN_AT = 0.88;      // chin, as a fraction down the box
+export const CROWN_ABOVE = 0.32;  // crown, as a fraction of box height above its top
+export const HEAD_TO_FACE = CHIN_AT + CROWN_ABOVE; // 1.20
 
 /** Estimated crown/chin/centre of the head from a detected face box. */
 export function headFromFace(face: FaceBox): { crownY: number; chinY: number; cx: number; headH: number } {
-  const headH = face.h * HEAD_TO_FACE;
-  // The chin sits near the bottom of the detector's box; the crown is above it.
-  const chinY = face.y + face.h;
-  const crownY = chinY - headH;
-  return { crownY, chinY, cx: face.x + face.w / 2, headH };
+  const chinY = face.y + face.h * CHIN_AT;
+  const crownY = face.y - face.h * CROWN_ABOVE;
+  return { crownY, chinY, cx: face.x + face.w / 2, headH: chinY - crownY };
 }
 
 export type FramingStatus = 'ok' | 'no-face' | 'too-close' | 'too-far' | 'off-center' | 'too-high' | 'too-low';
@@ -118,8 +121,11 @@ export function alignTransform(
   // Where the crown lands with offsetY = 0 …
   const baseCrown = (H - dh) / 2 + crownY * s;
   // … and how far it must move to reach the guide line.
+  // ±1 frame-height of travel: a small (distant) face needs a large zoom, and
+  // a large zoom needs a correspondingly large shift to bring the crown up.
+  // ±0.5 was too tight and left such photos visibly misaligned.
   const targetCrown = HEAD_GUIDE.crown * H;
-  const offsetY = Math.max(-0.5, Math.min(0.5, (targetCrown - baseCrown) / H));
+  const offsetY = Math.max(-1, Math.min(1, (targetCrown - baseCrown) / H));
 
   // cx is unused for now (the compositor centres horizontally), but a face far
   // off-centre is reported by framingFeedback so the user can recentre.

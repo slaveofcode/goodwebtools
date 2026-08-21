@@ -4,11 +4,9 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { useCamera } from '@/hooks/useCamera';
 import { frameToFile } from '@/tools/image/camera.lib';
-import { headGuideBox } from '@/tools/image/pas-foto.lib';
+import { headGuideBox, headOutlinePath } from '@/tools/image/pas-foto.lib';
 import { framingFeedback, coverCropRect, type FaceBox, type FramingStatus } from '@/tools/image/foto-align.lib';
 import type { Lang } from '@/i18n/config';
-
-const GUIDE = headGuideBox(100, 100);
 /** Detection cadence — faster than this wastes CPU without helping the user. */
 const DETECT_MS = 120;
 const COUNTDOWN_FROM = 3;
@@ -184,6 +182,10 @@ export default function PasFotoCamera({
     : { left: '0%', top: '0%', width: '100%', height: '100%' };
 
   const good = status === 'ok';
+  const guide = headGuideBox(photoW, photoH);
+  const outline = headOutlinePath(photoW, photoH);
+  // Keep the stroke visually constant whatever units the photo frame uses.
+  const guideStroke = photoH / 220;
 
   if (error) {
     return (
@@ -211,21 +213,23 @@ export default function PasFotoCamera({
 
         {/* Crop window: dims everything outside the photo area. */}
         <div className="pointer-events-none absolute" style={{ ...cropStyle, boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)' }}>
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
-            <g fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth={1.4}>
-              <line x1={0} y1={GUIDE.crownY} x2={100} y2={GUIDE.crownY} />
-              <line x1={0} y1={GUIDE.chinY} x2={100} y2={GUIDE.chinY} />
-              <ellipse cx={GUIDE.cx} cy={GUIDE.cy} rx={GUIDE.rx} ry={GUIDE.ry} />
+          {/* viewBox matches the photo aspect so the head outline keeps real
+              proportions instead of being stretched by preserveAspectRatio. */}
+          <svg viewBox={`0 0 ${photoW} ${photoH}`} preserveAspectRatio="none" className="h-full w-full">
+            <g fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth={guideStroke * 2.4}>
+              <line x1={0} y1={guide.crownY} x2={photoW} y2={guide.crownY} />
+              <line x1={0} y1={guide.chinY} x2={photoW} y2={guide.chinY} />
+              <path d={outline} />
             </g>
             <g
               fill="none"
               stroke={good ? 'rgba(74,222,128,0.95)' : 'rgba(255,255,255,0.95)'}
-              strokeWidth={good ? 0.9 : 0.5}
-              strokeDasharray="2 2"
+              strokeWidth={guideStroke}
+              strokeDasharray={`${guideStroke * 4} ${guideStroke * 4}`}
             >
-              <line x1={0} y1={GUIDE.crownY} x2={100} y2={GUIDE.crownY} />
-              <line x1={0} y1={GUIDE.chinY} x2={100} y2={GUIDE.chinY} />
-              <ellipse cx={GUIDE.cx} cy={GUIDE.cy} rx={GUIDE.rx} ry={GUIDE.ry} />
+              <line x1={0} y1={guide.crownY} x2={photoW} y2={guide.crownY} />
+              <line x1={0} y1={guide.chinY} x2={photoW} y2={guide.chinY} />
+              <path d={outline} />
             </g>
           </svg>
         </div>
