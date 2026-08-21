@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cmToPt, photoPx, sheetLayout, headGuideBox, PHOTO_SIZES, SHEETS } from './pas-foto.lib';
+import { cmToPt, photoPx, sheetLayout, headGuideBox, headOutlinePath, HEAD_GUIDE, PHOTO_SIZES, SHEETS } from './pas-foto.lib';
 
 describe('cmToPt', () => {
   it('converts cm to PDF points', () => {
@@ -56,15 +56,69 @@ describe('headGuideBox', () => {
     expect(g.crownY).toBeCloseTo(8, 5);
     expect(g.chinY).toBeCloseTo(85, 5);
     expect(g.cx).toBeCloseTo(50, 5);
-    expect(g.rx).toBeCloseTo(26, 5); // widthRatio 0.52 → diameter 52 → radius 26
     expect(g.ry).toBeCloseTo(38.5, 5); // (85-8)/2
     expect(g.cy).toBeCloseTo(46.5, 5); // (8+85)/2
+    expect(g.rx).toBeCloseTo(38.5 * HEAD_GUIDE.widthToHeight, 5);
   });
 
   it('scales with the frame size', () => {
     const g = headGuideBox(300, 400);
     expect(g.crownY).toBeCloseTo(32, 5); // 0.08 * 400
     expect(g.cx).toBeCloseTo(150, 5);
+  });
+
+  it('keeps a head-shaped oval in every photo aspect', () => {
+    // The oval's width must follow its HEIGHT (anatomy), not the frame width —
+    // deriving it from the frame made it far too narrow in a 3x4 frame.
+    for (const [w, h] of [[200, 300], [300, 400], [400, 600]]) {
+      const g = headGuideBox(w, h);
+      expect((g.rx * 2) / (g.ry * 2)).toBeCloseTo(HEAD_GUIDE.widthToHeight, 5);
+    }
+  });
+
+  it('the oval is wider than the old frame-derived version in a 3x4 frame', () => {
+    const g = headGuideBox(300, 400);
+    expect(g.rx * 2).toBeGreaterThan(0.52 * 300); // old widthRatio behaviour
+  });
+});
+
+describe('headOutlinePath', () => {
+  const path = headOutlinePath(300, 400);
+
+  it('produces a closed SVG path', () => {
+    expect(path.startsWith('M ')).toBe(true);
+    expect(path.trim().endsWith('Z')).toBe(true);
+    expect(path.match(/C /g)).toHaveLength(4); // four bezier quadrants
+  });
+
+  it('stays inside the guide box', () => {
+    const g = headGuideBox(300, 400);
+    const nums = path.match(/-?\d+(\.\d+)?/g)!.map(Number);
+    const xs = nums.filter((_, i) => i % 2 === 0);
+    const ys = nums.filter((_, i) => i % 2 === 1);
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(g.cx - g.rx - 0.01);
+    expect(Math.max(...xs)).toBeLessThanOrEqual(g.cx + g.rx + 0.01);
+    expect(Math.min(...ys)).toBeGreaterThanOrEqual(g.crownY - 0.01);
+    expect(Math.max(...ys)).toBeLessThanOrEqual(g.chinY + 0.01);
+  });
+
+  it('starts at the crown and reaches the chin', () => {
+    const g = headGuideBox(300, 400);
+    const nums = path.match(/-?\d+(\.\d+)?/g)!.map(Number);
+    // First point is the crown (centre-top); the chin is the lowest y.
+    expect(nums[0]).toBeCloseTo(g.cx, 1);
+    expect(nums[1]).toBeCloseTo(g.crownY, 1);
+    const ys = nums.filter((_, i) => i % 2 === 1);
+    expect(Math.max(...ys)).toBeCloseTo(g.chinY, 1);
+  });
+
+  it('is narrower at the chin than at the temples (head-shaped, not an ellipse)', () => {
+    // Sample the path's widest control points vs the chin end.
+    const g = headGuideBox(300, 400);
+    const nums = path.match(/-?\d+(\.\d+)?/g)!.map(Number);
+    const xs = nums.filter((_, i) => i % 2 === 0);
+    const widest = Math.max(...xs) - Math.min(...xs);
+    expect(widest).toBeCloseTo(g.rx * 2, 1);
   });
 });
 

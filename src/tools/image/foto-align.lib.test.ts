@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { framingFeedback, alignTransform, headFromFace, coverCropRect, HEAD_TO_FACE, type FaceBox } from './foto-align.lib';
+import { framingFeedback, alignTransform, headFromFace, coverCropRect, HEAD_TO_FACE, CROWN_ABOVE, type FaceBox } from './foto-align.lib';
 import { HEAD_GUIDE } from './pas-foto.lib';
 
 const FRAME_W = 600;
@@ -9,19 +9,27 @@ const FRAME_H = 800;
 function perfectFace(w = FRAME_W, h = FRAME_H): FaceBox {
   const headH = (HEAD_GUIDE.chin - HEAD_GUIDE.crown) * h;
   const faceH = headH / HEAD_TO_FACE;
-  const chinY = HEAD_GUIDE.chin * h;
-  const faceW = faceH * 0.75;
-  return { x: w / 2 - faceW / 2, y: chinY - faceH, w: faceW, h: faceH };
+  const crownY = HEAD_GUIDE.crown * h;
+  const faceW = faceH; // MediaPipe returns a square box
+  // crownY = y − h*CROWN_ABOVE  →  y = crownY + h*CROWN_ABOVE
+  return { x: w / 2 - faceW / 2, y: crownY + faceH * CROWN_ABOVE, w: faceW, h: faceH };
 }
 
 describe('headFromFace', () => {
-  it('extends the detector box upward to the crown', () => {
-    const face: FaceBox = { x: 100, y: 200, w: 80, h: 100 };
+  it('places the crown above the box and the chin just inside its bottom', () => {
+    const face: FaceBox = { x: 100, y: 200, w: 100, h: 100 };
     const head = headFromFace(face);
-    expect(head.chinY).toBe(300);                 // bottom of the box
-    expect(head.headH).toBeCloseTo(140, 5);       // 100 × 1.4
-    expect(head.crownY).toBeCloseTo(160, 5);      // chin − headH
-    expect(head.cx).toBe(140);
+    expect(head.chinY).toBeCloseTo(288, 5);   // 200 + 100×0.88 — above the box bottom
+    expect(head.crownY).toBeCloseTo(168, 5);  // 200 − 100×0.32
+    expect(head.headH).toBeCloseTo(120, 5);   // 100 × 1.20
+    expect(head.cx).toBe(150);
+  });
+
+  it('matches the real detection it was calibrated from', () => {
+    // Measured sample: 436px box at y=1021; true crown ≈883, chin ≈1404.
+    const head = headFromFace({ x: 323, y: 1021, w: 436, h: 436 });
+    expect(Math.abs(head.crownY - 883)).toBeLessThan(25);
+    expect(Math.abs(head.chinY - 1404)).toBeLessThan(25);
   });
 });
 
@@ -118,8 +126,8 @@ describe('alignTransform', () => {
     const r = alignTransform(tiny, 900, 1200, 300, 400);
     expect(r.zoom).toBeLessThanOrEqual(3);
     expect(r.zoom).toBeGreaterThanOrEqual(0.5);
-    expect(r.offsetY).toBeGreaterThanOrEqual(-0.5);
-    expect(r.offsetY).toBeLessThanOrEqual(0.5);
+    expect(r.offsetY).toBeGreaterThanOrEqual(-1);
+    expect(r.offsetY).toBeLessThanOrEqual(1);
   });
 
   it('works for a landscape source photo', () => {
