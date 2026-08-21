@@ -17,6 +17,7 @@ import {
   photoPx,
   sheetLayout,
   headGuideBox,
+  headOutlinePath,
   type PhotoSize,
   type Sheet,
 } from '@/tools/image/pas-foto.lib';
@@ -25,7 +26,9 @@ import type { Lang } from '@/i18n/config';
 const GAP_CM = 0.2;
 const MARGIN_CM = 0.3;
 // Framing-guide geometry in a 0–100 viewBox (drawn only on the preview).
-const GUIDE = headGuideBox(100, 100);
+// Guide geometry is computed per photo size so the head outline keeps real
+// proportions in 2x3, 3x4 and 4x6 alike (see headGuideBox).
+const GUIDE_UNITS = 100;
 const BG_PRESETS = [
   { color: '#e02424', label: 'Merah' },
   { color: '#1e50e0', label: 'Biru' },
@@ -124,7 +127,7 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
   const [size, setSize] = useState<PhotoSize>(PHOTO_SIZES[1]); // 3x4
   const [sheet, setSheet] = useState<Sheet>(SHEETS[0]); // 4R
   const [zoom, setZoom] = useState(1);
-  const [offsetY, setOffsetY] = useState(0); // -0.5 .. 0.5 of frame height
+  const [offsetY, setOffsetY] = useState(0); // -1 .. 1 of frame height
   const [showGuide, setShowGuide] = useState(true);
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState('');
@@ -150,6 +153,13 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
     () => sheetLayout(size.w, size.h, sheet.w, sheet.h, GAP_CM, MARGIN_CM),
     [size, sheet],
   );
+
+  // Guide drawn in the photo's own proportions (e.g. 300x400 for 3x4 cm).
+  const guideW = size.w * GUIDE_UNITS;
+  const guideH = size.h * GUIDE_UNITS;
+  const guide = useMemo(() => headGuideBox(guideW, guideH), [guideW, guideH]);
+  const outline = useMemo(() => headOutlinePath(guideW, guideH), [guideW, guideH]);
+  const guideStroke = guideH / 220;
 
   const setSubject = (blob: Blob) => {
     setSubjectUrl(prev => {
@@ -235,8 +245,10 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
     if (!file) return;
     setAligned(false);
     setSrcFile(file);
-    prepare(file, removeBg);
-    void autoAlign(file);
+    // Run the two on-device models one after the other: kicking off the
+    // background-removal and face-detection downloads at the same time made
+    // the first one fail with "Failed to fetch" on mobile connections.
+    void prepare(file, removeBg).then(() => autoAlign(file));
   };
 
   const onCameraCapture = (file: File) => {
@@ -381,20 +393,20 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
                 <canvas ref={previewRef} className="block h-auto max-h-[60vh] w-auto" />
                 {showGuide && (
                   <svg
-                    viewBox="0 0 100 100"
+                    viewBox={`0 0 ${guideW} ${guideH}`}
                     preserveAspectRatio="none"
                     className="pointer-events-none absolute inset-0 h-full w-full"
                   >
                     {/* Dark halo behind, light line on top → visible on any background. */}
-                    <g fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={1.4}>
-                      <line x1={0} y1={GUIDE.crownY} x2={100} y2={GUIDE.crownY} />
-                      <line x1={0} y1={GUIDE.chinY} x2={100} y2={GUIDE.chinY} />
-                      <ellipse cx={GUIDE.cx} cy={GUIDE.cy} rx={GUIDE.rx} ry={GUIDE.ry} />
+                    <g fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={guideStroke * 2.4}>
+                      <line x1={0} y1={guide.crownY} x2={guideW} y2={guide.crownY} />
+                      <line x1={0} y1={guide.chinY} x2={guideW} y2={guide.chinY} />
+                      <path d={outline} />
                     </g>
-                    <g fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth={0.5} strokeDasharray="2 2">
-                      <line x1={0} y1={GUIDE.crownY} x2={100} y2={GUIDE.crownY} />
-                      <line x1={0} y1={GUIDE.chinY} x2={100} y2={GUIDE.chinY} />
-                      <ellipse cx={GUIDE.cx} cy={GUIDE.cy} rx={GUIDE.rx} ry={GUIDE.ry} />
+                    <g fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth={guideStroke} strokeDasharray={`${guideStroke * 4} ${guideStroke * 4}`}>
+                      <line x1={0} y1={guide.crownY} x2={guideW} y2={guide.crownY} />
+                      <line x1={0} y1={guide.chinY} x2={guideW} y2={guide.chinY} />
+                      <path d={outline} />
                     </g>
                   </svg>
                 )}
@@ -412,7 +424,7 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
             </label>
             <label className="block space-y-1 text-sm">
               <span className="block font-semibold">{t.position}</span>
-              <input type="range" min={-0.5} max={0.5} step={0.01} value={offsetY}
+              <input type="range" min={-1} max={1} step={0.01} value={offsetY}
                 onChange={e => setOffsetY(Number(e.target.value))} className="w-full accent-accent" />
             </label>
             <div className="space-y-1">
