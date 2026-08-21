@@ -67,7 +67,8 @@ export function useCamera() {
     }
   }, []);
 
-  const start = useCallback(async () => { await open('environment'); }, [open]);
+  // Defaults to the rear camera; pass 'user' for selfie-style capture.
+  const start = useCallback(async (mode: 'environment' | 'user' = 'environment') => { await open(mode); }, [open]);
 
   // Try the other camera; if it can't be opened, fall back to the current one so
   // the user is never stranded on an error screen with no working camera.
