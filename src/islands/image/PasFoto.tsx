@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Camera, Upload, Crosshair } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
+import PasFotoCamera from './PasFotoCamera';
+import { alignTransform, type FaceBox } from '@/tools/image/foto-align.lib';
 import { Alert } from '@/components/ui/Alert';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { ResultActions } from '@/components/ui/ResultActions';
@@ -50,6 +53,11 @@ const TR: Record<Lang, {
   reset: string;
   guide: string;
   guideHint: string;
+  tabUpload: string;
+  tabCamera: string;
+  recenter: string;
+  aligning: string;
+  alignedHint: string;
 }> = {
   en: {
     intro: 'Make a print-ready ID photo (pas foto): remove the background, pick a color and size, and download a PDF that tiles copies onto a photo sheet — ready to print. Everything runs in your browser.',
@@ -72,6 +80,11 @@ const TR: Record<Lang, {
     reset: 'Clear',
     guide: 'Show framing guide',
     guideHint: 'Align the crown and chin to the dashed lines for a passport-style crop.',
+    tabUpload: 'Upload a photo',
+    tabCamera: 'Take a photo',
+    recenter: 'Auto-align head',
+    aligning: 'Aligning…',
+    alignedHint: 'Head aligned automatically — fine-tune with the sliders if needed.',
   },
   id: {
     intro: 'Buat pas foto siap cetak: hapus latar belakang, pilih warna dan ukuran, lalu unduh PDF berisi banyak salinan dalam satu lembar foto — siap dicetak. Semuanya berjalan di browser Anda.',
@@ -94,6 +107,11 @@ const TR: Record<Lang, {
     reset: 'Bersihkan',
     guide: 'Tampilkan panduan bingkai',
     guideHint: 'Sejajarkan puncak kepala dan dagu ke garis putus-putus untuk hasil gaya paspor.',
+    tabUpload: 'Unggah foto',
+    tabCamera: 'Ambil foto',
+    recenter: 'Sejajarkan kepala otomatis',
+    aligning: 'Menyejajarkan…',
+    alignedHint: 'Kepala disejajarkan otomatis — sesuaikan dengan slider bila perlu.',
   },
 };
 
@@ -115,9 +133,15 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
   const [error, setError] = useState('');
   const [result, setResult] = useState<Blob | null>(null);
 
+  const [mode, setMode] = useState<'upload' | 'camera'>('upload');
+  const [aligning, setAligning] = useState(false);
+  const [aligned, setAligned] = useState(false);
+
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [imgReady, setImgReady] = useState(0);
   const previewRef = useRef<HTMLCanvasElement | null>(null);
+  const sizeRef = useRef(size);
+  sizeRef.current = size;
 
   // Revoke the subject object URL when it changes/unmounts.
   useEffect(() => () => { if (subjectUrl) URL.revokeObjectURL(subjectUrl); }, [subjectUrl]);
@@ -165,11 +189,59 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
     }
   };
 
+  /**
+   * Detect the face in a source image and set zoom/offset so the head lands on
+   * the passport guide. Best-effort: if detection fails the manual sliders are
+   * untouched and the user carries on as before.
+   */
+  const autoAlign = async (file: File) => {
+    setAligning(true);
+    try {
+      const bitmap = await createImageBitmap(file);
+      try {
+        const { FilesetResolver, FaceDetector } = await import('@mediapipe/tasks-vision');
+        const vision = await FilesetResolver.forVisionTasks(new URL('/models/mediapipe/wasm', location.origin).href);
+        const detector = await FaceDetector.createFromOptions(vision, {
+          baseOptions: { modelAssetPath: new URL('/models/mediapipe/blaze_face_short_range.tflite', location.origin).href },
+          runningMode: 'IMAGE',
+          minDetectionConfidence: 0.4,
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        canvas.getContext('2d')?.drawImage(bitmap, 0, 0);
+        const box = detector.detect(canvas).detections?.[0]?.boundingBox;
+        detector.close();
+        if (box) {
+          const face: FaceBox = { x: box.originX, y: box.originY, w: box.width, h: box.height };
+          const s = sizeRef.current;
+          const { zoom: z, offsetY: oy } = alignTransform(face, bitmap.width, bitmap.height, s.w * 100, s.h * 100);
+          setZoom(z);
+          setOffsetY(oy);
+          setAligned(true);
+        }
+      } finally {
+        bitmap.close?.();
+      }
+    } catch {
+      // No detector / no face — keep the manual controls as they are.
+    } finally {
+      setAligning(false);
+    }
+  };
+
   const onDrop = (files: File[]) => {
     const file = files.find(f => f.type.startsWith('image/'));
     if (!file) return;
+    setAligned(false);
     setSrcFile(file);
     prepare(file, removeBg);
+    void autoAlign(file);
+  };
+
+  const onCameraCapture = (file: File) => {
+    setMode('upload');
+    onDrop([file]);
   };
 
   usePasteImage(f => onDrop([f]));
@@ -271,12 +343,31 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
-      <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
-        <div className="space-y-1">
-          <p className="text-lg font-bold">{t.dropTitle}</p>
-          <p className="text-sm text-muted-foreground">{t.dropSub}</p>
-        </div>
-      </Dropzone>
+      <div className="flex flex-wrap gap-2">
+        <Button variant={mode === 'upload' ? 'primary' : 'secondary'} onClick={() => setMode('upload')}>
+          <Upload className="h-4 w-4" /> {t.tabUpload}
+        </Button>
+        <Button variant={mode === 'camera' ? 'primary' : 'secondary'} onClick={() => setMode('camera')}>
+          <Camera className="h-4 w-4" /> {t.tabCamera}
+        </Button>
+      </div>
+
+      {mode === 'camera' ? (
+        <PasFotoCamera
+          photoW={size.w * 100}
+          photoH={size.h * 100}
+          lang={lang}
+          onCapture={onCameraCapture}
+          onCancel={() => setMode('upload')}
+        />
+      ) : (
+        <Dropzone onDrop={onDrop} accept="image/*" multiple={false}>
+          <div className="space-y-1">
+            <p className="text-lg font-bold">{t.dropTitle}</p>
+            <p className="text-sm text-muted-foreground">{t.dropSub}</p>
+          </div>
+        </Dropzone>
+      )}
 
       {error && <Alert variant="error">{error}</Alert>}
       {busy && <ProgressBar percent={percent} label={stage} />}
@@ -324,6 +415,12 @@ export default function PasFoto({ lang = 'en' }: { lang?: Lang }) {
               <input type="range" min={-0.5} max={0.5} step={0.01} value={offsetY}
                 onChange={e => setOffsetY(Number(e.target.value))} className="w-full accent-accent" />
             </label>
+            <div className="space-y-1">
+              <Button variant="secondary" onClick={() => srcFile && void autoAlign(srcFile)} disabled={!srcFile || aligning}>
+                <Crosshair className="h-4 w-4" /> {aligning ? t.aligning : t.recenter}
+              </Button>
+              {aligned && !aligning && <p className="text-xs text-muted-foreground">{t.alignedHint}</p>}
+            </div>
           </div>
 
           {/* Controls */}
