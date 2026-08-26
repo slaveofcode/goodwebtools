@@ -16,7 +16,7 @@ const TR: Record<Lang, Record<string, string>> = {
     loading: 'Opening…', page: 'Page', another: 'Another file',
     slide: 'Slide', of: 'of', prev: 'Previous slide', next: 'Next slide',
     noText: 'This slide has no text.',
-    deckNote: 'Keynote stores a picture of the first slide only, so the remaining slides are shown as the text and tables they contain.',
+    deckNote: 'Keynote stores a picture of the first slide only, so the remaining slides are shown as the text, tables and images they contain.',
     singleNote: 'iWork saves a preview of the first page only. To see the whole document, export it to PDF from Pages, Numbers or Keynote and open that instead.',
     untitled: 'Untitled slide',
   },
@@ -28,7 +28,7 @@ const TR: Record<Lang, Record<string, string>> = {
     loading: 'Membuka…', page: 'Halaman', another: 'Berkas lain',
     slide: 'Slide', of: 'dari', prev: 'Slide sebelumnya', next: 'Slide berikutnya',
     noText: 'Slide ini tidak memuat teks.',
-    deckNote: 'Keynote hanya menyimpan gambar slide pertama, jadi slide selanjutnya ditampilkan sebagai teks dan tabel yang dikandungnya.',
+    deckNote: 'Keynote hanya menyimpan gambar slide pertama, jadi slide selanjutnya ditampilkan sebagai teks, tabel, dan gambar yang dikandungnya.',
     singleNote: 'iWork hanya menyimpan pratinjau halaman pertama. Untuk melihat seluruh dokumen, ekspor ke PDF dari Pages, Numbers, atau Keynote lalu buka berkas PDF-nya.',
     untitled: 'Slide tanpa judul',
   },
@@ -43,9 +43,11 @@ export default function IWorkViewer({ lang = 'en' }: { lang?: Lang }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [opened, setOpened] = useState(false);
+  const [slideImgs, setSlideImgs] = useState<Record<string, string>>({});
   const rendererRef = useRef<PdfRenderer | null>(null);
   const urlsRef = useRef<string[]>([]);
   const imageRef = useRef('');
+  const slideImgRef = useRef<string[]>([]);
 
   const cleanup = useCallback(() => {
     rendererRef.current?.destroy();
@@ -54,6 +56,8 @@ export default function IWorkViewer({ lang = 'en' }: { lang?: Lang }) {
     urlsRef.current = [];
     if (imageRef.current) URL.revokeObjectURL(imageRef.current);
     imageRef.current = '';
+    slideImgRef.current.forEach(u => URL.revokeObjectURL(u));
+    slideImgRef.current = [];
   }, []);
 
   useEffect(() => () => cleanup(), [cleanup]);
@@ -82,7 +86,7 @@ export default function IWorkViewer({ lang = 'en' }: { lang?: Lang }) {
     const f = files.find(x => /\.(pages|numbers|key)$/i.test(x.name));
     if (!f) return;
     cleanup();
-    setError(''); setPages([]); setImageUrl(''); setSlides([]); setIndex(0);
+    setError(''); setPages([]); setImageUrl(''); setSlides([]); setSlideImgs({}); setIndex(0);
     setBusy(true); setOpened(true);
     try {
       const { unzipSync } = await import('fflate');
@@ -90,6 +94,18 @@ export default function IWorkViewer({ lang = 'en' }: { lang?: Lang }) {
 
       // Keynote decks: recover the text of every slide, in presentation order.
       const outline = readSlideOutline(entries as Record<string, Uint8Array>);
+
+      // Turn each slide's placed images into object URLs to render inline.
+      const imgMap: Record<string, string> = {};
+      for (const slide of outline) {
+        for (const path of slide.images) {
+          if (imgMap[path] || !entries[path]) continue;
+          const url = URL.createObjectURL(new Blob([entries[path]]));
+          imgMap[path] = url;
+          slideImgRef.current.push(url);
+        }
+      }
+      setSlideImgs(imgMap);
 
       const preview = findPreview(Object.keys(entries));
       if (!preview) {
@@ -124,7 +140,7 @@ export default function IWorkViewer({ lang = 'en' }: { lang?: Lang }) {
 
   const reset = () => {
     cleanup();
-    setPages([]); setImageUrl(''); setSlides([]); setIndex(0); setError(''); setOpened(false);
+    setPages([]); setImageUrl(''); setSlides([]); setSlideImgs({}); setIndex(0); setError(''); setOpened(false);
   };
 
   const current = slides[index];
@@ -199,7 +215,10 @@ export default function IWorkViewer({ lang = 'en' }: { lang?: Lang }) {
                     </table>
                   </div>
                 ))}
-                {!current.title && !current.body.length && !current.tables.length && (
+                {current.images.map((path, ii) => slideImgs[path] && (
+                  <img key={ii} src={slideImgs[path]} alt="" className="mx-auto max-h-[45vh] max-w-full border-2 border-border" />
+                ))}
+                {!current.title && !current.body.length && !current.tables.length && !current.images.length && (
                   <p className="text-sm text-muted-foreground">{t.noText}</p>
                 )}
               </div>

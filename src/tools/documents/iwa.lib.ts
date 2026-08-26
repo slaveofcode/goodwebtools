@@ -40,6 +40,8 @@ export interface SlideOutline {
   body: string[];
   /** Tables on the slide, in the order the slide references them. */
   tables: SlideTable[];
+  /** Zip paths of images placed on the slide (Data/…), in reference order. */
+  images: string[];
 }
 
 /* ------------------------------------------------------------------ snappy */
@@ -625,6 +627,92 @@ export function readTable(model: Archive, index: ArchiveIndex): SlideTable | nul
   return { rows, cols, cells };
 }
 
+/* -------------------------------------------------------------------- images
+ *
+ * A placed image is a drawable that references a package data id; the id → file
+ * name mapping lives in the DataInfo registry (Index/Metadata.iwa, message type
+ * 11006). The actual zip entry appends the data id: "testimg.png" (registry) is
+ * stored as "Data/testimg-9072.png". Theme/background art is referenced only by
+ * the master slides we exclude, so a slide's own references yield just its
+ * user-placed images.
+ */
+
+const IMAGE_EXT = /\.(png|jpe?g|heic|heif|tiff?|gif|bmp|webp)$/i;
+
+/** data id → original file name, from the package DataInfo registry. */
+export function readDataInfo(entries: Record<string, Uint8Array>): Map<number, string> {
+  const out = new Map<number, string>();
+  const meta = entries['Index/Metadata.iwa'];
+  if (!meta) return out;
+  let archives: Archive[];
+  try { archives = readArchives(decodeIwa(meta)); } catch { return out; }
+  for (const a of archives) {
+    for (const m of a.messages) {
+      if (m.type !== 11006) continue; // TSP.PackageMetadata / DataInfo table
+      for (const f of readFields(m.payload)) {
+        if (f.wire !== 2 || !f.bytes) continue; // one DataInfo entry
+        let id = -1;
+        let file: string | null = null;
+        for (const g of readFields(f.bytes)) {
+          if (g.no === 1 && g.wire === 0) id = g.value;
+          else if (g.wire === 2 && g.bytes) {
+            const s = new TextDecoder().decode(g.bytes).trim();
+            if (IMAGE_EXT.test(s)) file = s;
+          }
+        }
+        if (id >= 0 && file) out.set(id, file);
+      }
+    }
+  }
+  return out;
+}
+
+/** Locate the zip entry for a data id whose registry name is `filename`. */
+export function dataEntryPath(names: string[], dataId: number, filename: string): string | null {
+  const dot = filename.lastIndexOf('.');
+  const base = dot >= 0 ? filename.slice(0, dot) : filename;
+  const ext = dot >= 0 ? filename.slice(dot) : '';
+  const guess = `Data/${base}-${dataId}${ext}`;
+  if (names.includes(guess)) return guess;
+  const alt = names.find(n => n.startsWith(`Data/${base}-`) && n.includes(`-${dataId}`));
+  if (alt) return alt;
+  return names.includes(`Data/${filename}`) ? `Data/${filename}` : null;
+}
+
+/**
+ * Zip paths of the images placed on a slide, in reference order.
+ *
+ * A data reference is the TSP.Reference shape `{ 1: id }`, so we only treat a
+ * value as an image reference when it is field 1 of a nested message — a bare
+ * number that happens to equal a small data id is not a reference.
+ */
+export function slideImages(slideArchives: Archive[], dataInfo: Map<number, string>, names: string[]): string[] {
+  const ids: number[] = [];
+  const seen = new Set<number>();
+  const walk = (buf: Uint8Array, depth: number): void => {
+    if (depth > 8) return;
+    for (const f of readFields(buf)) {
+      if (f.wire !== 2 || !f.bytes || !f.bytes.length) continue;
+      for (const g of readFields(f.bytes)) {
+        if (g.no === 1 && g.wire === 0 && dataInfo.has(g.value) && !seen.has(g.value)) {
+          seen.add(g.value);
+          ids.push(g.value);
+        }
+        break; // only the first field decides the Reference shape
+      }
+      walk(f.bytes, depth + 1);
+    }
+  };
+  for (const a of slideArchives) for (const m of a.messages) walk(m.payload, 0);
+
+  const paths: string[] = [];
+  for (const id of ids) {
+    const path = dataEntryPath(names, id, dataInfo.get(id) as string);
+    if (path && !paths.includes(path)) paths.push(path);
+  }
+  return paths;
+}
+
 /** Every table on a slide, in the order the slide references them. */
 export function slideTables(slideArchives: Archive[], index: ArchiveIndex): SlideTable[] {
   const out: SlideTable[] = [];
@@ -661,6 +749,9 @@ export function readSlideOutline(entries: Record<string, Uint8Array>): SlideOutl
   // follow a slide's references into the table model.
   let index: ArchiveIndex;
   try { index = readArchiveIndex(entries); } catch { index = new Map(); }
+  let dataInfo: Map<number, string>;
+  try { dataInfo = readDataInfo(entries); } catch { dataInfo = new Map(); }
+  const allNames = Object.keys(entries);
 
   const slides = new Map<number, SlideOutline>();
   for (const name of names) {
@@ -673,7 +764,9 @@ export function readSlideOutline(entries: Record<string, Uint8Array>): SlideOutl
     if (!archives.length) continue;
     let tables: SlideTable[] = [];
     try { tables = slideTables(archives, index); } catch { tables = []; }
-    slides.set(archives[0].id, { id: archives[0].id, ...slideContent(archives), tables });
+    let images: string[] = [];
+    try { images = slideImages(archives, dataInfo, allNames); } catch { images = []; }
+    slides.set(archives[0].id, { id: archives[0].id, ...slideContent(archives), tables, images });
   }
   if (!slides.size) return [];
 
