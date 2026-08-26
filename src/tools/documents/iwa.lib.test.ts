@@ -3,6 +3,7 @@ import {
   snappyDecompress, decodeIwa, readFields, readArchives, cleanRun,
   slideTextRuns, slideOrder, slideEntryNames, readSlideOutline,
   readRefAt, storageTexts, shapeStorages, slidePlaceholders, slideContent,
+  readStringTable, readTile, readTable, refsToType, slideTables,
 } from './iwa.lib';
 
 /* ------------------------------------------------------------- test helpers */
@@ -82,6 +83,61 @@ const slideArchive = (id: number, title: number | null, body: number | null, dra
       ...drawables.flatMap(d => pbBytes(7, pbVarint(1, d))),
     ],
   }]);
+
+/* --- table builders (TST model) --- */
+
+/** A string DataList (type 6005, list type 1): key → text. */
+const stringList = (id: number, entries: [number, string][]) =>
+  archive(id, [{
+    type: 6005,
+    payload: [
+      ...pbVarint(1, 1), // list type 1 = strings
+      ...entries.flatMap(([k, s]) => pbBytes(3, [...pbVarint(1, k), ...pbString(3, s)])),
+    ],
+  }]);
+
+/** int16 LE per column; -1 marks an empty column. */
+const offsetBytes = (cols: number[]) =>
+  cols.flatMap(v => { const u = v < 0 ? v + 0x10000 : v; return [u & 0xff, (u >> 8) & 0xff]; });
+
+/** A 24-byte cell record carrying `key` as a uint32 at offset 12. */
+const cellRecord = (key: number) => {
+  const b = new Array(24).fill(0);
+  b[0] = 5;
+  b[12] = key & 0xff; b[13] = (key >> 8) & 0xff; b[14] = (key >> 16) & 0xff; b[15] = (key >> 24) & 0xff;
+  return b;
+};
+
+/** A tile (type 6002); each row = [rowIndex, [col→cell] map]. */
+const tile = (id: number, rows: { r: number; cells: Record<number, number> }[]) =>
+  archive(id, [{
+    type: 6002,
+    payload: rows.flatMap(({ r, cells }) => {
+      const colIdxs = Object.keys(cells).map(Number).sort((a, b) => a - b);
+      const maxCol = colIdxs.length ? Math.max(...colIdxs) : 0;
+      const storage: number[] = [];
+      const offsets: number[] = [];
+      for (let c = 0; c <= maxCol; c++) {
+        if (c in cells) { offsets.push(storage.length); storage.push(...cellRecord(cells[c])); }
+        else offsets.push(-1);
+      }
+      return pbBytes(5, [...pbVarint(1, r), ...pbBytes(6, storage), ...pbBytes(7, offsetBytes(offsets))]);
+    }),
+  }]);
+
+/** TableModelArchive (type 6001): rows (f6), cols (f7), refs to tile + string list. */
+const tableModel = (id: number, rows: number, cols: number, tileId: number, stringsId: number) =>
+  archive(id, [{ type: 6001, payload: [...pbVarint(6, rows), ...pbVarint(7, cols), ...pbVarint(10, tileId), ...pbVarint(11, stringsId)] }]);
+
+/** TableInfoArchive (type 6000) referencing its model. */
+const tableInfo = (id: number, modelId: number) =>
+  archive(id, [{ type: 6000, payload: pbVarint(2, modelId) }]);
+
+const indexOf = (...archs: number[][]) => {
+  const index = new Map<number, ReturnType<typeof readArchives>[number]>();
+  for (const bytes of archs) for (const a of readArchives(new Uint8Array(bytes))) index.set(a.id, a);
+  return index;
+};
 
 /* -------------------------------------------------------------------- tests */
 
@@ -240,6 +296,74 @@ describe('slide structure', () => {
   it('returns empty content for a slide with no text at all', () => {
     const ars = readArchives(new Uint8Array(slideArchive(200, null, null, [])));
     expect(slideContent(ars)).toEqual({ title: '', body: [] });
+  });
+});
+
+describe('tables', () => {
+  it('reads a string DataList and ignores non-string lists', () => {
+    const strings = readArchives(new Uint8Array(stringList(700, [[1, 'A'], [2, 'C'], [3, 'D']])));
+    expect([...readStringTable(strings[0])]).toEqual([[1, 'A'], [2, 'C'], [3, 'D']]);
+    // A numbers list (list type 2) yields nothing.
+    const numbers = readArchives(new Uint8Array(archive(701, [{ type: 6005, payload: [...pbVarint(1, 2), ...pbBytes(3, [...pbVarint(1, 1), ...pbString(3, '9')])] }])));
+    expect(readStringTable(numbers[0]).size).toBe(0);
+  });
+
+  it('reads cell placements (row, col, key) from a tile', () => {
+    const t = readArchives(new Uint8Array(tile(710, [
+      { r: 0, cells: { 0: 1 } },
+      { r: 3, cells: { 2: 2 } },
+      { r: 4, cells: { 3: 3 } },
+    ])));
+    expect(readTile(t[0])).toEqual([
+      { r: 0, c: 0, key: 1 }, { r: 3, c: 2, key: 2 }, { r: 4, c: 3, key: 3 },
+    ]);
+  });
+
+  it('builds a table grid with cells in their exact positions', () => {
+    const index = indexOf(
+      stringList(700, [[1, 'A'], [2, 'C'], [3, 'D']]),
+      tile(710, [{ r: 0, cells: { 0: 1 } }, { r: 3, cells: { 2: 2 } }, { r: 4, cells: { 3: 3 } }]),
+    );
+    const model = readArchives(new Uint8Array(tableModel(720, 5, 4, 710, 700)))[0];
+    const table = readTable(model, index)!;
+    expect(table).toMatchObject({ rows: 5, cols: 4 });
+    expect(table.cells[0][0]).toBe('A');
+    expect(table.cells[3][2]).toBe('C');
+    expect(table.cells[4][3]).toBe('D');
+    expect(table.cells[1][1]).toBe(''); // empty cell
+  });
+
+  it('leaves a cell blank when its key is not a string (e.g. a number cell)', () => {
+    const index = indexOf(stringList(700, [[1, 'A']]), tile(710, [{ r: 0, cells: { 0: 99 } }]));
+    const model = readArchives(new Uint8Array(tableModel(720, 1, 1, 710, 700)))[0];
+    expect(readTable(model, index)!.cells[0][0]).toBe('');
+  });
+
+  it('rejects an implausible table size', () => {
+    const index = indexOf(stringList(700, []), tile(710, []));
+    expect(readTable(readArchives(new Uint8Array(tableModel(720, 0, 4, 710, 700)))[0], index)).toBeNull();
+    expect(readTable(readArchives(new Uint8Array(tableModel(721, 5, 9999, 710, 700)))[0], index)).toBeNull();
+  });
+
+  it('finds a slide’s tables by following its references', () => {
+    const index = indexOf(
+      stringList(700, [[1, 'A'], [2, 'C'], [3, 'D']]),
+      tile(710, [{ r: 0, cells: { 0: 1 } }, { r: 3, cells: { 2: 2 } }, { r: 4, cells: { 3: 3 } }]),
+      tableModel(720, 5, 4, 710, 700),
+      tableInfo(730, 720),
+    );
+    const slide = readArchives(new Uint8Array(archive(200, [{ type: 5, payload: pbBytes(7, pbVarint(1, 730)) }])));
+    const tables = slideTables(slide, index);
+    expect(tables).toHaveLength(1);
+    expect(tables[0].cells[0][0]).toBe('A');
+    expect(tables[0].cells[4][3]).toBe('D');
+  });
+
+  it('refsToType only returns ids whose archive has the wanted message type', () => {
+    const index = indexOf(tableInfo(730, 720), stringList(700, [[1, 'X']]));
+    const payload = new Uint8Array([...pbVarint(1, 730), ...pbVarint(2, 700), ...pbVarint(3, 999)]);
+    expect(refsToType(payload, index, 6000)).toEqual([730]);
+    expect(refsToType(payload, index, 6005)).toEqual([700]);
   });
 });
 
