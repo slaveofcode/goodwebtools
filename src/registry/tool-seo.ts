@@ -2688,6 +2688,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Is a transcript saved?', a: 'The captions stay on screen until you clear them or leave the page; nothing is stored by us.' },
     ],
   },
+  'teleprompter': {
+    title: 'Free Teleprompter / Autocue — Voice-Tracking, in Your Browser',
+    description: 'A free online teleprompter: paste your script and read it with adjustable auto-scroll, voice-tracking, mirror mode and a camera preview. Runs in your browser — your script is never uploaded.',
+    intro: 'Paste a script, press Start, and read it back at a comfortable pace. Speed up or slow the auto-scroll, or turn on voice-tracking so the text advances as you actually read. Mirror it for a beam-splitter rig and show your camera behind the words. Your script stays in your browser.',
+    howTo: [
+      'Paste or type your script and set the font size, speed and colours.',
+      'Press Start, then use Space to play/pause and the arrow keys to change speed or nudge position.',
+      'Optionally turn on voice-tracking (Chrome/Edge) so the text follows your voice, mirror mode for a teleprompter rig, or the camera preview to frame yourself.',
+      'Press Expand for full screen while you record.',
+    ],
+    faqs: [
+      { q: 'Is my script uploaded?', a: 'No. The script is stored only in your browser and never sent anywhere. It is also saved locally so it survives a page reload.' },
+      { q: 'How does voice-tracking work and is it private?', a: 'It uses your browser’s built-in speech recognition to advance the text as you read. In Chrome and Edge that sends microphone audio to the browser’s speech service (e.g. Google) to transcribe — so avoid it for sensitive material. Auto-scroll needs no microphone.' },
+      { q: 'Which browsers support voice-tracking?', a: 'Chrome and Edge (desktop) support it. On Safari and Firefox the voice option is hidden, but adjustable auto-scroll still works.' },
+      { q: 'Can I use it with a teleprompter (beam-splitter) rig?', a: 'Yes — turn on mirror mode to flip the text horizontally (and vertically if needed) so it reads correctly in the reflection.' },
+      { q: 'Does it work offline?', a: 'Yes for auto-scroll — GoodWebTools is a PWA. Voice-tracking needs a connection because the browser’s speech service is online.' },
+    ],
+  },
   'text-to-speech': {
     title: 'Free Text to Speech — Read Any Text Aloud Online',
     description: 'Convert text to speech in your browser using built-in voices. Choose a voice, adjust speed and pitch, and listen instantly. Free, private — nothing is uploaded.',
@@ -5646,6 +5664,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Browser apa yang bisa?', a: 'Chrome dan Edge di desktop mendukung pengenalan suara langsung. Safari dan Firefox umumnya tidak.' },
       { q: 'Bahasa apa yang didukung?', a: 'Beberapa, termasuk Inggris, Bahasa Indonesia, Spanyol, Prancis, Jerman, Jepang, dan Mandarin — pilih bahasa yang diucapkan sebelum memulai.' },
       { q: 'Apakah transkrip disimpan?', a: 'Teks tetap di layar sampai Anda bersihkan atau meninggalkan halaman; tidak ada yang kami simpan.' },
+    ],
+  },
+  'teleprompter': {
+    title: 'Teleprompter / Autocue Gratis — Ikuti Suara, di Browser',
+    description: 'Teleprompter online gratis: tempel naskah dan bacakan dengan auto-scroll yang bisa diatur, pelacakan suara, mode cermin, dan pratinjau kamera. Berjalan di browser — naskah tidak pernah diunggah.',
+    intro: 'Tempel naskah, tekan Mulai, lalu bacakan dengan tempo yang nyaman. Percepat atau perlambat auto-scroll, atau nyalakan pelacakan suara agar teks maju mengikuti bacaan Anda. Balik teks untuk rig beam-splitter dan tampilkan kamera di belakang tulisan. Naskah tetap di browser Anda.',
+    howTo: [
+      'Tempel atau ketik naskah lalu atur ukuran font, kecepatan, dan warna.',
+      'Tekan Mulai, lalu pakai Spasi untuk main/jeda dan tombol panah untuk mengubah kecepatan atau menggeser posisi.',
+      'Opsional nyalakan pelacakan suara (Chrome/Edge) agar teks mengikuti suara, mode cermin untuk rig teleprompter, atau pratinjau kamera untuk membingkai diri Anda.',
+      'Tekan Perbesar untuk layar penuh saat merekam.',
+    ],
+    faqs: [
+      { q: 'Apakah naskah saya diunggah?', a: 'Tidak. Naskah hanya disimpan di browser Anda dan tidak dikirim ke mana pun. Naskah juga tersimpan lokal sehingga bertahan saat halaman dimuat ulang.' },
+      { q: 'Bagaimana pelacakan suara bekerja dan apakah privat?', a: 'Ia memakai pengenalan suara bawaan browser untuk memajukan teks saat Anda membaca. Di Chrome dan Edge, audio mikrofon dikirim ke layanan suara browser (mis. Google) untuk ditranskripsi — jadi hindari untuk materi sensitif. Auto-scroll tidak butuh mikrofon.' },
+      { q: 'Browser apa yang mendukung pelacakan suara?', a: 'Chrome dan Edge (desktop) mendukungnya. Di Safari dan Firefox opsi suara disembunyikan, tetapi auto-scroll yang bisa diatur tetap berfungsi.' },
+      { q: 'Bisakah dipakai dengan rig teleprompter (beam-splitter)?', a: 'Bisa — nyalakan mode cermin untuk membalik teks secara horizontal (dan vertikal bila perlu) agar terbaca benar di pantulan.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya untuk auto-scroll — GoodWebTools adalah PWA. Pelacakan suara butuh koneksi karena layanan suara browser bersifat online.' },
     ],
   },
   'text-to-speech': {
