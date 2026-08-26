@@ -54,7 +54,10 @@ function fresh(): Tile[] { return spawn(spawn([])); }
 export default function Game2048({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
   const { ref: stageRef, expanded, enter, exit } = useExpand<HTMLDivElement>();
-  const [tiles, setTiles] = useState<Tile[]>(fresh);
+  // Start empty so the server and first client render match; the opening tiles
+  // (which use Math.random) are dealt in a mount effect to avoid a hydration
+  // mismatch (React #425).
+  const [tiles, setTiles] = useState<Tile[]>([]);
   const [ghosts, setGhosts] = useState<Ghost[]>([]);
   const [score, setScore] = useState(0);
   const [won, setWon] = useState(false);
@@ -66,6 +69,7 @@ export default function Game2048({ lang = 'en' }: { lang?: Lang }) {
   const latest = useRef({ tiles, score, over });
   latest.current = { tiles, score, over };
 
+  useEffect(() => { setTiles(fresh()); }, []);
   useEffect(() => () => { if (ghostTimer.current) clearTimeout(ghostTimer.current); }, []);
 
   const doMove = useCallback((dir: Direction | null) => {

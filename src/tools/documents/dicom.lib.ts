@@ -15,6 +15,27 @@ export function isUncompressed(transferSyntaxUID: string): boolean {
   return UNCOMPRESSED.has(transferSyntaxUID);
 }
 
+/**
+ * Number of frames from the DICOM `NumberOfFrames` (0028,0008) string.
+ * Multi-frame objects (cine loops, volumes) pack every frame into one pixel-data
+ * element; a missing or invalid value means a single-frame image.
+ */
+export function parseFrameCount(raw: string | undefined | null): number {
+  const n = parseInt((raw ?? '').trim(), 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+/**
+ * Clamp the declared frame count to what the pixel data can actually hold, so a
+ * wrong header never makes the viewer read past the buffer. `bytesPerFrame` is
+ * rows × cols × samples × (bits > 8 ? 2 : 1).
+ */
+export function clampFrameCount(declared: number, availableBytes: number, bytesPerFrame: number): number {
+  if (bytesPerFrame <= 0) return 1;
+  const fit = Math.floor(availableBytes / bytesPerFrame);
+  return Math.max(1, Math.min(declared, fit));
+}
+
 /** Modality rescale: stored value → real-world value. */
 export function rescale(stored: number, slope: number, intercept: number): number {
   return stored * slope + intercept;
