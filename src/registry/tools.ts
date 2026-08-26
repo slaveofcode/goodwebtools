@@ -1753,6 +1753,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'teleprompter',
+    name: 'Teleprompter',
+    category: 'Media',
+    route: '/tools/teleprompter',
+    keywords: ['teleprompter', 'autocue', 'prompter', 'script', 'scroll', 'speech', 'voice', 'youtube', 'anchor', 'presenter'],
+    icon: ScrollText,
+    summary: 'Read a script on-screen with auto-scroll, voice-tracking, mirror mode and a camera preview',
+    load: () => import('@/islands/media/Teleprompter'),
+    status: 'beta'
+  },
+  {
     id: 'video-convert',
     name: 'Video Converter',
     category: 'Media',
