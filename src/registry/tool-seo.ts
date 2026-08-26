@@ -1121,7 +1121,7 @@ const en: Record<string, ToolSeoContent> = {
     howTo: [
       'Drop your .pages, .numbers or .key file.',
       'For a Keynote deck, move through the slides with the arrows, your keyboard’s arrow keys, or the strip of slide buttons below.',
-      'Slide one shows the picture Keynote saved; every other slide shows the text it contains.',
+      'Slide one shows the picture Keynote saved; every other slide shows the text, tables and images it contains.',
       'For Pages and Numbers, the built-in first-page preview is shown.',
       'Open another file any time.',
     ],
@@ -4081,7 +4081,7 @@ const id: Record<string, ToolSeoContent> = {
     howTo: [
       'Letakkan berkas .pages, .numbers, atau .key Anda.',
       'Untuk presentasi Keynote, berpindah slide dengan tombol panah di layar, tombol panah keyboard, atau deretan tombol slide di bawah.',
-      'Slide pertama menampilkan gambar yang disimpan Keynote; slide lainnya menampilkan teks yang dikandungnya.',
+      'Slide pertama menampilkan gambar yang disimpan Keynote; slide lainnya menampilkan teks, tabel, dan gambar yang dikandungnya.',
       'Untuk Pages dan Numbers, pratinjau bawaan halaman pertama yang ditampilkan.',
       'Buka berkas lain kapan saja.',
     ],
