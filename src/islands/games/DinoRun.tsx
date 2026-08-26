@@ -46,7 +46,7 @@ export default function DinoRun({ lang = 'en' }: { lang?: Lang }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<HTMLDivElement | null>(null);
   const g = useRef<Game>(initial());
-  const dims = useRef({ W: BASE_W });
+  const dims = useRef({ W: BASE_W, H, groundY: GROUND_Y, dpr: 1 });
   const [best, setBest] = useState(0);
   const [phase, setPhase] = useState<'ready' | 'playing' | 'dead'>('ready');
   const [score, setScore] = useState(0);
@@ -67,15 +67,27 @@ export default function DinoRun({ lang = 'en' }: { lang?: Lang }) {
   };
   const setDown = (v: boolean) => { g.current.down = v; };
 
-  // Expanded → widen the logical playfield to the screen's aspect ratio.
+  // Match the canvas resolution to the frame's real pixel size so it scales 1:1
+  // (no stretching). In fullscreen the ground is anchored near the bottom and
+  // the extra height — tall on a portrait phone — simply becomes more sky.
   useEffect(() => {
     const canvas = canvasRef.current;
     const frame = frameRef.current;
     if (!canvas || !frame) return;
     const apply = () => {
-      const rect = frame.getBoundingClientRect();
-      const W = expanded && rect.height > 0 ? Math.max(360, Math.round((H * rect.width) / rect.height)) : BASE_W;
-      if (W !== dims.current.W) { dims.current.W = W; canvas.width = W; }
+      if (expanded) {
+        const rect = frame.getBoundingClientRect();
+        const W = Math.max(1, Math.round(rect.width));
+        const Hh = Math.max(1, Math.round(rect.height));
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        dims.current = { W, H: Hh, groundY: Math.max(GROUND_Y, Hh - 44), dpr };
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(Hh * dpr);
+      } else {
+        dims.current = { W: BASE_W, H, groundY: GROUND_Y, dpr: 1 };
+        canvas.width = BASE_W;
+        canvas.height = H;
+      }
     };
     apply();
     const ro = new ResizeObserver(apply);
@@ -91,34 +103,35 @@ export default function DinoRun({ lang = 'en' }: { lang?: Lang }) {
     let last = performance.now();
 
     const draw = (s: Game) => {
-      const W = dims.current.W;
+      const { W, H: Hh, groundY, dpr } = dims.current;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 1 unit = 1 CSS px, crisp on hidpi
       const night = Math.floor(s.score / NIGHT_EVERY) % 2 === 1;
       const sky = night ? '#0f172a' : '#e0f2fe';
       const ink = night ? '#e2e8f0' : '#0f172a';
       ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, 0, W, Hh);
 
       // Parallax hills / stars.
       ctx.fillStyle = night ? '#1e293b' : '#bae6fd';
       for (let i = 0; i < 6; i++) {
         const x = ((i * 220 - s.dist * 0.25) % (W + 220)) - 110;
         if (night) { ctx.fillRect(x + 40, 40, 3, 3); ctx.fillRect(x + 120, 70, 2, 2); }
-        else { ctx.beginPath(); ctx.arc(x, GROUND_Y, 70, Math.PI, 0); ctx.fill(); }
+        else { ctx.beginPath(); ctx.arc(x, groundY, 70, Math.PI, 0); ctx.fill(); }
       }
 
       // Ground line + moving dashes.
       ctx.strokeStyle = ink;
       ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(W, GROUND_Y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
       ctx.fillStyle = ink;
       for (let i = 0; i < 20; i++) {
         const x = ((i * 90 - s.dist) % (W + 90)) - 45;
-        ctx.fillRect(x, GROUND_Y + 8, 22, 2);
+        ctx.fillRect(x, groundY + 8, 22, 2);
       }
 
       // Obstacles.
       for (const o of s.obstacles) {
-        const bottom = GROUND_Y - o.y;
+        const bottom = groundY - o.y;
         ctx.fillStyle = o.kind === 'bird' ? (night ? '#f472b6' : '#be123c') : o.kind === 'rock' ? '#78716c' : '#15803d';
         if (o.kind === 'bird') {
           // Simple flapping wing silhouette.
@@ -141,7 +154,7 @@ export default function DinoRun({ lang = 'en' }: { lang?: Lang }) {
 
       // Runner.
       const rh = runnerHeight(s.runner);
-      const top = GROUND_Y + s.runner.y - rh;
+      const top = groundY + s.runner.y - rh;
       ctx.fillStyle = night ? '#fbbf24' : '#1f2937';
       ctx.fillRect(RUNNER_X, top, RUNNER_W, rh);
       // Eye + legs for a bit of character.
@@ -150,7 +163,7 @@ export default function DinoRun({ lang = 'en' }: { lang?: Lang }) {
       if (s.runner.y === 0 && s.phase === 'playing') {
         const legPhase = Math.floor(s.dist / 12) % 2 === 0;
         ctx.fillStyle = night ? '#fbbf24' : '#1f2937';
-        ctx.fillRect(RUNNER_X + (legPhase ? 2 : 18), GROUND_Y, 10, 6);
+        ctx.fillRect(RUNNER_X + (legPhase ? 2 : 18), groundY, 10, 6);
       }
 
       // Score.
