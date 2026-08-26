@@ -41,7 +41,10 @@ export default function BlockPuzzle({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
   const { ref: stageRef, expanded, enter, exit } = useExpand<HTMLDivElement>();
   const [board, setBoard] = useState<Board>(emptyBoard);
-  const [hand, setHand] = useState<(PieceShape | null)[]>(() => drawHand());
+  // Three empty slots on the server and first client render (deterministic);
+  // the random opening hand is dealt in a mount effect so hydration matches
+  // (avoids React #425).
+  const [hand, setHand] = useState<(PieceShape | null)[]>([null, null, null]);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [over, setOver] = useState(false);
@@ -55,6 +58,7 @@ export default function BlockPuzzle({ lang = 'en' }: { lang?: Lang }) {
   latest.current = { board, hand, score };
 
   useEffect(() => {
+    setHand(drawHand());
     try { setBest(Number(localStorage.getItem(BEST_KEY)) || 0); } catch { /* blocked */ }
     return () => { if (flashTimer.current) clearTimeout(flashTimer.current); };
   }, []);

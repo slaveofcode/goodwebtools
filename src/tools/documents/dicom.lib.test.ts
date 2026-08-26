@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyWindowLevel, isUncompressed, rescale } from './dicom.lib';
+import { applyWindowLevel, isUncompressed, rescale, parseFrameCount, clampFrameCount } from './dicom.lib';
 
 describe('rescale', () => {
   it('applies slope and intercept', () => {
@@ -39,5 +39,34 @@ describe('isUncompressed', () => {
     expect(isUncompressed('1.2.840.10008.1.2.4.90')).toBe(false); // JPEG 2000
     expect(isUncompressed('1.2.840.10008.1.2.5')).toBe(false); // RLE
     expect(isUncompressed('')).toBe(false);
+  });
+});
+
+describe('parseFrameCount', () => {
+  it('reads a valid multi-frame count', () => {
+    expect(parseFrameCount('96')).toBe(96);
+    expect(parseFrameCount(' 12 ')).toBe(12);
+  });
+  it('defaults to a single frame when absent or invalid', () => {
+    expect(parseFrameCount(undefined)).toBe(1);
+    expect(parseFrameCount(null)).toBe(1);
+    expect(parseFrameCount('')).toBe(1);
+    expect(parseFrameCount('0')).toBe(1);
+    expect(parseFrameCount('-4')).toBe(1);
+    expect(parseFrameCount('abc')).toBe(1);
+  });
+});
+
+describe('clampFrameCount', () => {
+  it('keeps the declared count when the pixel data is large enough', () => {
+    // 96 frames of a 128×128 16-bit image = 96 × 32768 bytes.
+    expect(clampFrameCount(96, 96 * 128 * 128 * 2, 128 * 128 * 2)).toBe(96);
+  });
+  it('caps a header that claims more frames than the data holds', () => {
+    expect(clampFrameCount(96, 3 * 128 * 128 * 2, 128 * 128 * 2)).toBe(3);
+  });
+  it('never returns less than one frame', () => {
+    expect(clampFrameCount(10, 0, 4096)).toBe(1);
+    expect(clampFrameCount(1, 4096, 0)).toBe(1);
   });
 });
