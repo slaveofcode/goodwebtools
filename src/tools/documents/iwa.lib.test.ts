@@ -4,6 +4,7 @@ import {
   slideTextRuns, slideOrder, slideEntryNames, readSlideOutline,
   readRefAt, storageTexts, shapeStorages, slidePlaceholders, slideContent,
   readStringTable, readTile, readTable, refsToType, slideTables,
+  readDataInfo, dataEntryPath, slideImages,
 } from './iwa.lib';
 
 /* ------------------------------------------------------------- test helpers */
@@ -364,6 +365,41 @@ describe('tables', () => {
     const payload = new Uint8Array([...pbVarint(1, 730), ...pbVarint(2, 700), ...pbVarint(3, 999)]);
     expect(refsToType(payload, index, 6000)).toEqual([730]);
     expect(refsToType(payload, index, 6005)).toEqual([700]);
+  });
+});
+
+describe('images', () => {
+  /** DataInfo registry (type 11006): each entry = { 1: dataId, 3: filename }. */
+  const dataInfo = (id: number, entries: [number, string][]) =>
+    archive(id, [{ type: 11006, payload: entries.flatMap(([did, fn]) => pbBytes(3, [...pbVarint(1, did), ...pbString(3, fn)])) }]);
+
+  it('reads the data id → filename registry, keeping only images', () => {
+    const bytes = iwaFile(new Uint8Array(dataInfo(2, [[9072, 'testimg.png'], [8945, 'clip.mov'], [40, 'photo.jpeg']])));
+    const map = readDataInfo({ 'Index/Metadata.iwa': bytes });
+    expect([...map]).toEqual([[9072, 'testimg.png'], [40, 'photo.jpeg']]); // .mov dropped
+  });
+
+  it('resolves the Data/ zip entry, which appends the data id', () => {
+    const names = ['Data/testimg-9072.png', 'Data/photo-40.jpeg', 'preview.jpg'];
+    expect(dataEntryPath(names, 9072, 'testimg.png')).toBe('Data/testimg-9072.png');
+    expect(dataEntryPath(names, 40, 'photo.jpeg')).toBe('Data/photo-40.jpeg');
+    expect(dataEntryPath(names, 1, 'missing.png')).toBeNull();
+  });
+
+  it('collects a slide’s images from reference-shaped ids only', () => {
+    const info = new Map<number, string>([[9072, 'testimg.png']]);
+    const names = ['Data/testimg-9072.png'];
+    // The id appears as field 1 of a nested message (a TSP.Reference).
+    const slide = readArchives(new Uint8Array(archive(200, [{ type: 5, payload: pbBytes(7, pbBytes(9, pbVarint(1, 9072))) }])));
+    expect(slideImages(slide, info, names)).toEqual(['Data/testimg-9072.png']);
+  });
+
+  it('ignores a bare number that merely equals a data id', () => {
+    const info = new Map<number, string>([[240, 'w.png']]); // 240 also a plausible width
+    const names = ['Data/w-240.png'];
+    // 240 here is a bare scalar (field 5), not field 1 of a sub-message → not a reference.
+    const slide = readArchives(new Uint8Array(archive(200, [{ type: 5, payload: pbVarint(5, 240) }])));
+    expect(slideImages(slide, info, names)).toEqual([]);
   });
 });
 
