@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { tools } from '@/registry/tools';
 import { categories, categoryColors, categoryNotes, categorySlug } from '@/registry/categories';
+import { localizedTool } from '@/registry/tool-i18n';
 import { localizePath, DEFAULT_LOCALE, type Lang } from '@/i18n/config';
 
 /**
@@ -38,6 +39,7 @@ export function ToolGrid({ lang = DEFAULT_LOCALE }: { lang?: Lang }) {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {categoryTools.map(tool => {
                 const Icon = tool.icon;
+                const label = localizedTool(tool, lang);
                 return (
                   <a
                     key={tool.id}
@@ -51,8 +53,8 @@ export function ToolGrid({ lang = DEFAULT_LOCALE }: { lang?: Lang }) {
                       <Icon className="h-5 w-5" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block font-bold">{tool.name}</span>
-                      <span className="block text-sm text-muted-foreground">{tool.summary}</span>
+                      <span className="block font-bold">{label.name}</span>
+                      <span className="block text-sm text-muted-foreground">{label.summary}</span>
                     </span>
                   </a>
                 );

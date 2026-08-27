@@ -4,6 +4,7 @@ import Base from '@/layouts/Base.astro';
 import ToolHost from '@/islands/ToolHost';
 import ShareButton from '@/islands/share/ShareButton';
 import { tools, getToolById } from '@/registry/tools';
+import { localizedTool } from '@/registry/tool-i18n';
 import { getToolSeo } from '@/registry/tool-seo';
 import { categoryColors, categorySlug } from '@/registry/categories';
 import { SITE_URL, SITE_NAME } from '@/config';
@@ -21,14 +22,15 @@ export function getStaticPaths() {
 
 const { toolId, lang } = Astro.props as { toolId: string; lang: Lang };
 const tool = getToolById(toolId)!;
+const label = localizedTool(tool, lang); // localized card name/summary (EN fallback)
 const toolUrl = new URL(localizePath(tool.route, lang), SITE_URL).href;
 const seo = getToolSeo(tool.id, lang);
 
 // Authored copy where present; otherwise fall back to the registry summary.
-const lead = seo?.intro ?? tool.summary;
+const lead = seo?.intro ?? label.summary;
 const metaDescription =
   seo?.description ??
-  `${tool.summary}. Free, on-device, and private — runs entirely in your browser with no uploads. Part of ${SITE_NAME}.`;
+  `${label.summary}. Free, on-device, and private — runs entirely in your browser with no uploads. Part of ${SITE_NAME}.`;
 
 // Localized links.
 const homePath = localizePath('/', lang);
@@ -41,7 +43,7 @@ const relatedTools = tools
 const softwareJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: tool.name,
+  name: label.name,
   description: metaDescription,
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Any (web browser)',
@@ -57,7 +59,7 @@ const breadcrumbJsonLd = {
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: t(lang, 'nav.home'), item: new URL(homePath, SITE_URL).href },
     { '@type': 'ListItem', position: 2, name: catLabel, item: new URL(catPath, SITE_URL).href },
-    { '@type': 'ListItem', position: 3, name: tool.name, item: toolUrl },
+    { '@type': 'ListItem', position: 3, name: label.name, item: toolUrl },
   ],
 };
 const jsonLd: Record<string, unknown>[] = [softwareJsonLd, breadcrumbJsonLd];
@@ -65,7 +67,7 @@ if (seo?.howTo && seo.howTo.length > 0) {
   jsonLd.push({
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: t(lang, 'tool.howTo', { name: tool.name }),
+    name: t(lang, 'tool.howTo', { name: label.name }),
     step: seo.howTo.map((text, i) => ({ '@type': 'HowToStep', position: i + 1, text })),
   });
 }
@@ -83,7 +85,7 @@ if (seo?.faqs && seo.faqs.length > 0) {
 ---
 
 <Base
-  title={seo?.title ?? tool.name}
+  title={seo?.title ?? label.name}
   description={metaDescription}
   keywords={tool.keywords}
   image={`/og/${tool.id}.png`}
@@ -102,21 +104,21 @@ if (seo?.faqs && seo.faqs.length > 0) {
           <a href={catPath} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{tool.category}</a>
         </li>
         <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
-        <li aria-current="page" class="text-foreground">{tool.name}</li>
+        <li aria-current="page" class="text-foreground">{label.name}</li>
       </ol>
     </nav>
 
     <div class="mb-6">
       <div class="mb-1 flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2">
-          <h1 class="text-3xl font-bold uppercase tracking-tight">{tool.name}</h1>
+          <h1 class="text-3xl font-bold uppercase tracking-tight">{label.name}</h1>
           {tool.status !== 'stable' && (
             <span class="border-2 border-border bg-accent px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-accent-foreground">
               {tool.status}
             </span>
           )}
         </div>
-        <ShareButton client:idle url={toolUrl} title={`${tool.name} — ${SITE_NAME}`} text={tool.summary} />
+        <ShareButton client:idle url={toolUrl} title={`${label.name} — ${SITE_NAME}`} text={label.summary} />
       </div>
       <p class="max-w-3xl text-muted-foreground">{lead}</p>
     </div>
@@ -127,7 +129,7 @@ if (seo?.faqs && seo.faqs.length > 0) {
       <div class="mt-12 space-y-10 border-t-2 border-border pt-8">
         {seo?.howTo && seo.howTo.length > 0 && (
           <section aria-labelledby="howto-heading">
-            <h2 id="howto-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">{t(lang, 'tool.howTo', { name: tool.name })}</h2>
+            <h2 id="howto-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">{t(lang, 'tool.howTo', { name: label.name })}</h2>
             <ol class="max-w-3xl space-y-2">
               {seo.howTo.map((step, i) => (
                 <li class="flex gap-3">

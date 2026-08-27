@@ -3,6 +3,7 @@ import Base from '@/layouts/Base.astro';
 import { ToolGrid } from '@/components/ToolGrid';
 import ShareButton from '@/islands/share/ShareButton';
 import { tools } from '@/registry/tools';
+import { localizedTool } from '@/registry/tool-i18n';
 import { SITE_URL, SITE_NAME, SITE_TAGLINE } from '@/config';
 import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
 import { t } from '@/i18n/ui';
@@ -27,13 +28,16 @@ const toolList = {
   '@type': 'ItemList',
   name: 'GoodWebTools catalog',
   numberOfItems: tools.length,
-  itemListElement: tools.map((tool, i) => ({
-    '@type': 'ListItem',
-    position: i + 1,
-    name: tool.name,
-    description: tool.summary,
-    url: new URL(localizePath(tool.route, lang), SITE_URL).href,
-  })),
+  itemListElement: tools.map((tool, i) => {
+    const label = localizedTool(tool, lang);
+    return {
+      '@type': 'ListItem',
+      position: i + 1,
+      name: label.name,
+      description: label.summary,
+      url: new URL(localizePath(tool.route, lang), SITE_URL).href,
+    };
+  }),
 };
 ---
 
