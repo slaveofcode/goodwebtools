@@ -179,6 +179,57 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it support IPv6?', a: 'This calculator focuses on IPv4 subnetting. IPv6 support may come later.' },
     ],
   },
+  'code-beautify': {
+    title: 'Code Beautifier — Format JS, CSS, HTML & JSON (Prettier)',
+    description: 'Beautify and format code — JavaScript, TypeScript, CSS, HTML, JSON, Markdown, YAML — with Prettier, entirely in your browser. Nothing is uploaded.',
+    intro: 'This free code beautifier tidies and formats your code using Prettier. Choose the language, paste your code, and get a cleanly formatted version with consistent indentation — it all runs in your browser, so your code is never uploaded.',
+    howTo: [
+      'Choose the language (JavaScript, TypeScript, CSS, HTML, JSON, Markdown, or YAML).',
+      'Paste your code into the input box.',
+      'Click Beautify to format it.',
+      'Copy the formatted result.',
+    ],
+    faqs: [
+      { q: 'Is my code uploaded?', a: 'No. Formatting runs entirely in your browser using Prettier — your code never leaves your device.' },
+      { q: 'Which languages are supported?', a: 'JavaScript, TypeScript, CSS, SCSS, HTML, JSON, Markdown and YAML.' },
+      { q: 'What formatter does it use?', a: 'Prettier, the industry-standard code formatter, running fully client-side.' },
+      { q: 'Why did formatting fail?', a: 'Prettier needs parseable code. If there is a syntax error, fix it first and try again.' },
+    ],
+  },
+  'vcard-csv': {
+    title: 'vCard ↔ CSV Converter — Contacts (.vcf) & Spreadsheet',
+    description: 'Convert contacts between vCard (.vcf) and CSV — export phone contacts to a spreadsheet, or build a .vcf to import. Runs in your browser; nothing is uploaded.',
+    intro: 'This tool converts contacts between vCard (.vcf) and CSV both ways. Export contact cards from your phone into a spreadsheet, or turn a CSV list into a .vcf to import back. All conversion happens in your browser.',
+    howTo: [
+      'Choose a direction — vCard → CSV or CSV → vCard (use Swap to flip).',
+      'Drop a .vcf/.csv file or paste its contents into the input box.',
+      'Click Convert.',
+      'Copy the result or download it as a file.',
+    ],
+    faqs: [
+      { q: 'Are my contacts uploaded?', a: 'No. Conversion runs in your browser — your contacts never leave your device, which is ideal for personal data.' },
+      { q: 'Which fields are converted?', a: 'Name, email, phone, organization, title and URL — the most common contact subset.' },
+      { q: 'Will the CSV open in Excel/Google Sheets?', a: 'Yes. The CSV output uses a standard header row so it opens directly in any spreadsheet app.' },
+      { q: 'Which vCard version is produced?', a: 'vCard 3.0, which is widely accepted by phones and contact apps.' },
+    ],
+  },
+  'npwp-validator': {
+    title: 'NPWP Validator — Check & Format an Indonesian Tax ID',
+    description: 'Validate and format an Indonesian NPWP (taxpayer ID) — check the digit length and format a 15-digit NPWP to XX.XXX.XXX.X-XXX.XXX. In your browser.',
+    intro: 'This free tool validates and formats an Indonesian NPWP. Type the number and it checks whether the length is correct (15-digit legacy or 16-digit NIK-based) and formats a 15-digit NPWP into the standard XX.XXX.XXX.X-XXX.XXX form. Everything runs in your browser.',
+    howTo: [
+      'Type or paste the NPWP number (with or without dots and dashes).',
+      'The tool checks its validity instantly.',
+      'See the formatted NPWP and the taxpayer type.',
+      'Copy the formatted number.',
+    ],
+    faqs: [
+      { q: 'Is my data sent anywhere?', a: 'No. Validation happens entirely in your browser — nothing is uploaded.' },
+      { q: 'How is an NPWP validated?', a: 'An NPWP has no public check digit, so the tool validates it structurally: 15 digits (legacy NPWP) or 16 digits (NIK-based since 2024).' },
+      { q: 'What do the first two digits mean?', a: 'On a 15-digit NPWP, the first two digits indicate the taxpayer type (e.g. corporate, individual, branch). The tool shows it when recognized.' },
+      { q: 'Does it format my NPWP?', a: 'Yes. A 15-digit NPWP is formatted to XX.XXX.XXX.X-XXX.XXX; a 16-digit number is shown as-is.' },
+    ],
+  },
   'minifier': {
     title: 'Free HTML, CSS & JS Minifier — Shrink Code Online',
     description: 'Minify HTML, CSS and JavaScript to reduce file size, right in your browser. Fast, private — nothing is uploaded.',
@@ -2462,6 +2513,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the simulator works with no internet connection.' },
     ],
   },
+  'photo-collage': {
+    title: 'Free Photo Collage Maker — Combine Photos into a Grid',
+    description: 'Combine several photos into one grid collage — pick the columns, gap and background, then download a PNG. Made in your browser; nothing is uploaded.',
+    intro: 'This free photo collage maker arranges several images into a neat grid. Add your photos, choose the number of columns, the gap and a background color, and it renders them into a single image in your browser — nothing is uploaded.',
+    howTo: [
+      'Drop several photos onto the box (or click to select multiple).',
+      'Choose the number of columns, the gap, output width and background color.',
+      'Click Make collage.',
+      'Preview and download the PNG.',
+    ],
+    faqs: [
+      { q: 'Are my photos uploaded?', a: 'No. The collage is built in your browser via canvas — the photos never leave your device.' },
+      { q: 'How many photos can I combine?', a: 'As many as you like — the tool arranges them into a grid with the number of columns you choose.' },
+      { q: 'How are the photos cropped?', a: 'Each photo is cropped to fill its cell (center crop), so the grid stays tidy without stretching.' },
+      { q: 'What format is the output?', a: 'A PNG at the width you set; the height adjusts to the number of rows.' },
+    ],
+  },
   'meme-generator': {
     title: 'Free Meme Generator — Add Top & Bottom Text to Images',
     description: 'Make a meme in seconds: drop an image, add top and bottom captions in the classic bold outlined style, and download the PNG. Free and private — nothing is uploaded.',
@@ -3446,6 +3514,57 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bagaimana /31 dan /32 ditangani?', a: 'Sebuah /32 adalah host tunggal. Sebuah /31 adalah tautan point-to-point dua alamat (RFC 3021), jadi kedua alamat dapat dipakai — kalkulator memperhitungkannya.' },
       { q: 'Apakah input saya diunggah?', a: 'Tidak. Semua perhitungan berjalan lokal di browser Anda; tidak ada yang dikirim ke mana pun.' },
       { q: 'Apakah mendukung IPv6?', a: 'Kalkulator ini fokus pada subnetting IPv4. Dukungan IPv6 mungkin ditambahkan nanti.' },
+    ],
+  },
+  'code-beautify': {
+    title: 'Beautifier Kode — Format JS, CSS, HTML & JSON (Prettier)',
+    description: 'Percantik dan format kode — JavaScript, TypeScript, CSS, HTML, JSON, Markdown, YAML — dengan Prettier, sepenuhnya di browser Anda. Tidak ada yang diunggah.',
+    intro: 'Beautifier kode gratis ini merapikan dan memformat kode Anda memakai Prettier. Pilih bahasa, tempel kode, dan dapatkan versi yang terformat rapi dengan indentasi konsisten — semua berjalan di browser Anda, jadi kode Anda tidak pernah diunggah.',
+    howTo: [
+      'Pilih bahasa (JavaScript, TypeScript, CSS, HTML, JSON, Markdown, atau YAML).',
+      'Tempel kode Anda ke kotak masukan.',
+      'Klik Percantik untuk memformatnya.',
+      'Salin hasil yang terformat.',
+    ],
+    faqs: [
+      { q: 'Apakah kode saya diunggah?', a: 'Tidak. Pemformatan berjalan sepenuhnya di browser Anda memakai Prettier — kode Anda tidak pernah keluar dari perangkat.' },
+      { q: 'Bahasa apa yang didukung?', a: 'JavaScript, TypeScript, CSS, SCSS, HTML, JSON, Markdown, dan YAML.' },
+      { q: 'Formatter apa yang dipakai?', a: 'Prettier, formatter kode standar industri, berjalan sepenuhnya di sisi klien.' },
+      { q: 'Kenapa memformat bisa gagal?', a: 'Prettier perlu kode yang bisa di-parse. Jika ada kesalahan sintaks, perbaiki dulu lalu coba lagi.' },
+    ],
+  },
+  'vcard-csv': {
+    title: 'Konverter vCard ↔ CSV — Ubah Kontak (.vcf) & Spreadsheet',
+    description: 'Konversi kontak antara vCard (.vcf) dan CSV — ekspor kontak ponsel ke spreadsheet, atau buat .vcf untuk diimpor. Berjalan di browser Anda; tidak ada yang diunggah.',
+    intro: 'Tool ini mengonversi kontak antara vCard (.vcf) dan CSV dua arah. Ekspor kartu kontak dari ponsel ke spreadsheet, atau ubah daftar CSV menjadi .vcf untuk diimpor kembali. Semua konversi terjadi di browser Anda.',
+    howTo: [
+      'Pilih arah — vCard → CSV atau CSV → vCard (pakai Tukar untuk membalik).',
+      'Jatuhkan file .vcf/.csv atau tempel isinya ke kotak masukan.',
+      'Klik Konversi.',
+      'Salin hasilnya atau unduh sebagai file.',
+    ],
+    faqs: [
+      { q: 'Apakah kontak saya diunggah?', a: 'Tidak. Konversi berjalan di browser Anda — kontak Anda tidak pernah keluar dari perangkat, cocok untuk data pribadi.' },
+      { q: 'Field apa yang dikonversi?', a: 'Nama, email, telepon, organisasi, jabatan, dan URL — subset kontak yang paling umum.' },
+      { q: 'CSV bisa dibuka di Excel/Google Sheets?', a: 'Ya. Keluaran CSV memakai baris header standar sehingga langsung terbuka di aplikasi spreadsheet mana pun.' },
+      { q: 'Versi vCard apa yang dibuat?', a: 'vCard 3.0, yang diterima secara luas oleh ponsel dan aplikasi kontak.' },
+    ],
+  },
+  'npwp-validator': {
+    title: 'Validator NPWP — Cek & Format Nomor NPWP Online',
+    description: 'Validasi dan format NPWP (Nomor Pokok Wajib Pajak) Indonesia — periksa panjang digit dan format NPWP 15 digit ke XX.XXX.XXX.X-XXX.XXX. Di browser Anda.',
+    intro: 'Tool gratis ini memvalidasi dan memformat NPWP Indonesia. Ketik nomornya dan tool memeriksa apakah panjangnya benar (15 digit lama atau 16 digit berbasis NIK) dan memformat NPWP 15 digit ke bentuk baku XX.XXX.XXX.X-XXX.XXX. Semua di browser Anda.',
+    howTo: [
+      'Ketik atau tempel nomor NPWP (dengan atau tanpa titik dan strip).',
+      'Tool langsung memeriksa validitasnya.',
+      'Lihat NPWP yang terformat dan jenis wajib pajaknya.',
+      'Salin nomor terformat.',
+    ],
+    faqs: [
+      { q: 'Apakah data saya dikirim ke mana pun?', a: 'Tidak. Validasi terjadi sepenuhnya di browser Anda — tidak ada yang diunggah.' },
+      { q: 'Bagaimana NPWP divalidasi?', a: 'NPWP tidak punya digit pemeriksa publik, jadi tool memvalidasi secara struktural: 15 digit (NPWP lama) atau 16 digit (berbasis NIK sejak 2024).' },
+      { q: 'Apa arti dua digit pertama?', a: 'Pada NPWP 15 digit, dua digit pertama menandai jenis wajib pajak (mis. badan, orang pribadi, cabang). Tool menampilkannya bila dikenali.' },
+      { q: 'Apakah tool memformat NPWP saya?', a: 'Ya. NPWP 15 digit diformat ke XX.XXX.XXX.X-XXX.XXX; nomor 16 digit ditampilkan apa adanya.' },
     ],
   },
   'minifier': {
@@ -5729,6 +5848,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Seberapa akurat?', a: 'Menggunakan matriks aproksimasi dikromasi yang umum dipakai. Ini panduan kuat untuk tinjauan desain, bukan diagnosis medis.' },
       { q: 'Mengapa ini penting untuk aksesibilitas?', a: 'Sekitar 1 dari 12 pria memiliki defisiensi penglihatan warna. Simulasi membantu memastikan grafik, peta, dan warna status dapat dibedakan tanpa hanya mengandalkan warna.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat simulator bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'photo-collage': {
+    title: 'Pembuat Kolase Foto — Gabungkan Foto ke Satu Grid',
+    description: 'Gabungkan beberapa foto menjadi satu kolase pada grid — atur kolom, jarak, dan latar, lalu unduh PNG. Dibuat di browser Anda; tidak ada yang diunggah.',
+    intro: 'Pembuat kolase foto gratis ini menyusun beberapa gambar ke dalam grid rapi. Tambahkan foto Anda, pilih jumlah kolom, jarak, dan warna latar, lalu tool merendernya menjadi satu gambar di browser Anda — tidak ada yang diunggah.',
+    howTo: [
+      'Jatuhkan beberapa foto ke kotak (atau klik untuk memilih beberapa).',
+      'Pilih jumlah kolom, jarak, lebar output, dan warna latar.',
+      'Klik Buat kolase.',
+      'Pratinjau dan unduh PNG.',
+    ],
+    faqs: [
+      { q: 'Apakah foto saya diunggah?', a: 'Tidak. Kolase dibuat di browser Anda via canvas — foto tidak pernah keluar dari perangkat.' },
+      { q: 'Berapa banyak foto yang bisa saya gabungkan?', a: 'Sebanyak yang Anda mau — tool menyusunnya di grid dengan jumlah kolom yang Anda pilih.' },
+      { q: 'Bagaimana foto dipangkas?', a: 'Tiap foto dipotong untuk mengisi selnya (crop tengah), sehingga grid tetap rapi tanpa peregangan.' },
+      { q: 'Format keluarannya apa?', a: 'PNG pada lebar yang Anda tentukan; tingginya menyesuaikan jumlah baris.' },
     ],
   },
   'meme-generator': {
