@@ -6,7 +6,7 @@ import ShareButton from '@/islands/share/ShareButton';
 import { tools, getToolById } from '@/registry/tools';
 import { localizedTool } from '@/registry/tool-i18n';
 import { getToolSeo } from '@/registry/tool-seo';
-import { categoryColors, categorySlug } from '@/registry/categories';
+import { categoryColors, categorySlug, categoryName } from '@/registry/categories';
 import { SITE_URL, SITE_NAME } from '@/config';
 import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
 import { t } from '@/i18n/ui';
@@ -35,7 +35,8 @@ const metaDescription =
 // Localized links.
 const homePath = localizePath('/', lang);
 const catPath = localizePath(`/category/${categorySlug(tool.category)}`, lang);
-const catLabel = t(lang, 'category.heading', { category: tool.category });
+const catName = categoryName(tool.category, lang);
+const catLabel = t(lang, 'category.heading', { category: catName });
 const relatedTools = tools
   .filter(t2 => t2.category === tool.category && t2.id !== tool.id && !t2.desktopOnly)
   .slice(0, 6);
@@ -52,6 +53,7 @@ const softwareJsonLd = {
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   browserRequirements: 'Requires a modern web browser with JavaScript.',
   publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+  inLanguage: lang === 'id' ? 'id' : 'en',
 };
 const breadcrumbJsonLd = {
   '@context': 'https://schema.org',
@@ -62,19 +64,14 @@ const breadcrumbJsonLd = {
     { '@type': 'ListItem', position: 3, name: label.name, item: toolUrl },
   ],
 };
+// NOTE: no HowTo JSON-LD — Google deprecated the HowTo rich result (Sept 2023),
+// so it earns no SERP feature; the on-page how-to steps below are the real value.
 const jsonLd: Record<string, unknown>[] = [softwareJsonLd, breadcrumbJsonLd];
-if (seo?.howTo && seo.howTo.length > 0) {
-  jsonLd.push({
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: t(lang, 'tool.howTo', { name: label.name }),
-    step: seo.howTo.map((text, i) => ({ '@type': 'HowToStep', position: i + 1, text })),
-  });
-}
 if (seo?.faqs && seo.faqs.length > 0) {
   jsonLd.push({
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    inLanguage: lang === 'id' ? 'id' : 'en',
     mainEntity: seo.faqs.map(f => ({
       '@type': 'Question',
       name: f.q,
@@ -101,7 +98,7 @@ if (seo?.faqs && seo.faqs.length > 0) {
         </li>
         <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
         <li>
-          <a href={catPath} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{tool.category}</a>
+          <a href={catPath} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{catName}</a>
         </li>
         <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
         <li aria-current="page" class="text-foreground">{label.name}</li>
@@ -157,18 +154,19 @@ if (seo?.faqs && seo.faqs.length > 0) {
 
         {relatedTools.length > 0 && (
           <section aria-labelledby="related-heading">
-            <h2 id="related-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">{t(lang, 'tool.related', { category: tool.category })}</h2>
+            <h2 id="related-heading" class="mb-4 text-xl font-bold uppercase tracking-tight">{t(lang, 'tool.related', { category: catName })}</h2>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {relatedTools.map(rt => {
                 const Icon = rt.icon;
+                const rtLabel = localizedTool(rt, lang);
                 return (
                   <a href={localizePath(rt.route, lang)} class="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal-sm press-brutal">
                     <span class={`mt-0.5 border-2 border-border p-2 text-black ${categoryColors[rt.category]}`}>
                       <Icon className="h-4 w-4" />
                     </span>
                     <span class="min-w-0">
-                      <span class="block font-bold">{rt.name}</span>
-                      <span class="block text-sm text-muted-foreground">{rt.summary}</span>
+                      <span class="block font-bold">{rtLabel.name}</span>
+                      <span class="block text-sm text-muted-foreground">{rtLabel.summary}</span>
                     </span>
                   </a>
                 );

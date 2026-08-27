@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { tools } from '@/registry/tools';
-import { categories, categoryColors, categoryNotes, categorySlug } from '@/registry/categories';
+import { categories, categoryColors, categoryNotes, categorySlug, categoryName } from '@/registry/categories';
 import { localizedTool } from '@/registry/tool-i18n';
 import { localizePath, DEFAULT_LOCALE, type Lang } from '@/i18n/config';
 
@@ -27,7 +27,7 @@ export function ToolGrid({ lang = DEFAULT_LOCALE }: { lang?: Lang }) {
               <span
                 className={`inline-block h-4 w-4 border-2 border-border ${categoryColors[category]}`}
               />
-              <h2 className="text-xl font-bold uppercase tracking-tight group-hover:underline">{category}</h2>
+              <h2 className="text-xl font-bold uppercase tracking-tight group-hover:underline">{categoryName(category, lang)}</h2>
               <span className="text-sm font-bold text-muted-foreground">
                 ({categoryTools.filter(tool => !tool.desktopOnly).length})
               </span>
