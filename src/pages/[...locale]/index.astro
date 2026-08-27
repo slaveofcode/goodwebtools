@@ -26,7 +26,7 @@ const homeKeywords = [
 const toolList = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  name: 'GoodWebTools catalog',
+  name: lang === 'id' ? 'Katalog GoodWebTools' : 'GoodWebTools catalog',
   numberOfItems: tools.length,
   itemListElement: tools.map((tool, i) => {
     const label = localizedTool(tool, lang);

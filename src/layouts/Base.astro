@@ -50,6 +50,11 @@ const alternates = localized
   ? LOCALES.map(l => ({ hreflang: l, href: new URL(localizePath(basePath, l), SITE_URL).href }))
   : [];
 const ogLocale = lang === 'id' ? 'id_ID' : 'en_US';
+const ogLocaleAlt = lang === 'id' ? 'en_US' : 'id_ID';
+const siteDescription =
+  lang === 'id'
+    ? 'Utilitas sisi-klien yang mengutamakan privasi dan berjalan sepenuhnya di browser Anda — tanpa unggahan, tanpa server.'
+    : SITE_TAGLINE;
 
 // Site-wide structured data + any page-specific graph.
 const siteJsonLd = {
@@ -57,7 +62,8 @@ const siteJsonLd = {
   '@type': 'WebSite',
   name: SITE_NAME,
   url: SITE_URL,
-  description: SITE_TAGLINE,
+  description: siteDescription,
+  inLanguage: lang === 'id' ? 'id' : 'en',
 };
 const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : [])];
 ---
@@ -79,6 +85,7 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:locale" content={ogLocale} />
+    {localized && <meta property="og:locale:alternate" content={ogLocaleAlt} />}
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
