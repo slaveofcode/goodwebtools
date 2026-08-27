@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Maximize2, Minimize2, Play, Pause, FlipHorizontal2, FlipVertical2, Camera, Pencil, Mic } from 'lucide-react';
+import { Maximize2, Minimize2, Play, Pause, FlipHorizontal2, FlipVertical2, Camera, Pencil, Mic, Smartphone, ChevronsUp } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useExpand } from '@/hooks/useExpand';
 import { tokenize, advanceReading, readingTime, scrollSpeed } from '@/tools/media/teleprompter.lib';
+import { applyCommand, remoteUrl, remoteCodeFromSearch, type RemoteMsg, type RemoteState } from '@/tools/media/teleprompter-remote.lib';
+import { useTeleprompterLink } from '@/hooks/useTeleprompterLink';
+import { makeRoomId } from '@/tools/webrtc/signal.lib';
 import type { Lang } from '@/i18n/config';
 
 interface RecognitionResult { isFinal: boolean; 0: { transcript: string }; }
@@ -29,6 +32,10 @@ const TR: Record<Lang, Record<string, string>> = {
     camDenied: 'Camera permission was denied.',
     micDenied: 'Microphone permission was denied.',
     empty: 'Type or paste a script above, then press Start.',
+    pair: 'Pair phone', pairing: 'Scan with your phone', code: 'Code',
+    waiting: 'Waiting for phone…', phoneOn: 'Phone connected', phoneOff: 'Phone disconnected',
+    pairNote: 'Your phone pairs over a direct connection between your two devices — only the pairing code and connection details use our server, never the script.',
+    remoteTitle: 'Remote control', connecting: 'Connecting to the teleprompter…', top: 'Top',
   },
   id: {
     intro: 'Teleprompter untuk kreator dan pembicara: tempel naskah dan bacakan dengan auto-scroll atau pelacakan suara. Naskah tetap di browser Anda.',
@@ -40,6 +47,10 @@ const TR: Record<Lang, Record<string, string>> = {
     camDenied: 'Izin kamera ditolak.',
     micDenied: 'Izin mikrofon ditolak.',
     empty: 'Ketik atau tempel naskah di atas, lalu tekan Mulai.',
+    pair: 'Pair phone', pairing: 'Pindai dengan ponsel', code: 'Kode',
+    waiting: 'Menunggu ponsel…', phoneOn: 'Ponsel terhubung', phoneOff: 'Ponsel terputus',
+    pairNote: 'Ponsel Anda dipasangkan lewat koneksi langsung antar dua perangkat — hanya kode pemasangan dan detail koneksi yang memakai server kami, bukan naskahnya.',
+    remoteTitle: 'Kendali jarak jauh', connecting: 'Menghubungkan ke teleprompter…', top: 'Atas',
   },
 };
 
@@ -72,6 +83,69 @@ export default function Teleprompter({ lang = 'en' }: { lang?: Lang }) {
   const wpmRef = useRef(wpm);
   useEffect(() => { wpmRef.current = wpm; }, [wpm]);
 
+  // Phone remote: this device is the "remote" (guest) when the URL carries ?remote=CODE.
+  const [remoteCode] = useState<string | null>(() =>
+    typeof window === 'undefined' ? null : remoteCodeFromSearch(window.location.search));
+  const isRemote = !!remoteCode;
+  const [pairCode, setPairCode] = useState('');
+  const [qr, setQr] = useState('');
+  const [remotePct, setRemotePct] = useState(0);
+
+  const currentPct = useCallback(() => {
+    const el = scrollRef.current;
+    return el ? el.scrollTop / Math.max(1, el.scrollHeight - el.clientHeight) : 0;
+  }, []);
+
+  const handleRemoteMsg = useCallback((m: RemoteMsg) => {
+    if (isRemote) {
+      // Guest: mirror the display.
+      if (m.t === 'script') { setScript(m.text); setEditing(false); }
+      else if (m.t === 'state') {
+        setPlaying(m.playing); setWpm(m.wpm); setRemotePct(m.scrollPct);
+        const el = scrollRef.current;
+        if (el) el.scrollTop = m.scrollPct * Math.max(1, el.scrollHeight - el.clientHeight);
+      }
+    } else if (m.t === 'cmd') {
+      // Host: apply the phone's command to our own state.
+      const s: RemoteState = { playing, wpm, scrollPct: currentPct(), mirrorX };
+      const next = applyCommand(s, m);
+      setPlaying(next.playing); setWpm(next.wpm); setMirrorX(next.mirrorX);
+      if (m.cmd === 'seek' || m.cmd === 'top') {
+        const el = scrollRef.current;
+        if (el) el.scrollTop = next.scrollPct * Math.max(1, el.scrollHeight - el.clientHeight);
+      }
+    }
+  }, [isRemote, playing, wpm, mirrorX, currentPct]);
+
+  const link = useTeleprompterLink(handleRemoteMsg);
+
+  // Guest auto-connects on load.
+  useEffect(() => {
+    if (isRemote && remoteCode) { setEditing(false); link.connect(remoteCode, 'guest'); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRemote, remoteCode]);
+
+  const startPairing = async () => {
+    const code = makeRoomId();
+    setPairCode(code);
+    link.connect(code, 'host');
+    const QRCode = (await import('qrcode')).default;
+    setQr(await QRCode.toDataURL(remoteUrl(window.location.origin, code), { margin: 1, width: 220 }));
+  };
+
+  // Host streams the script once, then state on change + a light heartbeat.
+  const scriptSentRef = useRef(false);
+  useEffect(() => {
+    if (isRemote || link.status !== 'connected') { scriptSentRef.current = false; return; }
+    if (!scriptSentRef.current) { link.send({ t: 'script', text: script }); scriptSentRef.current = true; }
+    const emit = () => link.send({ t: 'state', playing, wpm, scrollPct: currentPct() });
+    emit();
+    const el = scrollRef.current;
+    el?.addEventListener('scroll', emit, { passive: true });
+    const id = window.setInterval(emit, 500);
+    return () => { el?.removeEventListener('scroll', emit); window.clearInterval(id); };
+  }, [isRemote, link, script, playing, wpm, currentPct]);
+
   const tokens = tokenize(script);
   const wordCount = tokens.length;
   const seconds = readingTime(wordCount, wpm);
@@ -100,9 +174,10 @@ export default function Teleprompter({ lang = 'en' }: { lang?: Lang }) {
 
   const stopRaf = () => { if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; } };
 
-  // Auto-scroll loop (paused while voice-tracking drives the position).
+  // Auto-scroll loop (paused while voice-tracking drives the position, and never
+  // on the remote — the guest scrolls only from the host's state messages).
   useEffect(() => {
-    if (!playing || voice || editing) { stopRaf(); return; }
+    if (!playing || voice || editing || isRemote) { stopRaf(); return; }
     let last = performance.now();
     const el = scrollRef.current;
     const step = (now: number) => {
@@ -115,7 +190,7 @@ export default function Teleprompter({ lang = 'en' }: { lang?: Lang }) {
     };
     rafRef.current = requestAnimationFrame(step);
     return stopRaf;
-  }, [playing, voice, editing]);
+  }, [playing, voice, editing, isRemote]);
 
   const scrollToWord = useCallback((i: number) => {
     const el = scrollRef.current, w = wordEls.current[i];
@@ -123,9 +198,9 @@ export default function Teleprompter({ lang = 'en' }: { lang?: Lang }) {
     el.scrollTo({ top: w.offsetTop - el.clientHeight * 0.38, behavior: 'smooth' });
   }, []);
 
-  // Voice-tracking.
+  // Voice-tracking (host only).
   useEffect(() => {
-    if (!voice || editing) return;
+    if (!voice || editing || isRemote) return;
     const w = window as unknown as { SpeechRecognition?: new () => RecognitionLike; webkitSpeechRecognition?: new () => RecognitionLike };
     const Impl = w.SpeechRecognition || w.webkitSpeechRecognition;
     if (!Impl) { setVoiceSupported(false); setVoice(false); return; }
@@ -145,11 +220,11 @@ export default function Teleprompter({ lang = 'en' }: { lang?: Lang }) {
     recRef.current = rec;
     try { rec.start(); } catch { /* already started */ }
     return () => { recRef.current = null; try { rec.stop(); } catch { /* ignore */ } };
-  }, [voice, editing, lang, script, scrollToWord, t.micDenied]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [voice, editing, isRemote, lang, script, scrollToWord, t.micDenied]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Camera preview.
+  // Camera preview (host only).
   useEffect(() => {
-    if (!camera || editing) return;
+    if (!camera || editing || isRemote) return;
     let cancelled = false;
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
       .then(stream => {
@@ -164,7 +239,7 @@ export default function Teleprompter({ lang = 'en' }: { lang?: Lang }) {
       streamRef.current = null;
       if (videoRef.current) videoRef.current.srcObject = null;
     };
-  }, [camera, editing, t.camDenied]);
+  }, [camera, editing, isRemote, t.camDenied]);
 
   // Global teardown on unmount.
   useEffect(() => () => {
@@ -173,9 +248,9 @@ export default function Teleprompter({ lang = 'en' }: { lang?: Lang }) {
     streamRef.current?.getTracks().forEach(tr => tr.stop());
   }, []);
 
-  // Keyboard while prompting.
+  // Keyboard while prompting (host only; the remote uses its on-screen buttons).
   useEffect(() => {
-    if (editing) return;
+    if (editing || isRemote) return;
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
       if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
@@ -185,19 +260,20 @@ export default function Teleprompter({ lang = 'en' }: { lang?: Lang }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [editing]);
+  }, [editing, isRemote]);
 
   const startPrompt = () => {
     setEditing(false); idxRef.current = 0; setHighlight(-1); setNote('');
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   };
 
-  // Align the first word to the eye-line once the prompter view mounts.
+  // Align the first word to the eye-line once the prompter view mounts (host only;
+  // the remote's position is driven by the host's state messages).
   useEffect(() => {
-    if (editing) return;
+    if (editing || isRemote) return;
     const id = requestAnimationFrame(() => scrollToWord(0));
     return () => cancelAnimationFrame(id);
-  }, [editing, scrollToWord]);
+  }, [editing, isRemote, scrollToWord]);
   const backToEdit = () => { setEditing(true); setPlaying(false); setVoice(false); setCamera(false); };
 
   const flip = `${mirrorX ? 'scaleX(-1) ' : ''}${mirrorY ? 'scaleY(-1)' : ''}`.trim() || 'none';
@@ -249,21 +325,65 @@ export default function Teleprompter({ lang = 'en' }: { lang?: Lang }) {
           className="z-10 flex flex-wrap items-center gap-2 border-2 border-border bg-background/95 p-2"
           style={expanded ? { paddingTop: 'max(0.5rem, env(safe-area-inset-top))' } : undefined}
         >
-          {iconBtn(playing, () => setPlaying(p => !p), playing ? t.speed : t.start, playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />)}
-          <label className="flex items-center gap-1.5 text-sm">{t.speed}
-            <input type="range" min={60} max={320} step={10} value={wpm} onChange={(e) => setWpm(Number(e.target.value))} className="w-24 accent-accent" />
-            <span className="tabular-nums">{wpm}</span>
-          </label>
-          <label className="flex items-center gap-1.5 text-sm">{t.size}
-            <input type="range" min={24} max={110} value={size} onChange={(e) => setSize(Number(e.target.value))} className="w-20 accent-accent" />
-          </label>
-          {voiceSupported && iconBtn(voice, () => setVoice(v => !v), t.voice, <Mic className="h-4 w-4" />)}
-          {iconBtn(mirrorX, () => setMirrorX(v => !v), t.mirror, <FlipHorizontal2 className="h-4 w-4" />)}
-          {iconBtn(mirrorY, () => setMirrorY(v => !v), t.flipV, <FlipVertical2 className="h-4 w-4" />)}
-          {iconBtn(camera, () => setCamera(v => !v), t.camera, <Camera className="h-4 w-4" />)}
-          {iconBtn(expanded, () => (expanded ? exit() : enter()), expanded ? t.exit : t.expand, expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />)}
-          {iconBtn(false, backToEdit, t.edit, <Pencil className="h-4 w-4" />)}
+          {isRemote ? (
+            <>
+              {iconBtn(playing, () => link.send({ t: 'cmd', cmd: 'toggle' }), playing ? t.speed : t.start, playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />)}
+              {iconBtn(false, () => link.send({ t: 'cmd', cmd: 'slower' }), '−10', <span className="font-black">−</span>)}
+              <span className="min-w-[4rem] text-center text-sm tabular-nums">{wpm} wpm</span>
+              {iconBtn(false, () => link.send({ t: 'cmd', cmd: 'faster' }), '+10', <span className="font-black">+</span>)}
+              {iconBtn(false, () => link.send({ t: 'cmd', cmd: 'top' }), t.top, <ChevronsUp className="h-4 w-4" />)}
+              {iconBtn(false, () => link.send({ t: 'cmd', cmd: 'mirror' }), t.mirror, <FlipHorizontal2 className="h-4 w-4" />)}
+              {iconBtn(expanded, () => (expanded ? exit() : enter()), expanded ? t.exit : t.expand, expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />)}
+            </>
+          ) : (
+            <>
+              {iconBtn(playing, () => setPlaying(p => !p), playing ? t.speed : t.start, playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />)}
+              <label className="flex items-center gap-1.5 text-sm">{t.speed}
+                <input type="range" min={60} max={320} step={10} value={wpm} onChange={(e) => setWpm(Number(e.target.value))} className="w-24 accent-accent" />
+                <span className="tabular-nums">{wpm}</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-sm">{t.size}
+                <input type="range" min={24} max={110} value={size} onChange={(e) => setSize(Number(e.target.value))} className="w-20 accent-accent" />
+              </label>
+              {voiceSupported && iconBtn(voice, () => setVoice(v => !v), t.voice, <Mic className="h-4 w-4" />)}
+              {iconBtn(mirrorX, () => setMirrorX(v => !v), t.mirror, <FlipHorizontal2 className="h-4 w-4" />)}
+              {iconBtn(mirrorY, () => setMirrorY(v => !v), t.flipV, <FlipVertical2 className="h-4 w-4" />)}
+              {iconBtn(camera, () => setCamera(v => !v), t.camera, <Camera className="h-4 w-4" />)}
+              {iconBtn(!!pairCode, () => { if (!pairCode) void startPairing(); }, t.pair, <Smartphone className="h-4 w-4" />)}
+              {iconBtn(expanded, () => (expanded ? exit() : enter()), expanded ? t.exit : t.expand, expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />)}
+              {iconBtn(false, backToEdit, t.edit, <Pencil className="h-4 w-4" />)}
+            </>
+          )}
         </div>
+
+        {/* Remote (guest): seek slider + connection status. */}
+        {isRemote && (
+          <div className="flex items-center gap-2 bg-background/95 px-2 py-1.5">
+            <input
+              type="range" min={0} max={100} value={Math.round(remotePct * 100)}
+              onChange={(e) => { const v = Number(e.target.value) / 100; setRemotePct(v); link.send({ t: 'cmd', cmd: 'seek', value: v }); }}
+              className="w-full accent-accent" aria-label="Seek"
+            />
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {link.status === 'connected' ? t.remoteTitle : t.connecting}
+            </span>
+          </div>
+        )}
+
+        {/* Host: pairing panel with QR + code + status. */}
+        {!isRemote && pairCode && (
+          <div className="flex flex-wrap items-center gap-3 border-2 border-border bg-background/95 p-2">
+            {qr && <img src={qr} alt="Pairing QR" className="h-24 w-24 border border-border" />}
+            <div className="space-y-0.5 text-sm">
+              <p className="font-bold">{t.pairing}</p>
+              <p className="text-muted-foreground">{t.code}: <span className="font-mono font-bold tracking-widest">{pairCode}</span></p>
+              <p className={link.status === 'connected' ? 'font-bold text-foreground' : 'text-muted-foreground'}>
+                {link.status === 'connected' ? t.phoneOn : link.status === 'disconnected' ? t.phoneOff : t.waiting}
+              </p>
+            </div>
+            <p className="basis-full text-xs text-muted-foreground">{t.pairNote}</p>
+          </div>
+        )}
 
         {(note || (!voiceSupported && voice)) && (
           <p className="bg-background/95 px-2 py-1 text-xs text-muted-foreground">{note || t.voiceUnsupported}</p>
