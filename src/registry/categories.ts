@@ -53,6 +53,25 @@ export function categorySlug(category: Category): string {
   return category.toLowerCase();
 }
 
+/**
+ * Localized category display name. Bahasa keeps established loanwords for the
+ * tech-native categories (PDF, Dev, Media, Network, Maps, Playground) and
+ * translates the everyday nouns, so ID pages don't show "Tool Image" etc.
+ * Anything without a mapping falls back to the English name.
+ */
+export const categoryNamesId: Partial<Record<Category, string>> = {
+  Image: 'Gambar',
+  Documents: 'Dokumen',
+  Files: 'Berkas',
+  Calculators: 'Kalkulator',
+  Games: 'Game',
+  Testers: 'Penguji',
+  Draw: 'Menggambar',
+};
+export function categoryName(category: Category, lang: Lang): string {
+  return lang === 'id' ? categoryNamesId[category] ?? category : category;
+}
+
 /** Category lead copy in the given language (English fallback). */
 export function catDescription(category: Category, lang: Lang): string {
   return lang === 'id' ? categoryDescriptionsId[category] : categoryDescriptions[category];

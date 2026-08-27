@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
 import { tools } from '@/registry/tools';
 import { localizedTool } from '@/registry/tool-i18n';
-import { categories, categoryColors, catDescription, categorySlug, categoryFaqs, categoryNotes } from '@/registry/categories';
+import { categories, categoryColors, catDescription, categorySlug, categoryFaqs, categoryNotes, categoryName } from '@/registry/categories';
 import { SITE_URL, SITE_NAME } from '@/config';
 import type { Category } from '@/types/tool';
 import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
@@ -19,7 +19,8 @@ export function getStaticPaths() {
 
 const { category, lang } = Astro.props as { category: Category; lang: Lang };
 const categoryTools = tools.filter(t2 => t2.category === category && !t2.desktopOnly);
-const pageTitle = t(lang, 'category.heading', { category });
+const catName = categoryName(category, lang);
+const pageTitle = t(lang, 'category.heading', { category: catName });
 const description = catDescription(category, lang);
 const homePath = localizePath('/', lang);
 const pageUrl = new URL(localizePath(`/category/${categorySlug(category)}`, lang), SITE_URL).href;
@@ -35,7 +36,7 @@ const breadcrumbJsonLd = {
 const itemListJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  name: `${category} tools on ${SITE_NAME}`,
+  name: lang === 'id' ? `Tool ${catName} di ${SITE_NAME}` : `${category} tools on ${SITE_NAME}`,
   numberOfItems: categoryTools.length,
   itemListElement: categoryTools.map((t2, i) => ({
     '@type': 'ListItem',
@@ -49,6 +50,7 @@ const faqs = categoryFaqs(category, lang);
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
+  inLanguage: lang === 'id' ? 'id' : 'en',
   mainEntity: faqs.map(f => ({
     '@type': 'Question',
     name: f.q,
@@ -72,7 +74,7 @@ const keywords = [
 ---
 
 <Base
-  title={t(lang, 'category.freePrivate', { category })}
+  title={t(lang, 'category.freePrivate', { category: catName })}
   description={description}
   keywords={keywords}
   jsonLd={[breadcrumbJsonLd, itemListJsonLd, faqJsonLd]}
@@ -143,7 +145,7 @@ const keywords = [
             <a href={localizePath(`/category/${categorySlug(c)}`, lang)}
               class="inline-flex items-center gap-1.5 border-2 border-border bg-muted px-3 py-1.5 text-sm font-bold shadow-brutal-sm press-brutal">
               <span class={`inline-block h-3 w-3 border border-border ${categoryColors[c]}`} />
-              {t(lang, 'category.heading', { category: c })}
+              {t(lang, 'category.heading', { category: categoryName(c, lang) })}
             </a>
           </li>
         ))}

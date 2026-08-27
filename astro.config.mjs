@@ -22,9 +22,13 @@ if (process.env.WORKERS_CI === '1') {
   if (process.env.PUBLIC_GA_ID === undefined) {
     process.env.PUBLIC_GA_ID = isProductionBranch ? PROD_GA_ID : '';
   }
-  if (process.env.PUBLIC_NOINDEX === undefined) {
-    process.env.PUBLIC_NOINDEX = isProductionBranch ? '' : '1';
-  }
+  // Indexing is OPT-OUT, not auto-gated by branch: the WORKERS_CI_BRANCH check
+  // proved unreliable in the production build (it silently noindex'd the whole
+  // live site — the same failure that once blanked Google Analytics, which we
+  // fixed by not trusting the branch env). So pages are index,follow by default
+  // and only noindex when PUBLIC_NOINDEX is explicitly set to "1"/"true".
+  // Non-production Workers (e.g. goodwebtools-staging) set PUBLIC_NOINDEX=1 as a
+  // build var so preview deploys stay out of the index.
 }
 
 export default defineConfig({

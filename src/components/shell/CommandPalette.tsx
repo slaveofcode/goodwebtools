@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Command } from 'cmdk';
 import { searchTools } from '@/registry/tools';
 import { localizedTool } from '@/registry/tool-i18n';
-import { categories } from '@/registry/categories';
+import { categories, categoryName } from '@/registry/categories';
 import { isTauri } from '@/services/platform';
 import { localizePath } from '@/i18n/config';
 import { useLang } from '@/i18n/shared';
@@ -72,7 +72,7 @@ export function CommandPalette() {
               return (
                 <Command.Group
                   key={category}
-                  heading={category}
+                  heading={categoryName(category, lang)}
                   className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-muted-foreground"
                 >
                   {categoryTools.map(tool => {
