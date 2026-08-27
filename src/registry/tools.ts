@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2, AlarmClock } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2, AlarmClock, Scale, Flame, GraduationCap } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -771,6 +771,61 @@ export const tools: ToolDef[] = [
     icon: Gauge,
     summary: 'Measure your typing speed (WPM) and accuracy',
     load: () => import('@/islands/calculators/TypingTest'),
+    status: 'beta'
+  },
+  {
+    id: 'bmi-calculator',
+    name: 'BMI Calculator',
+    category: 'Calculators',
+    route: '/tools/bmi-calculator',
+    keywords: ['bmi calculator', 'body mass index', 'bmi', 'healthy weight', 'kalkulator bmi', 'indeks massa tubuh', 'metric', 'imperial'],
+    icon: Scale,
+    summary: 'Calculate your Body Mass Index and healthy weight range',
+    load: () => import('@/islands/calculators/BmiCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'tdee-calculator',
+    name: 'Calorie / TDEE Calculator',
+    category: 'Calculators',
+    route: '/tools/tdee-calculator',
+    keywords: ['tdee calculator', 'calorie calculator', 'bmr calculator', 'maintenance calories', 'mifflin st jeor', 'kalkulator kalori', 'kebutuhan kalori', 'macro'],
+    icon: Flame,
+    summary: 'Estimate daily calories (BMR & TDEE) for your goals',
+    load: () => import('@/islands/calculators/TdeeCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'gpa-calculator',
+    name: 'GPA Calculator',
+    category: 'Calculators',
+    route: '/tools/gpa-calculator',
+    keywords: ['gpa calculator', 'grade point average', 'college gpa', 'weighted gpa', '4.0 scale', 'kalkulator ipk', 'nilai', 'sks'],
+    icon: GraduationCap,
+    summary: 'Compute your weighted GPA on a 4.0 scale',
+    load: () => import('@/islands/calculators/GpaCalculator'),
+    status: 'beta'
+  },
+  {
+    id: 'date-duration',
+    name: 'Date Duration Calculator',
+    category: 'Calculators',
+    route: '/tools/date-duration',
+    keywords: ['date duration', 'days between dates', 'date difference', 'add days to date', 'working days', 'business days', 'selisih tanggal', 'hitung hari'],
+    icon: CalendarClock,
+    summary: 'Days between two dates, or add/subtract days',
+    load: () => import('@/islands/calculators/DateDuration'),
+    status: 'beta'
+  },
+  {
+    id: 'scientific-calculator',
+    name: 'Scientific Calculator',
+    category: 'Calculators',
+    route: '/tools/scientific-calculator',
+    keywords: ['scientific calculator', 'calculator', 'trigonometry', 'sin cos tan', 'logarithm', 'square root', 'exponent', 'kalkulator ilmiah'],
+    icon: Calculator,
+    summary: 'Scientific calculator with functions, powers & constants',
+    load: () => import('@/islands/calculators/ScientificCalc'),
     status: 'beta'
   },
   {
