@@ -2,7 +2,25 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { connectSignal, type SignalClient } from '@/tools/webrtc/signal-client';
 import { createPeer, type PeerHandles } from '@/tools/webrtc/peer';
 import type { SignalMessage } from '@/tools/webrtc/signal.lib';
+import { DEFAULT_ICE_SERVERS } from '@/tools/webrtc/ice.lib';
 import { encodeMsg, decodeMsg, type RemoteMsg } from '@/tools/media/teleprompter-remote.lib';
+
+/**
+ * Fetch short-lived TURN credentials so pairing works across strict NATs (a
+ * phone on mobile data). Falls back to STUN-only if TURN isn't configured.
+ */
+async function fetchIceServers(): Promise<RTCIceServer[]> {
+  try {
+    const res = await fetch('/api/turn', { cache: 'no-store' });
+    if (!res.ok) return DEFAULT_ICE_SERVERS;
+    const data = (await res.json()) as { iceServers?: RTCIceServer | RTCIceServer[] };
+    const t = data.iceServers;
+    const turn = Array.isArray(t) ? t : t ? [t] : [];
+    return turn.length ? [...DEFAULT_ICE_SERVERS, ...turn] : DEFAULT_ICE_SERVERS;
+  } catch {
+    return DEFAULT_ICE_SERVERS;
+  }
+}
 
 export type LinkStatus = 'idle' | 'waiting' | 'connecting' | 'connected' | 'disconnected' | 'error';
 
@@ -21,6 +39,7 @@ export function useTeleprompterLink(onMessage: (m: RemoteMsg) => void) {
   const peerRef = useRef<PeerHandles | null>(null);
   const channelRef = useRef<RTCDataChannel | null>(null);
   const disconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const iceRef = useRef<RTCIceServer[]>(DEFAULT_ICE_SERVERS);
   const onMsgRef = useRef(onMessage);
   onMsgRef.current = onMessage;
 
@@ -53,22 +72,28 @@ export function useTeleprompterLink(onMessage: (m: RemoteMsg) => void) {
         } else if (s === 'failed' || s === 'closed') { clearDisconnect(); setStatus('disconnected'); }
       },
       onChannel: wireChannel,
+      iceServers: iceRef.current,
     });
   }, [wireChannel, clearDisconnect]);
 
   const connect = useCallback((code: string, role: 'host' | 'guest') => {
     setStatus(role === 'host' ? 'waiting' : 'connecting');
-    signalRef.current = connectSignal(code, {
-      onMessage: (msg: SignalMessage) => {
-        switch (msg.type) {
-          case 'welcome': if (msg.role === 'guest') setupPeer(false); else setStatus('waiting'); break;
-          case 'peer-joined': setupPeer(true); break;
-          case 'peer-left': setStatus('disconnected'); break;
-          case 'full': setStatus('error'); break;
-          default: void peerRef.current?.applySignal(msg); // offer / answer / ice
-        }
-      },
-      onError: () => setStatus('error'),
+    // Get TURN credentials first so the peer (created on the next signaling
+    // message) can traverse strict NATs; then open the signaling channel.
+    void fetchIceServers().then((ice) => {
+      iceRef.current = ice;
+      signalRef.current = connectSignal(code, {
+        onMessage: (msg: SignalMessage) => {
+          switch (msg.type) {
+            case 'welcome': if (msg.role === 'guest') setupPeer(false); else setStatus('waiting'); break;
+            case 'peer-joined': setupPeer(true); break;
+            case 'peer-left': setStatus('disconnected'); break;
+            case 'full': setStatus('error'); break;
+            default: void peerRef.current?.applySignal(msg); // offer / answer / ice
+          }
+        },
+        onError: () => setStatus('error'),
+      });
     });
   }, [setupPeer]);
 
