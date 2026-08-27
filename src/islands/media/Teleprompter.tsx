@@ -34,7 +34,7 @@ const TR: Record<Lang, Record<string, string>> = {
     empty: 'Type or paste a script above, then press Start.',
     pair: 'Pair phone', pairing: 'Scan with your phone', code: 'Code',
     waiting: 'Waiting for phone…', phoneOn: 'Phone connected', phoneOff: 'Phone disconnected',
-    pairNote: 'Your phone pairs over a direct connection between your two devices — only the pairing code and connection details use our server, never the script.',
+    pairNote: 'Paired over a direct device-to-device connection. On strict networks (e.g. mobile data) it relays through Cloudflare’s TURN service, which then sees your devices’ IP addresses. The script is never stored.',
     remoteTitle: 'Remote control', connecting: 'Connecting to the teleprompter…', top: 'Top',
   },
   id: {
@@ -49,7 +49,7 @@ const TR: Record<Lang, Record<string, string>> = {
     empty: 'Ketik atau tempel naskah di atas, lalu tekan Mulai.',
     pair: 'Pair phone', pairing: 'Pindai dengan ponsel', code: 'Kode',
     waiting: 'Menunggu ponsel…', phoneOn: 'Ponsel terhubung', phoneOff: 'Ponsel terputus',
-    pairNote: 'Ponsel Anda dipasangkan lewat koneksi langsung antar dua perangkat — hanya kode pemasangan dan detail koneksi yang memakai server kami, bukan naskahnya.',
+    pairNote: 'Terhubung langsung antar dua perangkat. Di jaringan ketat (mis. data seluler) koneksi direlai lewat layanan TURN Cloudflare, yang lalu melihat alamat IP perangkat Anda. Naskah tidak pernah disimpan.',
     remoteTitle: 'Kendali jarak jauh', connecting: 'Menghubungkan ke teleprompter…', top: 'Atas',
   },
 };

@@ -28,6 +28,34 @@ export default {
       return env.SIGNAL.getByName(roomId).fetch(request);
     }
 
+    // Short-lived TURN credentials from Cloudflare Realtime TURN, so the P2P
+    // tools can traverse strict NATs (e.g. a phone on mobile data). Returns
+    // `{ iceServers: [] }` when TURN isn't configured, so callers fall back to
+    // STUN-only cleanly. Requires the secrets TURN_KEY_ID and TURN_KEY_API_TOKEN.
+    if (url.pathname === '/api/turn') {
+      const empty = () => new Response(JSON.stringify({ iceServers: [] }), {
+        headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+      });
+      if (!env.TURN_KEY_ID || !env.TURN_KEY_API_TOKEN) return empty();
+      try {
+        const res = await fetch(
+          `https://rtc.live.cloudflare.com/v1/turn/keys/${env.TURN_KEY_ID}/credentials/generate-ice-servers`,
+          {
+            method: 'POST',
+            headers: { 'authorization': `Bearer ${env.TURN_KEY_API_TOKEN}`, 'content-type': 'application/json' },
+            body: JSON.stringify({ ttl: 86400 }),
+          },
+        );
+        if (!res.ok) return empty();
+        const data = await res.json();
+        return new Response(JSON.stringify(data), {
+          headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+        });
+      } catch {
+        return empty();
+      }
+    }
+
     // Same-origin proxy for Hugging Face model files. transformers.js fetches
     // Whisper weights from huggingface.co, which 302-redirects large files to a
     // CDN — the browser/Workbox can't reliably cache those redirected responses,
