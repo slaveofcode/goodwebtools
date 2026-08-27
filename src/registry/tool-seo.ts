@@ -2701,7 +2701,7 @@ const en: Record<string, ToolSeoContent> = {
     ],
     faqs: [
       { q: 'Is my script uploaded?', a: 'No. The script is stored only in your browser and never sent anywhere. It is also saved locally so it survives a page reload.' },
-      { q: 'How does the phone remote work?', a: 'Your phone pairs over a direct connection between your two devices; the script and controls are sent device-to-device and only the pairing (a short code and connection details) uses our server. If the phone disconnects, the teleprompter keeps running.' },
+      { q: 'How does the phone remote work?', a: 'Your phone pairs over a direct connection between your two devices; the script and controls are sent device-to-device and only the pairing (a short code and connection details) uses our server. On strict networks (such as mobile data) the connection may relay through Cloudflare’s TURN service, which then sees your devices’ IP addresses. If the phone disconnects, the teleprompter keeps running.' },
       { q: 'How does voice-tracking work and is it private?', a: 'It uses your browser’s built-in speech recognition to advance the text as you read. In Chrome and Edge that sends microphone audio to the browser’s speech service (e.g. Google) to transcribe — so avoid it for sensitive material. Auto-scroll needs no microphone.' },
       { q: 'Which browsers support voice-tracking?', a: 'Chrome and Edge (desktop) support it. On Safari and Firefox the voice option is hidden, but adjustable auto-scroll still works.' },
       { q: 'Can I use it with a teleprompter (beam-splitter) rig?', a: 'Yes — turn on mirror mode to flip the text horizontally (and vertically if needed) so it reads correctly in the reflection.' },
@@ -5681,7 +5681,7 @@ const id: Record<string, ToolSeoContent> = {
     ],
     faqs: [
       { q: 'Apakah naskah saya diunggah?', a: 'Tidak. Naskah hanya disimpan di browser Anda dan tidak dikirim ke mana pun. Naskah juga tersimpan lokal sehingga bertahan saat halaman dimuat ulang.' },
-      { q: 'Bagaimana remote ponsel bekerja?', a: 'Ponsel Anda dipasangkan lewat koneksi langsung antar dua perangkat Anda; naskah dan kontrol dikirim antar-perangkat dan hanya proses pemasangan (kode singkat dan detail koneksi) yang memakai server kami. Jika ponsel terputus, teleprompter tetap berjalan.' },
+      { q: 'Bagaimana remote ponsel bekerja?', a: 'Ponsel Anda dipasangkan lewat koneksi langsung antar dua perangkat Anda; naskah dan kontrol dikirim antar-perangkat dan hanya proses pemasangan (kode singkat dan detail koneksi) yang memakai server kami. Di jaringan ketat (seperti data seluler) koneksi bisa direlai lewat layanan TURN Cloudflare, yang lalu melihat alamat IP perangkat Anda. Jika ponsel terputus, teleprompter tetap berjalan.' },
       { q: 'Bagaimana pelacakan suara bekerja dan apakah privat?', a: 'Ia memakai pengenalan suara bawaan browser untuk memajukan teks saat Anda membaca. Di Chrome dan Edge, audio mikrofon dikirim ke layanan suara browser (mis. Google) untuk ditranskripsi — jadi hindari untuk materi sensitif. Auto-scroll tidak butuh mikrofon.' },
       { q: 'Browser apa yang mendukung pelacakan suara?', a: 'Chrome dan Edge (desktop) mendukungnya. Di Safari dan Firefox opsi suara disembunyikan, tetapi auto-scroll yang bisa diatur tetap berfungsi.' },
       { q: 'Bisakah dipakai dengan rig teleprompter (beam-splitter)?', a: 'Bisa — nyalakan mode cermin untuk membalik teks secara horizontal (dan vertikal bila perlu) agar terbaca benar di pantulan.' },
