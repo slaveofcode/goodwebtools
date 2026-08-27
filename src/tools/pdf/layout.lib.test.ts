@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pageNumberXY, placementToPdfRect } from './layout.lib';
+import { pageNumberXY, placementToPdfRect, textPlacementToPdf } from './layout.lib';
 
 describe('pageNumberXY', () => {
   it('places bottom-center', () => {
@@ -28,5 +28,17 @@ describe('placementToPdfRect', () => {
     const r = placementToPdfRect({ pageIndex: 0, xRatio: 0, yRatio: 0, wRatio: 1 }, 600, 800, 3);
     expect(r.width).toBe(600);
     expect(r.height).toBe(200);
+  });
+});
+
+describe('textPlacementToPdf', () => {
+  it('maps a top-left text placement to a bottom-left baseline', () => {
+    const r = textPlacementToPdf(
+      { pageIndex: 0, xRatio: 0.5, yRatio: 0.25, text: 'hi', sizeRatio: 0.02 },
+      600, 800,
+    );
+    expect(r.size).toBe(16);   // 0.02 × 800
+    expect(r.x).toBe(300);     // 0.5 × 600
+    expect(r.y).toBe(584);     // 800 − (0.25 × 800) − 16
   });
 });

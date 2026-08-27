@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
-import { pageNumberXY, placementToPdfRect, type PageNumberOptions, type SignPlacement } from './layout.lib';
+import { pageNumberXY, placementToPdfRect, textPlacementToPdf, type PageNumberOptions, type SignPlacement, type TextPlacement } from './layout.lib';
 
 // Loading/parsing existing PDFs is handled by the mupdf engine (in a worker) —
 // it parses the wide range of real-world PDFs that pdf-lib's parser rejects.
@@ -199,6 +199,47 @@ export async function signPdf(
     if (!page) continue;
     const { width, height } = page.getSize();
     page.drawImage(img, placementToPdfRect(placement, width, height, aspect));
+  }
+  return toBlob(await out.save());
+}
+
+// Helvetica (a StandardFont) can only encode WinAnsi characters, so typed text
+// containing anything outside it (curly quotes, em dashes, non-Latin scripts)
+// would make drawText throw. Fold the common typographic characters back to
+// ASCII and drop anything still unsupported so filling a form never crashes.
+function toWinAnsi(text: string): string {
+  return text
+    .replace(/[‘’‚′]/g, "'")
+    .replace(/[“”„″]/g, '"')
+    .replace(/[–—]/g, '-')
+    .replace(/…/g, '...')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[^\x00-\xFF]/g, '');
+}
+
+/** Stamp typed text (form fields, checkmarks, dates) onto the given placements. */
+export async function fillPdfText(
+  file: File,
+  placements: TextPlacement[],
+): Promise<Blob> {
+  const src = await loadViaMupdf(file);
+  const out = await PDFDocument.create();
+  const pages = await out.copyPages(src, src.getPageIndices());
+  pages.forEach(page => out.addPage(page));
+
+  const font = await out.embedFont(StandardFonts.Helvetica);
+  const docPages = out.getPages();
+  for (const placement of placements) {
+    const page = docPages[placement.pageIndex];
+    if (!page) continue;
+    const text = toWinAnsi(placement.text);
+    if (!text) continue;
+    const { width, height } = page.getSize();
+    const { x, y, size } = textPlacementToPdf(placement, width, height);
+    // Support multi-line fields; each line drops one line-height below the last.
+    text.split('\n').forEach((line, i) => {
+      page.drawText(line, { x, y: y - i * size * 1.2, size, font, color: rgb(0, 0, 0) });
+    });
   }
   return toBlob(await out.save());
 }
