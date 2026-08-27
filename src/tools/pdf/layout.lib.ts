@@ -44,6 +44,35 @@ export interface SignPlacement {
   wRatio: number;
 }
 
+/** A line of typed text placed on a page (top-left origin, page-relative ratios). */
+export interface TextPlacement {
+  pageIndex: number;
+  /** left edge, fraction of page width */
+  xRatio: number;
+  /** top edge of the text, fraction of page height (from the top) */
+  yRatio: number;
+  /** the text to draw */
+  text: string;
+  /** font size as a fraction of page height */
+  sizeRatio: number;
+}
+
+/**
+ * Convert a top-left-origin text placement into pdf-lib draw coordinates.
+ * pdf-lib's `drawText` y is the text baseline and its origin is bottom-left, so
+ * the baseline sits one font-size below the top edge of the text box.
+ */
+export function textPlacementToPdf(
+  p: TextPlacement,
+  pageW: number,
+  pageH: number,
+): { x: number; y: number; size: number } {
+  const size = p.sizeRatio * pageH;
+  const x = p.xRatio * pageW;
+  const yFromTop = p.yRatio * pageH;
+  return { x, y: pageH - yFromTop - size, size };
+}
+
 /**
  * Convert a top-left-origin ratio placement into a pdf-lib bottom-left rect.
  * Height is derived from the image aspect ratio (w/h).

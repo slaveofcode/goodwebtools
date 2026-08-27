@@ -689,6 +689,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps working with no connection once loaded.' },
     ],
   },
+  'timer-stopwatch': {
+    title: 'Online Stopwatch, Timer & Alarm Clock — Free',
+    description: 'A free online stopwatch with laps, a countdown timer, and an alarm clock — all in one. Runs in your browser and beeps when the time is up. Nothing to install.',
+    intro: 'This free tool combines a stopwatch (with lap times), a countdown timer, and an alarm clock in one page. It runs entirely in your browser and plays a beep when the timer reaches zero or an alarm time arrives — just keep the tab open.',
+    howTo: [
+      'Pick a tab: Stopwatch, Timer, or Alarm.',
+      'Stopwatch: click Start, use Lap to record splits, and Reset to clear.',
+      'Timer: set minutes and seconds, click Start, and it beeps at zero.',
+      'Alarm: choose a clock time (and an optional label), click Add alarm, and it rings at that time.',
+    ],
+    faqs: [
+      { q: 'Does it work offline?', a: 'Yes. Everything runs in your browser with no server, and once the page is loaded it keeps working offline. The tab needs to stay open for the timer or alarm to ring.' },
+      { q: 'Why does the alarm only ring while the tab is open?', a: 'The sound is played by this page, so the browser tab must stay open (and not fully asleep) for the beep to fire. Keep it in a visible or background tab.' },
+      { q: 'Is there a lap timer?', a: 'Yes. On the Stopwatch tab, click Lap while it runs to record each split; the list shows both the total time and the time since the previous lap.' },
+      { q: 'How is this different from the Countdown Timer?', a: 'The Countdown Timer counts down to a future date (like a deadline or event). This tool is for short, everyday timing — a stopwatch, a minutes/seconds timer, and a wake-up alarm.' },
+    ],
+  },
   'countdown': {
     title: 'Countdown Timer — Days Until Any Date',
     description: 'Count down to any date and time and see the days, hours, minutes and seconds left — deadlines, birthdays, launches and holidays. Free and in your browser.',
@@ -1041,6 +1058,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Can I delete pages too?', a: 'Yes. Click the ✕ on any page thumbnail to remove it; the rest keep your chosen order.' },
       { q: 'Where can page numbers go?', a: 'You can place page numbers at the bottom or top, aligned left, center or right, and choose the starting number.' },
       { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps working with no connection once loaded.' },
+    ],
+  },
+  'pdf-fill': {
+    title: 'Fill PDF Form Free — Add Text to a PDF Online',
+    description: 'Fill in a PDF form or add text anywhere on a PDF — type text, checkmarks and dates, drag them into place, and download. Runs in your browser; nothing is uploaded.',
+    intro: 'This free tool lets you fill in a PDF form or add text to any PDF without special software. Drop your PDF, click where you want to write, and type — add ✕ marks for checkboxes and stamp today\'s date too. Everything happens in your browser, so the document never leaves your device.',
+    howTo: [
+      'Drop a PDF onto the box or click to browse for one.',
+      'Click "Add text", then click on the page where the text should go and type it.',
+      'Use "Add ✕ mark" for checkboxes and "Add date" for today\'s date; drag any field by its grip to reposition it, and adjust its size.',
+      'Click Apply & download to get your filled PDF.',
+    ],
+    faqs: [
+      { q: 'Is my PDF uploaded to a server?', a: 'No. The PDF is rendered and edited entirely in your browser, so it never leaves your device — safe for contracts, forms and other private documents.' },
+      { q: 'Can I fill in a form that has no interactive fields?', a: 'Yes. This tool overlays your own text anywhere on the page, so it works on flat/scanned forms that have no fillable fields — just click and type where you need to.' },
+      { q: 'Can I add a checkbox tick or a date?', a: 'Yes. "Add ✕ mark" drops an X you can place in a checkbox, and "Add date" stamps today\'s date. You can edit or resize either afterwards.' },
+      { q: 'How do I add a handwritten signature?', a: 'This tool adds typed text. For a drawn or uploaded signature, use the Sign PDF tool, which places a signature image onto the page.' },
     ],
   },
   'pdf-sign': {
@@ -2727,6 +2761,40 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'The built-in system voices generally work offline; some browsers stream certain higher-quality voices, which then need a connection.' },
     ],
   },
+  'media-trim': {
+    title: 'Free Audio & Video Trimmer — Cut Clips & Make MP3 Ringtones',
+    description: 'Trim or cut a section from a video or audio file — a fast MP3 cutter and video trimmer that runs in your browser. Nothing is uploaded; the file stays on your device.',
+    intro: 'This free trimmer cuts a section out of any audio or video file. Set the start and end (or grab them from the player), and it exports just that part with ffmpeg running in your browser — great for making an MP3 ringtone or trimming a clip before sharing. Your file is never uploaded.',
+    howTo: [
+      'Drop an audio or video file onto the box, or click to browse.',
+      'Play it, then set Start and End — type the times or click "Use current" at the playhead.',
+      'Leave "Fast (no re-encode)" ticked for a quick lossless cut, or untick it for a frame-precise cut.',
+      'Click Trim, then preview and download the trimmed file.',
+    ],
+    faqs: [
+      { q: 'Is my file uploaded to a server?', a: 'No. Trimming runs entirely in your browser via ffmpeg.wasm, so the audio or video never leaves your device.' },
+      { q: 'Can I make a phone ringtone?', a: 'Yes. Drop an audio file (or a video — the audio is kept), set the section you want, and export it. Audio is saved as MP3, which works as a ringtone on most phones.' },
+      { q: 'What does "Fast (no re-encode)" do?', a: 'It copies the media streams instead of re-encoding, so the cut is instant and lossless — but it snaps to the nearest keyframe, so the start can be off by a fraction of a second. Untick it for an exact cut (slower, re-encodes).' },
+      { q: 'Which formats can I trim?', a: 'Common video (MP4, WebM, MOV) and audio (MP3, M4A, WAV, Opus) files. The first run downloads the ~31 MB engine, then it is cached.' },
+    ],
+  },
+  'video-compress': {
+    title: 'Free Video Compressor — Compress Video to a Target Size',
+    description: 'Compress a video to a target file size (e.g. under 25 MB for Discord or 16 MB for WhatsApp) right in your browser. Nothing is uploaded — the video stays on your device.',
+    intro: 'This free video compressor shrinks a clip to a file size you choose — pick a preset like 16 MB (WhatsApp) or 25 MB (Discord), or type your own target, and it calculates the right bitrate and re-encodes to MP4 with ffmpeg running in your browser. Your video is never uploaded.',
+    howTo: [
+      'Drop a video onto the box or click to browse for one.',
+      'Pick a target size — 8/16/25/50/100 MB — or choose Custom and type your own.',
+      'Optionally set a maximum width to shrink further, or untick Keep audio.',
+      'Click Compress, watch the progress bar, then preview and download the smaller MP4.',
+    ],
+    faqs: [
+      { q: 'Is my video uploaded to a server?', a: 'No. Compression runs entirely in your browser via ffmpeg.wasm, so the video never leaves your device — ideal for private clips or large files.' },
+      { q: 'How does compressing to a target size work?', a: 'The tool reads your clip\'s length, works out the bitrate that fits your chosen size, and encodes to that bitrate. The result usually lands just under the target so it clears upload limits like WhatsApp or Discord.' },
+      { q: 'Why is the result sometimes bigger than my target?', a: 'If the target is very small for a long clip, video quality would be unusable, so a minimum quality is kept and the tool warns you. Try a shorter clip, a smaller width, or a larger target.' },
+      { q: 'Why is the first run slow?', a: 'The first compression downloads the video engine (about 31 MB) and encoding is CPU-bound, so long or high-resolution clips take longer. After the first load the engine is cached for next time.' },
+    ],
+  },
   'video-convert': {
     title: 'Free Video Converter Tool — Convert & Compress',
     description: 'A free online video converter tool to convert, compress, trim, or resize video to MP4, WebM, or MOV. Runs in your browser — nothing is uploaded.',
@@ -3669,6 +3737,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat.' },
     ],
   },
+  'timer-stopwatch': {
+    title: 'Stopwatch, Timer & Jam Alarm Online — Gratis',
+    description: 'Stopwatch online gratis dengan lap, timer hitung mundur, dan jam alarm — semua dalam satu. Berjalan di browser Anda dan berbunyi saat waktunya habis. Tanpa instalasi.',
+    intro: 'Tool gratis ini menggabungkan stopwatch (dengan waktu lap), timer hitung mundur, dan jam alarm dalam satu halaman. Berjalan sepenuhnya di browser Anda dan memainkan bunyi bip saat timer mencapai nol atau waktu alarm tiba — cukup biarkan tab tetap terbuka.',
+    howTo: [
+      'Pilih tab: Stopwatch, Timer, atau Alarm.',
+      'Stopwatch: klik Mulai, pakai Lap untuk mencatat split, dan Reset untuk menghapus.',
+      'Timer: atur menit dan detik, klik Mulai, dan tool berbunyi saat nol.',
+      'Alarm: pilih waktu jam (dan label opsional), klik Tambah alarm, dan tool berbunyi pada waktu itu.',
+    ],
+    faqs: [
+      { q: 'Apakah berfungsi offline?', a: 'Ya. Semuanya berjalan di browser Anda tanpa server, dan setelah halaman dimuat tool tetap berfungsi offline. Tab perlu tetap terbuka agar timer atau alarm bisa berbunyi.' },
+      { q: 'Mengapa alarm hanya berbunyi saat tab terbuka?', a: 'Suara dimainkan oleh halaman ini, jadi tab browser harus tetap terbuka (dan tidak benar-benar tidur) agar bip berbunyi. Biarkan di tab yang terlihat atau di latar belakang.' },
+      { q: 'Apakah ada lap timer?', a: 'Ya. Di tab Stopwatch, klik Lap saat berjalan untuk mencatat setiap split; daftar menampilkan total waktu dan waktu sejak lap sebelumnya.' },
+      { q: 'Apa bedanya dengan Timer Hitung Mundur?', a: 'Timer Hitung Mundur menghitung mundur ke tanggal di masa depan (seperti tenggat atau acara). Tool ini untuk pengukuran waktu sehari-hari yang singkat — stopwatch, timer menit/detik, dan alarm bangun.' },
+    ],
+  },
   'countdown': {
     title: 'Timer Hitung Mundur — Berapa Hari Lagi ke Tanggal Apa Pun',
     description: 'Hitung mundur ke tanggal dan waktu apa pun serta lihat hari, jam, menit, dan detik tersisa — tenggat, ulang tahun, peluncuran, dan liburan. Gratis dan di browser Anda.',
@@ -4021,6 +4106,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah menghapus halaman juga?', a: 'Ya. Klik ✕ pada thumbnail halaman mana pun untuk menghapusnya; sisanya mempertahankan urutan pilihan Anda.' },
       { q: 'Di mana nomor halaman bisa diletakkan?', a: 'Anda bisa menempatkan nomor halaman di bawah atau atas, rata kiri, tengah, atau kanan, dan memilih nomor awal.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat.' },
+    ],
+  },
+  'pdf-fill': {
+    title: 'Isi Formulir PDF Gratis — Tambah Teks ke PDF Online',
+    description: 'Isi formulir PDF atau tambahkan teks di mana saja pada PDF — ketik teks, tanda centang, dan tanggal, seret ke posisinya, lalu unduh. Berjalan di browser Anda; tidak ada yang diunggah.',
+    intro: 'Tool gratis ini memungkinkan Anda mengisi formulir PDF atau menambahkan teks ke PDF apa pun tanpa software khusus. Jatuhkan PDF Anda, klik tempat Anda ingin menulis, lalu ketik — tambahkan tanda ✕ untuk kotak centang dan cap tanggal hari ini juga. Semuanya terjadi di browser Anda, jadi dokumen tidak pernah keluar dari perangkat Anda.',
+    howTo: [
+      'Jatuhkan PDF ke dalam kotak atau klik untuk memilihnya.',
+      'Klik "Tambah teks", lalu klik di halaman tempat teks diletakkan dan ketik.',
+      'Gunakan "Tambah tanda ✕" untuk kotak centang dan "Tambah tanggal" untuk tanggal hari ini; seret field lewat gripnya untuk memindahkan, dan atur ukurannya.',
+      'Klik Terapkan & unduh untuk mendapatkan PDF yang sudah diisi.',
+    ],
+    faqs: [
+      { q: 'Apakah PDF saya diunggah ke server?', a: 'Tidak. PDF dirender dan diedit sepenuhnya di browser Anda, jadi tidak pernah keluar dari perangkat Anda — aman untuk kontrak, formulir, dan dokumen pribadi lainnya.' },
+      { q: 'Bisakah mengisi formulir yang tidak punya field interaktif?', a: 'Bisa. Tool ini menempatkan teks Anda di mana saja pada halaman, jadi berfungsi pada formulir datar/hasil scan yang tidak punya field isian — cukup klik dan ketik di tempat yang Anda perlukan.' },
+      { q: 'Bisakah menambahkan centang atau tanggal?', a: 'Bisa. "Tambah tanda ✕" meletakkan X yang bisa Anda tempatkan di kotak centang, dan "Tambah tanggal" mencap tanggal hari ini. Keduanya bisa diedit atau diubah ukurannya.' },
+      { q: 'Bagaimana menambahkan tanda tangan tulisan tangan?', a: 'Tool ini menambahkan teks ketikan. Untuk tanda tangan gambar atau unggahan, gunakan tool Sign PDF yang menempatkan gambar tanda tangan pada halaman.' },
     ],
   },
   'pdf-sign': {
@@ -5705,6 +5807,40 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Mengapa voice saya berbeda dari orang lain?', a: 'Voice yang tersedia berasal dari browser dan sistem operasi Anda, jadi daftarnya berbeda tiap perangkat. Chrome, Edge, macOS, dan iOS masing-masing punya set sendiri.' },
       { q: 'Apakah mendukung bahasa selain English?', a: 'Ya. Bahasa apa pun yang sistem Anda sediakan voice-nya akan muncul di daftar — termasuk Indonesia di banyak perangkat. Pilih voice yang sesuai untuk hasil terbaik.' },
       { q: 'Apakah bekerja offline?', a: 'Voice sistem bawaan umumnya bekerja offline; sebagian browser mengalirkan voice berkualitas lebih tinggi tertentu, yang lalu membutuhkan koneksi.' },
+    ],
+  },
+  'media-trim': {
+    title: 'Pemotong Audio & Video Gratis — Potong Klip & Buat Ringtone MP3',
+    description: 'Potong satu bagian dari file video atau audio — pemotong MP3 dan pemangkas video cepat yang berjalan di browser Anda. Tidak ada yang diunggah; file tetap di perangkat Anda.',
+    intro: 'Tool pemotong gratis ini mengambil satu bagian dari file audio atau video mana pun. Atur waktu mulai dan akhir (atau ambil dari pemutar), lalu tool mengekspor bagian itu saja dengan ffmpeg yang berjalan di browser Anda — cocok untuk membuat ringtone MP3 atau memangkas klip sebelum dibagikan. File Anda tidak pernah diunggah.',
+    howTo: [
+      'Jatuhkan file audio atau video ke dalam kotak, atau klik untuk memilih.',
+      'Putar, lalu atur Mulai dan Akhir — ketik waktunya atau klik "Pakai posisi" di posisi pemutar.',
+      'Biarkan "Cepat (tanpa encode ulang)" tercentang untuk potongan lossless yang cepat, atau hilangkan centang untuk potongan presisi.',
+      'Klik Potong, lalu pratinjau dan unduh file hasil pemotongan.',
+    ],
+    faqs: [
+      { q: 'Apakah file saya diunggah ke server?', a: 'Tidak. Pemotongan berjalan sepenuhnya di browser Anda melalui ffmpeg.wasm, jadi audio atau video tidak pernah keluar dari perangkat Anda.' },
+      { q: 'Bisakah saya membuat ringtone HP?', a: 'Bisa. Jatuhkan file audio (atau video — audionya diambil), atur bagian yang Anda inginkan, lalu ekspor. Audio disimpan sebagai MP3, yang bisa dipakai sebagai ringtone di sebagian besar HP.' },
+      { q: 'Apa fungsi "Cepat (tanpa encode ulang)"?', a: 'Ini menyalin stream media alih-alih meng-encode ulang, jadi potongan instan dan lossless — tetapi menempel ke keyframe terdekat, sehingga awalnya bisa meleset sepersekian detik. Hilangkan centang untuk potongan presisi (lebih lambat, encode ulang).' },
+      { q: 'Format apa saja yang bisa dipotong?', a: 'Video umum (MP4, WebM, MOV) dan audio (MP3, M4A, WAV, Opus). Proses pertama mengunduh engine ~31 MB, lalu tersimpan di cache.' },
+    ],
+  },
+  'video-compress': {
+    title: 'Kompres Video Gratis — Perkecil Video ke Ukuran Target',
+    description: 'Kompres video ke ukuran file target (misalnya di bawah 25 MB untuk Discord atau 16 MB untuk WhatsApp) langsung di browser Anda. Tidak ada yang diunggah — video tetap di perangkat Anda.',
+    intro: 'Tool kompres video gratis ini memperkecil klip ke ukuran file yang Anda pilih — pilih preset seperti 16 MB (WhatsApp) atau 25 MB (Discord), atau ketik target Anda sendiri, lalu tool menghitung bitrate yang tepat dan meng-encode ulang ke MP4 dengan ffmpeg yang berjalan di browser Anda. Video Anda tidak pernah diunggah.',
+    howTo: [
+      'Jatuhkan video ke dalam kotak atau klik untuk memilihnya.',
+      'Pilih ukuran target — 8/16/25/50/100 MB — atau pilih Custom dan ketik target Anda sendiri.',
+      'Opsional, atur lebar maksimum untuk memperkecil lebih jauh, atau hilangkan centang Keep audio.',
+      'Klik Compress, amati bilah progres, lalu pratinjau dan unduh MP4 yang lebih kecil.',
+    ],
+    faqs: [
+      { q: 'Apakah video saya diunggah ke server?', a: 'Tidak. Kompresi berjalan sepenuhnya di browser Anda melalui ffmpeg.wasm, jadi video tidak pernah meninggalkan perangkat Anda — ideal untuk klip pribadi atau file besar.' },
+      { q: 'Bagaimana cara kerja kompres ke ukuran target?', a: 'Tool membaca durasi klip Anda, menghitung bitrate yang pas untuk ukuran pilihan Anda, lalu meng-encode ke bitrate itu. Hasilnya biasanya sedikit di bawah target agar lolos batas unggah seperti WhatsApp atau Discord.' },
+      { q: 'Mengapa hasilnya kadang lebih besar dari target?', a: 'Jika target sangat kecil untuk klip yang panjang, kualitas video akan tidak layak, jadi kualitas minimum dipertahankan dan tool memberi peringatan. Coba klip lebih pendek, lebar lebih kecil, atau target lebih besar.' },
+      { q: 'Mengapa proses pertama lambat?', a: 'Kompresi pertama mengunduh engine video (sekitar 31 MB) dan encoding bergantung pada CPU, jadi klip yang panjang atau beresolusi tinggi memerlukan waktu lebih lama. Setelah pemuatan pertama, engine tersimpan di cache.' },
     ],
   },
   'video-convert': {
