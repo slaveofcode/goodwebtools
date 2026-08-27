@@ -44,6 +44,11 @@ export interface SignPlacement {
   wRatio: number;
 }
 
+/** Fill a page-number template, e.g. "Page {n} of {total}" → "Page 3 of 10". */
+export function formatPageLabel(template: string, n: number, total: number): string {
+  return template.replace(/\{n\}/g, String(n)).replace(/\{total\}/g, String(total));
+}
+
 /** A line of typed text placed on a page (top-left origin, page-relative ratios). */
 export interface TextPlacement {
   pageIndex: number;
