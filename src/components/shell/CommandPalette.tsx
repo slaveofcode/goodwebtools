@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Command } from 'cmdk';
 import { searchTools } from '@/registry/tools';
+import { localizedTool } from '@/registry/tool-i18n';
 import { categories } from '@/registry/categories';
 import { isTauri } from '@/services/platform';
 import { localizePath } from '@/i18n/config';
@@ -74,10 +75,13 @@ export function CommandPalette() {
                   heading={category}
                   className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-muted-foreground"
                 >
-                  {categoryTools.map(tool => (
+                  {categoryTools.map(tool => {
+                    const label = localizedTool(tool, lang);
+                    return (
                     <Command.Item
                       key={tool.id}
-                      value={tool.name}
+                      // Keep both names searchable so Bahasa users can type either.
+                      value={`${label.name} ${tool.name}`}
                       onSelect={() => {
                         window.location.href = localizePath(tool.route, lang);
                       }}
@@ -85,11 +89,12 @@ export function CommandPalette() {
                     >
                       <tool.icon className="h-5 w-5" />
                       <div className="flex-1">
-                        <p className="font-bold">{tool.name}</p>
-                        <p className="text-sm opacity-80">{tool.summary}</p>
+                        <p className="font-bold">{label.name}</p>
+                        <p className="text-sm opacity-80">{label.summary}</p>
                       </div>
                     </Command.Item>
-                  ))}
+                    );
+                  })}
                 </Command.Group>
               );
             })}
