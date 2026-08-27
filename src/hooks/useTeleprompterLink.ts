@@ -3,23 +3,13 @@ import { connectSignal, type SignalClient } from '@/tools/webrtc/signal-client';
 import { createPeer, type PeerHandles } from '@/tools/webrtc/peer';
 import type { SignalMessage } from '@/tools/webrtc/signal.lib';
 import { DEFAULT_ICE_SERVERS } from '@/tools/webrtc/ice.lib';
+import { fetchTurnServers } from '@/tools/webrtc/turn';
 import { encodeMsg, decodeMsg, type RemoteMsg } from '@/tools/media/teleprompter-remote.lib';
 
-/**
- * Fetch short-lived TURN credentials so pairing works across strict NATs (a
- * phone on mobile data). Falls back to STUN-only if TURN isn't configured.
- */
+/** Default STUN plus any TURN servers, so pairing works across strict NATs. */
 async function fetchIceServers(): Promise<RTCIceServer[]> {
-  try {
-    const res = await fetch('/api/turn', { cache: 'no-store' });
-    if (!res.ok) return DEFAULT_ICE_SERVERS;
-    const data = (await res.json()) as { iceServers?: RTCIceServer | RTCIceServer[] };
-    const t = data.iceServers;
-    const turn = Array.isArray(t) ? t : t ? [t] : [];
-    return turn.length ? [...DEFAULT_ICE_SERVERS, ...turn] : DEFAULT_ICE_SERVERS;
-  } catch {
-    return DEFAULT_ICE_SERVERS;
-  }
+  const turn = await fetchTurnServers();
+  return turn.length ? [...DEFAULT_ICE_SERVERS, ...turn] : DEFAULT_ICE_SERVERS;
 }
 
 export type LinkStatus = 'idle' | 'waiting' | 'connecting' | 'connected' | 'disconnected' | 'error';

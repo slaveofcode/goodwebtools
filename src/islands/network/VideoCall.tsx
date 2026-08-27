@@ -8,6 +8,7 @@ import { CopyButton } from '@/components/ui/CopyButton';
 import { useVideoCall } from '@/hooks/useVideoCall';
 import { makeRoomId, roomLink, roomIdFromHash } from '@/tools/webrtc/signal.lib';
 import { effectiveIceServers } from '@/tools/webrtc/ice.lib';
+import { fetchTurnServers } from '@/tools/webrtc/turn';
 import type { Lang } from '@/i18n/config';
 
 type Signaling = 'auto' | 'manual';
@@ -170,6 +171,9 @@ export default function VideoCall({ lang = 'en' }: { lang?: Lang }) {
   const [acked, setAcked] = useState(false);
   const [signaling, setSignaling] = useState<Signaling>('auto');
   const [iceText, setIceText] = useState('');
+  // Provided TURN servers (from /api/turn) so calls work across strict NATs.
+  const [turn, setTurn] = useState<RTCIceServer[]>([]);
+  useEffect(() => { fetchTurnServers().then(setTurn); }, []);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [joining, setJoining] = useState(false);
@@ -200,7 +204,7 @@ export default function VideoCall({ lang = 'en' }: { lang?: Lang }) {
 
   const persistIce = (t: string) => { setIceText(t); try { localStorage.setItem(ICE_KEY, t); } catch { /* */ } };
   const persistSignaling = (s: Signaling) => { setSignaling(s); try { localStorage.setItem(SIGNALING_KEY, s); } catch { /* */ } };
-  const ice = () => effectiveIceServers(iceText);
+  const ice = () => [...turn, ...effectiveIceServers(iceText)];
 
   const start = async () => {
     setAcked(true);

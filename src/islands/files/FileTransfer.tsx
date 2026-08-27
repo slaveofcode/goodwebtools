@@ -10,6 +10,7 @@ import { useFileTransfer } from '@/hooks/useFileTransfer';
 import { makeRoomId, roomLink, roomIdFromHash } from '@/tools/webrtc/signal.lib';
 import { formatBytes } from '@/tools/webrtc/file-transfer.lib';
 import { effectiveIceServers } from '@/tools/webrtc/ice.lib';
+import { fetchTurnServers } from '@/tools/webrtc/turn';
 import type { Lang } from '@/i18n/config';
 
 type Signaling = 'auto' | 'manual';
@@ -156,6 +157,9 @@ export default function FileTransfer({ lang = 'en' }: { lang?: Lang }) {
   const [acked, setAcked] = useState(false);
   const [signaling, setSignaling] = useState<Signaling>('auto');
   const [iceText, setIceText] = useState('');
+  // Provided TURN servers (from /api/turn) so transfers work across strict NATs.
+  const [turn, setTurn] = useState<RTCIceServer[]>([]);
+  useEffect(() => { fetchTurnServers().then(setTurn); }, []);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Auto mode
@@ -204,7 +208,7 @@ export default function FileTransfer({ lang = 'en' }: { lang?: Lang }) {
     try { localStorage.setItem(SIGNALING_KEY, s); } catch { /* ignore */ }
   };
 
-  const ice = () => effectiveIceServers(iceText);
+  const ice = () => [...turn, ...effectiveIceServers(iceText)];
 
   const start = () => {
     setAcked(true);
