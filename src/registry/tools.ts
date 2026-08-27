@@ -224,6 +224,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'text-encrypt',
+    name: 'Text Encryption',
+    category: 'Dev',
+    route: '/tools/text-encrypt',
+    keywords: ['encrypt text', 'text encryption', 'encrypt message', 'aes', 'password encrypt', 'decrypt text', 'secure message', 'encrypt online'],
+    icon: Lock,
+    summary: 'Encrypt/decrypt a message with a password (AES-256)',
+    load: () => import('@/islands/dev/TextEncrypt'),
+    status: 'beta'
+  },
+  {
     id: 'cidr-calculator',
     name: 'CIDR Calculator',
     category: 'Dev',
@@ -1016,6 +1027,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'pdf-page-numbers',
+    name: 'Add Page Numbers to PDF',
+    category: 'PDF',
+    route: '/tools/pdf-page-numbers',
+    keywords: ['add page numbers to pdf', 'pdf page numbers', 'number pdf pages', 'paginate pdf', 'page numbering', 'bates'],
+    icon: ListOrdered,
+    summary: 'Add page numbers to a PDF, positioned and formatted',
+    load: () => import('@/islands/pdf/PdfPageNumbers'),
+    status: 'beta'
+  },
+  {
     id: 'pdf-redact',
     name: 'Redact PDF',
     category: 'PDF',
@@ -1487,6 +1509,28 @@ export const tools: ToolDef[] = [
     summary: 'Resize an image to exact pixel dimensions',
     load: () => import('@/islands/image/ImageResize'),
     status: 'stable'
+  },
+  {
+    id: 'social-image-resize',
+    name: 'Social Media Image Resizer',
+    category: 'Image',
+    route: '/tools/social-image-resize',
+    keywords: ['social media image resizer', 'instagram size', 'youtube thumbnail size', 'story size', 'facebook cover', 'twitter image', 'linkedin banner', 'resize for social'],
+    icon: Scaling,
+    summary: 'Resize images to exact Instagram/YouTube/TikTok sizes',
+    load: () => import('@/islands/image/SocialResize'),
+    status: 'beta'
+  },
+  {
+    id: 'image-palette',
+    name: 'Image Color Palette',
+    category: 'Image',
+    route: '/tools/image-palette',
+    keywords: ['color palette from image', 'extract colors', 'image colors', 'dominant colors', 'color picker from image', 'hex codes', 'palette generator'],
+    icon: Palette,
+    summary: 'Extract the dominant color palette (hex) from an image',
+    load: () => import('@/islands/image/ImagePalette'),
+    status: 'beta'
   },
   {
     id: 'image-annotate',
