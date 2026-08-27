@@ -2,6 +2,28 @@
 
 All notable changes to GoodWebTools are documented here.
 
+## [1.0.0-beta.4] — 2026-08-27
+
+A large batch bundling roughly a month of new tools and fixes.
+
+### Added
+- **Documents:** iWork viewer (Pages/Numbers/Keynote — now with real tables, images, and full slide navigation), legacy `.doc` viewer (Word 97–2003), PPTX slide rendering, DICOM medical-image viewer, EML email viewer, GEDCOM family-tree viewer, and PDF ↔ Word/Excel conversion.
+- **Media:** **Teleprompter / Autocue** with voice-tracking, mirror, camera, and a phone-remote control; Text to Speech (on-device neural voices, WAV/MP3); Live Captions; local Music & Video players; a Meditation session generator; and focus & audio tools (white noise, binaural, metronome, tuner).
+- **Games** (new category): 2048, Flying Bird, Snake, Dino Run, Block Puzzle, Onet Connect, and Wheel Spinner / Random Picker.
+- **Calculators** (new category): Age & Weton, Unit Converter, KPR/mortgage, Zakat, THR, percentage/tip/discount, timezone, countdown, and roman numerals.
+- **Testers** (new category): Device Test cluster — microphone, webcam, speaker, keyboard, mouse, and screen.
+- **Image:** Pas Foto passport maker (guided camera capture with live framing help + auto-align), HEIC → JPG, Meme Generator, Color-Blindness Simulator, and Scan Deskew & Crop.
+- **PDF:** true redaction, Sign PDF, Organize PDF, Booklet Imposition, Metadata Scrubber, and PDF → Excel (CSV).
+- **Dev:** API Client, Cron tools (parse + natural-language → cron), Regex Tester, Barcode generator & scanner, QRIS decoder, WCAG contrast checker, NIK/KTP decoder, and a set of developer reference tools.
+- **Bahasa Indonesia** interface: localized tool names, summaries, and category labels.
+
+### Fixed
+- Mobile playability for games (Snake on-screen D-pad; Dino Run no longer stretches in fullscreen), SSR hydration mismatches in 2048 and Block Puzzle, whiteboard autosave reliability, blank map tiles, QR/QRIS decoding from photos, and PDF image extraction.
+
+### Changed
+- Peer-to-peer tools (File Transfer, Video Call, and the Teleprompter phone remote) now use a TURN relay for reliable cross-network connectivity.
+- Improved tool search (stemming) and reordered the homepage categories (Image, PDF, Documents, Dev first).
+
 ## [1.0.0-beta.3] — 2026-07-27
 
 ### Added
