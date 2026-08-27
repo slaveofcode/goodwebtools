@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
-import { pageNumberXY, placementToPdfRect, textPlacementToPdf, type PageNumberOptions, type SignPlacement, type TextPlacement } from './layout.lib';
+import { pageNumberXY, placementToPdfRect, textPlacementToPdf, formatPageLabel, type PageNumberOptions, type PageNumberPosition, type SignPlacement, type TextPlacement } from './layout.lib';
 
 // Loading/parsing existing PDFs is handled by the mupdf engine (in a worker) —
 // it parses the wide range of real-world PDFs that pdf-lib's parser rejects.
@@ -241,6 +241,34 @@ export async function fillPdfText(
       page.drawText(line, { x, y: y - i * size * 1.2, size, font, color: rgb(0, 0, 0) });
     });
   }
+  return toBlob(await out.save());
+}
+
+export interface PageNumberFormat {
+  position: PageNumberPosition;
+  startAt: number;
+  fontSize: number;
+  margin: number;
+  /** Template with {n} and {total}, e.g. "{n}" or "Page {n} of {total}". */
+  template: string;
+}
+
+/** Stamp page numbers onto every page using the given format. */
+export async function addPageNumbers(file: File, fmt: PageNumberFormat): Promise<Blob> {
+  const src = await loadViaMupdf(file);
+  const out = await PDFDocument.create();
+  const pages = await out.copyPages(src, src.getPageIndices());
+  pages.forEach(page => out.addPage(page));
+
+  const font = await out.embedFont(StandardFonts.Helvetica);
+  const total = out.getPageCount();
+  out.getPages().forEach((page, i) => {
+    const { width, height } = page.getSize();
+    const label = formatPageLabel(fmt.template, fmt.startAt + i, total);
+    const textWidth = font.widthOfTextAtSize(label, fmt.fontSize);
+    const { x, y } = pageNumberXY(fmt.position, width, height, textWidth, fmt.fontSize, fmt.margin);
+    page.drawText(label, { x, y, size: fmt.fontSize, font, color: rgb(0, 0, 0) });
+  });
   return toBlob(await out.save());
 }
 

@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { pageNumberXY, placementToPdfRect, textPlacementToPdf } from './layout.lib';
+import { pageNumberXY, placementToPdfRect, textPlacementToPdf, formatPageLabel } from './layout.lib';
+
+describe('formatPageLabel', () => {
+  it('substitutes {n} and {total}', () => {
+    expect(formatPageLabel('{n}', 3, 10)).toBe('3');
+    expect(formatPageLabel('Page {n} of {total}', 3, 10)).toBe('Page 3 of 10');
+    expect(formatPageLabel('{n} / {total}', 1, 5)).toBe('1 / 5');
+  });
+});
 
 describe('pageNumberXY', () => {
   it('places bottom-center', () => {
