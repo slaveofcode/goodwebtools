@@ -620,6 +620,50 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'fancy-text',
+    name: 'Fancy Text Generator',
+    category: 'Dev',
+    route: '/tools/fancy-text',
+    keywords: ['fancy text', 'unicode text', 'bold text generator', 'italic text', 'font generator', 'cool text', 'instagram fonts', 'stylish text'],
+    icon: Sparkles,
+    summary: 'Turn text into fancy Unicode styles for bios and posts',
+    load: () => import('@/islands/dev/FancyText'),
+    status: 'beta'
+  },
+  {
+    id: 'image-to-base64',
+    name: 'Image to Base64',
+    category: 'Dev',
+    route: '/tools/image-to-base64',
+    keywords: ['image to base64', 'base64 image', 'data uri', 'data url', 'encode image', 'inline image css', 'png to base64', 'svg to base64'],
+    icon: FileImage,
+    summary: 'Convert an image to a Base64 data URI for CSS/HTML',
+    load: () => import('@/islands/dev/ImageBase64'),
+    status: 'beta'
+  },
+  {
+    id: 'css-generator',
+    name: 'CSS Generator',
+    category: 'Dev',
+    route: '/tools/css-generator',
+    keywords: ['css generator', 'gradient generator', 'box shadow generator', 'border radius', 'css gradient', 'linear gradient', 'radial gradient'],
+    icon: Brush,
+    summary: 'Generate gradient, box-shadow & border-radius CSS with a preview',
+    load: () => import('@/islands/dev/CssGenerator'),
+    status: 'beta'
+  },
+  {
+    id: 'html-markdown',
+    name: 'HTML ↔ Markdown',
+    category: 'Dev',
+    route: '/tools/html-markdown',
+    keywords: ['html to markdown', 'markdown to html', 'convert markdown', 'md to html', 'html to md', 'turndown', 'markdown converter'],
+    icon: FileCode2,
+    summary: 'Convert between HTML and Markdown, both ways',
+    load: () => import('@/islands/dev/HtmlMarkdown'),
+    status: 'beta'
+  },
+  {
     id: 'browser-info',
     name: 'What Is My Browser',
     category: 'Dev',
