@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2 } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2, AlarmClock } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -675,6 +675,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'timer-stopwatch',
+    name: 'Stopwatch, Timer & Alarm',
+    category: 'Calculators',
+    route: '/tools/timer-stopwatch',
+    keywords: ['stopwatch', 'online stopwatch', 'timer', 'online timer', 'countdown timer', 'alarm clock', 'online alarm', 'set a timer', 'kitchen timer', 'lap timer'],
+    icon: AlarmClock,
+    summary: 'Online stopwatch, countdown timer and alarm clock',
+    load: () => import('@/islands/calculators/TimerHub'),
+    status: 'beta'
+  },
+  {
     id: 'timezone-converter',
     name: 'Time Zone Converter',
     category: 'Calculators',
@@ -892,6 +903,17 @@ export const tools: ToolDef[] = [
     icon: FileSignature,
     summary: 'Draw or upload a signature and place it on a PDF',
     load: () => import('@/islands/pdf/PdfSign'),
+    status: 'beta'
+  },
+  {
+    id: 'pdf-fill',
+    name: 'Fill PDF (Add Text)',
+    category: 'PDF',
+    route: '/tools/pdf-fill',
+    keywords: ['fill pdf', 'fill pdf form', 'add text to pdf', 'edit pdf', 'type on pdf', 'pdf form filler', 'write on pdf', 'checkbox', 'insert date'],
+    icon: PenLine,
+    summary: 'Type text, checkmarks and dates onto a PDF form',
+    load: () => import('@/islands/pdf/PdfFill'),
     status: 'beta'
   },
   {
@@ -1773,6 +1795,28 @@ export const tools: ToolDef[] = [
     summary: 'Convert, compress, trim or resize video (client-side)',
     load: () => import('@/islands/media/VideoConvert'),
     status: 'stable'
+  },
+  {
+    id: 'video-compress',
+    name: 'Video Compressor',
+    category: 'Media',
+    route: '/tools/video-compress',
+    keywords: ['compress video', 'video compressor', 'reduce video size', 'shrink video', 'compress video for whatsapp', 'compress video for discord', 'video to target size', 'mp4', 'ffmpeg', 'under 25mb', 'under 16mb'],
+    icon: Shrink,
+    summary: 'Compress a video to a target file size (client-side)',
+    load: () => import('@/islands/media/VideoCompress'),
+    status: 'beta'
+  },
+  {
+    id: 'media-trim',
+    name: 'Audio & Video Trimmer',
+    category: 'Media',
+    route: '/tools/media-trim',
+    keywords: ['trim video', 'cut video', 'video cutter', 'mp3 cutter', 'audio trimmer', 'ringtone maker', 'cut audio', 'clip', 'ffmpeg', 'crop video length'],
+    icon: Scissors,
+    summary: 'Trim or cut a section from audio or video (client-side)',
+    load: () => import('@/islands/media/MediaTrim'),
+    status: 'beta'
   },
   {
     id: 'video-to-audio',
