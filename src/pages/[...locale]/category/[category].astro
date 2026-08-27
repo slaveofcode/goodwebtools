@@ -2,6 +2,7 @@
 import { ChevronRight } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
 import { tools } from '@/registry/tools';
+import { localizedTool } from '@/registry/tool-i18n';
 import { categories, categoryColors, catDescription, categorySlug, categoryFaqs, categoryNotes } from '@/registry/categories';
 import { SITE_URL, SITE_NAME } from '@/config';
 import type { Category } from '@/types/tool';
@@ -39,7 +40,7 @@ const itemListJsonLd = {
   itemListElement: categoryTools.map((t2, i) => ({
     '@type': 'ListItem',
     position: i + 1,
-    name: t2.name,
+    name: localizedTool(t2, lang).name,
     url: new URL(localizePath(t2.route, lang), SITE_URL).href,
   })),
 };
@@ -102,14 +103,15 @@ const keywords = [
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {categoryTools.map(tool => {
         const Icon = tool.icon;
+        const label = localizedTool(tool, lang);
         return (
           <a href={localizePath(tool.route, lang)} class="group flex items-start gap-3 border-2 border-border bg-muted p-4 shadow-brutal press-brutal">
             <span class={`mt-0.5 border-2 border-border p-2 text-black ${categoryColors[tool.category]}`}>
               <Icon className="h-5 w-5" />
             </span>
             <span class="min-w-0">
-              <span class="block font-bold">{tool.name}</span>
-              <span class="block text-sm text-muted-foreground">{tool.summary}</span>
+              <span class="block font-bold">{label.name}</span>
+              <span class="block text-sm text-muted-foreground">{label.summary}</span>
             </span>
           </a>
         );
