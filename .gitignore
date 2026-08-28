@@ -29,3 +29,10 @@ models-r2/
 public/excalidraw/
 public/og/
 public/sqlite/
+
+# Impeccable design-lint local config (per-machine tooling, not repo state)
+.impeccable/
+
+# Unbuilt api-client planning docs (kept local until that feature is picked up)
+docs/superpowers/plans/2026-08-09-api-client.md
+docs/superpowers/specs/2026-08-09-api-client-design.md
