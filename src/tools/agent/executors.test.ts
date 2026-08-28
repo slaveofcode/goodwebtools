@@ -56,6 +56,11 @@ describe('executor registry', () => {
     expect(scopeExecutors('crop this video').map(e => e.toolId)).toContain('media-trim');
     expect(scopeExecutors('cut this mp3').map(e => e.toolId)).toContain('media-trim');
   });
+  it('scopes svg generation (svg-viewer) for draw/create requests', () => {
+    expect(scopeExecutors('make a download icon').map(e => e.toolId)).toContain('svg-viewer');
+    expect(scopeExecutors('draw a flowchart of a login process').map(e => e.toolId)).toContain('svg-viewer');
+    expect(scopeExecutors('create an svg logo').map(e => e.toolId)).toContain('svg-viewer');
+  });
   it('does not scope any media compressor for small talk', () => {
     expect(scopeExecutors('hello how are you today')).toEqual([]);
   });

@@ -375,6 +375,20 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
+    // Generative: the model itself "draws" the icon/diagram by writing SVG markup;
+    // we sanitize it and hand back a rendered, downloadable graphic. Mapped to the
+    // real svg-viewer tool. Pass the full <svg>…</svg> in the `svg` arg.
+    toolId: 'svg-viewer', description: 'Draw/create an SVG icon, logo, illustration, badge or simple diagram — YOU write the full <svg>…</svg> markup and pass it as "svg".',
+    match: re(/\b(make|create|draw|generate|design|build|render)\b.*\b(icon|logo|svg|illustration|graphic|badge|emblem|diagram|flow ?chart|sketch|shape|avatar)\b|\bsvg\b.*(icon|logo|graphic|diagram|shape)/i),
+    files: [], params: [{ key: 'svg', type: 'string', label: 'SVG markup (<svg>…</svg>)' }],
+    execute: async ({ params }) => {
+      const { sanitizeSvg, svgToDataUrl } = await import('@/tools/image/svg-gen.lib');
+      const clean = sanitizeSvg(String(params.svg ?? ''));
+      if (!clean) throw new Error('that was not valid SVG — write complete <svg>…</svg> markup');
+      return { blob: new Blob([clean], { type: 'image/svg+xml' }), dataUrl: svgToDataUrl(clean), filename: 'graphic.svg', text: 'drew an SVG' };
+    },
+  },
+  {
     toolId: 'image-compress', description: 'Compress an image to a target size in KB',
     match: re(/(image|img|photo|pic(ture)?|jpe?g|png|webp).*(compress|small|reduce|shrink|kb|mb|size)|(compress|small|reduce|shrink).*(image|img|photo|pic(ture)?|jpe?g|png|webp)/i),
     files: [{ key: 'file', accept: 'image/*', label: 'Image' }],
