@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePrefill } from '@/hooks/usePrefill';
 import { Lock, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { TextArea } from '@/components/ui/TextArea';
@@ -31,8 +32,9 @@ const TR: Record<Lang, Record<string, string>> = {
 
 export default function TextEncrypt({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
+  const prefill = usePrefill();
   const [mode, setMode] = useState<Mode>('encrypt');
-  const [text, setText] = useState('');
+  const [text, setText] = useState(prefill.text ?? '');
   const [password, setPassword] = useState('');
   const [out, setOut] = useState('');
   const [busy, setBusy] = useState(false);

@@ -1,0 +1,30 @@
+---
+// The GoodWebTools agent: model-driven tool loop, on-device or via the user's own
+// API key. Publicly indexed (Sub-project B released).
+import Base from '@/layouts/Base.astro';
+import AskAgent from '@/islands/agent/AskAgent';
+
+const title = 'AI Agent — Run Any Tool Just by Chatting';
+const description =
+  'Chat with the GoodWebTools AI agent and it runs 190+ browser tools for you — compress images & video, make QR codes, format JSON, hash text and more. Runs on-device (private) or with your own API key. Nothing is uploaded.';
+const keywords = [
+  'ai agent', 'browser ai', 'chatgpt in the browser', 'client-side ai',
+  'run tools by chat', 'on-device llm', 'private ai assistant', 'webgpu ai',
+];
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'GoodWebTools AI Agent',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any (modern web browser)',
+  browserRequirements: 'Requires WebGPU for on-device mode; any browser for cloud mode.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  description,
+};
+---
+
+<Base {title} {description} {keywords} {jsonLd} lang="en" localized>
+  <main class="py-6">
+    <AskAgent client:only="react" lang="en" />
+  </main>
+</Base>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { usePrefill } from '@/hooks/usePrefill';
 import { Button } from '@/components/ui/Button';
 import { UNIT_CATEGORIES, getCategory, convert, formatNumber } from '@/tools/calculators/units.lib';
 import type { Lang } from '@/i18n/config';
@@ -20,7 +21,8 @@ export default function UnitConverter({ lang = 'en' }: { lang?: Lang }) {
   const [catId, setCatId] = useState(UNIT_CATEGORIES[0].id);
   const [fromId, setFromId] = useState(UNIT_CATEGORIES[0].units[0].id);
   const [toId, setToId] = useState(UNIT_CATEGORIES[0].units[1].id);
-  const [value, setValue] = useState('1');
+  const prefill = usePrefill();
+  const [value, setValue] = useState(prefill.number !== undefined ? String(prefill.number) : '1');
 
   const cat = getCategory(catId)!;
 

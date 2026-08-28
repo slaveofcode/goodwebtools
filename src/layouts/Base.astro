@@ -145,8 +145,9 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
       // Delegated on document (persists across view transitions) so the in-page
       // "search tools" hint keeps working after client-side navigations.
       document.addEventListener('click', function (e) {
-        var el = e.target && e.target.closest && e.target.closest('#home-search');
-        if (el) window.dispatchEvent(new CustomEvent('gwt:open-search'));
+        if (!e.target || !e.target.closest) return;
+        if (e.target.closest('#home-search')) window.dispatchEvent(new CustomEvent('gwt:open-search'));
+        else if (e.target.closest('#home-agent')) window.location.href = /^\/id(\/|$)/.test(location.pathname) ? '/id/ask-agent' : '/ask-agent';
       });
 
       // Assemble contact emails from parts so the address never appears in the

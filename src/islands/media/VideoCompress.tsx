@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePrefill } from '@/hooks/usePrefill';
 import { Download } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
@@ -6,7 +7,7 @@ import { Alert } from '@/components/ui/Alert';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
-import { loadFFmpeg, fileToU8 } from '@/services/ffmpeg.service';
+import { compressVideo } from '@/tools/media/encode.lib';
 import { computeTargetBitrate, VIDEO_TARGET_PRESETS } from '@/tools/media/video-compress.lib';
 import { targetToBytes, pctSmaller, type SizeUnit } from '@/tools/files/compress-target.lib';
 import type { Lang } from '@/i18n/config';
@@ -83,9 +84,10 @@ export default function VideoCompress({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
   const [duration, setDuration] = useState(0);
-  const [presetIdx, setPresetIdx] = useState(1); // default 16 MB (WhatsApp)
-  const [customValue, setCustomValue] = useState(10);
-  const [customUnit, setCustomUnit] = useState<SizeUnit>('MB');
+  const prefill = usePrefill();
+  const [presetIdx, setPresetIdx] = useState(prefill.size ? -1 : 1); // -1 = custom; default 16 MB (WhatsApp)
+  const [customValue, setCustomValue] = useState(prefill.size ? prefill.size.value : 10);
+  const [customUnit, setCustomUnit] = useState<SizeUnit>(prefill.size ? prefill.size.unit : 'MB');
   const [keepAudio, setKeepAudio] = useState(true);
   const [maxWidth, setMaxWidth] = useState(0);
   const [result, setResult] = useState<Blob | null>(null);
@@ -124,36 +126,12 @@ export default function VideoCompress({ lang = 'en' }: { lang?: Lang }) {
     setResult(null);
     setPercent(0);
     try {
-      setStage(t.loadEngine);
-      const ffmpeg = await loadFFmpeg();
-      const onProgress = ({ progress }: { progress: number }) =>
-        setPercent(Math.min(100, Math.round(progress * 100)));
-      ffmpeg.on('progress', onProgress);
-
-      await ffmpeg.writeFile('in', await fileToU8(file));
-
-      const args = ['-i', 'in'];
-      if (maxWidth > 0) args.push('-vf', `scale='min(${maxWidth},iw)':-2:flags=lanczos`);
-      // Single-pass constrained bitrate — reliably lands near (and under) target.
-      args.push(
-        '-c:v', 'libx264',
-        '-b:v', `${plan.videoKbps}k`,
-        '-maxrate', `${plan.videoKbps}k`,
-        '-bufsize', `${plan.videoKbps * 2}k`,
-        '-preset', 'veryfast',
-        '-pix_fmt', 'yuv420p',
-        '-movflags', '+faststart',
-      );
-      if (plan.audioKbps > 0) args.push('-c:a', 'aac', '-b:a', `${plan.audioKbps}k`);
-      else args.push('-an');
-      args.push('out.mp4');
-
       setStage(t.encoding);
-      await ffmpeg.exec(args);
-
-      const data = await ffmpeg.readFile('out.mp4');
-      ffmpeg.off('progress', onProgress);
-      const blob = new Blob([data], { type: 'video/mp4' });
+      const blob = await compressVideo(
+        file,
+        { targetBytes, durationSec: duration, maxWidth: maxWidth > 0 ? maxWidth : 0, audioKbps: keepAudio ? 128 : 0 },
+        p => setPercent(Math.min(100, Math.round(p * 100))),
+      );
       setResult(blob);
       setResultUrl(prev => {
         if (prev) URL.revokeObjectURL(prev);

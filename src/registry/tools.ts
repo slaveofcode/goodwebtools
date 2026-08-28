@@ -2136,22 +2136,23 @@ export function getToolByRoute(route: string): ToolDef | undefined {
   return tools.find(tool => tool.route === route);
 }
 
+/** Ranked tools with their raw relevance score (highest first). Empty query → all tools, score 0. */
+export function searchToolsScored(query: string): { tool: ToolDef; score: number }[] {
+  if (!query || query.trim() === '') {
+    return tools.map(tool => ({ tool, score: 0 }));
+  }
+  const lowerQuery = query.toLowerCase().trim();
+  return tools
+    .map(tool => ({ tool, score: calculateScore(tool, lowerQuery) }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score);
+}
+
 export function searchTools(query: string): ToolDef[] {
-  // Return all tools if query is empty
   if (!query || query.trim() === '') {
     return tools;
   }
-
-  const lowerQuery = query.toLowerCase().trim();
-
-  return tools
-    .map(tool => ({
-      tool,
-      score: calculateScore(tool, lowerQuery)
-    }))
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map(({ tool }) => tool);
+  return searchToolsScored(query).map(({ tool }) => tool);
 }
 
 /** Split text into lowercase word tokens (letters/digits). */

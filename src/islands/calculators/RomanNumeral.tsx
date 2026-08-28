@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePrefill } from '@/hooks/usePrefill';
 import { ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
@@ -20,8 +21,9 @@ const TR: Record<Lang, { intro: string; toRoman: string; toNumber: string; swap:
 
 export default function RomanNumeral({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
+  const prefill = usePrefill();
   const [mode, setMode] = useState<'toRoman' | 'toNumber'>('toRoman');
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(prefill.number !== undefined ? String(prefill.number) : '');
 
   let result = '';
   let error = '';

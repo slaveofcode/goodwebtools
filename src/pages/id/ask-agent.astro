@@ -1,0 +1,29 @@
+---
+// Bahasa Indonesia version of the GoodWebTools agent page. Publicly indexed.
+import Base from '@/layouts/Base.astro';
+import AskAgent from '@/islands/agent/AskAgent';
+
+const title = 'Agen AI — Jalankan Tool Apa Saja Lewat Chat';
+const description =
+  'Ngobrol dengan agen AI GoodWebTools dan ia menjalankan 190+ tool di browser untuk Anda — kompres gambar & video, buat QR code, format JSON, hash teks, dan banyak lagi. Berjalan on-device (privat) atau dengan API key Anda sendiri. Tidak ada yang diunggah.';
+const keywords = [
+  'agen ai', 'ai di browser', 'chatgpt di browser', 'ai sisi klien',
+  'jalankan tool lewat chat', 'llm on-device', 'asisten ai privat', 'webgpu ai',
+];
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Agen AI GoodWebTools',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Semua (browser web modern)',
+  browserRequirements: 'Butuh WebGPU untuk mode on-device; browser apa pun untuk mode cloud.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  description,
+};
+---
+
+<Base {title} {description} {keywords} {jsonLd} lang="id" localized>
+  <main class="py-6">
+    <AskAgent client:only="react" lang="id" />
+  </main>
+</Base>

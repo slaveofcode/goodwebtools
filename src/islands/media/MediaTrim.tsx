@@ -6,8 +6,8 @@ import { Alert } from '@/components/ui/Alert';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
-import { loadFFmpeg, fileToU8 } from '@/services/ffmpeg.service';
-import { parseTime, formatTime, validateTrim, clampTrim } from '@/tools/media/trim.lib';
+import { trimMedia } from '@/tools/media/encode.lib';
+import { parseTime, formatTime, validateTrim } from '@/tools/media/trim.lib';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, {
@@ -93,63 +93,26 @@ export default function MediaTrim({ lang = 'en' }: { lang?: Lang }) {
 
   const run = async () => {
     if (!file || start === null || end === null) return;
-    const { start: s, end: e } = clampTrim(start, end, duration);
     setBusy(true);
     setError('');
     setResult(null);
     setPercent(0);
     const ext = (file.name.match(/\.([^.]+)$/)?.[1] || (isVideo ? 'mp4' : 'mp3')).toLowerCase();
-    const out = `out.${ext}`;
     try {
-      setStage(t.loadEngine);
-      const ffmpeg = await loadFFmpeg();
-      const onProgress = ({ progress }: { progress: number }) =>
-        setPercent(Math.min(100, Math.round(progress * 100)));
-      ffmpeg.on('progress', onProgress);
-      await ffmpeg.writeFile('in', await fileToU8(file));
-
-      const seek = ['-ss', String(s), '-to', String(e), '-i', 'in'];
-      const reencode = async () => {
-        // Re-encode the selection for a frame-precise cut (or when copy fails).
-        const enc = isVideo
-          ? ['-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-c:a', 'aac']
-          : ['-c:a', 'libmp3lame', '-q:a', '2'];
-        const reOut = isVideo ? out : 'out.mp3';
-        await ffmpeg.exec([...seek, ...enc, reOut]);
-        await finish(ffmpeg, reOut, reOut.split('.').pop()!, onProgress);
-      };
       setStage(t.cutting);
-      if (!fast) {
-        await reencode();
-      } else {
-        try {
-          await ffmpeg.exec([...seek, '-c', 'copy', out]);
-          const probe = await ffmpeg.readFile(out);
-          if (!probe || (probe as Uint8Array).length === 0) throw new Error('empty');
-          await finish(ffmpeg, out, ext, onProgress);
-        } catch {
-          await reencode(); // stream copy failed → fall back to a re-encode
-        }
-      }
+      const { blob } = await trimMedia(
+        file,
+        { startSec: start, endSec: end, durationSec: duration, isVideo, fast, ext },
+        p => setPercent(Math.min(100, Math.round(p * 100))),
+      );
+      setResult(blob);
+      setResultUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(blob); });
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : t.error);
+    } finally {
       setBusy(false);
       setStage('');
     }
-  };
-
-  const finish = async (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ffmpeg: any, out: string, ext: string, onProgress: (p: { progress: number }) => void,
-  ) => {
-    const data = await ffmpeg.readFile(out);
-    ffmpeg.off('progress', onProgress);
-    const mime = isVideo ? `video/${ext === 'mov' ? 'quicktime' : ext}` : `audio/${ext === 'mp3' ? 'mpeg' : ext}`;
-    const blob = new Blob([data], { type: mime });
-    setResult(blob);
-    setResultUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(blob); });
-    setBusy(false);
-    setStage('');
   };
 
   const download = () => {

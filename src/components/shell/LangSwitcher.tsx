@@ -3,7 +3,7 @@ import { LOCALES, LOCALE_LABEL, LOCALE_NAME, localizePath, stripLocale, type Lan
 
 // Public sections that exist in every locale. Other paths (about, settings…) fall
 // back to the locale home when switching, so the switcher never lands on a 404.
-const LOCALIZED_PREFIXES = ['/tools/', '/category/', '/about', '/privacy'];
+const LOCALIZED_PREFIXES = ['/tools/', '/category/', '/about', '/privacy', '/ask-agent'];
 
 /** The URL for the current page in `lang` — computed fresh from the live location. */
 function targetFor(lang: Lang): string {

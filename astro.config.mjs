@@ -37,6 +37,54 @@ export default defineConfig({
   site: 'https://goodwebtools.com',
   trailingSlash: 'ignore',
   vite: {
+    plugins: [
+      // Dev-only shim for the worker's /api/llm-proxy route (see worker/index.js).
+      // Astro dev serves via Vite, not the Cloudflare Worker, so the CORS-blocked
+      // cloud LLM providers (OpenCode Go/Zen) would 404 in `npm run dev` without
+      // this. Mirrors the worker's host-allowlist + header-forward behavior.
+      {
+        name: 'gwt-llm-proxy-dev',
+        configureServer(server) {
+          const ALLOWED = new Set([
+            'api.openai.com', 'api.deepseek.com', 'openrouter.ai', 'opencode.ai',
+            'generativelanguage.googleapis.com', 'api.groq.com', 'api.anthropic.com',
+          ]);
+          server.middlewares.use('/api/llm-proxy', async (req, res) => {
+            const sendJson = (status, obj) => {
+              res.statusCode = status;
+              res.setHeader('content-type', 'application/json');
+              res.end(JSON.stringify(obj));
+            };
+            if (req.method !== 'POST') return sendJson(405, { error: { message: 'Method not allowed' } });
+            const target = req.headers['x-llm-target'];
+            let host;
+            try {
+              const u = new URL(target);
+              if (u.protocol !== 'https:') return sendJson(400, { error: { message: 'Target must be https' } });
+              host = u.hostname;
+            } catch {
+              return sendJson(400, { error: { message: 'Bad x-llm-target URL' } });
+            }
+            if (!ALLOWED.has(host)) return sendJson(403, { error: { message: 'Provider host not allowed: ' + host } });
+            const chunks = [];
+            for await (const c of req) chunks.push(c);
+            const fwd = {};
+            for (const h of ['content-type', 'authorization', 'x-api-key', 'anthropic-version', 'anthropic-dangerous-direct-browser-access']) {
+              if (req.headers[h]) fwd[h] = req.headers[h];
+            }
+            try {
+              const upstream = await fetch(target, { method: 'POST', headers: fwd, body: Buffer.concat(chunks) });
+              const text = await upstream.text();
+              res.statusCode = upstream.status;
+              res.setHeader('content-type', upstream.headers.get('content-type') || 'application/json');
+              res.end(text);
+            } catch (e) {
+              sendJson(502, { error: { message: 'Proxy fetch failed: ' + ((e && e.message) || e) } });
+            }
+          });
+        },
+      },
+    ],
     resolve: {
       alias: {
         // @tensorflow/tfjs-core pulls in node-fetch (+ its CJS whatwg-url) for its
@@ -68,6 +116,10 @@ export default defineConfig({
               return m ? `prettier-${m[1]}` : 'prettier-plugin';
             }
             if (id.includes('node_modules/prettier/')) return 'prettier-standalone';
+            // WebLLM (on-device model runtime, Sub-project B) is ~6 MB and only
+            // loaded on demand in the agent chat — keep it in a stable-named
+            // chunk so it stays out of the PWA precache via globIgnores.
+            if (id.includes('node_modules/@mlc-ai/web-llm')) return 'web-llm';
           },
         },
       },
@@ -152,6 +204,8 @@ export default defineConfig({
           '**/csso*.js',
           '**/zxing*.js',
           '**/prettier-*.js',
+          '**/web-llm*.js',
+          '**/webllm*.js',
           'og/*.png',
         ],
         runtimeCaching: [
