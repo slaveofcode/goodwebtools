@@ -14,7 +14,12 @@ export interface FileSpec { key: string; accept: string; label: string }
 export interface ParamSpec { key: string; type: 'number' | 'string'; label: string; default?: string | number }
 export interface ExecResult { text?: string; blob?: Blob; filename?: string; dataUrl?: string }
 export interface AgentExecutor {
+  /** Unique function name the model calls. Usually a registry tool id, but for a
+   *  headless op with no dedicated page it's a standalone name + a `page` ref. */
   toolId: string;
+  /** Registry tool this maps to (for the guard / an "open" link), when the
+   *  function name isn't itself a real tool id. Defaults to toolId. */
+  page?: string;
   description: string;
   match: (q: string) => boolean;
   files: FileSpec[];
@@ -357,6 +362,48 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
+    toolId: 'csv-dedupe', page: 'csv-json', description: 'Remove duplicate rows from a CSV file',
+    match: re(/(dedup|de-?dup|duplicate|redundant|unique).*(csv|rows?|records?|data)|(csv|rows?|records?).*(dedup|duplicate|redundant|unique)|remove.*(duplicate|redundant).*(row|csv|record|line)/i),
+    files: [{ key: 'file', accept: '.csv,text/csv', label: 'CSV file' }], params: [],
+    execute: async ({ files }) => {
+      const { dedupeCsvRows } = await import('@/tools/documents/office.lib');
+      const { csv, removed } = dedupeCsvRows(await files.file.text());
+      return { blob: new Blob([csv], { type: 'text/csv' }), filename: 'deduped.csv', text: `removed ${removed} duplicate row${removed === 1 ? '' : 's'}` };
+    },
+  },
+  {
+    toolId: 'spreadsheet-convert', page: 'spreadsheet-viewer', description: 'Convert between CSV and Excel (.xlsx) — auto-detects the direction from the file',
+    match: re(/csv.*(excel|xlsx|spread ?sheet|workbook)|(excel|xlsx|spread ?sheet|workbook).*(csv|convert)|convert.*(excel|xlsx|csv|spread ?sheet)|to ?(xlsx|excel)\b|xlsx ?(to|2) ?csv/i),
+    files: [{ key: 'file', accept: '.csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', label: 'CSV or Excel file' }], params: [],
+    execute: async ({ files }) => {
+      const XLSX = await import('xlsx');
+      const file = files.file;
+      const isSheet = /\.(xlsx|xls|ods)$/i.test(file.name) || /sheet|excel/i.test(file.type);
+      if (isSheet) {
+        const wb = XLSX.read(new Uint8Array(await file.arrayBuffer()), { type: 'array' });
+        const name = wb.SheetNames[0];
+        const csv = XLSX.utils.sheet_to_csv(wb.Sheets[name]);
+        return { blob: new Blob([csv], { type: 'text/csv' }), filename: 'sheet.csv', text: `converted "${name}" to CSV` };
+      }
+      const { parseCsv } = await import('@/tools/dev/csv.lib');
+      const ws = XLSX.utils.aoa_to_sheet(parseCsv(await file.text()));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+      const out = new Uint8Array(XLSX.write(wb, { type: 'array', bookType: 'xlsx' }));
+      return { blob: new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename: 'workbook.xlsx', text: 'converted to Excel (.xlsx)' };
+    },
+  },
+  {
+    toolId: 'word-count', page: 'word-counter', description: 'Count words, characters, sentences and reading time of text',
+    match: re(/word ?count|count.*(words|characters)|how many words|character count|text stat|reading time/i),
+    files: [], params: [{ key: 'text', type: 'string', label: 'Text' }],
+    execute: async ({ params }) => {
+      const { countText } = await import('@/tools/dev/text.lib');
+      const s = countText(String(params.text ?? ''));
+      return { text: `Words: ${s.words}\nCharacters: ${s.characters} (${s.charactersNoSpaces} without spaces)\nSentences: ${s.sentences}\nParagraphs: ${s.paragraphs}\nLines: ${s.lines}\nReading time: ~${s.readingMinutes} min` };
+    },
+  },
+  {
     toolId: 'hash-text', description: 'Hash text (SHA-256)', match: re(/\bhash\b|sha-?\d|md5|checksum|digest/i),
     files: [], params: [{ key: 'text', type: 'string', label: 'Text' }],
     execute: async ({ params }) => {
@@ -509,7 +556,16 @@ export function executorFor(toolId: string): AgentExecutor | undefined {
   return AGENT_EXECUTORS.find(e => e.toolId === toolId);
 }
 
-/** Guard used by tests: every executor must reference a real tool. */
+/** Guard used by tests: every executor must reference a real tool (via `page`,
+ *  else its `toolId`). Also flags duplicate function names. */
 export function unknownExecutorIds(): string[] {
-  return AGENT_EXECUTORS.filter(e => !getToolById(e.toolId)).map(e => e.toolId);
+  return AGENT_EXECUTORS.filter(e => !getToolById(e.page ?? e.toolId)).map(e => e.toolId);
+}
+
+/** Function names must be unique (they're what the model calls). */
+export function duplicateExecutorIds(): string[] {
+  const seen = new Set<string>();
+  const dupes: string[] = [];
+  for (const e of AGENT_EXECUTORS) { if (seen.has(e.toolId)) dupes.push(e.toolId); seen.add(e.toolId); }
+  return dupes;
 }
