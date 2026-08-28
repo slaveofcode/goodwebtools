@@ -50,6 +50,12 @@ describe('executor registry', () => {
     expect(ids).toContain('video-to-audio');
     expect(ids).not.toContain('video-convert');
   });
+  it('does not scope media-trim for image cropping (only for audio/video)', () => {
+    expect(scopeExecutors('how to crop image').map(e => e.toolId)).not.toContain('media-trim');
+    expect(scopeExecutors('crop this image').map(e => e.toolId)).not.toContain('media-trim');
+    expect(scopeExecutors('crop this video').map(e => e.toolId)).toContain('media-trim');
+    expect(scopeExecutors('cut this mp3').map(e => e.toolId)).toContain('media-trim');
+  });
   it('does not scope any media compressor for small talk', () => {
     expect(scopeExecutors('hello how are you today')).toEqual([]);
   });
