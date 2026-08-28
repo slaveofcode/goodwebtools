@@ -20,9 +20,13 @@ describe('classifyIntent', () => {
   });
 
   it('chats about the agent itself instead of routing to a tool', () => {
-    expect(classifyIntent('what model are you').mode).toBe('chat');
-    expect(classifyIntent('who are you').mode).toBe('chat');
-    expect(classifyIntent('what can you do').mode).toBe('chat');
+    for (const q of [
+      'what model are you', 'what models are u?', 'which model r you',
+      'who are you', 'who r u', 'what can you do', 'what can u do',
+      'are you an ai', 'are u chatgpt', 'whats your name',
+    ]) {
+      expect(classifyIntent(q).mode, q).toBe('chat');
+    }
   });
   it('opens the image crop tool for "how to crop image" (not the media trimmer)', () => {
     const i = classifyIntent('how to crop image');
