@@ -7,7 +7,12 @@
  */
 
 export interface ChatMessage { role: 'system' | 'user' | 'assistant'; content: string }
-export interface AgentProvider { chat(messages: ChatMessage[]): Promise<string> }
+export interface AgentProvider {
+  chat(messages: ChatMessage[]): Promise<string>;
+  /** Capable enough to plan over the full tool catalog and chain tools (cloud
+   * models). Tiny on-device models are NOT — they get a keyword-scoped subset. */
+  capable?: boolean;
+}
 
 /** True when the browser exposes WebGPU (required for the on-device model). */
 export function hasWebGPU(): boolean {
@@ -117,6 +122,7 @@ function providerFetch(proxy: boolean | undefined, target: string, headers: Reco
 /** A provider that calls a cloud chat API with the user's key, from the browser. */
 export function createCloudProvider(cfg: CloudConfig): AgentProvider {
   return {
+    capable: true,
     async chat(messages) {
       if (cfg.kind === 'anthropic') {
         const system = messages.find(m => m.role === 'system')?.content ?? '';
