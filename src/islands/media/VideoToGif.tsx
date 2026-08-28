@@ -6,7 +6,7 @@ import { Alert } from '@/components/ui/Alert';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
-import { loadFFmpeg, fileToU8 } from '@/services/ffmpeg.service';
+import { videoToGif } from '@/tools/media/encode.lib';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, {
@@ -76,32 +76,12 @@ export default function VideoToGif({ lang = 'en' }: { lang?: Lang }) {
     setResult(null);
     setPercent(0);
     try {
-      setStage(t.stageLoading);
-      const ffmpeg = await loadFFmpeg();
-      const onProgress = ({ progress }: { progress: number }) =>
-        setPercent(Math.min(100, Math.round(progress * 100)));
-      ffmpeg.on('progress', onProgress);
-
-      const trim: string[] = [];
-      if (start && Number(start) > 0) trim.push('-ss', String(Number(start)));
-      if (duration && Number(duration) > 0) trim.push('-t', String(Number(duration)));
-      const filters = `fps=${fps},scale=${width}:-1:flags=lanczos`;
-
-      await ffmpeg.writeFile('in', await fileToU8(file));
-
-      setStage(t.stagePalette);
-      await ffmpeg.exec([...trim, '-i', 'in', '-vf', `${filters},palettegen`, 'palette.png']);
-
       setStage(t.stageEncoding);
-      await ffmpeg.exec([
-        ...trim, '-i', 'in', '-i', 'palette.png',
-        '-lavfi', `${filters} [x]; [x][1:v] paletteuse`,
-        'out.gif',
-      ]);
-
-      const data = await ffmpeg.readFile('out.gif');
-      ffmpeg.off('progress', onProgress);
-      const blob = new Blob([data], { type: 'image/gif' });
+      const blob = await videoToGif(
+        file,
+        { fps, width, trimStart: Number(start) || 0, trimDuration: Number(duration) || 0 },
+        p => setPercent(Math.min(100, Math.round(p * 100))),
+      );
       setResult(blob);
       setResultUrl(prev => {
         if (prev) URL.revokeObjectURL(prev);

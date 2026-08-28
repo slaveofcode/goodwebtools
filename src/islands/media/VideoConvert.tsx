@@ -6,7 +6,7 @@ import { Alert } from '@/components/ui/Alert';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
-import { loadFFmpeg, fileToU8 } from '@/services/ffmpeg.service';
+import { convertVideo } from '@/tools/media/encode.lib';
 import type { Lang } from '@/i18n/config';
 
 type Fmt = 'mp4' | 'webm' | 'mov';
@@ -125,36 +125,13 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
     setError('');
     setResult(null);
     setPercent(0);
-    const spec = FORMATS.find(f => f.id === fmt)!;
     try {
-      setStage(t.loadEngine);
-      const ffmpeg = await loadFFmpeg();
-      const onProgress = ({ progress }: { progress: number }) =>
-        setPercent(Math.min(100, Math.round(progress * 100)));
-      ffmpeg.on('progress', onProgress);
-
-      await ffmpeg.writeFile('in', await fileToU8(file));
-
-      const trim: string[] = [];
-      if (start && Number(start) > 0) trim.push('-ss', String(Number(start)));
-      if (duration && Number(duration) > 0) trim.push('-t', String(Number(duration)));
-
-      const args = [...trim, '-i', 'in'];
-      if (scale > 0) args.push('-vf', `scale=${scale}:-2:flags=lanczos`);
-      args.push('-c:v', spec.vcodec, '-crf', String(crf));
-      if (spec.id === 'mp4' || spec.id === 'mov') args.push('-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-movflags', '+faststart');
-      if (spec.id === 'webm') args.push('-b:v', '0', '-row-mt', '1');
-      if (muted) args.push('-an');
-      else args.push('-c:a', spec.acodec, '-b:a', '128k');
-      const out = `out.${spec.id}`;
-      args.push(out);
-
       setStage(t.transcoding);
-      await ffmpeg.exec(args);
-
-      const data = await ffmpeg.readFile(out);
-      ffmpeg.off('progress', onProgress);
-      const blob = new Blob([data], { type: spec.mime });
+      const blob = await convertVideo(
+        file,
+        { format: fmt, crf, scale, muted, trimStart: Number(start) || 0, trimDuration: Number(duration) || 0 },
+        p => setPercent(Math.min(100, Math.round(p * 100))),
+      );
       setResult(blob);
       setResultUrl(prev => {
         if (prev) URL.revokeObjectURL(prev);

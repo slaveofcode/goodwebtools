@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Search, Github, Info, ExternalLink, Settings, MoreVertical } from 'lucide-react';
+import { Search, Github, Info, ExternalLink, Settings, MoreVertical, Sparkles } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LangSwitcher } from './LangSwitcher';
 import { CommandPalette } from './CommandPalette';
@@ -14,6 +14,12 @@ export function openSearch() {
   window.dispatchEvent(new CustomEvent('gwt:open-search'));
 }
 
+export function openAgent() {
+  // Keep the visitor in their locale (the /id/ page exists too).
+  const inId = /^\/id(\/|$)/.test(window.location.pathname);
+  window.location.href = inId ? '/id/ask-agent' : '/ask-agent';
+}
+
 const iconBtn =
   'flex h-9 w-9 items-center justify-center border-2 border-border bg-muted shadow-brutal-sm press-brutal text-muted-foreground';
 const menuItem =
@@ -22,12 +28,12 @@ const menuItem =
 // Header UI strings, per language (the header persists across navigations, so the
 // language is detected from the URL client-side rather than passed as a prop).
 const S: Record<Lang, {
-  searchAria: string; searchPre: string; searchPost: string;
+  searchAria: string; searchPre: string; searchPost: string; askAgent: string;
   about: string; contribute: string; contribMenu: string; more: string; settings: string;
   modalTitle: string; modalBody: ReactNode;
 }> = {
   en: {
-    searchAria: 'Search tools', searchPre: 'Press', searchPost: 'to search',
+    searchAria: 'Search tools', searchPre: 'Press', searchPost: 'to search', askAgent: 'Ask agent',
     about: 'About', contribute: 'Contribute on GitHub', contribMenu: 'Contribute', more: 'More', settings: 'Settings',
     modalTitle: 'Contribute',
     modalBody: (
@@ -38,7 +44,7 @@ const S: Record<Lang, {
     ),
   },
   id: {
-    searchAria: 'Cari tool', searchPre: 'Tekan', searchPost: 'untuk mencari',
+    searchAria: 'Cari tool', searchPre: 'Tekan', searchPost: 'untuk mencari', askAgent: 'Tanya agen',
     about: 'Tentang', contribute: 'Kontribusi di GitHub', contribMenu: 'Kontribusi', more: 'Lainnya', settings: 'Pengaturan',
     modalTitle: 'Kontribusi',
     modalBody: (
@@ -111,6 +117,16 @@ export function ShellIsland() {
                 </span>
               </button>
 
+              <button
+                onClick={openAgent}
+                aria-label={s.askAgent}
+                title={s.askAgent}
+                className="flex h-9 items-center gap-1.5 border-2 border-border bg-accent px-2.5 text-sm font-bold uppercase tracking-wide text-accent-foreground shadow-brutal-sm press-brutal"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden md:inline">{s.askAgent}</span>
+              </button>
+
               {/* Secondary actions — inline on ≥sm, in an overflow menu on mobile. */}
               <div className="hidden items-center gap-2 sm:flex sm:gap-3">
                 {isDesktop && (
@@ -126,12 +142,22 @@ export function ShellIsland() {
                 </button>
               </div>
 
+              {/* Language + theme inline on ≥sm; folded into the overflow menu on mobile. */}
+              <div className="hidden items-center gap-2 sm:flex sm:gap-3">
+                <LangSwitcher />
+                <ThemeToggle />
+              </div>
+
               <div className="relative sm:hidden" ref={menuRef}>
                 <button onClick={() => setMenuOpen(o => !o)} aria-label={s.more} aria-haspopup="menu" aria-expanded={menuOpen} className={iconBtn}>
                   <MoreVertical className="h-4 w-4" />
                 </button>
                 {menuOpen && (
-                  <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-48 border-2 border-border bg-background shadow-brutal">
+                  <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-56 border-2 border-border bg-background shadow-brutal">
+                    <div className="flex items-center justify-between gap-2 border-b-2 border-border px-3 py-2.5">
+                      <LangSwitcher />
+                      <ThemeToggle />
+                    </div>
                     {isDesktop && (
                       <a href="/settings" role="menuitem" className={menuItem}><Settings className="h-4 w-4" /> {s.settings}</a>
                     )}
@@ -142,9 +168,6 @@ export function ShellIsland() {
                   </div>
                 )}
               </div>
-
-              <LangSwitcher />
-              <ThemeToggle />
             </div>
           </div>
         </div>
