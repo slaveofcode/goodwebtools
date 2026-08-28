@@ -436,6 +436,26 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
+    // v2 code-canvas: the model writes JS that draws on a 2D `ctx`; it runs in a
+    // locked-down Web Worker (no DOM, no network, hard timeout) → PNG. For charts,
+    // procedural graphics, and pixel work SVG can't easily express.
+    toolId: 'canvas-draw', page: 'whiteboard',
+    description: 'Render anything on a 2D canvas by writing JavaScript. YOU write JS that draws on `ctx` (a CanvasRenderingContext2D of a `canvas`); it runs in a sandbox (no network) and returns a PNG. Use for charts, plots, procedural/pixel graphics.',
+    match: re(/\b(draw|render|plot|paint|generate|make|create)\b.*\b(canvas|chart|graph|plot|pixel|procedural|pattern|fractal|bar ?chart|pie ?chart|line ?graph|histogram)\b|canvas.*(draw|render|code)|\bplot\b.*(data|points|function)/i),
+    files: [], params: [
+      { key: 'code', type: 'string', label: 'JavaScript that draws on `ctx`' },
+      { key: 'width', type: 'number', label: 'Width px', default: 512 },
+      { key: 'height', type: 'number', label: 'Height px', default: 512 },
+    ],
+    execute: async ({ params }) => {
+      const { runCanvasCode, extractCode, blobToDataUrl } = await import('@/tools/image/canvas-run.lib');
+      const code = extractCode(String(params.code ?? ''));
+      if (!code) throw new Error('no drawing code — write JS that draws on `ctx`');
+      const blob = await runCanvasCode(code, { width: Number(params.width) || 512, height: Number(params.height) || 512 });
+      return { blob, dataUrl: await blobToDataUrl(blob), filename: 'canvas.png', text: 'rendered a canvas drawing' };
+    },
+  },
+  {
     toolId: 'image-compress', description: 'Compress an image to a target size in KB',
     match: re(/(image|img|photo|pic(ture)?|jpe?g|png|webp).*(compress|small|reduce|shrink|kb|mb|size)|(compress|small|reduce|shrink).*(image|img|photo|pic(ture)?|jpe?g|png|webp)/i),
     files: [{ key: 'file', accept: 'image/*', label: 'Image' }],

@@ -70,6 +70,10 @@ describe('executor registry', () => {
     expect(scopeExecutors('convert this xlsx to csv').map(e => e.toolId)).toContain('spreadsheet-convert');
     expect(scopeExecutors('word count of this text').map(e => e.toolId)).toContain('word-count');
   });
+  it('scopes canvas-draw for chart/plot/procedural draw requests', () => {
+    expect(scopeExecutors('draw a bar chart of my sales').map(e => e.toolId)).toContain('canvas-draw');
+    expect(scopeExecutors('plot these data points on a canvas').map(e => e.toolId)).toContain('canvas-draw');
+  });
   it('does not scope any media compressor for small talk', () => {
     expect(scopeExecutors('hello how are you today')).toEqual([]);
   });
