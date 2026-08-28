@@ -10,6 +10,10 @@ function mockFetchOnce(json: unknown, ok = true) {
 }
 
 describe('createCloudProvider', () => {
+  it('is marked capable (cloud models get the full tool catalog + chaining)', () => {
+    const p = createCloudProvider({ kind: 'openai', baseUrl: 'https://api.example.com/v1', model: 'm', apiKey: 'sk-1' });
+    expect(p.capable).toBe(true);
+  });
   it('calls the provider directly when not proxied (OpenAI-compatible)', async () => {
     const f = mockFetchOnce({ choices: [{ message: { content: 'hi there' } }] });
     const p = createCloudProvider({ kind: 'openai', baseUrl: 'https://api.example.com/v1', model: 'm', apiKey: 'sk-1' });
