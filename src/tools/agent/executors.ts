@@ -464,7 +464,9 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
   },
   {
     toolId: 'media-trim', description: 'Trim/cut an audio or video file to a time range (start and end, e.g. 0:10 to 0:30)',
-    match: re(/\b(trim|crop|shorten)\b|\bcut\b.*(video|audio|clip|mp3|mp4|song|track|file|this|it)/i),
+    // Require a media noun near the verb so "crop/cut/trim IMAGE" doesn't grab the
+    // audio/video trimmer (image cropping is a different, interactive tool).
+    match: re(/\b(trim|cut|crop|shorten)\b.*(video|audio|clip|mp3|mp4|wav|m4a|song|track|movie|footage|recording|sound)|(video|audio|clip|mp3|mp4|wav|m4a|song|track|movie|footage|recording|sound).*\b(trim|cut|crop|shorten)\b|\b(trim|cut|shorten) (this|it|that)\b/i),
     files: [{ key: 'file', accept: 'audio/*,video/*', label: 'Audio or video' }],
     params: [
       { key: 'start', type: 'string', label: 'Start (e.g. 0:10)', default: '0' },

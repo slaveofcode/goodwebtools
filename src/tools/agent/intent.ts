@@ -18,6 +18,10 @@ export type Intent =
 // smaller", "again", "to 300"). Used only when a tool is already active.
 const CONTINUATION = /\b\d+(\.\d+)?\s?(kb|mb|gb|%|px|k|m)\b|\b(make it|instead|again|smaller|bigger|larger|lower|higher|reduce|to \d)/i;
 
+// Questions about the agent itself — must chat, not route to a tool. Otherwise
+// "what model are you" matches the browser-info tool (it has a "model" keyword).
+const META = /\b(who are you|what are you|which model|what model are you|are you (an? )?(ai|llm|bot|gpt|model|human)|your name|what can you do|what do you do|how do you work|are you (chatgpt|claude|gpt|gemini))\b/i;
+
 /**
  * Decide how to handle a message. `activeToolId` (the tool from the previous
  * turn, if any) lets a bare parameter follow-up like "50kb" continue that tool
@@ -25,6 +29,8 @@ const CONTINUATION = /\b\d+(\.\d+)?\s?(kb|mb|gb|%|px|k|m)\b|\b(make it|instead|a
  * 50kb" to the wrong tool because the message no longer contains "image".
  */
 export function classifyIntent(query: string, activeToolId?: string | null): Intent {
+  if (META.test(query)) return { mode: 'chat' };
+
   const scoped = scopeExecutors(query);
   const isContinuation = !!activeToolId && CONTINUATION.test(query);
   const active = activeToolId ? executorFor(activeToolId) : undefined;

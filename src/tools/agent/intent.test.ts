@@ -19,6 +19,16 @@ describe('classifyIntent', () => {
     }
   });
 
+  it('chats about the agent itself instead of routing to a tool', () => {
+    expect(classifyIntent('what model are you').mode).toBe('chat');
+    expect(classifyIntent('who are you').mode).toBe('chat');
+    expect(classifyIntent('what can you do').mode).toBe('chat');
+  });
+  it('opens the image crop tool for "how to crop image" (not the media trimmer)', () => {
+    const i = classifyIntent('how to crop image');
+    expect(i.mode).toBe('open');
+    if (i.mode === 'open') expect(i.candidates[0].id).toBe('image-crop');
+  });
   it('continues the active executor on a param-only follow-up ("50kb")', () => {
     // No "image" word → would otherwise mis-route to pdf-compress. With an active
     // image-compress task, a size tweak stays on it.
