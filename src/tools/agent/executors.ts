@@ -14,7 +14,12 @@ export interface FileSpec { key: string; accept: string; label: string }
 export interface ParamSpec { key: string; type: 'number' | 'string'; label: string; default?: string | number }
 export interface ExecResult { text?: string; blob?: Blob; filename?: string; dataUrl?: string }
 export interface AgentExecutor {
+  /** Unique function name the model calls. Usually a registry tool id, but for a
+   *  headless op with no dedicated page it's a standalone name + a `page` ref. */
   toolId: string;
+  /** Registry tool this maps to (for the guard / an "open" link), when the
+   *  function name isn't itself a real tool id. Defaults to toolId. */
+  page?: string;
   description: string;
   match: (q: string) => boolean;
   files: FileSpec[];
@@ -357,6 +362,48 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
+    toolId: 'csv-dedupe', page: 'csv-json', description: 'Remove duplicate rows from a CSV file',
+    match: re(/(dedup|de-?dup|duplicate|redundant|unique).*(csv|rows?|records?|data)|(csv|rows?|records?).*(dedup|duplicate|redundant|unique)|remove.*(duplicate|redundant).*(row|csv|record|line)/i),
+    files: [{ key: 'file', accept: '.csv,text/csv', label: 'CSV file' }], params: [],
+    execute: async ({ files }) => {
+      const { dedupeCsvRows } = await import('@/tools/documents/office.lib');
+      const { csv, removed } = dedupeCsvRows(await files.file.text());
+      return { blob: new Blob([csv], { type: 'text/csv' }), filename: 'deduped.csv', text: `removed ${removed} duplicate row${removed === 1 ? '' : 's'}` };
+    },
+  },
+  {
+    toolId: 'spreadsheet-convert', page: 'spreadsheet-viewer', description: 'Convert between CSV and Excel (.xlsx) — auto-detects the direction from the file',
+    match: re(/csv.*(excel|xlsx|spread ?sheet|workbook)|(excel|xlsx|spread ?sheet|workbook).*(csv|convert)|convert.*(excel|xlsx|csv|spread ?sheet)|to ?(xlsx|excel)\b|xlsx ?(to|2) ?csv/i),
+    files: [{ key: 'file', accept: '.csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', label: 'CSV or Excel file' }], params: [],
+    execute: async ({ files }) => {
+      const XLSX = await import('xlsx');
+      const file = files.file;
+      const isSheet = /\.(xlsx|xls|ods)$/i.test(file.name) || /sheet|excel/i.test(file.type);
+      if (isSheet) {
+        const wb = XLSX.read(new Uint8Array(await file.arrayBuffer()), { type: 'array' });
+        const name = wb.SheetNames[0];
+        const csv = XLSX.utils.sheet_to_csv(wb.Sheets[name]);
+        return { blob: new Blob([csv], { type: 'text/csv' }), filename: 'sheet.csv', text: `converted "${name}" to CSV` };
+      }
+      const { parseCsv } = await import('@/tools/dev/csv.lib');
+      const ws = XLSX.utils.aoa_to_sheet(parseCsv(await file.text()));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+      const out = new Uint8Array(XLSX.write(wb, { type: 'array', bookType: 'xlsx' }));
+      return { blob: new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename: 'workbook.xlsx', text: 'converted to Excel (.xlsx)' };
+    },
+  },
+  {
+    toolId: 'word-count', page: 'word-counter', description: 'Count words, characters, sentences and reading time of text',
+    match: re(/word ?count|count.*(words|characters)|how many words|character count|text stat|reading time/i),
+    files: [], params: [{ key: 'text', type: 'string', label: 'Text' }],
+    execute: async ({ params }) => {
+      const { countText } = await import('@/tools/dev/text.lib');
+      const s = countText(String(params.text ?? ''));
+      return { text: `Words: ${s.words}\nCharacters: ${s.characters} (${s.charactersNoSpaces} without spaces)\nSentences: ${s.sentences}\nParagraphs: ${s.paragraphs}\nLines: ${s.lines}\nReading time: ~${s.readingMinutes} min` };
+    },
+  },
+  {
     toolId: 'hash-text', description: 'Hash text (SHA-256)', match: re(/\bhash\b|sha-?\d|md5|checksum|digest/i),
     files: [], params: [{ key: 'text', type: 'string', label: 'Text' }],
     execute: async ({ params }) => {
@@ -372,6 +419,40 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
       if (!text) throw new Error('nothing to encode — tell me the text or URL for the QR');
       const QRCode = (await import('qrcode')).default;
       return { dataUrl: await QRCode.toDataURL(text), filename: 'qr.png', text: 'made a QR code' };
+    },
+  },
+  {
+    // Generative: the model itself "draws" the icon/diagram by writing SVG markup;
+    // we sanitize it and hand back a rendered, downloadable graphic. Mapped to the
+    // real svg-viewer tool. Pass the full <svg>…</svg> in the `svg` arg.
+    toolId: 'svg-viewer', description: 'Draw/create an SVG icon, logo, illustration, badge or simple diagram — YOU write the full <svg>…</svg> markup and pass it as "svg".',
+    match: re(/\b(make|create|draw|generate|design|build|render)\b.*\b(icon|logo|svg|illustration|graphic|badge|emblem|diagram|flow ?chart|sketch|shape|avatar)\b|\bsvg\b.*(icon|logo|graphic|diagram|shape)/i),
+    files: [], params: [{ key: 'svg', type: 'string', label: 'SVG markup (<svg>…</svg>)' }],
+    execute: async ({ params }) => {
+      const { sanitizeSvg, svgToDataUrl } = await import('@/tools/image/svg-gen.lib');
+      const clean = sanitizeSvg(String(params.svg ?? ''));
+      if (!clean) throw new Error('that was not valid SVG — write complete <svg>…</svg> markup');
+      return { blob: new Blob([clean], { type: 'image/svg+xml' }), dataUrl: svgToDataUrl(clean), filename: 'graphic.svg', text: 'drew an SVG' };
+    },
+  },
+  {
+    // v2 code-canvas: the model writes JS that draws on a 2D `ctx`; it runs in a
+    // locked-down Web Worker (no DOM, no network, hard timeout) → PNG. For charts,
+    // procedural graphics, and pixel work SVG can't easily express.
+    toolId: 'canvas-draw', page: 'whiteboard',
+    description: 'Render anything on a 2D canvas by writing JavaScript. YOU write JS that draws on `ctx` (a CanvasRenderingContext2D of a `canvas`); it runs in a sandbox (no network) and returns a PNG. Use for charts, plots, procedural/pixel graphics.',
+    match: re(/\b(draw|render|plot|paint|generate|make|create)\b.*\b(canvas|chart|graph|plot|pixel|procedural|pattern|fractal|bar ?chart|pie ?chart|line ?graph|histogram)\b|canvas.*(draw|render|code)|\bplot\b.*(data|points|function)/i),
+    files: [], params: [
+      { key: 'code', type: 'string', label: 'JavaScript that draws on `ctx`' },
+      { key: 'width', type: 'number', label: 'Width px', default: 512 },
+      { key: 'height', type: 'number', label: 'Height px', default: 512 },
+    ],
+    execute: async ({ params }) => {
+      const { runCanvasCode, extractCode, blobToDataUrl } = await import('@/tools/image/canvas-run.lib');
+      const code = extractCode(String(params.code ?? ''));
+      if (!code) throw new Error('no drawing code — write JS that draws on `ctx`');
+      const blob = await runCanvasCode(code, { width: Number(params.width) || 512, height: Number(params.height) || 512 });
+      return { blob, dataUrl: await blobToDataUrl(blob), filename: 'canvas.png', text: 'rendered a canvas drawing' };
     },
   },
   {
@@ -495,7 +576,16 @@ export function executorFor(toolId: string): AgentExecutor | undefined {
   return AGENT_EXECUTORS.find(e => e.toolId === toolId);
 }
 
-/** Guard used by tests: every executor must reference a real tool. */
+/** Guard used by tests: every executor must reference a real tool (via `page`,
+ *  else its `toolId`). Also flags duplicate function names. */
 export function unknownExecutorIds(): string[] {
-  return AGENT_EXECUTORS.filter(e => !getToolById(e.toolId)).map(e => e.toolId);
+  return AGENT_EXECUTORS.filter(e => !getToolById(e.page ?? e.toolId)).map(e => e.toolId);
+}
+
+/** Function names must be unique (they're what the model calls). */
+export function duplicateExecutorIds(): string[] {
+  const seen = new Set<string>();
+  const dupes: string[] = [];
+  for (const e of AGENT_EXECUTORS) { if (seen.has(e.toolId)) dupes.push(e.toolId); seen.add(e.toolId); }
+  return dupes;
 }

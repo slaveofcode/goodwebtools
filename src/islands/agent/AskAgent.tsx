@@ -140,7 +140,7 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
               <div key={i} className={t.role === 'user' ? 'text-right' : ''}>
                 <span className={`inline-block max-w-[90%] border-2 border-border px-3 py-2 text-left text-sm ${t.role === 'user' ? 'bg-background' : 'bg-accent/20'}`}>
                   <span className="whitespace-pre-wrap break-words font-mono">{t.text}</span>
-                  {t.imgUrl && <img src={t.imgUrl} alt="" className="mt-2 h-32 w-32 border-2 border-border" />}
+                  {t.imgUrl && <img src={t.imgUrl} alt="" className="mt-2 max-h-64 max-w-full border-2 border-border bg-white object-contain" />}
                   {(t.blobUrl || t.imgUrl) && (
                     <a href={t.blobUrl || t.imgUrl} download={t.filename || 'download'} className="ml-2 inline-block border-2 border-border bg-accent px-2 py-0.5 text-xs font-bold uppercase text-accent-foreground">Download</a>
                   )}
