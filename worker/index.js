@@ -56,6 +56,53 @@ export default {
       }
     }
 
+    // Same-origin proxy for the Ask-Agent cloud LLM providers that don't send
+    // CORS headers (OpenCode Go/Zen preflight-404 in the browser). The client
+    // POSTs here with the real endpoint in `x-llm-target` plus its auth headers;
+    // we forward server-side and return the JSON. Host-allowlisted so it can't be
+    // used as an open relay. The user's key + prompt pass through this edge but
+    // are never stored or logged (opt-in, clearly labeled in the UI).
+    if (url.pathname === '/api/llm-proxy') {
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405 });
+      }
+      const jsonErr = (message, status) => new Response(
+        JSON.stringify({ error: { message } }),
+        { status, headers: { 'content-type': 'application/json' } },
+      );
+      const target = request.headers.get('x-llm-target') || '';
+      let host;
+      try {
+        const u = new URL(target);
+        if (u.protocol !== 'https:') return jsonErr('Target must be https', 400);
+        host = u.hostname;
+      } catch {
+        return jsonErr('Bad x-llm-target URL', 400);
+      }
+      const ALLOWED_LLM_HOSTS = new Set([
+        'api.openai.com', 'api.deepseek.com', 'openrouter.ai', 'opencode.ai',
+        'generativelanguage.googleapis.com', 'api.groq.com', 'api.anthropic.com',
+      ]);
+      if (!ALLOWED_LLM_HOSTS.has(host)) {
+        return jsonErr('Provider host not allowed: ' + host, 403);
+      }
+      const fwd = new Headers();
+      for (const h of ['content-type', 'authorization', 'x-api-key', 'anthropic-version', 'anthropic-dangerous-direct-browser-access']) {
+        const v = request.headers.get(h);
+        if (v) fwd.set(h, v);
+      }
+      let upstream;
+      try {
+        upstream = await fetch(target, { method: 'POST', headers: fwd, body: await request.text() });
+      } catch (e) {
+        return jsonErr('Proxy fetch failed: ' + ((e && e.message) || e), 502);
+      }
+      const headers = new Headers(upstream.headers);
+      headers.set('access-control-allow-origin', '*');
+      headers.delete('set-cookie');
+      return new Response(upstream.body, { status: upstream.status, headers });
+    }
+
     // Same-origin proxy for Hugging Face model files. transformers.js fetches
     // Whisper weights from huggingface.co, which 302-redirects large files to a
     // CDN — the browser/Workbox can't reliably cache those redirected responses,

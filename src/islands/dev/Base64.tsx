@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePrefill } from '@/hooks/usePrefill';
 import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
@@ -42,7 +43,8 @@ const TR: Record<Lang, {
 
 export default function Base64({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
-  const [input, setInput] = useState('');
+  const prefill = usePrefill();
+  const [input, setInput] = useState(prefill.text ?? '');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
   const [activeMode, setActiveMode] = useState<Mode | null>(null);

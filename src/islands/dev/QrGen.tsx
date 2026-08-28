@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { usePrefill } from '@/hooks/usePrefill';
 import { Download, ChevronDown } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Button } from '@/components/ui/Button';
@@ -67,7 +68,8 @@ const QR_WIDTH = 320;
 
 export default function QrGen({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
-  const [text, setText] = useState('https://goodwebtools.com');
+  const prefill = usePrefill();
+  const [text, setText] = useState(prefill.text ?? 'https://goodwebtools.com');
   const [level, setLevel] = useState<ErrorLevel>('M');
   const [avifOk, setAvifOk] = useState(false);
   const [error, setError] = useState('');

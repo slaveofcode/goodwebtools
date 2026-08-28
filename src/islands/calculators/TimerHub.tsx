@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { usePrefill } from '@/hooks/usePrefill';
 import { Play, Pause, RotateCcw, Flag, Plus, BellOff, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { formatStopwatch, formatCountdown, msUntilNext, msOfDay } from '@/tools/calculators/stopwatch.lib';
@@ -33,7 +34,8 @@ const TR: Record<Lang, {
 
 export default function TimerHub({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
-  const [tab, setTab] = useState<Tab>('stopwatch');
+  const prefill = usePrefill();
+  const [tab, setTab] = useState<Tab>(prefill.number !== undefined ? 'timer' : 'stopwatch');
   const [ringing, setRinging] = useState(false);
 
   // --- shared alarm sound (Web Audio; no asset) ---
@@ -95,7 +97,7 @@ export default function TimerHub({ lang = 'en' }: { lang?: Lang }) {
   const swLap = () => setLaps(l => [...l, swElapsed]);
 
   // --- timer ---
-  const [tMin, setTMin] = useState(5);
+  const [tMin, setTMin] = useState(prefill.number !== undefined ? Math.max(0, Math.round(prefill.number)) : 5);
   const [tSec, setTSec] = useState(0);
   const [tRemaining, setTRemaining] = useState(0);
   const [tRunning, setTRunning] = useState(false);
