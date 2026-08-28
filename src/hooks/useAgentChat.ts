@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { classifyIntent } from '@/tools/agent/intent';
-import { executorFor } from '@/tools/agent/executors';
+import { executorFor, AGENT_EXECUTORS } from '@/tools/agent/executors';
 import { buildSystemPrompt, parseAction, type LoopTool } from '@/tools/agent/loop.lib';
 import { emptySession, recordUser, applyResolution, historyForPrompt } from '@/tools/agent/session.lib';
 import { prefillUrl } from '@/tools/agent/router.lib';
@@ -114,8 +114,12 @@ export function useAgentChat(provider: AgentProvider | null) {
         return;
       }
 
-      // TASK mode: the model may only call the scoped executors.
-      const loopTools: LoopTool[] = intent.executors.map(e => ({
+      // TASK mode. A capable cloud model gets the FULL tool catalog so it can plan
+      // and CHAIN tools (the output of one feeds the next) like an MCP toolset; a
+      // tiny on-device model gets only the keyword-scoped subset so it can't mis-pick.
+      const capable = provider.capable === true;
+      const offered = capable ? AGENT_EXECUTORS : intent.executors;
+      const loopTools: LoopTool[] = offered.map(e => ({
         name: e.toolId,
         description: e.description,
         args: [
@@ -123,10 +127,15 @@ export function useAgentChat(provider: AgentProvider | null) {
           ...e.params.map(p => ({ name: p.key, type: p.type, required: p.default === undefined })),
         ],
       }));
-      const convo: ChatMessage[] = [{ role: 'system', content: buildSystemPrompt(loopTools) }, { role: 'user', content: q }];
+      const systemPrompt = buildSystemPrompt(loopTools) + (capable
+        ? '\n- You can call SEVERAL tools in sequence to fulfil one request. The output file of each tool automatically becomes the input for the next, so you can chain them (e.g. get audio from a video, then compress that audio). Plan the steps and call one tool per turn.'
+        : '');
+      const convo: ChatMessage[] = [{ role: 'system', content: systemPrompt }, { role: 'user', content: q }];
       // Files available to this task: seeded from a prior turn on a continuation,
       // and accumulated within the loop so a repeated call never re-prompts.
       const loopFiles: Record<string, File> = intent.continued ? { ...lastFilesRef.current } : {};
+      // The most recent tool OUTPUT, offered as the input to the next tool (chaining).
+      let chainFile: File | null = null;
       const doneKeys = new Set<string>();
       let produced = false;
       for (let iter = 0; iter < 8; iter++) {
@@ -163,18 +172,19 @@ export function useAgentChat(provider: AgentProvider | null) {
         const files: Record<string, File> = {};
         let cancelled = false;
         for (const fs of exec.files) {
-          // Reuse a file already provided this task (or carried from the previous
-          // turn on a continuation) instead of prompting again.
-          const cached = loopFiles[fs.key];
-          try {
-            const f = cached ?? await requestFile(fs.label);
-            files[fs.key] = f;
-            loopFiles[fs.key] = f;
-            lastFilesRef.current[fs.key] = f;
-          } catch {
-            cancelled = true; // user dismissed the file request
-            break;
+          // Prefer the previous tool's OUTPUT (chaining), then a file already
+          // uploaded this task, otherwise ask. Don't cache a chained output as the
+          // "original upload" — a later "make it smaller" should re-run on the source.
+          const piped = chainFile;
+          const cached = piped ?? loopFiles[fs.key];
+          let f: File;
+          if (cached) { f = cached; }
+          else {
+            try { f = await requestFile(fs.label); }
+            catch { cancelled = true; break; }
           }
+          files[fs.key] = f;
+          if (!piped) { loopFiles[fs.key] = f; lastFilesRef.current[fs.key] = f; }
         }
         if (cancelled) { updateLastText(`✗ ${exec.toolId} — cancelled`); break; }
 
@@ -202,6 +212,8 @@ export function useAgentChat(provider: AgentProvider | null) {
           });
           const blobUrl = result.blob ? URL.createObjectURL(result.blob) : undefined;
           push({ role: 'assistant', text: `✓ ${exec.toolId}: ${result.text ?? 'produced a file'}`, blobUrl, imgUrl: result.dataUrl, filename: result.filename });
+          // Pipe this output into the next tool of the chain.
+          if (result.blob) chainFile = new File([result.blob], result.filename ?? 'output', { type: result.blob.type });
           sessionRef.current = applyResolution(sessionRef.current, { toolId: exec.toolId, params, reply: result.text ?? 'done' });
           doneKeys.add(key);
           produced = true;
