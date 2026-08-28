@@ -257,6 +257,39 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'code-beautify',
+    name: 'Code Beautifier',
+    category: 'Dev',
+    route: '/tools/code-beautify',
+    keywords: ['code beautifier', 'code formatter', 'prettier', 'format code', 'beautify javascript', 'beautify css', 'beautify html', 'format json', 'pretty print'],
+    icon: Braces,
+    summary: 'Format JS, TS, CSS, HTML, JSON, Markdown & YAML with Prettier',
+    load: () => import('@/islands/dev/CodeBeautify'),
+    status: 'beta'
+  },
+  {
+    id: 'vcard-csv',
+    name: 'vCard ↔ CSV',
+    category: 'Dev',
+    route: '/tools/vcard-csv',
+    keywords: ['vcard to csv', 'csv to vcard', 'vcf to csv', 'convert contacts', 'export contacts', 'contacts spreadsheet', 'phone contacts'],
+    icon: Contact,
+    summary: 'Convert contacts between vCard (.vcf) and CSV',
+    load: () => import('@/islands/dev/VcardCsv'),
+    status: 'beta'
+  },
+  {
+    id: 'npwp-validator',
+    name: 'NPWP Validator',
+    category: 'Dev',
+    route: '/tools/npwp-validator',
+    keywords: ['npwp', 'validasi npwp', 'format npwp', 'cek npwp', 'nomor pokok wajib pajak', 'npwp validator', 'tax id indonesia'],
+    icon: Landmark,
+    summary: 'Validate and format an Indonesian NPWP (tax ID)',
+    load: () => import('@/islands/dev/NpwpTool'),
+    status: 'beta'
+  },
+  {
     id: 'subtitle-editor',
     name: 'Subtitle Editor (SRT/VTT)',
     category: 'Media',
@@ -1574,6 +1607,17 @@ export const tools: ToolDef[] = [
     icon: Sticker,
     summary: 'Add classic top/bottom captions to an image',
     load: () => import('@/islands/image/MemeGenerator'),
+    status: 'beta'
+  },
+  {
+    id: 'photo-collage',
+    name: 'Photo Collage Maker',
+    category: 'Image',
+    route: '/tools/photo-collage',
+    keywords: ['photo collage', 'collage maker', 'picture collage', 'combine photos', 'photo grid', 'image collage', 'merge photos grid'],
+    icon: Grid3x3,
+    summary: 'Combine several photos into one grid collage',
+    load: () => import('@/islands/image/PhotoCollage'),
     status: 'beta'
   },
   {

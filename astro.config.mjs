@@ -59,6 +59,15 @@ export default defineConfig({
           manualChunks(id) {
             if (id.includes('node_modules/epubjs')) return 'epubjs';
             if (id.includes('node_modules/jszip')) return 'jszip';
+            // Prettier (Code Beautifier) is large and lazily-imported per language.
+            // Give every prettier chunk a stable `prettier-` prefix so it can be
+            // kept out of the PWA precache via globIgnores while still code-split
+            // per language plugin (loaded on demand, not in the island chunk).
+            if (id.includes('node_modules/prettier/plugins/')) {
+              const m = id.match(/plugins\/([a-z0-9]+)/i);
+              return m ? `prettier-${m[1]}` : 'prettier-plugin';
+            }
+            if (id.includes('node_modules/prettier/')) return 'prettier-standalone';
           },
         },
       },
@@ -142,6 +151,7 @@ export default defineConfig({
           '**/terser*.js',
           '**/csso*.js',
           '**/zxing*.js',
+          '**/prettier-*.js',
           'og/*.png',
         ],
         runtimeCaching: [
