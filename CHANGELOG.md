@@ -2,6 +2,15 @@
 
 All notable changes to GoodWebTools are documented here.
 
+## [1.0.0-beta.5] — 2026-08-28
+
+### Added
+- **AI Agent (Ask Agent):** a fully client-side assistant at `/ask-agent` (EN + Bahasa) that runs GoodWebTools tools for you by chatting — on-device via WebGPU or with your own API key (OpenAI, Anthropic, OpenRouter, Groq, Gemini, OpenCode). Over 40 tools run headless in the background — compress/convert/trim images, video and audio, make QR codes, hash and encode text, format JSON/CSV/TOML, and more — and every other tool is opened for you by smart routing across the whole library.
+- **Home:** collapsible tool categories with a category jump-nav and a mobile floating category button for quick navigation.
+
+### Changed
+- Mobile header decluttered — language and theme controls moved into the overflow menu, keeping Search and Ask Agent one tap away.
+
 ## [1.0.0-beta.4] — 2026-08-27
 
 A large batch bundling roughly a month of new tools and fixes.
