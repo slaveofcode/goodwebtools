@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { AGENT_EXECUTORS, scopeExecutors, executorFor, unknownExecutorIds } from './executors';
+import { AGENT_EXECUTORS, scopeExecutors, executorFor, unknownExecutorIds, duplicateExecutorIds } from './executors';
 
 describe('executor registry', () => {
   it('every executor maps to a real tool and declares a match fn', () => {
     expect(unknownExecutorIds()).toEqual([]);
     for (const e of AGENT_EXECUTORS) expect(typeof e.match).toBe('function');
+  });
+  it('has unique function names (toolIds)', () => {
+    expect(duplicateExecutorIds()).toEqual([]);
   });
   it('scopes to the right tool for encode vs qr requests', () => {
     expect(scopeExecutors('encode base64 of hi').map(e => e.toolId)).toContain('base64');
@@ -60,6 +63,16 @@ describe('executor registry', () => {
     expect(scopeExecutors('make a download icon').map(e => e.toolId)).toContain('svg-viewer');
     expect(scopeExecutors('draw a flowchart of a login process').map(e => e.toolId)).toContain('svg-viewer');
     expect(scopeExecutors('create an svg logo').map(e => e.toolId)).toContain('svg-viewer');
+  });
+  it('scopes the office/productivity tools', () => {
+    expect(scopeExecutors('remove duplicate rows from this csv').map(e => e.toolId)).toContain('csv-dedupe');
+    expect(scopeExecutors('convert this csv to excel').map(e => e.toolId)).toContain('spreadsheet-convert');
+    expect(scopeExecutors('convert this xlsx to csv').map(e => e.toolId)).toContain('spreadsheet-convert');
+    expect(scopeExecutors('word count of this text').map(e => e.toolId)).toContain('word-count');
+  });
+  it('scopes canvas-draw for chart/plot/procedural draw requests', () => {
+    expect(scopeExecutors('draw a bar chart of my sales').map(e => e.toolId)).toContain('canvas-draw');
+    expect(scopeExecutors('plot these data points on a canvas').map(e => e.toolId)).toContain('canvas-draw');
   });
   it('does not scope any media compressor for small talk', () => {
     expect(scopeExecutors('hello how are you today')).toEqual([]);
