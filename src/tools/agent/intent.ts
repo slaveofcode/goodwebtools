@@ -19,8 +19,9 @@ export type Intent =
 const CONTINUATION = /\b\d+(\.\d+)?\s?(kb|mb|gb|%|px|k|m)\b|\b(make it|instead|again|smaller|bigger|larger|lower|higher|reduce|to \d)/i;
 
 // Questions about the agent itself — must chat, not route to a tool. Otherwise
-// "what model are you" matches the browser-info tool (it has a "model" keyword).
-const META = /\b(who are you|what are you|which model|what model are you|are you (an? )?(ai|llm|bot|gpt|model|human)|your name|what can you do|what do you do|how do you work|are you (chatgpt|claude|gpt|gemini))\b/i;
+// "what model(s) are you/u" matches the browser-info tool (it has a "model"
+// keyword). Handles plurals and "u"/"ya" for "you".
+const META = /\b(what|which)\s+(models?|llms?|ai)\b|\b(who|what)\s+(are|r)\s+(you|u|ya)\b|\bare\s+(you|u|ya)\s+(an?\s+)?(ai|a\.?i\.?|llm|bot|gpt|model|robot|human|chatgpt|claude|gemini|deepseek)\b|\byour\s+name\b|\bwhat\s+(can|do)\s+(you|u|ya)\s+do\b|\bhow\s+do\s+(you|u)\s+work\b/i;
 
 /**
  * Decide how to handle a message. `activeToolId` (the tool from the previous
