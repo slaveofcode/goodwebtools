@@ -7,11 +7,41 @@
  */
 
 export interface ChatMessage { role: 'system' | 'user' | 'assistant'; content: string }
+
+// --- Native function-calling ---------------------------------------------------
+/** A tool offered to the model (JSON-Schema params), like MCP tools/list. */
+export interface ToolSpec { name: string; description: string; parameters: Record<string, unknown> }
+/** A tool call the model asked for. */
+export interface ToolCall { id: string; name: string; args: Record<string, string | number> }
+/** One turn of a native tool loop: assistant text (optional) + tool calls. */
+export interface ToolTurn { text: string; calls: ToolCall[] }
+/** Messages for the native loop — richer than ChatMessage (carry calls/results). */
+export interface ToolMsg {
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string;
+  toolCalls?: ToolCall[]; // on an assistant turn that called tools
+  toolCallId?: string;    // on a tool-result turn
+}
+
 export interface AgentProvider {
   chat(messages: ChatMessage[]): Promise<string>;
   /** Capable enough to plan over the full tool catalog and chain tools (cloud
    * models). Tiny on-device models are NOT — they get a keyword-scoped subset. */
   capable?: boolean;
+  /** Native tool-calling step (present on cloud providers). Uses the provider's
+   * real tools API so big args (SVG/code) are encoded reliably, not model-typed. */
+  chatTools?(messages: ToolMsg[], tools: ToolSpec[]): Promise<ToolTurn>;
+}
+
+/** Coerce a provider's tool-call args object to the scalar shape executors expect. */
+function coerceArgs(input: unknown): Record<string, string | number> {
+  const out: Record<string, string | number> = {};
+  if (input && typeof input === 'object') {
+    for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
+      out[k] = typeof v === 'number' ? v : typeof v === 'string' ? v : (typeof v === 'boolean' ? String(v) : JSON.stringify(v));
+    }
+  }
+  return out;
 }
 
 /** True when the browser exposes WebGPU (required for the on-device model). */
@@ -145,6 +175,54 @@ export function createCloudProvider(cfg: CloudConfig): AgentProvider {
       const j = await r.json();
       if (!r.ok) throw new Error(j.error?.message || 'API error');
       return j.choices?.[0]?.message?.content ?? '';
+    },
+
+    async chatTools(messages, tools) {
+      if (cfg.kind === 'anthropic') {
+        const system = messages.find(m => m.role === 'system')?.content ?? '';
+        const conv = messages.filter(m => m.role !== 'system').map(m => {
+          if (m.role === 'tool') return { role: 'user', content: [{ type: 'tool_result', tool_use_id: m.toolCallId, content: m.content }] };
+          if (m.role === 'assistant' && m.toolCalls?.length) {
+            return { role: 'assistant', content: [
+              ...(m.content ? [{ type: 'text', text: m.content }] : []),
+              ...m.toolCalls.map(c => ({ type: 'tool_use', id: c.id, name: c.name, input: c.args })),
+            ] };
+          }
+          return { role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content };
+        });
+        const r = await providerFetch(cfg.proxy, cfg.baseUrl + '/v1/messages', {
+          'content-type': 'application/json', 'x-api-key': cfg.apiKey,
+          'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true',
+        }, { model: cfg.model, max_tokens: 1500, system, tools: tools.map(t => ({ name: t.name, description: t.description, input_schema: t.parameters })), messages: conv });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error?.message || 'API error');
+        let text = ''; const calls: ToolCall[] = [];
+        for (const b of j.content ?? []) {
+          if (b.type === 'text') text += b.text;
+          else if (b.type === 'tool_use') calls.push({ id: b.id, name: b.name, args: coerceArgs(b.input) });
+        }
+        return { text, calls };
+      }
+      // OpenAI-compatible (GLM, OpenAI, DeepSeek, Groq, Gemini, OpenRouter, OpenCode).
+      const msgs = messages.map(m => {
+        if (m.role === 'tool') return { role: 'tool', tool_call_id: m.toolCallId, content: m.content };
+        if (m.role === 'assistant' && m.toolCalls?.length) {
+          return { role: 'assistant', content: m.content || null, tool_calls: m.toolCalls.map(c => ({ id: c.id, type: 'function', function: { name: c.name, arguments: JSON.stringify(c.args) } })) };
+        }
+        return { role: m.role, content: m.content };
+      });
+      const r = await providerFetch(cfg.proxy, cfg.baseUrl + '/chat/completions', {
+        'content-type': 'application/json', authorization: `Bearer ${cfg.apiKey}`,
+      }, { model: cfg.model, temperature: 0.2, max_tokens: 1500, tool_choice: 'auto', tools: tools.map(t => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })), messages: msgs });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error?.message || 'API error');
+      const msg = j.choices?.[0]?.message ?? {};
+      const calls: ToolCall[] = (msg.tool_calls ?? []).map((tc: { id: string; function?: { name: string; arguments?: string } }) => {
+        let parsed: unknown = {};
+        try { parsed = JSON.parse(tc.function?.arguments || '{}'); } catch { /* keep {} */ }
+        return { id: tc.id, name: tc.function?.name ?? '', args: coerceArgs(parsed) };
+      });
+      return { text: msg.content ?? '', calls };
     },
   };
 }
