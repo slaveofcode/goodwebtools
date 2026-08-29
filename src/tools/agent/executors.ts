@@ -404,6 +404,34 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
+    // v3 data interpreter: peek the schema so the model writes a correct transform.
+    toolId: 'peek-data', page: 'csv-json',
+    description: "Preview a data file's shape (dimensions + first rows). Call this FIRST when the user wants to clean/filter/reshape a data file, so you can see the columns before writing a transform.",
+    match: re(/(peek|preview|inspect|look at|show me|what.?s? in).*(data|csv|file|rows?|columns?)|what columns/i),
+    files: [{ key: 'file', accept: '.csv,.tsv,.txt,.json,text/*', label: 'Data file' }], params: [],
+    execute: async ({ files }) => {
+      const { peekData } = await import('@/tools/documents/data-run.lib');
+      return { text: peekData(await files.file.text()) };
+    },
+  },
+  {
+    toolId: 'run-on-data', page: 'code-scratchpad',
+    description: "Transform a data file by writing JavaScript. YOU write JS in `code` that reads the file's text as `input` and returns the result (assign to `output` or return it). Helpers: parseCSV(text)->rows[][], toCSV(rows)->text, JSON. Runs in a no-network sandbox. Call peek-data first to see the columns. CSV output chains to spreadsheet-convert for Excel.",
+    match: re(/(clean|filter|dedup|deduplicate|sort|pivot|group|reshape|transform|process|extract|merge|remove|summari[sz]e|aggregate).*(csv|data|rows?|records?|file|columns?|json)|(csv|data|rows?|spreadsheet|json).*(clean|filter|dedup|sort|pivot|group|reshape|transform|process|extract|remove|aggregate)/i),
+    files: [{ key: 'file', accept: '.csv,.tsv,.txt,.json,text/*', label: 'Data file' }],
+    params: [{ key: 'code', type: 'string', label: 'JavaScript transform (reads `input`, returns the output text)' }],
+    execute: async ({ files, params }, onProgress) => {
+      const { runDataCode } = await import('@/tools/documents/data-run.lib');
+      const { extractCode } = await import('@/tools/image/canvas-run.lib');
+      const code = extractCode(String(params.code ?? ''));
+      if (!code) throw new Error('no transform code — write JS that reads `input` and returns the result');
+      onProgress?.(0.3);
+      const out = await runDataCode(code, await files.file.text());
+      const isJson = out.trim().startsWith('{') || out.trim().startsWith('[');
+      return { blob: new Blob([out], { type: isJson ? 'application/json' : 'text/csv' }), filename: isJson ? 'output.json' : 'output.csv', text: `transformed the data (${out.length} chars)` };
+    },
+  },
+  {
     toolId: 'hash-text', description: 'Hash text (SHA-256)', match: re(/\bhash\b|sha-?\d|md5|checksum|digest/i),
     files: [], params: [{ key: 'text', type: 'string', label: 'Text' }],
     execute: async ({ params }) => {
