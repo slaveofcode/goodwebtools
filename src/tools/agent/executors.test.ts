@@ -79,6 +79,11 @@ describe('executor registry', () => {
     expect(scopeExecutors('filter rows where amount is over 100 in this csv').map(e => e.toolId)).toContain('run-on-data');
     expect(scopeExecutors('pivot this data by region').map(e => e.toolId)).toContain('run-on-data');
   });
+  it('scopes the PDF tools (compress/rotate/split), not image/video compress', () => {
+    expect(scopeExecutors('compress this pdf').map(e => e.toolId)).toEqual(['pdf-compress']);
+    expect(scopeExecutors('rotate my pdf 90 degrees').map(e => e.toolId)).toContain('pdf-rotate');
+    expect(scopeExecutors('extract pages 1-3 from this pdf').map(e => e.toolId)).toContain('pdf-split');
+  });
   it('does not scope any media compressor for small talk', () => {
     expect(scopeExecutors('hello how are you today')).toEqual([]);
   });

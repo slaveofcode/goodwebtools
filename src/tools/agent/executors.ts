@@ -432,6 +432,39 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
+    toolId: 'pdf-compress', description: 'Compress / shrink a PDF file', match: re(/(compress|shrink|reduce|smaller|optimi[sz]e).*pdf|pdf.*(compress|shrink|reduce|smaller|size)/i),
+    files: [{ key: 'file', accept: '.pdf,application/pdf', label: 'PDF' }], params: [],
+    execute: async ({ files }) => {
+      const { compressPdf } = await import('@/tools/pdf/mupdf.client');
+      const blob = await compressPdf(files.file);
+      return { blob, filename: 'compressed.pdf', text: `compressed to ${Math.round(blob.size / 1024)} KB` };
+    },
+  },
+  {
+    toolId: 'pdf-rotate', description: 'Rotate every page of a PDF (90, 180 or 270 degrees)', match: re(/rotate.*pdf|pdf.*rotate|turn.*pdf/i),
+    files: [{ key: 'file', accept: '.pdf,application/pdf', label: 'PDF' }],
+    params: [{ key: 'degrees', type: 'number', label: 'Degrees (90/180/270)', default: 90 }],
+    execute: async ({ files, params }) => {
+      const { rotatePdf } = await import('@/tools/pdf/mupdf.client');
+      const deg = Number(params.degrees) || 90;
+      const blob = await rotatePdf(files.file, deg);
+      return { blob, filename: 'rotated.pdf', text: `rotated by ${deg}°` };
+    },
+  },
+  {
+    toolId: 'pdf-split', description: 'Extract specific pages from a PDF (e.g. "1-3,5") into a new PDF', match: re(/(extract|split|get|keep|pull|take).*pages?.*pdf|pdf.*pages?.*(extract|split|keep)|split.*pdf|pdf.*split/i),
+    files: [{ key: 'file', accept: '.pdf,application/pdf', label: 'PDF' }],
+    params: [{ key: 'pages', type: 'string', label: 'Pages (e.g. 1-3,5)' }],
+    execute: async ({ files, params }) => {
+      const { extractPageList } = await import('@/tools/pdf/mupdf.client');
+      const { parsePageRange } = await import('@/tools/pdf/pagerange.lib');
+      const pages = parsePageRange(String(params.pages ?? ''));
+      if (!pages.length) throw new Error('tell me which pages, e.g. "1-3,5"');
+      const blob = await extractPageList(files.file, pages);
+      return { blob, filename: 'pages.pdf', text: `extracted ${pages.length} page${pages.length === 1 ? '' : 's'}` };
+    },
+  },
+  {
     toolId: 'hash-text', description: 'Hash text (SHA-256)', match: re(/\bhash\b|sha-?\d|md5|checksum|digest/i),
     files: [], params: [{ key: 'text', type: 'string', label: 'Text' }],
     execute: async ({ params }) => {
