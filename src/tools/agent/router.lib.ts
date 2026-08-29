@@ -149,6 +149,7 @@ const ID_EN: Record<string, string> = {
   vidio: 'video', vidionya: 'video', dokumen: 'document', dok: 'document',
   angka: 'number', bilangan: 'number', tulisan: 'text', kalimat: 'sentence', paragraf: 'paragraph',
   qr: 'qr code', barkode: 'barcode', sandiin: 'password',
+  ke: 'to', dari: 'from', jadi: 'to become',
 };
 export function expandIndonesian(query: string): string {
   const extra: string[] = [];
