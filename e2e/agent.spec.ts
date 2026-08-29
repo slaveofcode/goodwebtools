@@ -60,3 +60,30 @@ test('multi-file tool asks for several files', async ({ page }) => {
   // With no attachment, the app prompts with a visible multiple file input.
   await expect(page.locator('input[type="file"][multiple]:visible')).toBeVisible();
 });
+
+test('echo cap: a repeated tool call runs only once', async ({ page }) => {
+  await installAgent(page, {
+    steps: [
+      { calls: [{ name: 'base64', args: { text: 'hi' } }] },
+      { calls: [{ name: 'base64', args: { text: 'hi' } }] }, // duplicate — must be ignored
+      { text: 'Done.' },
+    ],
+    capable: true,
+  });
+  await send(page, 'base64 encode this');
+  await expect(page.getByTestId('agent-messages')).toContainText('✓ base64:');
+  const runs = await page.getByText('→ base64', { exact: false }).count();
+  expect(runs).toBe(1);
+});
+
+test('settings persist across reload', async ({ page }) => {
+  await page.goto('/ask-agent');
+  await page.getByRole('button', { name: 'Cloud (API key)' }).click();
+  const preset = page.getByTestId('cloud-preset');
+  await preset.selectOption({ index: 1 }); // pick a non-default preset
+  const val = await preset.inputValue();
+  await page.reload();
+  // The last-used tab + preset persist to localStorage, so the cloud panel
+  // restores automatically with the same preset selected.
+  await expect(page.getByTestId('cloud-preset')).toHaveValue(val);
+});
