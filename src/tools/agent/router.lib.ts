@@ -123,7 +123,7 @@ function scoreTool(tool: (typeof tools)[number], queryStems: string[]): number {
 // Appended (not replaced) to the query before matching, so mixed EN/ID also works.
 const ID_EN: Record<string, string> = {
   gambar: 'image', foto: 'photo', citra: 'image', gbr: 'image',
-  kompres: 'compress', mampatkan: 'compress', perkecil: 'shrink smaller', kecilkan: 'shrink smaller', kurangi: 'reduce',
+  kompres: 'compress', mampatkan: 'compress', perkecil: 'shrink smaller', kecilkan: 'shrink smaller', kecilin: 'shrink smaller', kurangi: 'reduce', kurangin: 'reduce',
   suara: 'audio', video: 'video', musik: 'audio',
   ubah: 'convert', konversi: 'convert', konversikan: 'convert', jadikan: 'convert', mengubah: 'convert',
   potong: 'trim cut', pangkas: 'trim crop', gabung: 'merge combine', gabungkan: 'merge combine', satukan: 'merge',
