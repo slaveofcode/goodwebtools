@@ -74,6 +74,11 @@ describe('executor registry', () => {
     expect(scopeExecutors('draw a bar chart of my sales').map(e => e.toolId)).toContain('canvas-draw');
     expect(scopeExecutors('plot these data points on a canvas').map(e => e.toolId)).toContain('canvas-draw');
   });
+  it('scopes the data interpreter (peek-data / run-on-data)', () => {
+    expect(scopeExecutors('preview this csv file').map(e => e.toolId)).toContain('peek-data');
+    expect(scopeExecutors('filter rows where amount is over 100 in this csv').map(e => e.toolId)).toContain('run-on-data');
+    expect(scopeExecutors('pivot this data by region').map(e => e.toolId)).toContain('run-on-data');
+  });
   it('does not scope any media compressor for small talk', () => {
     expect(scopeExecutors('hello how are you today')).toEqual([]);
   });
