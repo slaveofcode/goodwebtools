@@ -137,7 +137,7 @@ const ID_EN: Record<string, string> = {
   // Informal / gaul: the -in suffix (kecilin, gabungin…), slang, and misspellings.
   gedein: 'enlarge upscale bigger', gede: 'enlarge bigger', gedegin: 'enlarge',
   ubahin: 'convert', jadiin: 'convert make', rubah: 'convert', ganti: 'convert change',
-  potongin: 'trim cut', pangkas: 'trim crop', pangkasin: 'trim crop',
+  potongin: 'trim cut', pangkasin: 'trim crop',
   gabungin: 'merge combine', satuin: 'merge', pisahin: 'split', pecah: 'split',
   puterin: 'rotate', rotasiin: 'rotate', balik: 'rotate flip',
   hapusin: 'remove delete', ilangin: 'remove delete', buang: 'remove delete',
