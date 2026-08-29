@@ -23,9 +23,11 @@ export interface AgentExecutor {
   description: string;
   match: (q: string) => boolean;
   files: FileSpec[];
+  /** An optional variable-count file input (e.g. "merge these PDFs"). */
+  multiFile?: FileSpec;
   params: ParamSpec[];
   execute: (
-    inputs: { files: Record<string, File>; params: Record<string, string | number> },
+    inputs: { files: Record<string, File>; params: Record<string, string | number>; fileList?: File[] },
     onProgress?: (p: number, note?: string) => void,
   ) => Promise<ExecResult>;
 }
@@ -462,6 +464,16 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
       if (!pages.length) throw new Error('tell me which pages, e.g. "1-3,5"');
       const blob = await extractPageList(files.file, pages);
       return { blob, filename: 'pages.pdf', text: `extracted ${pages.length} page${pages.length === 1 ? '' : 's'}` };
+    },
+  },
+  {
+    toolId: 'pdf-merge', description: 'Merge several PDF files into one', match: re(/merge.*pdf|combine.*pdf|pdf.*(merge|combine)|join.*pdfs?/i),
+    files: [], multiFile: { key: 'files', accept: '.pdf,application/pdf', label: 'PDFs to merge (pick 2 or more)' }, params: [],
+    execute: async ({ fileList }) => {
+      if (!fileList || fileList.length < 2) throw new Error('pick at least two PDFs to merge');
+      const { mergePdfs } = await import('@/tools/pdf/mupdf.client');
+      const blob = await mergePdfs(fileList);
+      return { blob, filename: 'merged.pdf', text: `merged ${fileList.length} PDFs` };
     },
   },
   {

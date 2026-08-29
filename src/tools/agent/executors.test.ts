@@ -83,6 +83,10 @@ describe('executor registry', () => {
     expect(scopeExecutors('compress this pdf').map(e => e.toolId)).toEqual(['pdf-compress']);
     expect(scopeExecutors('rotate my pdf 90 degrees').map(e => e.toolId)).toContain('pdf-rotate');
     expect(scopeExecutors('extract pages 1-3 from this pdf').map(e => e.toolId)).toContain('pdf-split');
+    expect(scopeExecutors('merge these pdfs into one').map(e => e.toolId)).toContain('pdf-merge');
+  });
+  it('the pdf-merge executor declares a multiFile slot', () => {
+    expect(executorFor('pdf-merge')?.multiFile?.key).toBe('files');
   });
   it('does not scope any media compressor for small talk', () => {
     expect(scopeExecutors('hello how are you today')).toEqual([]);

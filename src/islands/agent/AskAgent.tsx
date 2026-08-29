@@ -34,7 +34,7 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
   const [input, setInput] = useState('');
   const ondeviceRef = useRef<OnDeviceProvider | null>(null);
 
-  const { turns, busy, pendingFile, pendingInput, send, provideFile, cancelFile, provideInput, cancelInput } = useAgentChat(provider);
+  const { turns, busy, pendingFile, pendingFiles, pendingInput, send, provideFile, cancelFile, provideFiles, cancelFiles, provideInput, cancelInput } = useAgentChat(provider);
   const [inputValue, setInputValue] = useState('');
 
   const loadOndevice = async () => {
@@ -154,6 +154,13 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
                 <p className="mb-2 text-sm font-bold">The agent needs a file: {pendingFile.label}</p>
                 <input type="file" onChange={e => { const f = e.target.files?.[0]; if (f) provideFile(f); }} className="text-sm" />
                 <button onClick={cancelFile} className="ml-2 border-2 border-border bg-muted px-2 py-0.5 text-xs font-bold uppercase press-brutal">Cancel</button>
+              </div>
+            )}
+            {pendingFiles && (
+              <div className="border-2 border-dashed border-accent p-4 text-center">
+                <p className="mb-2 text-sm font-bold">The agent needs files: {pendingFiles.label}</p>
+                <input type="file" multiple onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) provideFiles(fs); }} className="text-sm" />
+                <button onClick={cancelFiles} className="ml-2 border-2 border-border bg-muted px-2 py-0.5 text-xs font-bold uppercase press-brutal">Cancel</button>
               </div>
             )}
             {pendingInput && (

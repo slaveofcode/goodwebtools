@@ -33,10 +33,13 @@ export function useAgentChat(provider: AgentProvider | null) {
   const [turns, setTurns] = useState<ChatUiTurn[]>([]);
   const [busy, setBusy] = useState(false);
   const [pendingFile, setPendingFile] = useState<{ label: string } | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<{ label: string } | null>(null);
   const [pendingInput, setPendingInput] = useState<{ label: string } | null>(null);
   const sessionRef = useRef(emptySession());
   const fileResolver = useRef<((f: File) => void) | null>(null);
   const fileRejecter = useRef<((e: Error) => void) | null>(null);
+  const filesResolver = useRef<((f: File[]) => void) | null>(null);
+  const filesRejecter = useRef<((e: Error) => void) | null>(null);
   const inputResolver = useRef<((v: string) => void) | null>(null);
   const inputRejecter = useRef<((e: Error) => void) | null>(null);
   // Files the user already uploaded this session, keyed by file-slot. Reused on a
@@ -61,6 +64,15 @@ export function useAgentChat(provider: AgentProvider | null) {
   const provideFile = (f: File) => { const r = fileResolver.current; clearFileWaiters(); r?.(f); };
   /** Abandon a pending file request (user chose not to upload). Unwinds the loop. */
   const cancelFile = () => { const r = fileRejecter.current; clearFileWaiters(); r?.(new Error('__cancelled__')); };
+
+  // Variable-count file request (e.g. "merge these PDFs").
+  const requestFiles = (label: string): Promise<File[]> => {
+    setPendingFiles({ label });
+    return new Promise((res, rej) => { filesResolver.current = res; filesRejecter.current = rej; });
+  };
+  const clearFilesWaiters = () => { setPendingFiles(null); filesResolver.current = null; filesRejecter.current = null; };
+  const provideFiles = (fs: File[]) => { const r = filesResolver.current; clearFilesWaiters(); r?.(fs); };
+  const cancelFiles = () => { const r = filesRejecter.current; clearFilesWaiters(); r?.(new Error('__cancelled__')); };
 
   // Ask the user for a required text value the model couldn't fill (e.g. what a
   // QR should encode) — the text equivalent of requestFile.
@@ -144,6 +156,11 @@ export function useAgentChat(provider: AgentProvider | null) {
           files[fs.key] = f;
           if (!piped) { loopFiles[fs.key] = f; lastFilesRef.current[fs.key] = f; } // remember only real uploads
         }
+        let fileList: File[] | undefined;
+        if (exec.multiFile) {
+          try { fileList = await requestFiles(exec.multiFile.label); }
+          catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+        }
         const params: Record<string, string | number> = { ...argsIn };
         for (const ps of exec.params) {
           if (ps.default !== undefined) continue;
@@ -155,7 +172,7 @@ export function useAgentChat(provider: AgentProvider | null) {
           }
         }
         try {
-          const result = await exec.execute({ files, params }, p => updateLastText(`→ ${exec.toolId} — ${Math.round(p * 100)}%`));
+          const result = await exec.execute({ files, params, fileList }, p => updateLastText(`→ ${exec.toolId} — ${Math.round(p * 100)}%`));
           const blobUrl = result.blob ? URL.createObjectURL(result.blob) : undefined;
           push({ role: 'assistant', text: `✓ ${exec.toolId}: ${result.text ?? 'produced a file'}`, blobUrl, imgUrl: result.dataUrl, filename: result.filename });
           if (result.blob) chainFile = new File([result.blob], result.filename ?? 'output', { type: result.blob.type });
@@ -178,9 +195,10 @@ export function useAgentChat(provider: AgentProvider | null) {
             type: 'object',
             properties: {
               ...Object.fromEntries(e.files.map(f => [f.key, { type: 'string', description: `${f.label} — pass the string "UPLOAD" and the app will ask the user for the file` }])),
+              ...(e.multiFile ? { [e.multiFile.key]: { type: 'string', description: `${e.multiFile.label} — pass "UPLOAD"; the app will let the user pick several files` } } : {}),
               ...Object.fromEntries(e.params.map(p => [p.key, { type: p.type === 'number' ? 'number' : 'string', description: p.label }])),
             },
-            required: [...e.files.map(f => f.key), ...e.params.filter(p => p.default === undefined).map(p => p.key)],
+            required: [...e.files.map(f => f.key), ...(e.multiFile ? [e.multiFile.key] : []), ...e.params.filter(p => p.default === undefined).map(p => p.key)],
           },
         }));
         const sys = "You are GoodWebTools' agent. Use the tools to fulfil the user's request. You can call several tools in sequence — each tool's output file automatically becomes the next tool's input, so you can chain them. For a file argument pass the string \"UPLOAD\". When the task is done, reply with a short final message and no tool call.";
@@ -250,5 +268,5 @@ export function useAgentChat(provider: AgentProvider | null) {
     }
   };
 
-  return { turns, busy, pendingFile, pendingInput, send, provideFile, cancelFile, provideInput, cancelInput };
+  return { turns, busy, pendingFile, pendingFiles, pendingInput, send, provideFile, cancelFile, provideFiles, cancelFiles, provideInput, cancelInput };
 }
