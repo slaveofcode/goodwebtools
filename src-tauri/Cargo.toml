@@ -1,6 +1,6 @@
 [package]
 name = "goodwebtools"
-version = "1.0.0-beta.5"
+version = "1.0.0-beta.6"
 description = "Privacy-first client-side tools"
 authors = ["Kresna <kresnapmn@gmail.com>"]
 edition = "2021"
