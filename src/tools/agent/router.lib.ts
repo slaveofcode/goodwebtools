@@ -134,6 +134,21 @@ const ID_EN: Record<string, string> = {
   terjemah: 'translate', terjemahkan: 'translate', ringkas: 'summarize',
   buat: 'make create', bikin: 'make create', buatkan: 'make create', gambarkan: 'draw',
   unduh: 'download', warna: 'color', diagram: 'diagram', ikon: 'icon',
+  // Informal / gaul: the -in suffix (kecilin, gabungin…), slang, and misspellings.
+  gedein: 'enlarge upscale bigger', gede: 'enlarge bigger', gedegin: 'enlarge',
+  ubahin: 'convert', jadiin: 'convert make', rubah: 'convert', ganti: 'convert change',
+  potongin: 'trim cut', pangkas: 'trim crop', pangkasin: 'trim crop',
+  gabungin: 'merge combine', satuin: 'merge', pisahin: 'split', pecah: 'split',
+  puterin: 'rotate', rotasiin: 'rotate', balik: 'rotate flip',
+  hapusin: 'remove delete', ilangin: 'remove delete', buang: 'remove delete',
+  buatin: 'make create', bikinin: 'make create', gambarin: 'draw',
+  kompresin: 'compress', mampatin: 'compress', kecilkin: 'shrink smaller',
+  ringkasin: 'summarize', ringkesin: 'summarize', terjemahin: 'translate',
+  amanin: 'encrypt protect', kunciin: 'password protect', enkripin: 'encrypt',
+  rapiin: 'format tidy', rapihin: 'format tidy', benerin: 'repair fix', perbaiki: 'repair fix',
+  vidio: 'video', vidionya: 'video', dokumen: 'document', dok: 'document',
+  angka: 'number', bilangan: 'number', tulisan: 'text', kalimat: 'sentence', paragraf: 'paragraph',
+  qr: 'qr code', barkode: 'barcode', sandiin: 'password',
 };
 export function expandIndonesian(query: string): string {
   const extra: string[] = [];
