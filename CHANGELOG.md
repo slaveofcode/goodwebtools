@@ -2,6 +2,24 @@
 
 All notable changes to GoodWebTools are documented here.
 
+## [1.0.0-beta.6] — 2026-08-29
+
+A big upgrade to the AI Agent, plus reliability work for smaller models.
+
+### Added
+- **Ask Agent can now build things, not just run tools:** it generates **SVG icons and diagrams**, draws anything on a **sandboxed canvas**, and transforms your data with a **sandboxed data interpreter** (model-written JavaScript, no network) — e.g. remove redundant CSV rows then convert to Excel.
+- **More productivity tools wired into the agent:** CSV dedupe, CSV ↔ Excel, word count, PDF compress / rotate / split, **multi-file merge** (drop several PDFs), and image format conversion (PNG / JPG / WebP).
+- **Attach files right in the chat** with the paperclip button.
+- **Bahasa Indonesia understanding**, including informal/slang phrasing (e.g. "kecilin", "ganti gambar ke webp").
+
+### Changed
+- **Reliable tool use on cloud models** via native function-calling — the agent can plan and **chain several tools** to fulfil one request.
+- **Much steadier on small on-device models (0.5B/1.5B):** a single clear request runs directly without the model faltering, tools no longer re-run on their own output, and file sizes read correctly (KB, never "0 MB").
+- **Your cloud provider settings persist** (provider, model, proxy, and last-used tab) so you return straight to chatting.
+
+### Fixed
+- Agent routing and display fixes — number-base conversion no longer crashes, "crop image" opens the right tool, and dropped messages/args are recovered instead of silently ignored.
+
 ## [1.0.0-beta.5] — 2026-08-28
 
 ### Added
