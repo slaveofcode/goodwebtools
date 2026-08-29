@@ -36,6 +36,9 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
 
   const { turns, busy, pendingFile, pendingFiles, pendingInput, send, provideFile, cancelFile, provideFiles, cancelFiles, provideInput, cancelInput } = useAgentChat(provider);
   const [inputValue, setInputValue] = useState('');
+  const [attached, setAttached] = useState<File[]>([]);
+  const attachInputRef = useRef<HTMLInputElement>(null);
+  const submit = () => { if (input.trim()) { send(input, attached); setInput(''); setAttached([]); } };
 
   const loadOndevice = async () => {
     setLoading(true); setProgressText('');
@@ -177,10 +180,24 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
               </div>
             )}
           </div>
+          {attached.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {attached.map((f, i) => (
+                <span key={i} className="inline-flex items-center gap-1 border-2 border-border bg-muted px-2 py-0.5 text-xs">
+                  📎 {f.name}
+                  <button onClick={() => setAttached(a => a.filter((_, j) => j !== i))} aria-label="Remove" className="font-bold text-muted-foreground hover:text-foreground">×</button>
+                </span>
+              ))}
+            </div>
+          )}
           <div className="flex gap-2">
-            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { send(input); setInput(''); } }}
+            <input ref={attachInputRef} type="file" multiple className="hidden"
+              onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) setAttached(a => [...a, ...fs]); e.target.value = ''; }} />
+            <button onClick={() => attachInputRef.current?.click()} aria-label="Attach a file" title="Attach a file"
+              className="border-2 border-border bg-muted px-3 font-bold text-muted-foreground press-brutal">📎</button>
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') submit(); }}
               placeholder="Tell the agent what you want…" className="flex-1 border-2 border-border bg-muted p-3 outline-none focus:shadow-brutal-sm" />
-            <button onClick={() => { send(input); setInput(''); }} disabled={busy || !input.trim()} className="border-2 border-border bg-accent px-4 font-bold uppercase text-accent-foreground press-brutal disabled:opacity-50">Send</button>
+            <button onClick={submit} disabled={busy || !input.trim()} className="border-2 border-border bg-accent px-4 font-bold uppercase text-accent-foreground press-brutal disabled:opacity-50">Send</button>
           </div>
         </>
       )}

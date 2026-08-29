@@ -103,6 +103,10 @@ describe('executor registry', () => {
     expect(scopeExecutors('convert this unix timestamp').map(e => e.toolId)).toContain('timestamp');
     expect(scopeExecutors('csv to json').map(e => e.toolId)).toContain('csv-json');
     expect(scopeExecutors('convert 255 base 10 to base 16').map(e => e.toolId)).toContain('base-convert');
+    // base-convert must NOT be pulled in by "base64" (that's the base64 tool).
+    const b64 = scopeExecutors('encode base64 ABCDEF').map(e => e.toolId);
+    expect(b64).toContain('base64');
+    expect(b64).not.toContain('base-convert');
     expect(scopeExecutors('clean the tracking params from this url').map(e => e.toolId)).toContain('url-cleaner');
     expect(scopeExecutors('generate a strong password').map(e => e.toolId)).toContain('password-gen');
     expect(scopeExecutors('convert this html to markdown').map(e => e.toolId)).toContain('html-markdown');

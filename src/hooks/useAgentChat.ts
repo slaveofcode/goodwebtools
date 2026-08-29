@@ -3,7 +3,7 @@ import { classifyIntent } from '@/tools/agent/intent';
 import { executorFor, AGENT_EXECUTORS } from '@/tools/agent/executors';
 import { buildSystemPrompt, parseAction, recoverContentAction, type LoopTool } from '@/tools/agent/loop.lib';
 import { emptySession, recordUser, applyResolution, historyForPrompt } from '@/tools/agent/session.lib';
-import { prefillUrl } from '@/tools/agent/router.lib';
+import { prefillUrl, extractParams } from '@/tools/agent/router.lib';
 import { buildToolChoicePrompt, parseToolChoice } from '@/tools/agent/select.lib';
 import { getToolById } from '@/registry/tools';
 import type { AgentProvider, ChatMessage, ToolSpec, ToolMsg } from '@/services/agent/provider';
@@ -23,6 +23,23 @@ const CHAT_SYSTEM = [
   "NEVER recommend external or competitor websites, apps, or software (e.g. Photoshop, Canva, iLoveIMG, Photopea) — and don't give generic OS/phone instructions. If the user wants to DO something, assume GoodWebTools has a tool for it and offer to open it (tell them to just ask, e.g. \"want me to crop it?\").",
   'If you are unsure whether a tool exists, say you can look for one rather than sending them elsewhere.',
 ].join(' ');
+
+/**
+ * Guess a content value from the user's message for a tool arg a weak model left
+ * empty — e.g. "format this json: {ac:1}" → "{ac:1}", or a quoted string. Falls
+ * back to the router's residual-text extraction. So a small model that calls the
+ * right tool but forgets the arg doesn't re-ask for content already in the message.
+ */
+function guessContent(q: string): string {
+  // Content after the FIRST ':' (a colon inside the value, e.g. JSON, must not
+  // split it) — "format json: {a:1}" → "{a:1}".
+  const colon = q.indexOf(':');
+  if (colon >= 0) { const after = q.slice(colon + 1).trim(); if (after) return after; }
+  const quoted = q.match(/["'`]([^"'`]{2,})["'`]/);
+  if (quoted) return quoted[1];
+  const residual = extractParams(q).text;
+  return residual ? residual.trim() : '';
+}
 
 /**
  * Orchestrates one agent conversation over any `AgentProvider`:
@@ -45,6 +62,9 @@ export function useAgentChat(provider: AgentProvider | null) {
   // Files the user already uploaded this session, keyed by file-slot. Reused on a
   // follow-up ("make it 50kb") so the agent doesn't re-ask for the same image.
   const lastFilesRef = useRef<Record<string, File>>({});
+  // Files attached to the current message (via the paperclip) — consumed by tools
+  // that need a file before falling back to a dropzone prompt.
+  const attachedRef = useRef<File[]>([]);
 
   const push = (t: ChatUiTurn) => setTurns(x => [...x, t]);
   // Rewrite the most recent turn's text — used to animate a running executor's
@@ -84,10 +104,11 @@ export function useAgentChat(provider: AgentProvider | null) {
   const provideInput = (v: string) => { const r = inputResolver.current; clearInputWaiters(); r?.(v); };
   const cancelInput = () => { const r = inputRejecter.current; clearInputWaiters(); r?.(new Error('__cancelled__')); };
 
-  const send = async (text: string) => {
+  const send = async (text: string, attached: File[] = []) => {
     const q = text.trim();
     if (!q || !provider || busy) return;
-    push({ role: 'user', text: q });
+    attachedRef.current = [...attached];
+    push({ role: 'user', text: q + (attached.length ? ` 📎 ${attached.map(f => f.name).join(', ')}` : '') });
     sessionRef.current = recordUser(sessionRef.current, q);
     setBusy(true);
     try {
@@ -149,6 +170,7 @@ export function useAgentChat(provider: AgentProvider | null) {
           const cached = piped ?? loopFiles[fs.key];
           let f: File;
           if (cached) { f = cached; }
+          else if (attachedRef.current.length) { f = attachedRef.current.shift()!; } // use an attached file
           else {
             try { f = await requestFile(fs.label); }
             catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
@@ -158,17 +180,28 @@ export function useAgentChat(provider: AgentProvider | null) {
         }
         let fileList: File[] | undefined;
         if (exec.multiFile) {
-          try { fileList = await requestFiles(exec.multiFile.label); }
-          catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+          if (attachedRef.current.length) { fileList = attachedRef.current.splice(0); } // use attached files
+          else {
+            try { fileList = await requestFiles(exec.multiFile.label); }
+            catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+          }
         }
         const params: Record<string, string | number> = { ...argsIn };
+        const singleContentParam = exec.params.filter(p => p.default === undefined).length === 1;
         for (const ps of exec.params) {
           if (ps.default !== undefined) continue;
           const raw = params[ps.key] == null ? '' : String(params[ps.key]).trim();
           const echoed = raw !== '' && (raw.toLowerCase() === q.trim().toLowerCase() || (wordCount(raw) <= 3 && exec.match(raw)));
           if (raw === '' || raw.toUpperCase() === 'UPLOAD' || echoed) {
-            try { params[ps.key] = await requestInput(ps.label); }
-            catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+            // For a single-content tool, recover the value from the message before
+            // asking — a weak model often calls the right tool but omits the arg.
+            const guess = singleContentParam ? guessContent(q) : '';
+            if (guess && guess.toLowerCase() !== q.trim().toLowerCase() && !(wordCount(guess) <= 3 && exec.match(guess))) {
+              params[ps.key] = guess;
+            } else {
+              try { params[ps.key] = await requestInput(ps.label); }
+              catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+            }
           }
         }
         try {

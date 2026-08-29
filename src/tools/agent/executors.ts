@@ -141,16 +141,20 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
-    toolId: 'base-convert', description: 'Convert a number between bases (pass from and to, e.g. 2, 10, 16)', match: re(/base ?\d+|binary|hex(adecimal)?|octal|radix|convert.*(base|binary|hex|octal)/i),
+    // Match only a real base CONVERSION — NOT "base64" (which is the base64 tool);
+    // "base ?\d+" alone caught "base64" and polluted the scope.
+    toolId: 'base-convert', description: 'Convert a number between numeric bases 2–36 (pass from and to, e.g. 2, 10, 16)',
+    match: re(/\bto\s+base[- ]?\d+\b|\bbase[- ]?\d+\s+to\b|\bin\s+base[- ]?\d+\b|\bradix\b|\bnumber base\b|convert.*\b(binary|octal|hexadecimal)\b|\b(binary|octal|hexadecimal)\b.*\bconvert\b/i),
     files: [], params: [
       { key: 'value', type: 'string', label: 'Number' },
-      { key: 'from', type: 'number', label: 'From base', default: 10 },
-      { key: 'to', type: 'number', label: 'To base', default: 16 },
+      { key: 'from', type: 'number', label: 'From base (2–36)', default: 10 },
+      { key: 'to', type: 'number', label: 'To base (2–36)', default: 16 },
     ],
     execute: async ({ params }) => {
       const { parseInBase } = await import('@/tools/dev/base-convert.lib');
       const from = Number(params.from) || 10;
       const to = Number(params.to) || 16;
+      if (from < 2 || from > 36 || to < 2 || to > 36) throw new Error('bases must be between 2 and 36');
       const n = parseInBase(String(params.value ?? '').trim(), from);
       if (n === null) throw new Error(`"${params.value}" is not a valid base-${from} number`);
       return { text: n.toString(to) };
