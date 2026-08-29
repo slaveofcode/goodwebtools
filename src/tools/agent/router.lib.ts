@@ -120,7 +120,7 @@ function scoreTool(tool: (typeof tools)[number], queryStems: string[]): number {
 }
 
 // Bahasa Indonesia → English keyword bridge, so the agent works on the /id/ site.
-// Appended (not replaced) to the query before matching, so mixed EN/ID also works.
+// Replaced in place (see expandIndonesian) so phrases stay adjacent for the matchers.
 const ID_EN: Record<string, string> = {
   gambar: 'image', foto: 'photo', citra: 'image', gbr: 'image',
   kompres: 'compress', mampatkan: 'compress', perkecil: 'shrink smaller', kecilkan: 'shrink smaller', kecilin: 'shrink smaller', kurangi: 'reduce', kurangin: 'reduce',
@@ -152,9 +152,9 @@ const ID_EN: Record<string, string> = {
   ke: 'to', dari: 'from', jadi: 'to become',
 };
 export function expandIndonesian(query: string): string {
-  const extra: string[] = [];
-  for (const w of query.toLowerCase().split(/[^a-z0-9]+/)) { const e = ID_EN[w]; if (e) extra.push(e); }
-  return extra.length ? `${query} ${extra.join(' ')}` : query;
+  // Replace ID words in place (not append) so phrases stay adjacent — "ganti
+  // video ke mp4" → "convert change video to mp4", which the format matchers need.
+  return query.split(/\b/).map(tok => ID_EN[tok.toLowerCase()] ?? tok).join('');
 }
 
 /** Route a query to the most relevant tools plus any extracted parameters. */

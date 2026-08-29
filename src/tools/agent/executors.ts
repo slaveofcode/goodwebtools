@@ -545,6 +545,19 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
+    toolId: 'image-convert', description: 'Convert an image to another format — png, jpg, or webp',
+    match: re(/(convert|change|turn|export|save|transcode).*(image|img|photo|picture).*\b(png|jpe?g|webp|avif)\b|(image|img|photo|picture).*\b(to|into|as)\b.*\b(png|jpe?g|webp|avif)\b|\b(to|into|as) ?(png|jpe?g|webp|avif)\b/i),
+    files: [{ key: 'file', accept: 'image/*', label: 'Image' }],
+    params: [{ key: 'format', type: 'string', label: 'Format (png/jpg/webp)', default: 'webp' }],
+    execute: async ({ files, params }) => {
+      const { convertImage } = await import('@/tools/image/canvas.lib');
+      const fmt = String(params.format ?? 'webp').toLowerCase().replace('jpeg', 'jpg');
+      const mime = ({ png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp', avif: 'image/avif' } as Record<string, string>)[fmt] || 'image/webp';
+      const blob = await convertImage(files.file, mime);
+      return { blob, filename: `converted.${fmt}`, text: `converted to ${fmt.toUpperCase()} — ${Math.round(blob.size / 1024)} KB` };
+    },
+  },
+  {
     toolId: 'video-compress', description: 'Compress a video file to a target size in megabytes',
     match: re(/(video|vid|mp4|mov|mkv|movie|clip|footage|webm).*(compress|smaller|reduce|shrink|size|\bmb\b|\bkb\b)|(compress|smaller|reduce|shrink).*(video|vid|mp4|mov|mkv|movie|clip|footage|webm)/i),
     files: [{ key: 'file', accept: 'video/*', label: 'Video' }],

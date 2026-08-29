@@ -61,6 +61,28 @@ export async function encodeCanvas(
   );
 }
 
+/** Convert an image File to another raster format via a canvas. Browser-only. */
+export async function convertImage(file: File, mime: string, quality = 0.92): Promise<Blob> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error('could not load the image'));
+      i.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('no 2d context');
+    ctx.drawImage(img, 0, 0);
+    return await encodeCanvas(canvas, mime, mime === 'image/png' ? undefined : quality);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 /**
  * Map a user-facing Scale percent (1–100) to a `fontScale` fraction of the
  * image's shorter side. Larger percents yield a bigger font and — because the

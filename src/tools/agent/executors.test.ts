@@ -19,6 +19,11 @@ describe('executor registry', () => {
   it('scopes image-compress for an image request', () => {
     expect(scopeExecutors('compress this image to 100kb').map(e => e.toolId)).toContain('image-compress');
   });
+  it('scopes image-convert for a format-change request (not compress)', () => {
+    expect(scopeExecutors('convert this image to webp').map(e => e.toolId)).toContain('image-convert');
+    expect(scopeExecutors('change this photo to png').map(e => e.toolId)).toContain('image-convert');
+    expect(scopeExecutors('ganti gambar ini ke jpg').map(e => e.toolId)).toContain('image-convert');
+  });
   it('scopes audio-convert (not video/image) for "compress my mp3 to 3mb"', () => {
     const ids = scopeExecutors('compress my mp3 to 3mb').map(e => e.toolId);
     expect(ids).toContain('audio-convert');
