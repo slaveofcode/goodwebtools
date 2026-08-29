@@ -36,3 +36,9 @@ public/sqlite/
 # Unbuilt api-client planning docs (kept local until that feature is picked up)
 docs/superpowers/plans/2026-08-09-api-client.md
 docs/superpowers/specs/2026-08-09-api-client-design.md
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

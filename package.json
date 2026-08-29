@@ -18,6 +18,8 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 astro build",
     "preview": "astro preview",
     "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:real": "PLAYWRIGHT_REAL=1 playwright test e2e/agent-real.spec.ts",
     "lint": "eslint src --ext .ts,.tsx,.astro",
     "lint:fix": "eslint src --ext .ts,.tsx,.astro --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,astro,css}\"",
@@ -126,6 +128,7 @@
   "devDependencies": {
     "@fontsource/space-grotesk": "^5.3.0",
     "@imgly/background-removal-data": "^1.4.5",
+    "@playwright/test": "^1.62.1",
     "@resvg/resvg-js": "^2.6.2",
     "@tauri-apps/cli": "^2.11.4",
     "@testing-library/jest-dom": "^6.9.1",
