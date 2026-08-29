@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { test, expect } from '@playwright/test';
 import { installAgent, send } from './helpers';
 
@@ -35,4 +36,27 @@ test('single-candidate shortcut runs the tool with no model JSON', async ({ page
   await send(page, 'terbilang 1500000');
   await expect(page.getByTestId('agent-messages')).toContainText('✓ terbilang:');
   await expect(page.getByTestId('agent-messages')).not.toContainText('quite catch');
+});
+
+test('consumes an attached CSV and dedupes it', async ({ page }) => {
+  await installAgent(page, {
+    steps: [{ calls: [{ name: 'csv-dedupe', args: {} }] }, { text: 'Done.' }],
+    capable: true,
+  });
+  await page.getByTestId('agent-attach-input').setInputFiles(path.join(__dirname, 'fixtures/sample.csv'));
+  await expect(page.getByText('sample.csv')).toBeVisible();       // attach state settled
+  await send(page, 'remove duplicate rows from this csv');
+  await expect(page.getByTestId('agent-messages')).toContainText('✓ csv-dedupe:');
+  await expect(page.getByTestId('agent-messages')).toContainText('removed 1 duplicate row');
+  await expect(page.getByRole('link', { name: /download/i })).toBeVisible();
+});
+
+test('multi-file tool asks for several files', async ({ page }) => {
+  await installAgent(page, {
+    steps: [{ calls: [{ name: 'pdf-merge', args: {} }] }, { text: 'Done.' }],
+    capable: true,
+  });
+  await send(page, 'merge these pdfs into one');
+  // With no attachment, the app prompts with a visible multiple file input.
+  await expect(page.locator('input[type="file"][multiple]:visible')).toBeVisible();
 });
