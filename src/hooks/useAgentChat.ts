@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import { classifyIntent } from '@/tools/agent/intent';
 import { executorFor, AGENT_EXECUTORS } from '@/tools/agent/executors';
-import { buildSystemPrompt, parseAction, type LoopTool } from '@/tools/agent/loop.lib';
+import { buildSystemPrompt, parseAction, recoverContentAction, type LoopTool } from '@/tools/agent/loop.lib';
 import { emptySession, recordUser, applyResolution, historyForPrompt } from '@/tools/agent/session.lib';
 import { prefillUrl } from '@/tools/agent/router.lib';
 import { buildToolChoicePrompt, parseToolChoice } from '@/tools/agent/select.lib';
 import { getToolById } from '@/registry/tools';
-import type { AgentProvider, ChatMessage } from '@/services/agent/provider';
+import type { AgentProvider, ChatMessage, ToolSpec, ToolMsg } from '@/services/agent/provider';
 
 export interface ChatUiTurn {
   role: 'user' | 'assistant';
@@ -119,6 +119,100 @@ export function useAgentChat(provider: AgentProvider | null) {
       // tiny on-device model gets only the keyword-scoped subset so it can't mis-pick.
       const capable = provider.capable === true;
       const offered = capable ? AGENT_EXECUTORS : intent.executors;
+      const offeredIds = offered.map(e => e.toolId);
+      // Files available to this task: seeded from a prior turn on a continuation.
+      const loopFiles: Record<string, File> = intent.continued ? { ...lastFilesRef.current } : {};
+      let chainFile: File | null = null; // last tool OUTPUT, piped into the next tool
+      let produced = false;
+      const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+
+      // Run ONE executor call: collect files (chaining/upload) + required params
+      // (asking the user for hallucinated/empty ones), execute, show the result,
+      // and pipe its output. Shared by both the native and prompt loops.
+      const runExecutor = async (exec: (typeof AGENT_EXECUTORS)[number], argsIn: Record<string, string | number>): Promise<{ ok: boolean; resultText: string; cancelled?: boolean }> => {
+        push({ role: 'assistant', text: `→ ${exec.toolId}` });
+        const files: Record<string, File> = {};
+        for (const fs of exec.files) {
+          const piped = chainFile; // prefer the previous tool's output (chaining)
+          const cached = piped ?? loopFiles[fs.key];
+          let f: File;
+          if (cached) { f = cached; }
+          else {
+            try { f = await requestFile(fs.label); }
+            catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+          }
+          files[fs.key] = f;
+          if (!piped) { loopFiles[fs.key] = f; lastFilesRef.current[fs.key] = f; } // remember only real uploads
+        }
+        const params: Record<string, string | number> = { ...argsIn };
+        for (const ps of exec.params) {
+          if (ps.default !== undefined) continue;
+          const raw = params[ps.key] == null ? '' : String(params[ps.key]).trim();
+          const echoed = raw !== '' && (raw.toLowerCase() === q.trim().toLowerCase() || (wordCount(raw) <= 3 && exec.match(raw)));
+          if (raw === '' || raw.toUpperCase() === 'UPLOAD' || echoed) {
+            try { params[ps.key] = await requestInput(ps.label); }
+            catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+          }
+        }
+        try {
+          const result = await exec.execute({ files, params }, p => updateLastText(`→ ${exec.toolId} — ${Math.round(p * 100)}%`));
+          const blobUrl = result.blob ? URL.createObjectURL(result.blob) : undefined;
+          push({ role: 'assistant', text: `✓ ${exec.toolId}: ${result.text ?? 'produced a file'}`, blobUrl, imgUrl: result.dataUrl, filename: result.filename });
+          if (result.blob) chainFile = new File([result.blob], result.filename ?? 'output', { type: result.blob.type });
+          sessionRef.current = applyResolution(sessionRef.current, { toolId: exec.toolId, params, reply: result.text ?? 'done' });
+          produced = true;
+          return { ok: true, resultText: result.text ? result.text.slice(0, 400) : 'produced a file for the user' };
+        } catch (e) {
+          push({ role: 'assistant', text: `✗ ${exec.toolId} error: ${(e as Error).message}` });
+          return { ok: false, resultText: `error: ${(e as Error).message}` };
+        }
+      };
+
+      // --- Native function-calling loop (cloud): the provider's real tools API ---
+      const chatTools = provider.chatTools;
+      if (chatTools) {
+        const tools: ToolSpec[] = offered.map(e => ({
+          name: e.toolId,
+          description: e.description,
+          parameters: {
+            type: 'object',
+            properties: {
+              ...Object.fromEntries(e.files.map(f => [f.key, { type: 'string', description: `${f.label} — pass the string "UPLOAD" and the app will ask the user for the file` }])),
+              ...Object.fromEntries(e.params.map(p => [p.key, { type: p.type === 'number' ? 'number' : 'string', description: p.label }])),
+            },
+            required: [...e.files.map(f => f.key), ...e.params.filter(p => p.default === undefined).map(p => p.key)],
+          },
+        }));
+        const sys = "You are GoodWebTools' agent. Use the tools to fulfil the user's request. You can call several tools in sequence — each tool's output file automatically becomes the next tool's input, so you can chain them. For a file argument pass the string \"UPLOAD\". When the task is done, reply with a short final message and no tool call.";
+        const msgs: ToolMsg[] = [{ role: 'system', content: sys }, { role: 'user', content: q }];
+        const done = new Set<string>();
+        for (let iter = 0; iter < 8; iter++) {
+          const turn = await chatTools(msgs, tools);
+          if (!turn.calls.length) {
+            const r = turn.text || (produced ? 'Done.' : 'Okay.');
+            push({ role: 'assistant', text: r });
+            sessionRef.current = applyResolution(sessionRef.current, { toolId: null, params: {}, reply: r });
+            break;
+          }
+          msgs.push({ role: 'assistant', content: turn.text, toolCalls: turn.calls });
+          let stop = false;
+          for (const call of turn.calls) {
+            const exec = executorFor(call.name);
+            if (!exec) { msgs.push({ role: 'tool', toolCallId: call.id, content: `unknown tool ${call.name}` }); continue; }
+            const key = call.name + JSON.stringify(call.args);
+            if (done.has(key)) { msgs.push({ role: 'tool', toolCallId: call.id, content: 'already done — reply with a final message' }); continue; }
+            const res = await runExecutor(exec, call.args);
+            if (res.cancelled) { stop = true; break; }
+            done.add(key);
+            msgs.push({ role: 'tool', toolCallId: call.id, content: res.resultText });
+          }
+          if (stop) break;
+          if (iter === 7) push({ role: 'assistant', text: produced ? 'Done — anything else?' : "I couldn't finish that." });
+        }
+        return;
+      }
+
+      // --- Prompt-based loop (on-device / no tools API): JSON action protocol ---
       const loopTools: LoopTool[] = offered.map(e => ({
         name: e.toolId,
         description: e.description,
@@ -127,102 +221,26 @@ export function useAgentChat(provider: AgentProvider | null) {
           ...e.params.map(p => ({ name: p.key, type: p.type, required: p.default === undefined })),
         ],
       }));
-      const systemPrompt = buildSystemPrompt(loopTools) + (capable
-        ? '\n- You can call SEVERAL tools in sequence to fulfil one request. The output file of each tool automatically becomes the input for the next, so you can chain them (e.g. get audio from a video, then compress that audio). Plan the steps and call one tool per turn.'
-        : '');
-      const convo: ChatMessage[] = [{ role: 'system', content: systemPrompt }, { role: 'user', content: q }];
-      // Files available to this task: seeded from a prior turn on a continuation,
-      // and accumulated within the loop so a repeated call never re-prompts.
-      const loopFiles: Record<string, File> = intent.continued ? { ...lastFilesRef.current } : {};
-      // The most recent tool OUTPUT, offered as the input to the next tool (chaining).
-      let chainFile: File | null = null;
+      const convo: ChatMessage[] = [{ role: 'system', content: buildSystemPrompt(loopTools) }, { role: 'user', content: q }];
       const doneKeys = new Set<string>();
-      let produced = false;
       for (let iter = 0; iter < 8; iter++) {
         const raw = await provider.chat(convo);
-        const act = parseAction(raw);
-        if (!act) {
-          // Unparseable turn (small models emit junk). If we already handed the
-          // user a result, just close out cleanly — never dump raw JSON to chat.
-          push({ role: 'assistant', text: produced ? 'Done — anything else?' : "I didn't quite catch that. Could you rephrase what you'd like to do?" });
-          break;
-        }
+        const act = parseAction(raw) ?? recoverContentAction(raw, offeredIds);
+        if (!act) { push({ role: 'assistant', text: produced ? 'Done — anything else?' : "I didn't quite catch that. Could you rephrase what you'd like to do?" }); break; }
         if (act.action === 'final') {
           const r = act.text || (produced ? 'Done.' : '(done)');
           push({ role: 'assistant', text: r });
           sessionRef.current = applyResolution(sessionRef.current, { toolId: null, params: {}, reply: r });
           break;
         }
-
         const key = act.tool + JSON.stringify(act.args);
-        if (doneKeys.has(key)) {
-          // Model re-issued a call it already completed — the result is already
-          // shown. Stop instead of re-running (or re-prompting for the file).
-          push({ role: 'assistant', text: 'Done — anything else?' });
-          break;
-        }
-
+        if (doneKeys.has(key)) { push({ role: 'assistant', text: 'Done — anything else?' }); break; }
         const exec = executorFor(act.tool);
-        if (!exec) {
-          convo.push({ role: 'assistant', content: raw }, { role: 'user', content: `TOOL_ERROR: unknown tool ${act.tool}` });
-          continue;
-        }
-        push({ role: 'assistant', text: `→ ${exec.toolId}` });
-
-        const files: Record<string, File> = {};
-        let cancelled = false;
-        for (const fs of exec.files) {
-          // Prefer the previous tool's OUTPUT (chaining), then a file already
-          // uploaded this task, otherwise ask. Don't cache a chained output as the
-          // "original upload" — a later "make it smaller" should re-run on the source.
-          const piped = chainFile;
-          const cached = piped ?? loopFiles[fs.key];
-          let f: File;
-          if (cached) { f = cached; }
-          else {
-            try { f = await requestFile(fs.label); }
-            catch { cancelled = true; break; }
-          }
-          files[fs.key] = f;
-          if (!piped) { loopFiles[fs.key] = f; lastFilesRef.current[fs.key] = f; }
-        }
-        if (cancelled) { updateLastText(`✗ ${exec.toolId} — cancelled`); break; }
-
-        // Fill any required text param the model left empty — OR hallucinated —
-        // by asking the user. A tiny model often echoes the command itself as the
-        // value ("QR" → a QR of the word "QR"); treat as missing when the value is
-        // empty, equals the whole query, or is a short phrase that itself triggers
-        // this same tool (a command word, not content).
-        const params: Record<string, string | number> = { ...act.args };
-        const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
-        for (const ps of exec.params) {
-          if (ps.default !== undefined) continue; // optional / has a default
-          const raw = params[ps.key] == null ? '' : String(params[ps.key]).trim();
-          const echoed = raw !== '' && (raw.toLowerCase() === q.trim().toLowerCase() || (wordCount(raw) <= 3 && exec.match(raw)));
-          if (raw === '' || raw.toUpperCase() === 'UPLOAD' || echoed) {
-            try { params[ps.key] = await requestInput(ps.label); }
-            catch { cancelled = true; break; }
-          }
-        }
-        if (cancelled) { updateLastText(`✗ ${exec.toolId} — cancelled`); break; }
-
-        try {
-          const result = await exec.execute({ files, params }, p => {
-            updateLastText(`→ ${exec.toolId} — ${Math.round(p * 100)}%`);
-          });
-          const blobUrl = result.blob ? URL.createObjectURL(result.blob) : undefined;
-          push({ role: 'assistant', text: `✓ ${exec.toolId}: ${result.text ?? 'produced a file'}`, blobUrl, imgUrl: result.dataUrl, filename: result.filename });
-          // Pipe this output into the next tool of the chain.
-          if (result.blob) chainFile = new File([result.blob], result.filename ?? 'output', { type: result.blob.type });
-          sessionRef.current = applyResolution(sessionRef.current, { toolId: exec.toolId, params, reply: result.text ?? 'done' });
-          doneKeys.add(key);
-          produced = true;
-          convo.push({ role: 'assistant', content: raw }, { role: 'user', content: `TOOL_RESULT ${exec.toolId}: ${result.text ? result.text.slice(0, 400) : 'produced a file for the user'}. Respond with a "final" action now unless the user asked for more.` });
-        } catch (e) {
-          push({ role: 'assistant', text: `✗ ${exec.toolId} error: ${(e as Error).message}` });
-          convo.push({ role: 'assistant', content: raw }, { role: 'user', content: `TOOL_ERROR ${exec.toolId}: ${(e as Error).message}` });
-        }
-        // Ran out of iterations mid-task: close out rather than leave it hanging.
+        if (!exec) { convo.push({ role: 'assistant', content: raw }, { role: 'user', content: `TOOL_ERROR: unknown tool ${act.tool}` }); continue; }
+        const res = await runExecutor(exec, act.args);
+        if (res.cancelled) break;
+        doneKeys.add(key);
+        convo.push({ role: 'assistant', content: raw }, { role: 'user', content: `TOOL_RESULT ${exec.toolId}: ${res.resultText}. Respond with a "final" action now unless the user asked for more.` });
         if (iter === 7) push({ role: 'assistant', text: produced ? 'Done — anything else?' : "I couldn't finish that — try rephrasing, or a bigger model." });
       }
     } catch (e) {

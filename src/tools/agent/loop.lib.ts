@@ -87,3 +87,20 @@ export function parseAction(raw: string): LoopAction | null {
   }
   return null;
 }
+
+/**
+ * Recover a content-producing tool call when the model emitted the artifact
+ * itself — an `<svg>` or a ```js code block — instead of a JSON action. A big
+ * SVG/code blob rarely survives being embedded (and JSON-escaped) inside the
+ * action protocol, so models tend to just output it; this routes that raw output
+ * to the right generative tool. Only fires for tools that are actually offered.
+ */
+export function recoverContentAction(raw: string, offeredToolIds: string[]): LoopAction | null {
+  if (offeredToolIds.includes('svg-viewer') && /<svg[\s>][\s\S]*<\/svg>/i.test(raw)) {
+    return { action: 'call_tool', tool: 'svg-viewer', args: { svg: raw } };
+  }
+  if (offeredToolIds.includes('canvas-draw') && /```(?:js|javascript)\b/i.test(raw)) {
+    return { action: 'call_tool', tool: 'canvas-draw', args: { code: raw } };
+  }
+  return null;
+}
