@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { classifyIntent } from '@/tools/agent/intent';
 import { executorFor, AGENT_EXECUTORS } from '@/tools/agent/executors';
-import { buildSystemPrompt, parseAction, type LoopTool } from '@/tools/agent/loop.lib';
+import { buildSystemPrompt, parseAction, recoverContentAction, type LoopTool } from '@/tools/agent/loop.lib';
 import { emptySession, recordUser, applyResolution, historyForPrompt } from '@/tools/agent/session.lib';
 import { prefillUrl } from '@/tools/agent/router.lib';
 import { buildToolChoicePrompt, parseToolChoice } from '@/tools/agent/select.lib';
@@ -140,7 +140,10 @@ export function useAgentChat(provider: AgentProvider | null) {
       let produced = false;
       for (let iter = 0; iter < 8; iter++) {
         const raw = await provider.chat(convo);
-        const act = parseAction(raw);
+        // Generative tools (svg/canvas) often emit the artifact itself instead of
+        // a JSON action — a big SVG/code blob rarely survives JSON-escaping — so
+        // recover it and run the right tool.
+        const act = parseAction(raw) ?? recoverContentAction(raw, offered.map(e => e.toolId));
         if (!act) {
           // Unparseable turn (small models emit junk). If we already handed the
           // user a result, just close out cleanly — never dump raw JSON to chat.

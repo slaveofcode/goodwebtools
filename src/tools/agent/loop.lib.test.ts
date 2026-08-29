@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildSystemPrompt, parseAction, type LoopTool } from './loop.lib';
+import { buildSystemPrompt, parseAction, recoverContentAction, type LoopTool } from './loop.lib';
 
 const TOOLS: LoopTool[] = [
   { name: 'base64_encode', description: 'Encode text to Base64', args: [{ name: 'text', type: 'string', required: true }] },
@@ -40,5 +40,24 @@ describe('parseAction', () => {
   it('returns null on garbage or unknown action', () => {
     expect(parseAction('nope')).toBeNull();
     expect(parseAction('{"action":"weird"}')).toBeNull();
+  });
+});
+
+describe('recoverContentAction', () => {
+  it('recovers an svg-viewer call when the model outputs raw <svg>', () => {
+    const r = recoverContentAction('Here you go:\n<svg viewBox="0 0 10 10"><rect/></svg>', ['svg-viewer', 'qr-gen']);
+    expect(r?.action).toBe('call_tool');
+    expect(r?.action === 'call_tool' && r.tool).toBe('svg-viewer');
+    expect(r?.action === 'call_tool' && String(r.args.svg)).toContain('<svg');
+  });
+  it('recovers a canvas-draw call from a js code block', () => {
+    const r = recoverContentAction('```js\nctx.fillRect(0,0,5,5)\n```', ['canvas-draw']);
+    expect(r?.action === 'call_tool' && r.tool).toBe('canvas-draw');
+  });
+  it('returns null when the matching tool is not offered', () => {
+    expect(recoverContentAction('<svg></svg>', ['qr-gen'])).toBeNull();
+  });
+  it('returns null when there is no artifact', () => {
+    expect(recoverContentAction('just chatting here', ['svg-viewer', 'canvas-draw'])).toBeNull();
   });
 });
