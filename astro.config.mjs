@@ -134,7 +134,10 @@ export default defineConfig({
       // Vite doesn't discover them mid-request and force a reload that makes
       // in-flight dynamic imports fail ("Failed to fetch dynamically imported
       // module"). pdfjs worker is excluded — it's loaded via ?url.
-      include: ['pdf-lib', 'pdfjs-dist', 'marked', 'dompurify', 'qrcode', 'jsqr', 'comlink', 'fflate', 'gifenc', 'yaml', 'fast-xml-parser', 'smol-toml', 'hash-wasm', 'highlight.js/lib/core', 'highlight.js/lib/languages/json', 'highlight.js/lib/languages/yaml', 'highlight.js/lib/languages/xml', 'highlight.js/lib/languages/ini', '@imgly/background-removal', '@mediapipe/tasks-vision', 'upscaler', '@tensorflow/tfjs'],
+      include: ['pdf-lib', 'pdfjs-dist', 'marked', 'dompurify', 'qrcode', 'jsqr', 'comlink', 'fflate', 'gifenc', 'yaml', 'fast-xml-parser', 'smol-toml', 'hash-wasm', 'xlsx', 'turndown', 'highlight.js/lib/core', 'highlight.js/lib/languages/json', 'highlight.js/lib/languages/yaml', 'highlight.js/lib/languages/xml', 'highlight.js/lib/languages/ini', '@imgly/background-removal', '@mediapipe/tasks-vision', 'upscaler', '@tensorflow/tfjs',
+        // Pure-JS deps only reached via dynamic import (Code Beautifier / CSS tools) —
+        // pre-bundle so they don't 404 on first use in dev. No effect on prod bundling.
+        'csso', 'terser', 'prettier/standalone', 'prettier/plugins/babel', 'prettier/plugins/estree', 'prettier/plugins/html', 'prettier/plugins/markdown', 'prettier/plugins/postcss', 'prettier/plugins/typescript', 'prettier/plugins/yaml'],
       // mupdf is a large wasm module used only inside a worker — don't pre-bundle it.
       // @tauri-apps/api must be excluded - it's only available in Tauri runtime
       exclude: ['pdfjs-dist/build/pdf.worker.min.mjs', 'mupdf', 'libarchive.js', 'onnxruntime-web', '@ffmpeg/ffmpeg', '@ffmpeg/util', '@sqlite.org/sqlite-wasm', '@tauri-apps/api'],

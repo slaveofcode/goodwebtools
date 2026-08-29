@@ -3,7 +3,7 @@ import { classifyIntent } from '@/tools/agent/intent';
 import { executorFor, AGENT_EXECUTORS } from '@/tools/agent/executors';
 import { buildSystemPrompt, parseAction, recoverContentAction, type LoopTool } from '@/tools/agent/loop.lib';
 import { emptySession, recordUser, applyResolution, historyForPrompt } from '@/tools/agent/session.lib';
-import { prefillUrl } from '@/tools/agent/router.lib';
+import { prefillUrl, extractParams } from '@/tools/agent/router.lib';
 import { buildToolChoicePrompt, parseToolChoice } from '@/tools/agent/select.lib';
 import { getToolById } from '@/registry/tools';
 import type { AgentProvider, ChatMessage, ToolSpec, ToolMsg } from '@/services/agent/provider';
@@ -25,6 +25,51 @@ const CHAT_SYSTEM = [
 ].join(' ');
 
 /**
+ * Guess a content value from the user's message for a tool arg a weak model left
+ * empty — e.g. "format this json: {ac:1}" → "{ac:1}", or a quoted string. Falls
+ * back to the router's residual-text extraction. So a small model that calls the
+ * right tool but forgets the arg doesn't re-ask for content already in the message.
+ */
+function guessContent(q: string): string {
+  // Content after the FIRST ':' (a colon inside the value, e.g. JSON, must not
+  // split it) — "format json: {a:1}" → "{a:1}".
+  const colon = q.indexOf(':');
+  if (colon >= 0) { const after = q.slice(colon + 1).trim(); if (after) return after; }
+  const quoted = q.match(/["'`]([^"'`]{2,})["'`]/);
+  if (quoted) return quoted[1];
+  const residual = extractParams(q).text;
+  return residual ? residual.trim() : '';
+}
+
+/**
+ * Deterministically seed an executor's args from the query when we bypass the
+ * model. A tiny on-device model often can't emit valid JSON, but a single scoped
+ * candidate means the tool is already certain — so map a parsed size/number onto
+ * the matching numeric param (targetKb / targetMb) and any text onto a content
+ * param, and let runExecutor fill the rest (files, defaults, prompts).
+ */
+export function seedArgs(exec: (typeof AGENT_EXECUTORS)[number], q: string): Record<string, string | number> {
+  const p = extractParams(q);
+  const out: Record<string, string | number> = {};
+  for (const ps of exec.params) {
+    const k = ps.key.toLowerCase();
+    if (ps.type === 'number') {
+      if (p.size) {
+        const kb = p.size.unit === 'MB' ? p.size.value * 1024 : p.size.unit === 'GB' ? p.size.value * 1024 * 1024 : p.size.value;
+        if (k.includes('kb')) out[ps.key] = Math.round(kb);
+        else if (k.includes('mb')) out[ps.key] = Math.round((kb / 1024) * 100) / 100;
+        else out[ps.key] = p.size.value;
+      } else if (p.number !== undefined) {
+        out[ps.key] = p.number;
+      }
+    } else if (p.text) {
+      out[ps.key] = p.text;
+    }
+  }
+  return out;
+}
+
+/**
  * Orchestrates one agent conversation over any `AgentProvider`:
  * intent gate (chat / open / task) → runtime-scoped agentic loop → session.
  * The runtime, not the model, decides scope, so a tiny model can't mis-pick.
@@ -33,15 +78,21 @@ export function useAgentChat(provider: AgentProvider | null) {
   const [turns, setTurns] = useState<ChatUiTurn[]>([]);
   const [busy, setBusy] = useState(false);
   const [pendingFile, setPendingFile] = useState<{ label: string } | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<{ label: string } | null>(null);
   const [pendingInput, setPendingInput] = useState<{ label: string } | null>(null);
   const sessionRef = useRef(emptySession());
   const fileResolver = useRef<((f: File) => void) | null>(null);
   const fileRejecter = useRef<((e: Error) => void) | null>(null);
+  const filesResolver = useRef<((f: File[]) => void) | null>(null);
+  const filesRejecter = useRef<((e: Error) => void) | null>(null);
   const inputResolver = useRef<((v: string) => void) | null>(null);
   const inputRejecter = useRef<((e: Error) => void) | null>(null);
   // Files the user already uploaded this session, keyed by file-slot. Reused on a
   // follow-up ("make it 50kb") so the agent doesn't re-ask for the same image.
   const lastFilesRef = useRef<Record<string, File>>({});
+  // Files attached to the current message (via the paperclip) — consumed by tools
+  // that need a file before falling back to a dropzone prompt.
+  const attachedRef = useRef<File[]>([]);
 
   const push = (t: ChatUiTurn) => setTurns(x => [...x, t]);
   // Rewrite the most recent turn's text — used to animate a running executor's
@@ -62,6 +113,15 @@ export function useAgentChat(provider: AgentProvider | null) {
   /** Abandon a pending file request (user chose not to upload). Unwinds the loop. */
   const cancelFile = () => { const r = fileRejecter.current; clearFileWaiters(); r?.(new Error('__cancelled__')); };
 
+  // Variable-count file request (e.g. "merge these PDFs").
+  const requestFiles = (label: string): Promise<File[]> => {
+    setPendingFiles({ label });
+    return new Promise((res, rej) => { filesResolver.current = res; filesRejecter.current = rej; });
+  };
+  const clearFilesWaiters = () => { setPendingFiles(null); filesResolver.current = null; filesRejecter.current = null; };
+  const provideFiles = (fs: File[]) => { const r = filesResolver.current; clearFilesWaiters(); r?.(fs); };
+  const cancelFiles = () => { const r = filesRejecter.current; clearFilesWaiters(); r?.(new Error('__cancelled__')); };
+
   // Ask the user for a required text value the model couldn't fill (e.g. what a
   // QR should encode) — the text equivalent of requestFile.
   const requestInput = (label: string): Promise<string> => {
@@ -72,10 +132,11 @@ export function useAgentChat(provider: AgentProvider | null) {
   const provideInput = (v: string) => { const r = inputResolver.current; clearInputWaiters(); r?.(v); };
   const cancelInput = () => { const r = inputRejecter.current; clearInputWaiters(); r?.(new Error('__cancelled__')); };
 
-  const send = async (text: string) => {
+  const send = async (text: string, attached: File[] = []) => {
     const q = text.trim();
     if (!q || !provider || busy) return;
-    push({ role: 'user', text: q });
+    attachedRef.current = [...attached];
+    push({ role: 'user', text: q + (attached.length ? ` 📎 ${attached.map(f => f.name).join(', ')}` : '') });
     sessionRef.current = recordUser(sessionRef.current, q);
     setBusy(true);
     try {
@@ -137,6 +198,7 @@ export function useAgentChat(provider: AgentProvider | null) {
           const cached = piped ?? loopFiles[fs.key];
           let f: File;
           if (cached) { f = cached; }
+          else if (attachedRef.current.length) { f = attachedRef.current.shift()!; } // use an attached file
           else {
             try { f = await requestFile(fs.label); }
             catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
@@ -144,18 +206,34 @@ export function useAgentChat(provider: AgentProvider | null) {
           files[fs.key] = f;
           if (!piped) { loopFiles[fs.key] = f; lastFilesRef.current[fs.key] = f; } // remember only real uploads
         }
+        let fileList: File[] | undefined;
+        if (exec.multiFile) {
+          if (attachedRef.current.length) { fileList = attachedRef.current.splice(0); } // use attached files
+          else {
+            try { fileList = await requestFiles(exec.multiFile.label); }
+            catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+          }
+        }
         const params: Record<string, string | number> = { ...argsIn };
+        const singleContentParam = exec.params.filter(p => p.default === undefined).length === 1;
         for (const ps of exec.params) {
           if (ps.default !== undefined) continue;
           const raw = params[ps.key] == null ? '' : String(params[ps.key]).trim();
           const echoed = raw !== '' && (raw.toLowerCase() === q.trim().toLowerCase() || (wordCount(raw) <= 3 && exec.match(raw)));
           if (raw === '' || raw.toUpperCase() === 'UPLOAD' || echoed) {
-            try { params[ps.key] = await requestInput(ps.label); }
-            catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+            // For a single-content tool, recover the value from the message before
+            // asking — a weak model often calls the right tool but omits the arg.
+            const guess = singleContentParam ? guessContent(q) : '';
+            if (guess && guess.toLowerCase() !== q.trim().toLowerCase() && !(wordCount(guess) <= 3 && exec.match(guess))) {
+              params[ps.key] = guess;
+            } else {
+              try { params[ps.key] = await requestInput(ps.label); }
+              catch { updateLastText(`✗ ${exec.toolId} — cancelled`); return { ok: false, resultText: 'cancelled', cancelled: true }; }
+            }
           }
         }
         try {
-          const result = await exec.execute({ files, params }, p => updateLastText(`→ ${exec.toolId} — ${Math.round(p * 100)}%`));
+          const result = await exec.execute({ files, params, fileList }, p => updateLastText(`→ ${exec.toolId} — ${Math.round(p * 100)}%`));
           const blobUrl = result.blob ? URL.createObjectURL(result.blob) : undefined;
           push({ role: 'assistant', text: `✓ ${exec.toolId}: ${result.text ?? 'produced a file'}`, blobUrl, imgUrl: result.dataUrl, filename: result.filename });
           if (result.blob) chainFile = new File([result.blob], result.filename ?? 'output', { type: result.blob.type });
@@ -168,6 +246,16 @@ export function useAgentChat(provider: AgentProvider | null) {
         }
       };
 
+      // Deterministic shortcut for tiny models: when the keyword scope collapses
+      // to a SINGLE tool, the route is already certain — run it directly instead
+      // of asking a 0.5B to emit JSON (which it frequently can't, producing an
+      // "I didn't quite catch that"). Args are seeded from the message; files come
+      // from the attachment/upload path. Capable cloud models still plan + chain.
+      if (!capable && offered.length === 1) {
+        await runExecutor(offered[0], seedArgs(offered[0], q));
+        return;
+      }
+
       // --- Native function-calling loop (cloud): the provider's real tools API ---
       const chatTools = provider.chatTools;
       if (chatTools) {
@@ -178,9 +266,10 @@ export function useAgentChat(provider: AgentProvider | null) {
             type: 'object',
             properties: {
               ...Object.fromEntries(e.files.map(f => [f.key, { type: 'string', description: `${f.label} — pass the string "UPLOAD" and the app will ask the user for the file` }])),
+              ...(e.multiFile ? { [e.multiFile.key]: { type: 'string', description: `${e.multiFile.label} — pass "UPLOAD"; the app will let the user pick several files` } } : {}),
               ...Object.fromEntries(e.params.map(p => [p.key, { type: p.type === 'number' ? 'number' : 'string', description: p.label }])),
             },
-            required: [...e.files.map(f => f.key), ...e.params.filter(p => p.default === undefined).map(p => p.key)],
+            required: [...e.files.map(f => f.key), ...(e.multiFile ? [e.multiFile.key] : []), ...e.params.filter(p => p.default === undefined).map(p => p.key)],
           },
         }));
         const sys = "You are GoodWebTools' agent. Use the tools to fulfil the user's request. You can call several tools in sequence — each tool's output file automatically becomes the next tool's input, so you can chain them. For a file argument pass the string \"UPLOAD\". When the task is done, reply with a short final message and no tool call.";
@@ -223,6 +312,7 @@ export function useAgentChat(provider: AgentProvider | null) {
       }));
       const convo: ChatMessage[] = [{ role: 'system', content: buildSystemPrompt(loopTools) }, { role: 'user', content: q }];
       const doneKeys = new Set<string>();
+      const ranTools = new Set<string>(); // weak models re-run a tool on its own output (base64→base64→…) — cap at one run per tool
       for (let iter = 0; iter < 8; iter++) {
         const raw = await provider.chat(convo);
         const act = parseAction(raw) ?? recoverContentAction(raw, offeredIds);
@@ -237,8 +327,10 @@ export function useAgentChat(provider: AgentProvider | null) {
         if (doneKeys.has(key)) { push({ role: 'assistant', text: 'Done — anything else?' }); break; }
         const exec = executorFor(act.tool);
         if (!exec) { convo.push({ role: 'assistant', content: raw }, { role: 'user', content: `TOOL_ERROR: unknown tool ${act.tool}` }); continue; }
+        if (ranTools.has(exec.toolId)) { push({ role: 'assistant', text: 'Done — anything else?' }); break; }
         const res = await runExecutor(exec, act.args);
         if (res.cancelled) break;
+        if (res.ok) ranTools.add(exec.toolId);
         doneKeys.add(key);
         convo.push({ role: 'assistant', content: raw }, { role: 'user', content: `TOOL_RESULT ${exec.toolId}: ${res.resultText}. Respond with a "final" action now unless the user asked for more.` });
         if (iter === 7) push({ role: 'assistant', text: produced ? 'Done — anything else?' : "I couldn't finish that — try rephrasing, or a bigger model." });
@@ -250,5 +342,5 @@ export function useAgentChat(provider: AgentProvider | null) {
     }
   };
 
-  return { turns, busy, pendingFile, pendingInput, send, provideFile, cancelFile, provideInput, cancelInput };
+  return { turns, busy, pendingFile, pendingFiles, pendingInput, send, provideFile, cancelFile, provideFiles, cancelFiles, provideInput, cancelInput };
 }

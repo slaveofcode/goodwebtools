@@ -9,6 +9,7 @@
  * compress-to-size and audio/video trim) backed by src/tools/media/encode.lib.
  */
 import { getToolById } from '@/registry/tools';
+import { expandIndonesian } from './router.lib';
 
 export interface FileSpec { key: string; accept: string; label: string }
 export interface ParamSpec { key: string; type: 'number' | 'string'; label: string; default?: string | number }
@@ -23,14 +24,22 @@ export interface AgentExecutor {
   description: string;
   match: (q: string) => boolean;
   files: FileSpec[];
+  /** An optional variable-count file input (e.g. "merge these PDFs"). */
+  multiFile?: FileSpec;
   params: ParamSpec[];
   execute: (
-    inputs: { files: Record<string, File>; params: Record<string, string | number> },
+    inputs: { files: Record<string, File>; params: Record<string, string | number>; fileList?: File[] },
     onProgress?: (p: number, note?: string) => void,
   ) => Promise<ExecResult>;
 }
 
 const re = (r: RegExp) => (q: string) => r.test(q);
+
+/** Human-friendly byte size: KB under 1 MB (so a small output never reads "0 MB"), MB above. */
+export function humanSize(bytes: number): string {
+  const kb = bytes / 1024;
+  return kb >= 1024 ? `${Math.round((kb / 1024) * 10) / 10} MB` : `${Math.max(1, Math.round(kb))} KB`;
+}
 
 export const AGENT_EXECUTORS: AgentExecutor[] = [
   {
@@ -139,16 +148,20 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
-    toolId: 'base-convert', description: 'Convert a number between bases (pass from and to, e.g. 2, 10, 16)', match: re(/base ?\d+|binary|hex(adecimal)?|octal|radix|convert.*(base|binary|hex|octal)/i),
+    // Match only a real base CONVERSION — NOT "base64" (which is the base64 tool);
+    // "base ?\d+" alone caught "base64" and polluted the scope.
+    toolId: 'base-convert', description: 'Convert a number between numeric bases 2–36 (pass from and to, e.g. 2, 10, 16)',
+    match: re(/\bto\s+base[- ]?\d+\b|\bbase[- ]?\d+\s+to\b|\bin\s+base[- ]?\d+\b|\bradix\b|\bnumber base\b|convert.*\b(binary|octal|hexadecimal)\b|\b(binary|octal|hexadecimal)\b.*\bconvert\b/i),
     files: [], params: [
       { key: 'value', type: 'string', label: 'Number' },
-      { key: 'from', type: 'number', label: 'From base', default: 10 },
-      { key: 'to', type: 'number', label: 'To base', default: 16 },
+      { key: 'from', type: 'number', label: 'From base (2–36)', default: 10 },
+      { key: 'to', type: 'number', label: 'To base (2–36)', default: 16 },
     ],
     execute: async ({ params }) => {
       const { parseInBase } = await import('@/tools/dev/base-convert.lib');
       const from = Number(params.from) || 10;
       const to = Number(params.to) || 16;
+      if (from < 2 || from > 36 || to < 2 || to > 36) throw new Error('bases must be between 2 and 36');
       const n = parseInBase(String(params.value ?? '').trim(), from);
       if (n === null) throw new Error(`"${params.value}" is not a valid base-${from} number`);
       return { text: n.toString(to) };
@@ -404,6 +417,77 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
+    // v3 data interpreter: peek the schema so the model writes a correct transform.
+    toolId: 'peek-data', page: 'csv-json',
+    description: "Preview a data file's shape (dimensions + first rows). Call this FIRST when the user wants to clean/filter/reshape a data file, so you can see the columns before writing a transform.",
+    match: re(/(peek|preview|inspect|look at|show me|what.?s? in).*(data|csv|file|rows?|columns?)|what columns/i),
+    files: [{ key: 'file', accept: '.csv,.tsv,.txt,.json,text/*', label: 'Data file' }], params: [],
+    execute: async ({ files }) => {
+      const { peekData } = await import('@/tools/documents/data-run.lib');
+      return { text: peekData(await files.file.text()) };
+    },
+  },
+  {
+    toolId: 'run-on-data', page: 'code-scratchpad',
+    description: "Transform a data file by writing JavaScript. YOU write JS in `code` that reads the file's text as `input` and returns the result (assign to `output` or return it). Helpers: parseCSV(text)->rows[][], toCSV(rows)->text, JSON. Runs in a no-network sandbox. Call peek-data first to see the columns. CSV output chains to spreadsheet-convert for Excel.",
+    match: re(/(clean|filter|dedup|deduplicate|sort|pivot|group|reshape|transform|process|extract|merge|remove|summari[sz]e|aggregate).*(csv|data|rows?|records?|file|columns?|json)|(csv|data|rows?|spreadsheet|json).*(clean|filter|dedup|sort|pivot|group|reshape|transform|process|extract|remove|aggregate)/i),
+    files: [{ key: 'file', accept: '.csv,.tsv,.txt,.json,text/*', label: 'Data file' }],
+    params: [{ key: 'code', type: 'string', label: 'JavaScript transform (reads `input`, returns the output text)' }],
+    execute: async ({ files, params }, onProgress) => {
+      const { runDataCode } = await import('@/tools/documents/data-run.lib');
+      const { extractCode } = await import('@/tools/image/canvas-run.lib');
+      const code = extractCode(String(params.code ?? ''));
+      if (!code) throw new Error('no transform code — write JS that reads `input` and returns the result');
+      onProgress?.(0.3);
+      const out = await runDataCode(code, await files.file.text());
+      const isJson = out.trim().startsWith('{') || out.trim().startsWith('[');
+      return { blob: new Blob([out], { type: isJson ? 'application/json' : 'text/csv' }), filename: isJson ? 'output.json' : 'output.csv', text: `transformed the data (${out.length} chars)` };
+    },
+  },
+  {
+    toolId: 'pdf-compress', description: 'Compress / shrink a PDF file', match: re(/(compress|shrink|reduce|smaller|optimi[sz]e).*pdf|pdf.*(compress|shrink|reduce|smaller|size)/i),
+    files: [{ key: 'file', accept: '.pdf,application/pdf', label: 'PDF' }], params: [],
+    execute: async ({ files }) => {
+      const { compressPdf } = await import('@/tools/pdf/mupdf.client');
+      const blob = await compressPdf(files.file);
+      return { blob, filename: 'compressed.pdf', text: `compressed to ${Math.round(blob.size / 1024)} KB` };
+    },
+  },
+  {
+    toolId: 'pdf-rotate', description: 'Rotate every page of a PDF (90, 180 or 270 degrees)', match: re(/rotate.*pdf|pdf.*rotate|turn.*pdf/i),
+    files: [{ key: 'file', accept: '.pdf,application/pdf', label: 'PDF' }],
+    params: [{ key: 'degrees', type: 'number', label: 'Degrees (90/180/270)', default: 90 }],
+    execute: async ({ files, params }) => {
+      const { rotatePdf } = await import('@/tools/pdf/mupdf.client');
+      const deg = Number(params.degrees) || 90;
+      const blob = await rotatePdf(files.file, deg);
+      return { blob, filename: 'rotated.pdf', text: `rotated by ${deg}°` };
+    },
+  },
+  {
+    toolId: 'pdf-split', description: 'Extract specific pages from a PDF (e.g. "1-3,5") into a new PDF', match: re(/(extract|split|get|keep|pull|take).*pages?.*pdf|pdf.*pages?.*(extract|split|keep)|split.*pdf|pdf.*split/i),
+    files: [{ key: 'file', accept: '.pdf,application/pdf', label: 'PDF' }],
+    params: [{ key: 'pages', type: 'string', label: 'Pages (e.g. 1-3,5)' }],
+    execute: async ({ files, params }) => {
+      const { extractPageList } = await import('@/tools/pdf/mupdf.client');
+      const { parsePageRange } = await import('@/tools/pdf/pagerange.lib');
+      const pages = parsePageRange(String(params.pages ?? ''));
+      if (!pages.length) throw new Error('tell me which pages, e.g. "1-3,5"');
+      const blob = await extractPageList(files.file, pages);
+      return { blob, filename: 'pages.pdf', text: `extracted ${pages.length} page${pages.length === 1 ? '' : 's'}` };
+    },
+  },
+  {
+    toolId: 'pdf-merge', description: 'Merge several PDF files into one', match: re(/merge.*pdf|combine.*pdf|pdf.*(merge|combine)|join.*pdfs?/i),
+    files: [], multiFile: { key: 'files', accept: '.pdf,application/pdf', label: 'PDFs to merge (pick 2 or more)' }, params: [],
+    execute: async ({ fileList }) => {
+      if (!fileList || fileList.length < 2) throw new Error('pick at least two PDFs to merge');
+      const { mergePdfs } = await import('@/tools/pdf/mupdf.client');
+      const blob = await mergePdfs(fileList);
+      return { blob, filename: 'merged.pdf', text: `merged ${fileList.length} PDFs` };
+    },
+  },
+  {
     toolId: 'hash-text', description: 'Hash text (SHA-256)', match: re(/\bhash\b|sha-?\d|md5|checksum|digest/i),
     files: [], params: [{ key: 'text', type: 'string', label: 'Text' }],
     execute: async ({ params }) => {
@@ -467,6 +551,19 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     },
   },
   {
+    toolId: 'image-convert', description: 'Convert an image to another format — png, jpg, or webp',
+    match: re(/(convert|change|turn|export|save|transcode).*(image|img|photo|picture).*\b(png|jpe?g|webp|avif)\b|(image|img|photo|picture).*\b(to|into|as)\b.*\b(png|jpe?g|webp|avif)\b|\b(to|into|as) ?(png|jpe?g|webp|avif)\b/i),
+    files: [{ key: 'file', accept: 'image/*', label: 'Image' }],
+    params: [{ key: 'format', type: 'string', label: 'Format (png/jpg/webp)', default: 'webp' }],
+    execute: async ({ files, params }) => {
+      const { convertImage } = await import('@/tools/image/canvas.lib');
+      const fmt = String(params.format ?? 'webp').toLowerCase().replace('jpeg', 'jpg');
+      const mime = ({ png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp', avif: 'image/avif' } as Record<string, string>)[fmt] || 'image/webp';
+      const blob = await convertImage(files.file, mime);
+      return { blob, filename: `converted.${fmt}`, text: `converted to ${fmt.toUpperCase()} — ${Math.round(blob.size / 1024)} KB` };
+    },
+  },
+  {
     toolId: 'video-compress', description: 'Compress a video file to a target size in megabytes',
     match: re(/(video|vid|mp4|mov|mkv|movie|clip|footage|webm).*(compress|smaller|reduce|shrink|size|\bmb\b|\bkb\b)|(compress|smaller|reduce|shrink).*(video|vid|mp4|mov|mkv|movie|clip|footage|webm)/i),
     files: [{ key: 'file', accept: 'video/*', label: 'Video' }],
@@ -486,7 +583,8 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
         maxWidth: Number(params.maxWidth) || 0,
         audioKbps: keepAudio ? 128 : 0,
       }, p => onProgress?.(p));
-      return { blob, filename: 'compressed.mp4', text: `compressed to ${Math.round(blob.size / 1024 / 1024 * 10) / 10} MB` };
+      if (blob.size === 0) throw new Error('compression produced an empty file — try a larger target size');
+      return { blob, filename: 'compressed.mp4', text: `compressed to ${humanSize(blob.size)}` };
     },
   },
   {
@@ -569,7 +667,8 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
 ];
 
 export function scopeExecutors(query: string): AgentExecutor[] {
-  return AGENT_EXECUTORS.filter(e => e.match(query));
+  const q = expandIndonesian(query); // recognize Bahasa Indonesia keywords too
+  return AGENT_EXECUTORS.filter(e => e.match(q));
 }
 
 export function executorFor(toolId: string): AgentExecutor | undefined {

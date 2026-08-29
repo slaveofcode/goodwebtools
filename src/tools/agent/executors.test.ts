@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { AGENT_EXECUTORS, scopeExecutors, executorFor, unknownExecutorIds, duplicateExecutorIds } from './executors';
+import { AGENT_EXECUTORS, scopeExecutors, executorFor, unknownExecutorIds, duplicateExecutorIds, humanSize } from './executors';
+
+describe('humanSize', () => {
+  it('shows KB under 1 MB (never "0 MB")', () => {
+    expect(humanSize(40 * 1024)).toBe('40 KB');
+    expect(humanSize(500)).toBe('1 KB'); // sub-KB clamps to 1, not 0
+  });
+  it('shows MB at/above 1 MB', () => {
+    expect(humanSize(1024 * 1024)).toBe('1 MB');
+    expect(humanSize(Math.round(2.5 * 1024 * 1024))).toBe('2.5 MB');
+  });
+});
 
 describe('executor registry', () => {
   it('every executor maps to a real tool and declares a match fn', () => {
@@ -18,6 +29,11 @@ describe('executor registry', () => {
   });
   it('scopes image-compress for an image request', () => {
     expect(scopeExecutors('compress this image to 100kb').map(e => e.toolId)).toContain('image-compress');
+  });
+  it('scopes image-convert for a format-change request (not compress)', () => {
+    expect(scopeExecutors('convert this image to webp').map(e => e.toolId)).toContain('image-convert');
+    expect(scopeExecutors('change this photo to png').map(e => e.toolId)).toContain('image-convert');
+    expect(scopeExecutors('ganti gambar ini ke jpg').map(e => e.toolId)).toContain('image-convert');
   });
   it('scopes audio-convert (not video/image) for "compress my mp3 to 3mb"', () => {
     const ids = scopeExecutors('compress my mp3 to 3mb').map(e => e.toolId);
@@ -74,6 +90,25 @@ describe('executor registry', () => {
     expect(scopeExecutors('draw a bar chart of my sales').map(e => e.toolId)).toContain('canvas-draw');
     expect(scopeExecutors('plot these data points on a canvas').map(e => e.toolId)).toContain('canvas-draw');
   });
+  it('scopes the data interpreter (peek-data / run-on-data)', () => {
+    expect(scopeExecutors('preview this csv file').map(e => e.toolId)).toContain('peek-data');
+    expect(scopeExecutors('filter rows where amount is over 100 in this csv').map(e => e.toolId)).toContain('run-on-data');
+    expect(scopeExecutors('pivot this data by region').map(e => e.toolId)).toContain('run-on-data');
+  });
+  it('scopes the PDF tools (compress/rotate/split), not image/video compress', () => {
+    expect(scopeExecutors('compress this pdf').map(e => e.toolId)).toEqual(['pdf-compress']);
+    expect(scopeExecutors('rotate my pdf 90 degrees').map(e => e.toolId)).toContain('pdf-rotate');
+    expect(scopeExecutors('extract pages 1-3 from this pdf').map(e => e.toolId)).toContain('pdf-split');
+    expect(scopeExecutors('merge these pdfs into one').map(e => e.toolId)).toContain('pdf-merge');
+  });
+  it('the pdf-merge executor declares a multiFile slot', () => {
+    expect(executorFor('pdf-merge')?.multiFile?.key).toBe('files');
+  });
+  it('recognizes Bahasa Indonesia keywords', () => {
+    expect(scopeExecutors('compress gambar ini ke 100kb').map(e => e.toolId)).toContain('image-compress');
+    expect(scopeExecutors('kompres video ini jadi 5mb').map(e => e.toolId)).toContain('video-compress');
+    expect(scopeExecutors('gabungkan pdf ini').map(e => e.toolId)).toContain('pdf-merge');
+  });
   it('does not scope any media compressor for small talk', () => {
     expect(scopeExecutors('hello how are you today')).toEqual([]);
   });
@@ -89,6 +124,10 @@ describe('executor registry', () => {
     expect(scopeExecutors('convert this unix timestamp').map(e => e.toolId)).toContain('timestamp');
     expect(scopeExecutors('csv to json').map(e => e.toolId)).toContain('csv-json');
     expect(scopeExecutors('convert 255 base 10 to base 16').map(e => e.toolId)).toContain('base-convert');
+    // base-convert must NOT be pulled in by "base64" (that's the base64 tool).
+    const b64 = scopeExecutors('encode base64 ABCDEF').map(e => e.toolId);
+    expect(b64).toContain('base64');
+    expect(b64).not.toContain('base-convert');
     expect(scopeExecutors('clean the tracking params from this url').map(e => e.toolId)).toContain('url-cleaner');
     expect(scopeExecutors('generate a strong password').map(e => e.toolId)).toContain('password-gen');
     expect(scopeExecutors('convert this html to markdown').map(e => e.toolId)).toContain('html-markdown');

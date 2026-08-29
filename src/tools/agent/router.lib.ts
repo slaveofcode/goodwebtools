@@ -119,9 +119,47 @@ function scoreTool(tool: (typeof tools)[number], queryStems: string[]): number {
   return score;
 }
 
+// Bahasa Indonesia → English keyword bridge, so the agent works on the /id/ site.
+// Replaced in place (see expandIndonesian) so phrases stay adjacent for the matchers.
+const ID_EN: Record<string, string> = {
+  gambar: 'image', foto: 'photo', citra: 'image', gbr: 'image',
+  kompres: 'compress', mampatkan: 'compress', perkecil: 'shrink smaller', kecilkan: 'shrink smaller', kecilin: 'shrink smaller', kurangi: 'reduce', kurangin: 'reduce',
+  suara: 'audio', video: 'video', musik: 'audio',
+  ubah: 'convert', konversi: 'convert', konversikan: 'convert', jadikan: 'convert', mengubah: 'convert',
+  potong: 'trim cut', pangkas: 'trim crop', gabung: 'merge combine', gabungkan: 'merge combine', satukan: 'merge',
+  pisah: 'split', pisahkan: 'split', putar: 'rotate', rotasi: 'rotate',
+  hapus: 'remove delete', duplikat: 'duplicate', ganda: 'duplicate',
+  kata: 'word', huruf: 'text case', teks: 'text', tabel: 'table',
+  sandi: 'password', kata_sandi: 'password', enkripsi: 'encrypt', dekripsi: 'decrypt',
+  terjemah: 'translate', terjemahkan: 'translate', ringkas: 'summarize',
+  buat: 'make create', bikin: 'make create', buatkan: 'make create', gambarkan: 'draw',
+  unduh: 'download', warna: 'color', diagram: 'diagram', ikon: 'icon',
+  // Informal / gaul: the -in suffix (kecilin, gabungin…), slang, and misspellings.
+  gedein: 'enlarge upscale bigger', gede: 'enlarge bigger', gedegin: 'enlarge',
+  ubahin: 'convert', jadiin: 'convert make', rubah: 'convert', ganti: 'convert change',
+  potongin: 'trim cut', pangkasin: 'trim crop',
+  gabungin: 'merge combine', satuin: 'merge', pisahin: 'split', pecah: 'split',
+  puterin: 'rotate', rotasiin: 'rotate', balik: 'rotate flip',
+  hapusin: 'remove delete', ilangin: 'remove delete', buang: 'remove delete',
+  buatin: 'make create', bikinin: 'make create', gambarin: 'draw',
+  kompresin: 'compress', mampatin: 'compress', kecilkin: 'shrink smaller',
+  ringkasin: 'summarize', ringkesin: 'summarize', terjemahin: 'translate',
+  amanin: 'encrypt protect', kunciin: 'password protect', enkripin: 'encrypt',
+  rapiin: 'format tidy', rapihin: 'format tidy', benerin: 'repair fix', perbaiki: 'repair fix',
+  vidio: 'video', vidionya: 'video', dokumen: 'document', dok: 'document',
+  angka: 'number', bilangan: 'number', tulisan: 'text', kalimat: 'sentence', paragraf: 'paragraph',
+  qr: 'qr code', barkode: 'barcode', sandiin: 'password',
+  ke: 'to', dari: 'from', jadi: 'to become',
+};
+export function expandIndonesian(query: string): string {
+  // Replace ID words in place (not append) so phrases stay adjacent — "ganti
+  // video ke mp4" → "convert change video to mp4", which the format matchers need.
+  return query.split(/\b/).map(tok => ID_EN[tok.toLowerCase()] ?? tok).join('');
+}
+
 /** Route a query to the most relevant tools plus any extracted parameters. */
 export function routeQuery(query: string, limit = 5): RouteResult {
-  const queryStems = tokenize(query).filter(t => !STOPWORDS.has(t)).map(stem);
+  const queryStems = tokenize(expandIndonesian(query)).filter(t => !STOPWORDS.has(t)).map(stem);
   const rank = (id: string) => { const i = POPULARITY.indexOf(id); return i === -1 ? 999 : i; };
   const scored = tools
     .filter(t => !t.desktopOnly)
