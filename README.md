@@ -12,7 +12,18 @@
 [![Tools](https://img.shields.io/badge/tools-193-16a34a)](https://goodwebtools.com)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-ec4899.svg)](#contributing)
 
-<a href="https://goodwebtools.com"><img src="docs/images/hero.png" alt="GoodWebTools homepage — a searchable grid of 193 privacy-first browser tools across Image, PDF, Dev, Media and more" width="820"></a>
+<table>
+  <tr>
+    <td width="58%"><img src="docs/images/hero.png" alt="GoodWebTools on desktop — searchable grid of 193 privacy-first browser tools across Image, PDF, Dev, Media and more"></td>
+    <td width="21%"><img src="docs/images/mobile-hero.png" alt="GoodWebTools on mobile — responsive tool grid that works in any phone browser"></td>
+    <td width="21%"><img src="docs/images/mobile-menu.png" alt="GoodWebTools mobile floating category menu for quick navigation between tool categories"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Desktop</em></td>
+    <td align="center"><em>Mobile</em></td>
+    <td align="center"><em>Mobile category menu</em></td>
+  </tr>
+</table>
 
 ⭐ **If GoodWebTools is useful, star the repo — it helps other people find privacy-first tools.**
 

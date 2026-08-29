@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAgentChat } from '@/hooks/useAgentChat';
 import {
   hasWebGPU, CLOUD_PRESETS, ONDEVICE_MODELS,
@@ -46,6 +46,16 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
   const [attached, setAttached] = useState<File[]>([]);
   const attachInputRef = useRef<HTMLInputElement>(null);
   const submit = () => { if (input.trim()) { send(input, attached); setInput(''); setAttached([]); } };
+
+  // E2E hook: a scripted provider injected by Playwright. Behind import.meta.env.DEV
+  // so it is tree-shaken from production — a real user can never trigger it.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const cfg = (window as unknown as { __E2E_AGENT__?: { steps: unknown[]; capable?: boolean } }).__E2E_AGENT__;
+    if (!cfg) return;
+    import('@/services/agent/e2e-provider').then(({ createScriptedProvider }) =>
+      setProvider(createScriptedProvider(cfg.steps as never, { capable: cfg.capable })));
+  }, []);
 
   const loadOndevice = async () => {
     setLoading(true); setProgressText('');
@@ -126,7 +136,7 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
                 : '⚠ Cloud mode sends your conversation to the provider using your key (direct from your browser, no GoodWebTools server). On-device keeps everything private.'}
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              <select value={cloudPreset} onChange={e => { const k = e.target.value; setCloudPreset(k); setCloudModel(CLOUD_PRESETS[k].model); setUseProxy(!!CLOUD_PRESETS[k].proxied); save('gwt-agent-cloud-preset', k); save('gwt-agent-cloud-model', CLOUD_PRESETS[k].model); save('gwt-agent-cloud-proxy', CLOUD_PRESETS[k].proxied ? '1' : '0'); setProvider(null); }} className={inputCls}>
+              <select data-testid="cloud-preset" value={cloudPreset} onChange={e => { const k = e.target.value; setCloudPreset(k); setCloudModel(CLOUD_PRESETS[k].model); setUseProxy(!!CLOUD_PRESETS[k].proxied); save('gwt-agent-cloud-preset', k); save('gwt-agent-cloud-model', CLOUD_PRESETS[k].model); save('gwt-agent-cloud-proxy', CLOUD_PRESETS[k].proxied ? '1' : '0'); setProvider(null); }} className={inputCls}>
                 {Object.entries(CLOUD_PRESETS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
               <input value={cloudModel} onChange={e => { setCloudModel(e.target.value); save('gwt-agent-cloud-model', e.target.value); }} placeholder="model" className={`${inputCls} w-48`} />
@@ -144,7 +154,7 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
 
       {loaded && (
         <>
-          <div className="min-h-[200px] space-y-2 border-2 border-border bg-muted p-3">
+          <div data-testid="agent-messages" className="min-h-[200px] space-y-2 border-2 border-border bg-muted p-3">
             {turns.length === 0 && <p className="text-sm text-muted-foreground">{tr.hint}</p>}
             {turns.map((t, i) => (
               <div key={i} className={t.role === 'user' ? 'text-right' : ''}>
@@ -198,13 +208,13 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
             </div>
           )}
           <div className="flex gap-2">
-            <input ref={attachInputRef} type="file" multiple className="hidden"
+            <input ref={attachInputRef} data-testid="agent-attach-input" type="file" multiple className="hidden"
               onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) setAttached(a => [...a, ...fs]); e.target.value = ''; }} />
             <button onClick={() => attachInputRef.current?.click()} aria-label="Attach a file" title="Attach a file"
               className="border-2 border-border bg-muted px-3 font-bold text-muted-foreground press-brutal">📎</button>
-            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') submit(); }}
+            <input data-testid="agent-input" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') submit(); }}
               placeholder="Tell the agent what you want…" className="flex-1 border-2 border-border bg-muted p-3 outline-none focus:shadow-brutal-sm" />
-            <button onClick={submit} disabled={busy || !input.trim()} className="border-2 border-border bg-accent px-4 font-bold uppercase text-accent-foreground press-brutal disabled:opacity-50">Send</button>
+            <button data-testid="agent-send" onClick={submit} disabled={busy || !input.trim()} className="border-2 border-border bg-accent px-4 font-bold uppercase text-accent-foreground press-brutal disabled:opacity-50">Send</button>
           </div>
         </>
       )}
