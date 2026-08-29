@@ -9,6 +9,7 @@
  * compress-to-size and audio/video trim) backed by src/tools/media/encode.lib.
  */
 import { getToolById } from '@/registry/tools';
+import { expandIndonesian } from './router.lib';
 
 export interface FileSpec { key: string; accept: string; label: string }
 export interface ParamSpec { key: string; type: 'number' | 'string'; label: string; default?: string | number }
@@ -646,7 +647,8 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
 ];
 
 export function scopeExecutors(query: string): AgentExecutor[] {
-  return AGENT_EXECUTORS.filter(e => e.match(query));
+  const q = expandIndonesian(query); // recognize Bahasa Indonesia keywords too
+  return AGENT_EXECUTORS.filter(e => e.match(q));
 }
 
 export function executorFor(toolId: string): AgentExecutor | undefined {

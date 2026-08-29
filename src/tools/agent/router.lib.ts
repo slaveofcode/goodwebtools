@@ -119,9 +119,31 @@ function scoreTool(tool: (typeof tools)[number], queryStems: string[]): number {
   return score;
 }
 
+// Bahasa Indonesia → English keyword bridge, so the agent works on the /id/ site.
+// Appended (not replaced) to the query before matching, so mixed EN/ID also works.
+const ID_EN: Record<string, string> = {
+  gambar: 'image', foto: 'photo', citra: 'image', gbr: 'image',
+  kompres: 'compress', mampatkan: 'compress', perkecil: 'shrink smaller', kecilkan: 'shrink smaller', kurangi: 'reduce',
+  suara: 'audio', video: 'video', musik: 'audio',
+  ubah: 'convert', konversi: 'convert', konversikan: 'convert', jadikan: 'convert', mengubah: 'convert',
+  potong: 'trim cut', pangkas: 'trim crop', gabung: 'merge combine', gabungkan: 'merge combine', satukan: 'merge',
+  pisah: 'split', pisahkan: 'split', putar: 'rotate', rotasi: 'rotate',
+  hapus: 'remove delete', duplikat: 'duplicate', ganda: 'duplicate',
+  kata: 'word', huruf: 'text case', teks: 'text', tabel: 'table',
+  sandi: 'password', kata_sandi: 'password', enkripsi: 'encrypt', dekripsi: 'decrypt',
+  terjemah: 'translate', terjemahkan: 'translate', ringkas: 'summarize',
+  buat: 'make create', bikin: 'make create', buatkan: 'make create', gambarkan: 'draw',
+  unduh: 'download', warna: 'color', diagram: 'diagram', ikon: 'icon',
+};
+export function expandIndonesian(query: string): string {
+  const extra: string[] = [];
+  for (const w of query.toLowerCase().split(/[^a-z0-9]+/)) { const e = ID_EN[w]; if (e) extra.push(e); }
+  return extra.length ? `${query} ${extra.join(' ')}` : query;
+}
+
 /** Route a query to the most relevant tools plus any extracted parameters. */
 export function routeQuery(query: string, limit = 5): RouteResult {
-  const queryStems = tokenize(query).filter(t => !STOPWORDS.has(t)).map(stem);
+  const queryStems = tokenize(expandIndonesian(query)).filter(t => !STOPWORDS.has(t)).map(stem);
   const rank = (id: string) => { const i = POPULARITY.indexOf(id); return i === -1 ? 999 : i; };
   const scored = tools
     .filter(t => !t.desktopOnly)

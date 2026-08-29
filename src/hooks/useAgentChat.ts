@@ -274,6 +274,7 @@ export function useAgentChat(provider: AgentProvider | null) {
       }));
       const convo: ChatMessage[] = [{ role: 'system', content: buildSystemPrompt(loopTools) }, { role: 'user', content: q }];
       const doneKeys = new Set<string>();
+      const ranTools = new Set<string>(); // weak models re-run a tool on its own output (base64→base64→…) — cap at one run per tool
       for (let iter = 0; iter < 8; iter++) {
         const raw = await provider.chat(convo);
         const act = parseAction(raw) ?? recoverContentAction(raw, offeredIds);
@@ -288,8 +289,10 @@ export function useAgentChat(provider: AgentProvider | null) {
         if (doneKeys.has(key)) { push({ role: 'assistant', text: 'Done — anything else?' }); break; }
         const exec = executorFor(act.tool);
         if (!exec) { convo.push({ role: 'assistant', content: raw }, { role: 'user', content: `TOOL_ERROR: unknown tool ${act.tool}` }); continue; }
+        if (ranTools.has(exec.toolId)) { push({ role: 'assistant', text: 'Done — anything else?' }); break; }
         const res = await runExecutor(exec, act.args);
         if (res.cancelled) break;
+        if (res.ok) ranTools.add(exec.toolId);
         doneKeys.add(key);
         convo.push({ role: 'assistant', content: raw }, { role: 'user', content: `TOOL_RESULT ${exec.toolId}: ${res.resultText}. Respond with a "final" action now unless the user asked for more.` });
         if (iter === 7) push({ role: 'assistant', text: produced ? 'Done — anything else?' : "I couldn't finish that — try rephrasing, or a bigger model." });

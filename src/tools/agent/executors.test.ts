@@ -88,6 +88,11 @@ describe('executor registry', () => {
   it('the pdf-merge executor declares a multiFile slot', () => {
     expect(executorFor('pdf-merge')?.multiFile?.key).toBe('files');
   });
+  it('recognizes Bahasa Indonesia keywords', () => {
+    expect(scopeExecutors('compress gambar ini ke 100kb').map(e => e.toolId)).toContain('image-compress');
+    expect(scopeExecutors('kompres video ini jadi 5mb').map(e => e.toolId)).toContain('video-compress');
+    expect(scopeExecutors('gabungkan pdf ini').map(e => e.toolId)).toContain('pdf-merge');
+  });
   it('does not scope any media compressor for small talk', () => {
     expect(scopeExecutors('hello how are you today')).toEqual([]);
   });
