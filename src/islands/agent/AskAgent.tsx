@@ -6,6 +6,12 @@ import {
   type AgentProvider, type OnDeviceProvider,
 } from '@/services/agent/provider';
 
+// Persist the last-used cloud settings so reopening the panel returns to the
+// provider/model/proxy the user picked (the API key already persists) instead of
+// snapping back to the OpenAI default — faster to get back to chatting.
+const ls = (k: string): string | null => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null);
+const save = (k: string, v: string) => { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); };
+
 const TR = {
   en: {
     h1: 'Ask Agent',
@@ -21,11 +27,12 @@ const TR = {
 
 export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
   const tr = TR[lang] ?? TR.en;
-  const [source, setSource] = useState<'ondevice' | 'cloud'>('ondevice');
+  const [source, setSource] = useState<'ondevice' | 'cloud'>(() => (ls('gwt-agent-source') === 'cloud' ? 'cloud' : 'ondevice'));
   const [ondeviceModel, setOndeviceModel] = useState(ONDEVICE_MODELS[0].id);
-  const [cloudPreset, setCloudPreset] = useState('openai');
-  const [cloudModel, setCloudModel] = useState(CLOUD_PRESETS.openai.model);
-  const [useProxy, setUseProxy] = useState(!!CLOUD_PRESETS.openai.proxied);
+  const initPreset = (() => { const s = ls('gwt-agent-cloud-preset'); return s && CLOUD_PRESETS[s] ? s : 'openai'; })();
+  const [cloudPreset, setCloudPreset] = useState(initPreset);
+  const [cloudModel, setCloudModel] = useState(() => ls('gwt-agent-cloud-model') || CLOUD_PRESETS[initPreset].model);
+  const [useProxy, setUseProxy] = useState(() => { const v = ls('gwt-agent-cloud-proxy'); return v == null ? !!CLOUD_PRESETS[initPreset].proxied : v === '1'; });
   const [apiKey, setApiKey] = useState(() => (typeof localStorage !== 'undefined' ? localStorage.getItem('gwt-agent-key') || '' : ''));
   const [provider, setProvider] = useState<AgentProvider | null>(null);
   const [loading, setLoading] = useState(false);
@@ -90,7 +97,7 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
       <div className="space-y-3 border-2 border-border bg-muted p-4">
         <div className="flex gap-1 text-sm">
           {(['ondevice', 'cloud'] as const).map(s => (
-            <button key={s} onClick={() => { setSource(s); setProvider(null); }} aria-pressed={source === s}
+            <button key={s} onClick={() => { setSource(s); save('gwt-agent-source', s); setProvider(null); }} aria-pressed={source === s}
               className={`border-2 px-3 py-1 font-bold uppercase ${source === s ? 'border-border bg-accent text-accent-foreground' : 'border-border'}`}>
               {s === 'ondevice' ? 'On-device' : 'Cloud (API key)'}
             </button>
@@ -119,15 +126,15 @@ export default function AskAgent({ lang = 'en' }: { lang?: 'en' | 'id' }) {
                 : '⚠ Cloud mode sends your conversation to the provider using your key (direct from your browser, no GoodWebTools server). On-device keeps everything private.'}
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              <select value={cloudPreset} onChange={e => { const k = e.target.value; setCloudPreset(k); setCloudModel(CLOUD_PRESETS[k].model); setUseProxy(!!CLOUD_PRESETS[k].proxied); setProvider(null); }} className={inputCls}>
+              <select value={cloudPreset} onChange={e => { const k = e.target.value; setCloudPreset(k); setCloudModel(CLOUD_PRESETS[k].model); setUseProxy(!!CLOUD_PRESETS[k].proxied); save('gwt-agent-cloud-preset', k); save('gwt-agent-cloud-model', CLOUD_PRESETS[k].model); save('gwt-agent-cloud-proxy', CLOUD_PRESETS[k].proxied ? '1' : '0'); setProvider(null); }} className={inputCls}>
                 {Object.entries(CLOUD_PRESETS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
-              <input value={cloudModel} onChange={e => setCloudModel(e.target.value)} placeholder="model" className={`${inputCls} w-48`} />
+              <input value={cloudModel} onChange={e => { setCloudModel(e.target.value); save('gwt-agent-cloud-model', e.target.value); }} placeholder="model" className={`${inputCls} w-48`} />
               <input value={apiKey} onChange={e => setApiKey(e.target.value)} type="password" placeholder="API key" className={`${inputCls} w-56`} />
               <button onClick={useCloud} className="border-2 border-border bg-accent px-3 py-1.5 text-sm font-bold uppercase text-accent-foreground press-brutal">Use</button>
             </div>
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <input type="checkbox" checked={useProxy} onChange={e => { setUseProxy(e.target.checked); setProvider(null); }} className="h-3.5 w-3.5" />
+              <input type="checkbox" checked={useProxy} onChange={e => { setUseProxy(e.target.checked); save('gwt-agent-cloud-proxy', e.target.checked ? '1' : '0'); setProvider(null); }} className="h-3.5 w-3.5" />
               Route through GoodWebTools (needed for providers that block direct browser calls, e.g. OpenCode)
             </label>
             {progressText && <span className="font-mono text-xs text-red-600">{progressText}</span>}

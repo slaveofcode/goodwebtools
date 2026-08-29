@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { AGENT_EXECUTORS, scopeExecutors, executorFor, unknownExecutorIds, duplicateExecutorIds } from './executors';
+import { AGENT_EXECUTORS, scopeExecutors, executorFor, unknownExecutorIds, duplicateExecutorIds, humanSize } from './executors';
+
+describe('humanSize', () => {
+  it('shows KB under 1 MB (never "0 MB")', () => {
+    expect(humanSize(40 * 1024)).toBe('40 KB');
+    expect(humanSize(500)).toBe('1 KB'); // sub-KB clamps to 1, not 0
+  });
+  it('shows MB at/above 1 MB', () => {
+    expect(humanSize(1024 * 1024)).toBe('1 MB');
+    expect(humanSize(Math.round(2.5 * 1024 * 1024))).toBe('2.5 MB');
+  });
+});
 
 describe('executor registry', () => {
   it('every executor maps to a real tool and declares a match fn', () => {

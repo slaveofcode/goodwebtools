@@ -42,6 +42,34 @@ function guessContent(q: string): string {
 }
 
 /**
+ * Deterministically seed an executor's args from the query when we bypass the
+ * model. A tiny on-device model often can't emit valid JSON, but a single scoped
+ * candidate means the tool is already certain — so map a parsed size/number onto
+ * the matching numeric param (targetKb / targetMb) and any text onto a content
+ * param, and let runExecutor fill the rest (files, defaults, prompts).
+ */
+export function seedArgs(exec: (typeof AGENT_EXECUTORS)[number], q: string): Record<string, string | number> {
+  const p = extractParams(q);
+  const out: Record<string, string | number> = {};
+  for (const ps of exec.params) {
+    const k = ps.key.toLowerCase();
+    if (ps.type === 'number') {
+      if (p.size) {
+        const kb = p.size.unit === 'MB' ? p.size.value * 1024 : p.size.unit === 'GB' ? p.size.value * 1024 * 1024 : p.size.value;
+        if (k.includes('kb')) out[ps.key] = Math.round(kb);
+        else if (k.includes('mb')) out[ps.key] = Math.round((kb / 1024) * 100) / 100;
+        else out[ps.key] = p.size.value;
+      } else if (p.number !== undefined) {
+        out[ps.key] = p.number;
+      }
+    } else if (p.text) {
+      out[ps.key] = p.text;
+    }
+  }
+  return out;
+}
+
+/**
  * Orchestrates one agent conversation over any `AgentProvider`:
  * intent gate (chat / open / task) → runtime-scoped agentic loop → session.
  * The runtime, not the model, decides scope, so a tiny model can't mis-pick.
@@ -217,6 +245,16 @@ export function useAgentChat(provider: AgentProvider | null) {
           return { ok: false, resultText: `error: ${(e as Error).message}` };
         }
       };
+
+      // Deterministic shortcut for tiny models: when the keyword scope collapses
+      // to a SINGLE tool, the route is already certain — run it directly instead
+      // of asking a 0.5B to emit JSON (which it frequently can't, producing an
+      // "I didn't quite catch that"). Args are seeded from the message; files come
+      // from the attachment/upload path. Capable cloud models still plan + chain.
+      if (!capable && offered.length === 1) {
+        await runExecutor(offered[0], seedArgs(offered[0], q));
+        return;
+      }
 
       // --- Native function-calling loop (cloud): the provider's real tools API ---
       const chatTools = provider.chatTools;

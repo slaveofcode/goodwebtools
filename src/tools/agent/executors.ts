@@ -35,6 +35,12 @@ export interface AgentExecutor {
 
 const re = (r: RegExp) => (q: string) => r.test(q);
 
+/** Human-friendly byte size: KB under 1 MB (so a small output never reads "0 MB"), MB above. */
+export function humanSize(bytes: number): string {
+  const kb = bytes / 1024;
+  return kb >= 1024 ? `${Math.round((kb / 1024) * 10) / 10} MB` : `${Math.max(1, Math.round(kb))} KB`;
+}
+
 export const AGENT_EXECUTORS: AgentExecutor[] = [
   {
     toolId: 'base64', description: 'Encode or decode Base64 text', match: re(/base64|b64/i),
@@ -577,7 +583,8 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
         maxWidth: Number(params.maxWidth) || 0,
         audioKbps: keepAudio ? 128 : 0,
       }, p => onProgress?.(p));
-      return { blob, filename: 'compressed.mp4', text: `compressed to ${Math.round(blob.size / 1024 / 1024 * 10) / 10} MB` };
+      if (blob.size === 0) throw new Error('compression produced an empty file — try a larger target size');
+      return { blob, filename: 'compressed.mp4', text: `compressed to ${humanSize(blob.size)}` };
     },
   },
   {
