@@ -28,6 +28,15 @@ describe('DownloadService', () => {
     expect(mockLink.click).toHaveBeenCalled();
   });
 
+  it('appends the link to the document before clicking (mobile/Firefox need it in the DOM)', async () => {
+    const appendSpy = vi.spyOn(document.body, 'appendChild');
+    const blob = new Blob(['test content'], { type: 'text/plain' });
+    await downloadService.download(blob, 'test.txt');
+
+    expect(appendSpy).toHaveBeenCalledWith(mockLink);
+    expect(mockLink.click).toHaveBeenCalled();
+  });
+
   it('should clean up blob URL after download', async () => {
     // Revocation is deferred via setTimeout — advance timers to trigger it.
     vi.useFakeTimers();

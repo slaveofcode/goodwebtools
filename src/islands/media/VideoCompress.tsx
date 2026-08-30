@@ -28,7 +28,7 @@ const TR: Record<Lang, {
   dropTitle: string; dropSubtitle: string;
   target: string; custom: string; keepAudio: string; maxWidth: string; widthKeep: string; widthHelp: string;
   privacy: string; compress: string; compressing: string; clear: string; working: string; loadEngine: string; encoding: string;
-  duration: string; estimate: string; overBudget: string; result: string; smaller: (p: number) => string; download: string; error: string;
+  duration: string; estimate: string; overBudget: string; result: string; smaller: (p: number) => string; download: string; error: string; largeFile: string;
 }> = {
   en: {
     dropTitle: 'Drop a video or click to browse',
@@ -53,6 +53,7 @@ const TR: Record<Lang, {
     smaller: (p) => `${p}% smaller`,
     download: 'Download MP4',
     error: 'Could not compress this video.',
+    largeFile: 'Large video — mobile browsers can run out of memory on big files. If compressing fails, try a shorter clip, a smaller max width, or the desktop app.',
   },
   id: {
     dropTitle: 'Letakkan video atau klik untuk memilih',
@@ -77,6 +78,7 @@ const TR: Record<Lang, {
     smaller: (p) => `${p}% lebih kecil`,
     download: 'Unduh MP4',
     error: 'Tidak dapat mengompres video ini.',
+    largeFile: 'Video besar — browser mobile bisa kehabisan memori pada file besar. Jika kompresi gagal, coba klip lebih pendek, lebar maksimum lebih kecil, atau pakai desktop app.',
   },
 };
 
@@ -104,6 +106,8 @@ export default function VideoCompress({ lang = 'en' }: { lang?: Lang }) {
   const plan = duration > 0 && targetBytes > 0
     ? computeTargetBitrate({ targetBytes, durationSec: duration, audioKbps: keepAudio ? 128 : 0 })
     : null;
+  // ffmpeg.wasm holds the whole file (~2×) in memory; phones OOM on big videos.
+  const largeVideo = !!file && file.size > 300 * 1024 * 1024;
 
   const onDrop = async (files: File[]) => {
     const video = files.find(f => f.type.startsWith('video/'));
@@ -216,6 +220,7 @@ export default function VideoCompress({ lang = 'en' }: { lang?: Lang }) {
         </p>
       )}
       {plan?.overBudget && <Alert variant="error">{t.overBudget}</Alert>}
+      {largeVideo && !busy && !result && <p className="text-xs text-amber-600 dark:text-amber-400">{t.largeFile}</p>}
 
       <p className="text-xs text-muted-foreground">{t.privacy}</p>
 
