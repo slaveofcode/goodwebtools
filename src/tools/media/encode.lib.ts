@@ -35,7 +35,14 @@ async function withFFmpeg<T>(file: Blob, onProgress: EncodeProgress | undefined,
   const cb = ({ progress }: { progress: number }) => onProgress?.(Math.min(1, progress));
   ffmpeg.on('progress', cb);
   try {
-    await ffmpeg.writeFile('in', await fileToU8(file));
+    try {
+      // Reads the whole file into memory then copies it into the WASM heap
+      // (~2× the file size). On phones this overruns the tab's memory budget for
+      // large videos and throws a cryptic NotReadableError — surface a clear one.
+      await ffmpeg.writeFile('in', await fileToU8(file));
+    } catch {
+      throw new Error('This file is too large to load in your browser — it ran out of memory. Try a shorter/smaller clip, or use the desktop app.');
+    }
     return await work(ffmpeg);
   } finally {
     ffmpeg.off('progress', cb);
