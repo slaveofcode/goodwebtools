@@ -3,6 +3,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { usePasteImage } from '@/hooks/usePasteImage';
 import { CVD_TYPES, simulateImageData } from '@/tools/image/colorblind.lib';
+import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, Record<string, string>> = {
@@ -57,12 +58,7 @@ export default function ColorBlindSim({ lang = 'en' }: { lang?: Lang }) {
   const download = () => {
     simRef.current?.toBlob(blob => {
       if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `colorblind-${type}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadService.download(blob, `colorblind-${type}.png`);
     }, 'image/png');
   };
 

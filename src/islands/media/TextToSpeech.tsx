@@ -4,6 +4,7 @@ import { Alert } from '@/components/ui/Alert';
 import { splitIntoChunks } from '@/tools/media/tts.lib';
 import { floatToWav } from '@/tools/media/tts-audio.lib';
 import { NEURAL_VOICES } from '@/tools/media/neural-tts.engine';
+import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, {
@@ -91,10 +92,7 @@ export default function TextToSpeech({ lang = 'en' }: { lang?: Lang }) {
   };
 
   const saveBlob = (bytes: Uint8Array, type: string, name: string) => {
-    const url = URL.createObjectURL(new Blob([bytes], { type }));
-    const a = document.createElement('a');
-    a.href = url; a.download = name; a.click();
-    URL.revokeObjectURL(url);
+    downloadService.download(new Blob([bytes], { type }), name);
   };
 
   const downloadWav = () => { if (wavBytesRef.current) saveBlob(wavBytesRef.current, 'audio/wav', 'speech.wav'); };

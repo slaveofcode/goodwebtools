@@ -3,6 +3,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { groupRows, toCsv, type TextItem } from '@/tools/pdf/pdf-table.lib';
+import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, Record<string, string>> = {
@@ -68,12 +69,7 @@ export default function PdfToExcel({ lang = 'en' }: { lang?: Lang }) {
 
   const download = () => {
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = (file ? file.name.replace(/\.pdf$/i, '') : 'table') + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadService.download(blob, (file ? file.name.replace(/\.pdf$/i, '') : 'table') + '.csv');
   };
 
   return (

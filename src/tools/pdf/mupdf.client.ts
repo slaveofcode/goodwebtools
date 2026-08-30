@@ -23,7 +23,13 @@ function engine(): Remote<MupdfApi> {
 }
 
 async function bytesOf(file: File): Promise<Uint8Array> {
-  return new Uint8Array(await file.arrayBuffer());
+  try {
+    return new Uint8Array(await file.arrayBuffer());
+  } catch {
+    // Reading a very large PDF into one contiguous ArrayBuffer overruns a phone's
+    // tab memory and throws a cryptic NotReadableError — surface a clear one.
+    throw new Error('This PDF is too large to load in your browser — it ran out of memory. Try splitting it or use the desktop app.');
+  }
 }
 
 function toBlob(bytes: Uint8Array): Blob {

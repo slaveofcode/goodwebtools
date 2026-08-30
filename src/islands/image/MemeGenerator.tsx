@@ -3,6 +3,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { usePasteImage } from '@/hooks/usePasteImage';
 import { wrapText } from '@/tools/image/meme.lib';
+import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, Record<string, string>> = {
@@ -81,12 +82,7 @@ export default function MemeGenerator({ lang = 'en' }: { lang?: Lang }) {
   const download = () => {
     canvasRef.current?.toBlob(blob => {
       if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'meme.png';
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadService.download(blob, 'meme.png');
     }, 'image/png');
   };
 
