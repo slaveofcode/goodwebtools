@@ -3,6 +3,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { usePasteImage } from '@/hooks/usePasteImage';
 import { computeHomography, applyHomography, type Point } from '@/tools/image/perspective.lib';
+import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, Record<string, string>> = {
@@ -130,9 +131,8 @@ export default function DeskewTool({ lang = 'en' }: { lang?: Lang }) {
   };
 
   const download = () => {
-    if (!resultUrl) return;
-    const a = document.createElement('a');
-    a.href = resultUrl; a.download = 'deskewed.png'; a.click();
+    if (!result) return;
+    downloadService.download(result, 'deskewed.png');
   };
 
   const backToEdit = () => { setResult(null); setResultUrl(''); };

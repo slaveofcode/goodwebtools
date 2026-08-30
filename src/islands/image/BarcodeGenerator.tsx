@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { BARCODE_FORMATS, validateValue } from '@/tools/image/barcode.lib';
+import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, Record<string, string>> = {
@@ -60,12 +61,7 @@ export default function BarcodeGenerator({ lang = 'en' }: { lang?: Lang }) {
   const downloadPng = () => {
     canvasRef.current?.toBlob(blob => {
       if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `barcode-${format}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadService.download(blob, `barcode-${format}.png`);
     });
   };
 
@@ -79,12 +75,7 @@ export default function BarcodeGenerator({ lang = 'en' }: { lang?: Lang }) {
     }
     const xml = new XMLSerializer().serializeToString(svg);
     const blob = new Blob([xml], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `barcode-${format}.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadService.download(blob, `barcode-${format}.svg`);
   };
 
   const input = 'w-full border-2 border-border bg-muted p-2 text-sm';

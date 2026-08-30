@@ -3,6 +3,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { CopyButton } from '@/components/ui/CopyButton';
+import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, Record<string, string>> = {
@@ -48,10 +49,7 @@ export default function DocViewer({ lang = 'en' }: { lang?: Lang }) {
   const download = () => {
     if (text == null) return;
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${name}.txt`; a.click();
-    URL.revokeObjectURL(url);
+    downloadService.download(blob, `${name}.txt`);
   };
 
   const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;

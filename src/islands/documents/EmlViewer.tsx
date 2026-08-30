@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Alert } from '@/components/ui/Alert';
 import { formatAddress, formatAddressList } from '@/tools/documents/eml.lib';
+import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
 interface ParsedEmail {
@@ -56,12 +57,7 @@ export default function EmlViewer({ lang = 'en' }: { lang?: Lang }) {
   const downloadAttachment = (a: ParsedEmail['attachments'][number]) => {
     const part = typeof a.content === 'string' ? new TextEncoder().encode(a.content) : new Uint8Array(a.content as ArrayBuffer);
     const blob = new Blob([part], { type: a.mimeType || 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = a.filename || 'attachment';
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadService.download(blob, a.filename || 'attachment');
   };
 
   const row = (label: string, value: string) => value ? (

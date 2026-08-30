@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { toBraille } from '@/tools/dev/braille.lib';
+import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, Record<string, string>> = {
@@ -24,12 +25,7 @@ export default function BrailleConverter({ lang = 'en' }: { lang?: Lang }) {
 
   const download = () => {
     const blob = new Blob([braille], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'braille.txt';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadService.download(blob, 'braille.txt');
   };
 
   return (

@@ -26,10 +26,27 @@ export class BrowserDownloadService implements DownloadService {
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    // The anchor MUST be in the document for a synthetic click to trigger a
+    // download on mobile browsers and Firefox — a detached <a>.click() is ignored.
+    document.body.appendChild(link);
     link.click();
 
-    // Clean up
-    setTimeout(() => URL.revokeObjectURL(url), 100);
+    // Keep the object URL alive well past the click. Mobile browsers and large
+    // blobs (e.g. a compressed video) hand off to the download manager
+    // asynchronously; revoking too soon aborts the transfer and the file never
+    // saves. Clean up on a long delay, and on page hide as a backstop.
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      URL.revokeObjectURL(url);
+      link.remove();
+      window.removeEventListener('pagehide', cleanup);
+    };
+    window.addEventListener('pagehide', cleanup);
+    setTimeout(cleanup, 60_000);
   }
 
   async downloadZip(files: BlobFile[], zipName: string): Promise<void> {
