@@ -972,6 +972,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'word-guess',
+    name: 'Daily Word Guess',
+    category: 'Games',
+    route: '/tools/word-guess',
+    keywords: ['word guess', 'wordle', 'word game', 'daily word', 'guess the word', 'word puzzle', 'kata', 'tebak kata', 'teka-teki kata'],
+    icon: WholeWord,
+    summary: 'A Wordle-style daily word puzzle in English & Bahasa',
+    load: () => import('@/islands/games/WordGuess'),
+    status: 'beta'
+  },
+  {
     id: 'flappy-bird',
     name: 'Flying Bird Game',
     category: 'Games',
