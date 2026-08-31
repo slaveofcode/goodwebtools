@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { EN_ANSWERS, EN_EXTRA } from '../../src/tools/games/wordguess.words';
 
 /**
@@ -11,8 +11,22 @@ import { EN_ANSWERS, EN_EXTRA } from '../../src/tools/games/wordguess.words';
  */
 const GUESSES = ['crane', 'solar', 'piano', 'stone', 'valid', 'zebra'];
 
+/**
+ * Wait until the island is interactive. The grid and keyboard are in the
+ * server HTML, so visibility proves nothing — clicks before React attaches
+ * its props are silently dropped (a cold CI runner lost exactly that way).
+ */
+async function waitForHydration(page: Page) {
+  await page.locator('button[aria-label="letter q"]').waitFor();
+  await page.waitForFunction(() => {
+    const el = document.querySelector('button[aria-label="letter q"]');
+    return !!el && Object.keys(el).some(k => k.startsWith('__react'));
+  });
+}
+
 test('plays a full daily game and shows the end panel', async ({ page }) => {
   await page.goto('/tools/word-guess');
+  await waitForHydration(page);
 
   const grid = page.locator('[aria-label="word grid"]');
   await expect(grid).toBeVisible();
@@ -40,6 +54,7 @@ test('plays a full daily game and shows the end panel', async ({ page }) => {
 
 test('rejects a word that is not in the list', async ({ page }) => {
   await page.goto('/tools/word-guess');
+  await waitForHydration(page);
 
   // zzzyx is shape-valid but not a word in either list.
   const junk = 'zzzyx';
@@ -69,6 +84,7 @@ test('rejects a word that is not in the list', async ({ page }) => {
 
 test('practice mode serves random games that never persist stats', async ({ page }) => {
   await page.goto('/tools/word-guess');
+  await waitForHydration(page);
   await page.getByRole('button', { name: /practice|latihan/i }).first().click();
 
   // Practice label appears and the grid is fresh.
