@@ -54,7 +54,12 @@ export function sortTextLines(text: string, opts: SortLinesOptions = {}): string
     sensitivity: caseInsensitive ? 'base' : 'variant',
   });
   const keyOf = byKey ? (l: string) => l.split(/[=:]/, 1)[0] : (l: string) => l;
-  lines.sort((a, b) => collator.compare(keyOf(a), keyOf(b)));
-  if (direction === 'desc') lines.reverse();
-  return lines.join('\n');
+  // Keep blank lines out of the sort and park them at the end — sorting them
+  // inline floats every blank above the real content, so the output looks empty.
+  const blanks: string[] = [];
+  const content: string[] = [];
+  for (const l of lines) (l.trim() === '' ? blanks : content).push(l);
+  content.sort((a, b) => collator.compare(keyOf(a), keyOf(b)));
+  if (direction === 'desc') content.reverse();
+  return [...content, ...blanks].join('\n');
 }
