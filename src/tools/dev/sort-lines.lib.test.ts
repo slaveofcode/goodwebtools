@@ -36,6 +36,10 @@ describe('sortTextLines', () => {
     expect(sortTextLines(input, { byKey: true, caseInsensitive: true, dedupe: true }))
       .toBe('API_KEY=1\napi_key=1\ndb_host=x\nZONE=us');
   });
+  it('parks blank lines at the end so content stays on top', () => {
+    expect(sortTextLines('b\n\na\n\nc')).toBe('a\nb\nc\n\n');
+    expect(sortTextLines('b\n\na', { direction: 'desc' })).toBe('b\na\n');
+  });
   it('returns empty for empty input', () => {
     expect(sortTextLines('', { dropBlanks: true })).toBe('');
   });

@@ -103,11 +103,13 @@ export default function SortLines({ lang = 'en' }: { lang?: Lang }) {
 
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="space-y-1">
-          <span className="block text-sm font-semibold">{t.input}</span>
+          <div className="flex min-h-9 items-center">
+            <span className="text-sm font-semibold">{t.input}</span>
+          </div>
           <TextArea value={text} onChange={e => setText(e.target.value)} rows={14} placeholder={t.placeholder} />
         </div>
         <div className="space-y-1">
-          <div className="flex items-center justify-between">
+          <div className="flex min-h-9 items-center justify-between">
             <span className="text-sm font-semibold">{t.output} <span className="font-normal text-muted-foreground">· {t.count(outCount)}</span></span>
             <div className="flex gap-2">
               <DownloadTextButton text={output} filename="sorted.txt" />
