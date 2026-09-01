@@ -1586,6 +1586,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the scrubber works with no internet connection.' },
     ],
   },
+  'sort-lines': {
+    title: 'Sort Text Lines — Alphabetize, Reverse & Sort by Key Online',
+    description: 'Sort lines of text A→Z, Z→A or reversed — case-insensitive, natural (numeric) order, or by the key before = or :. Great for env vars and secrets. Free, private, nothing uploaded.',
+    intro: 'Paste lines and reorder them instantly — ascending, descending, or reversed. Sort case-insensitively, use natural order so item2 comes before item10, or sort by the key (the text before the first = or :) so KEY=value lines line up for a clean side-by-side compare of env files, k8s secrets and Vault output. You can also dedupe, trim each line, drop blank lines and strip stray characters. It all runs in your browser, so sensitive values are never uploaded.',
+    howTo: [
+      'Paste your lines into the Lines box (one entry per line).',
+      'Choose the order: A→Z, Z→A, or Reverse (flip without sorting).',
+      'Turn on options as needed — ignore case, natural order, sort by key (before = or :), remove duplicates, trim lines, drop blanks, or trim specific characters.',
+      'Copy the sorted result or download it as a .txt file.',
+    ],
+    faqs: [
+      { q: 'Is my text uploaded?', a: 'No. All sorting happens in your browser with JavaScript. Your lines never leave your device, so it is safe for env vars, k8s secrets and other sensitive values.' },
+      { q: 'Can I sort env vars or secrets by their key?', a: 'Yes. Turn on “Sort by key” to order by the text before the first = or :, so KEY=value and KEY: value lines are ordered by KEY. Sort both files the same way and they line up for a line-by-line diff.' },
+      { q: 'What is natural order?', a: 'Natural (numeric) order sorts embedded numbers by value, so item2 comes before item10 instead of the plain alphabetical item10 before item2.' },
+      { q: 'Can it remove duplicates and blank lines?', a: 'Yes. Toggle “Remove duplicate lines”, “Remove blank lines” and “Trim each line”, and use “Trim characters” to strip stray quotes or commas from the ends of each line.' },
+    ],
+  },
   'compare-lists': {
     title: 'Compare Two Lists — Merge, Dedupe & Diff Lines',
     description: 'Compare two lists of lines online: merge and remove duplicates, subtract one list from another, or find common lines. Free, private and instant — nothing is uploaded.',
@@ -4959,6 +4976,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Mengapa menghapus metadata itu penting?', a: 'Metadata bisa membocorkan nama asli Anda, pengguna atau path berkas komputer Anda, software yang Anda pakai, serta kapan dokumen dibuat atau diedit — detail yang mungkin tak ingin Anda bagikan.' },
       { q: 'Apakah mengubah tampilan PDF?', a: 'Tidak. Hanya metadata yang dihapus; halaman, teks, dan gambar tetap sama persis.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat pembersih bekerja tanpa koneksi internet.' },
+    ],
+  },
+  'sort-lines': {
+    title: 'Urutkan Baris Teks — Alfabet, Balik & Urut berdasarkan Key',
+    description: 'Urutkan baris teks A→Z, Z→A atau dibalik — abaikan huruf besar/kecil, urutan natural (angka), atau berdasarkan key sebelum = atau :. Cocok untuk env var dan secret. Gratis, privat, tidak diunggah.',
+    intro: 'Tempel baris dan urutkan seketika — menaik, menurun, atau dibalik. Urutkan tanpa memandang huruf besar/kecil, pakai urutan natural agar item2 sebelum item10, atau urutkan berdasarkan key (teks sebelum = atau : pertama) sehingga baris KEY=value sejajar untuk membandingkan berkas env, secret k8s, dan output Vault secara berdampingan. Anda juga bisa hapus duplikat, rapikan tiap baris, hapus baris kosong, dan pangkas karakter yang mengganggu. Semua berjalan di browser Anda, jadi nilai sensitif tidak pernah diunggah.',
+    howTo: [
+      'Tempel baris Anda ke kotak Baris (satu entri per baris).',
+      'Pilih urutan: A→Z, Z→A, atau Balik (membalik tanpa mengurutkan).',
+      'Aktifkan opsi sesuai kebutuhan — abaikan huruf besar/kecil, urutan natural, urutkan berdasarkan key (sebelum = atau :), hapus duplikat, rapikan baris, hapus baris kosong, atau pangkas karakter tertentu.',
+      'Salin hasil terurut atau unduh sebagai berkas .txt.',
+    ],
+    faqs: [
+      { q: 'Apakah teks saya diunggah?', a: 'Tidak. Semua pengurutan terjadi di browser Anda dengan JavaScript. Baris Anda tidak pernah meninggalkan perangkat, jadi aman untuk env var, secret k8s, dan nilai sensitif lainnya.' },
+      { q: 'Bisakah mengurutkan env var atau secret berdasarkan key-nya?', a: 'Ya. Aktifkan “Urutkan berdasarkan key” untuk mengurutkan berdasarkan teks sebelum = atau : pertama, sehingga baris KEY=value dan KEY: value diurutkan berdasarkan KEY. Urutkan kedua berkas dengan cara yang sama dan keduanya sejajar untuk diff baris per baris.' },
+      { q: 'Apa itu urutan natural?', a: 'Urutan natural (angka) mengurutkan angka di dalam teks berdasarkan nilainya, jadi item2 sebelum item10, bukan alfabet biasa item10 sebelum item2.' },
+      { q: 'Bisakah menghapus duplikat dan baris kosong?', a: 'Ya. Aktifkan “Hapus baris duplikat”, “Hapus baris kosong”, dan “Rapikan tiap baris”, serta gunakan “Pangkas karakter” untuk membuang tanda kutip atau koma yang mengganggu di ujung tiap baris.' },
     ],
   },
   'compare-lists': {
