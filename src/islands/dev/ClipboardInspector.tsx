@@ -3,7 +3,7 @@ import { ClipboardPaste, Download, Trash2, RefreshCw, FileVideo, FileAudio, File
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import {
-  readClipboard, parseDataTransfer, previewKindOf, formatSize, mimeToExtension,
+  readClipboard, parseDataTransfer, previewKindOf, formatSize, mimeToExtension, entryToBlob,
   type ClipboardSnapshot, type ClipboardItemEntry, type PreviewKind,
 } from '@/tools/dev/clipboard.lib';
 import { downloadService } from '@/services/download.service';
@@ -54,19 +54,13 @@ function TypeBadge({ kind, type }: { kind: PreviewKind; type: string }) {
 function ItemPreview({ item }: { item: ClipboardItemEntry }) {
   const [showHtml, setShowHtml] = useState<'source' | 'render'>('render');
 
-  function handleDownload() {
+  async function handleDownload() {
     const ext = item.filename
       ? item.filename.split('.').pop() ?? mimeToExtension(item.type)
       : mimeToExtension(item.type);
     const name = item.filename ?? `clipboard.${ext}`;
-    if (item.blobUrl) {
-      downloadService.download(item.blobUrl, name);
-    } else if (item.text != null) {
-      const blob = new Blob([item.text], { type: item.type });
-      const url = URL.createObjectURL(blob);
-      downloadService.download(url, name);
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    }
+    const blob = await entryToBlob(item);
+    if (blob) downloadService.download(blob, name);
   }
 
   return (

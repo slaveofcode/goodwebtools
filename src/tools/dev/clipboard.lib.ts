@@ -29,6 +29,18 @@ export interface ClipboardSnapshot {
   items: ClipboardItemEntry[];
 }
 
+/**
+ * Resolve the actual downloadable Blob for an entry. Binary entries only keep a
+ * `blobUrl` (an object-URL string), so we fetch the bytes back — passing the URL
+ * string straight to a download helper writes the ~60-char URL to disk instead of
+ * the file (the "saved PNG is 66 bytes / invalid" bug).
+ */
+export async function entryToBlob(item: ClipboardItemEntry): Promise<Blob | null> {
+  if (item.blobUrl) return fetch(item.blobUrl).then(r => r.blob()).catch(() => null);
+  if (item.text != null) return new Blob([item.text], { type: item.type });
+  return null;
+}
+
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
 export function previewKindOf(mimeType: string): PreviewKind {

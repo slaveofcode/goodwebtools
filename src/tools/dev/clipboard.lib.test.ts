@@ -1,7 +1,29 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
-  previewKindOf, formatSize, mimeToExtension, parseDataTransfer,
+  previewKindOf, formatSize, mimeToExtension, parseDataTransfer, entryToBlob,
 } from './clipboard.lib';
+
+// ─── entryToBlob (the download source — regression for the 66-byte PNG bug) ─────
+
+describe('entryToBlob', () => {
+  it('wraps a text entry in a blob of the right type', async () => {
+    const blob = await entryToBlob({ type: 'text/plain', kind: 'text', text: 'hello', size: 5 });
+    expect(blob).toBeInstanceOf(Blob);
+    expect(await blob!.text()).toBe('hello');
+    expect(blob!.type).toBe('text/plain');
+  });
+  it('fetches the real blob for a binary entry (never the URL string)', async () => {
+    const png = new Blob([new Uint8Array([137, 80, 78, 71])], { type: 'image/png' });
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ blob: async () => png } as Response);
+    const blob = await entryToBlob({ type: 'image/png', kind: 'image', blobUrl: 'blob:mock', size: 4 });
+    expect(fetchSpy).toHaveBeenCalledWith('blob:mock');
+    expect(blob).toBe(png);
+    fetchSpy.mockRestore();
+  });
+  it('returns null when there is nothing to download', async () => {
+    expect(await entryToBlob({ type: 'text/plain', kind: 'text', size: 0 })).toBeNull();
+  });
+});
 
 // ─── previewKindOf ────────────────────────────────────────────────────────────
 
