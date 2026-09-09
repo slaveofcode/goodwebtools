@@ -898,7 +898,7 @@ const en: Record<string, ToolSeoContent> = {
     description: 'Count down to any date and time and see the days, hours, minutes and seconds left — deadlines, birthdays, launches and holidays. Free and in your browser.',
     intro: 'This free countdown timer counts down to any date and time, showing the exact days, hours, minutes and seconds remaining, plus the number of calendar and business days until it. Great for deadlines, birthdays, launches and holidays. Runs in your browser.',
     howTo: [
-      'Pick a target date and time.',
+      'Click the field to open the calendar, click a day, then set the hour and minute — or tap a quick preset like Tomorrow or New Year.',
       'Watch the live countdown of days, hours, minutes and seconds.',
       'See how many calendar days and business days (Mon–Fri) remain.',
       'Leave the tab open — it keeps ticking.',
@@ -4290,7 +4290,7 @@ const id: Record<string, ToolSeoContent> = {
     description: 'Hitung mundur ke tanggal dan waktu apa pun serta lihat hari, jam, menit, dan detik tersisa — tenggat, ulang tahun, peluncuran, dan liburan. Gratis dan di browser Anda.',
     intro: 'Tool timer hitung mundur gratis ini menghitung mundur ke tanggal dan waktu apa pun, menampilkan hari, jam, menit, dan detik yang tersisa persis, plus jumlah hari kalender dan hari kerja sampai saat itu. Bagus untuk tenggat, ulang tahun, peluncuran, dan liburan. Berjalan di browser Anda.',
     howTo: [
-      'Pilih tanggal dan waktu target.',
+      'Klik kolomnya untuk membuka kalender, klik tanggal, lalu atur jam dan menit — atau tap preset cepat seperti Besok atau Tahun Baru.',
       'Amati hitung mundur langsung hari, jam, menit, dan detik.',
       'Lihat berapa hari kalender dan hari kerja (Sen–Jum) tersisa.',
       'Biarkan tab terbuka — hitungan terus berjalan.',

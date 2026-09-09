@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { formatClock, phaseDuration, nextPhase, type Phase, type PomodoroConfig } from '@/tools/calculators/pomodoro.lib';
+import { useTabTitle } from '@/hooks/useTabTitle';
 import type { Lang } from '@/i18n/config';
+
+const PHASE_ICON: Record<Phase, string> = { work: '🍅', short: '☕', long: '☕' };
 
 const TR: Record<Lang, {
   intro: string; work: string; short: string; long: string; round: string;
@@ -69,6 +72,9 @@ export default function TimerPomodoro({ lang = 'en' }: { lang?: Lang }) {
   const endRef = useRef<number>(0);
 
   const phaseLabel = phase === 'work' ? t.work : phase === 'short' ? t.short : t.long;
+
+  // Reflect the active phase + remaining time in the tab title while running.
+  useTabTitle(running ? `${PHASE_ICON[phase]} ${formatClock(remaining)} · ${phaseLabel}` : null);
 
   // Reset the current phase's clock when config changes while idle.
   useEffect(() => {

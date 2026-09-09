@@ -3,7 +3,16 @@ import { usePrefill } from '@/hooks/usePrefill';
 import { Play, Pause, RotateCcw, Flag, Plus, BellOff, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { formatStopwatch, formatCountdown, msUntilNext, msOfDay } from '@/tools/calculators/stopwatch.lib';
+import { useTabTitle } from '@/hooks/useTabTitle';
 import type { Lang } from '@/i18n/config';
+
+/** Elapsed ms → `M:SS` / `H:MM:SS`, floored to the second (for the tab title). */
+function clockTitle(ms: number): string {
+  const total = Math.floor(Math.max(0, ms) / 1000);
+  const p = (n: number) => String(n).padStart(2, '0');
+  const s = total % 60, m = Math.floor(total / 60) % 60, h = Math.floor(total / 3600);
+  return h > 0 ? `${h}:${p(m)}:${p(s)}` : `${m}:${p(s)}`;
+}
 
 type Tab = 'stopwatch' | 'timer' | 'alarm';
 interface Alarm { id: number; label: string; hh: number; mm: number; fireAt: number }
@@ -160,6 +169,17 @@ export default function TimerHub({ lang = 'en' }: { lang?: Lang }) {
   }, []);
 
   const fmtHM = (a: Alarm) => `${String(a.hh).padStart(2, '0')}:${String(a.mm).padStart(2, '0')}`;
+
+  // Show the running timer/stopwatch (or the ringing alert) in the tab title.
+  useTabTitle(
+    ringing
+      ? `🔔 ${t.done}`
+      : tRunning
+        ? `⏳ ${formatCountdown(tRemaining)}`
+        : swRunning
+          ? `⏱️ ${clockTitle(swElapsed)}`
+          : null,
+  );
 
   return (
     <div className="space-y-4">
