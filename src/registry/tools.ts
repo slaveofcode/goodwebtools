@@ -796,6 +796,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'clock',
+    name: 'Digital Clock',
+    category: 'Calculators',
+    route: '/tools/clock',
+    keywords: ['clock', 'digital clock', 'online clock', 'live clock', 'current time', 'what time is it', 'real time clock', 'time with seconds', 'milliseconds', 'microseconds', 'time now'],
+    icon: Clock,
+    summary: 'Live current time with seconds, milliseconds and a timezone picker',
+    load: () => import('@/islands/calculators/Clock'),
+    status: 'beta'
+  },
+  {
     id: 'favicon-generator',
     name: 'Favicon Generator',
     category: 'Image',
