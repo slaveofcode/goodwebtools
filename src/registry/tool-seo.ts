@@ -898,7 +898,7 @@ const en: Record<string, ToolSeoContent> = {
     description: 'Count down to any date and time and see the days, hours, minutes and seconds left — deadlines, birthdays, launches and holidays. Free and in your browser.',
     intro: 'This free countdown timer counts down to any date and time, showing the exact days, hours, minutes and seconds remaining, plus the number of calendar and business days until it. Great for deadlines, birthdays, launches and holidays. Runs in your browser.',
     howTo: [
-      'Pick a target date and time.',
+      'Click the field to open the calendar, click a day, then set the hour and minute — or tap a quick preset like Tomorrow or New Year.',
       'Watch the live countdown of days, hours, minutes and seconds.',
       'See how many calendar days and business days (Mon–Fri) remain.',
       'Leave the tab open — it keeps ticking.',
@@ -908,6 +908,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it count business days?', a: 'Yes. Alongside calendar days it shows the number of weekdays (Monday–Friday) until your date.' },
       { q: 'Is anything uploaded?', a: 'No. The countdown runs entirely in your browser using your device clock; nothing is sent anywhere.' },
       { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps working with no connection once loaded.' },
+    ],
+  },
+  'clock': {
+    title: 'Online Digital Clock — Live Current Time with Seconds & Milliseconds',
+    description: 'A live digital clock showing the current time down to milliseconds and microseconds in any time zone. Free, accurate and runs in your browser — nothing uploaded.',
+    intro: 'This free online digital clock shows the current time ticking live in real time — with seconds, milliseconds and microseconds — for any time zone you choose. It uses your device clock and runs entirely in your browser, so nothing is uploaded.',
+    howTo: [
+      'Read the live time — hours, minutes, seconds, then the animated milliseconds and microseconds.',
+      'Pick a time zone from the list, or tap “My zone” to use your own.',
+      'Switch between 24-hour and 12-hour format.',
+      'Copy the current Unix timestamp (ms) or ISO string with one tap.',
+    ],
+    faqs: [
+      { q: 'Is the time accurate?', a: 'It reads your device clock, so it is as accurate as your computer or phone is (which is usually synced to internet time automatically).' },
+      { q: 'Can it really show microseconds?', a: 'It reads the browser high-resolution timer for the sub-millisecond digits. Browsers clamp that timer for security, so the smallest digits are best-effort rather than a true hardware microsecond clock.' },
+      { q: 'Is anything uploaded?', a: 'No. The clock runs entirely in your browser using your device time and time-zone data; nothing is sent anywhere.' },
+      { q: 'Can I see the time in another country?', a: 'Yes. Choose any IANA time zone from the picker and the clock shows that region’s current time and UTC offset.' },
+      { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps ticking with no connection once loaded.' },
     ],
   },
   'timezone-converter': {
@@ -4290,7 +4308,7 @@ const id: Record<string, ToolSeoContent> = {
     description: 'Hitung mundur ke tanggal dan waktu apa pun serta lihat hari, jam, menit, dan detik tersisa — tenggat, ulang tahun, peluncuran, dan liburan. Gratis dan di browser Anda.',
     intro: 'Tool timer hitung mundur gratis ini menghitung mundur ke tanggal dan waktu apa pun, menampilkan hari, jam, menit, dan detik yang tersisa persis, plus jumlah hari kalender dan hari kerja sampai saat itu. Bagus untuk tenggat, ulang tahun, peluncuran, dan liburan. Berjalan di browser Anda.',
     howTo: [
-      'Pilih tanggal dan waktu target.',
+      'Klik kolomnya untuk membuka kalender, klik tanggal, lalu atur jam dan menit — atau tap preset cepat seperti Besok atau Tahun Baru.',
       'Amati hitung mundur langsung hari, jam, menit, dan detik.',
       'Lihat berapa hari kalender dan hari kerja (Sen–Jum) tersisa.',
       'Biarkan tab terbuka — hitungan terus berjalan.',
@@ -4300,6 +4318,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah menghitung hari kerja?', a: 'Ya. Selain hari kalender, ditampilkan jumlah hari kerja (Senin–Jumat) sampai tanggal Anda.' },
       { q: 'Apakah ada yang diunggah?', a: 'Tidak. Hitung mundur berjalan sepenuhnya di browser Anda memakai jam perangkat; tidak ada yang dikirim.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat.' },
+    ],
+  },
+  'clock': {
+    title: 'Jam Digital Online — Waktu Saat Ini Langsung dengan Detik & Milidetik',
+    description: 'Jam digital langsung yang menampilkan waktu saat ini hingga milidetik dan mikrodetik di zona waktu apa pun. Gratis, akurat, dan berjalan di browser Anda — tanpa unggah.',
+    intro: 'Jam digital online gratis ini menampilkan waktu saat ini berdetak langsung secara real-time — dengan detik, milidetik, dan mikrodetik — untuk zona waktu apa pun yang Anda pilih. Memakai jam perangkat Anda dan berjalan sepenuhnya di browser, jadi tidak ada yang diunggah.',
+    howTo: [
+      'Baca waktu langsung — jam, menit, detik, lalu milidetik dan mikrodetik yang beranimasi.',
+      'Pilih zona waktu dari daftar, atau tap “Zona saya” untuk memakai zona Anda sendiri.',
+      'Ganti antara format 24 jam dan 12 jam.',
+      'Salin timestamp Unix saat ini (ms) atau string ISO dengan satu tap.',
+    ],
+    faqs: [
+      { q: 'Apakah waktunya akurat?', a: 'Jam ini membaca jam perangkat Anda, jadi seakurat komputer atau ponsel Anda (yang biasanya otomatis sinkron dengan waktu internet).' },
+      { q: 'Apakah benar bisa menampilkan mikrodetik?', a: 'Jam membaca high-resolution timer browser untuk digit di bawah milidetik. Browser membatasi timer itu demi keamanan, jadi digit terkecil bersifat best-effort, bukan jam mikrodetik perangkat keras sebenarnya.' },
+      { q: 'Apakah ada yang diunggah?', a: 'Tidak. Jam berjalan sepenuhnya di browser Anda memakai waktu perangkat dan data zona waktu; tidak ada yang dikirim.' },
+      { q: 'Bisakah melihat waktu di negara lain?', a: 'Bisa. Pilih zona waktu IANA mana pun dari picker dan jam menampilkan waktu saat ini serta offset UTC wilayah tersebut.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berdetak tanpa koneksi setelah dimuat.' },
     ],
   },
   'timezone-converter': {

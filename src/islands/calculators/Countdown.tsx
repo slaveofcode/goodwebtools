@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { breakdown, daysUntil, businessDaysUntil } from '@/tools/calculators/countdown.lib';
+import { DateTimePicker } from '@/components/ui/DateTimePicker';
+import { useTabTitle } from '@/hooks/useTabTitle';
 import type { Lang } from '@/i18n/config';
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
 
 const TR: Record<Lang, {
   intro: string; label: string; days: string; hours: string; minutes: string; seconds: string;
@@ -43,19 +47,23 @@ export default function Countdown({ lang = 'en' }: { lang?: Lang }) {
   const cal = valid ? daysUntil(new Date(now), new Date(targetMs)) : 0;
   const biz = valid ? businessDaysUntil(new Date(now), new Date(targetMs)) : 0;
 
+  // Mirror the live countdown in the tab title so it's visible from other tabs.
+  useTabTitle(b ? `${b.past ? '⌛' : '⏳'} ${b.days}d ${pad2(b.hours)}:${pad2(b.minutes)}:${pad2(b.seconds)}` : null);
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-muted-foreground">{t.label}</span>
-        <input
-          type="datetime-local"
+      <div className="flex flex-col gap-1 text-sm">
+        <span className="text-muted-foreground" id="countdown-target-label">{t.label}</span>
+        <DateTimePicker
           value={target}
-          onChange={e => setTarget(e.target.value)}
-          className="w-full max-w-xs rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm outline-none focus:border-accent"
+          onChange={setTarget}
+          lang={lang}
+          id="countdown-target"
+          placeholder={t.pick}
         />
-      </label>
+      </div>
 
       {!valid ? (
         <p className="text-sm text-muted-foreground">{t.pick}</p>
