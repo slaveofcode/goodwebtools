@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
 import ToolHost from '@/islands/ToolHost';
 import ShareButton from '@/islands/share/ShareButton';
+import InstallTool from '@/islands/shell/InstallTool';
 import { tools, getToolById } from '@/registry/tools';
 import { localizedTool } from '@/registry/tool-i18n';
 import { getToolSeo } from '@/registry/tool-seo';
@@ -89,6 +90,8 @@ if (seo?.faqs && seo.faqs.length > 0) {
   jsonLd={jsonLd}
   lang={lang}
   localized
+  manifestHref={`/manifests/${tool.id}.webmanifest`}
+  appleTouchIcon={`/manifests/icons/${tool.id}-180.png`}
 >
   <main class="page-container py-8">
     <nav aria-label={t(lang, 'a11y.breadcrumb')} class="mb-4">
@@ -115,7 +118,10 @@ if (seo?.faqs && seo.faqs.length > 0) {
             </span>
           )}
         </div>
-        <ShareButton client:idle url={toolUrl} title={`${label.name} — ${SITE_NAME}`} text={label.summary} />
+        <div class="flex flex-wrap items-center gap-2">
+          <InstallTool client:idle toolId={tool.id} name={label.name} lang={lang} />
+          <ShareButton client:idle url={toolUrl} title={`${label.name} — ${SITE_NAME}`} text={label.summary} />
+        </div>
       </div>
       <p class="max-w-3xl text-muted-foreground">{lead}</p>
     </div>
