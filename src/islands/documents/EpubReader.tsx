@@ -5,6 +5,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { flattenToc, type FlatTocItem } from '@/tools/documents/epub-toc.lib';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import type { Lang } from '@/i18n/config';
 
 const MIN_FONT = 70;
@@ -133,6 +134,7 @@ export default function EpubReader({ lang = 'en' }: { lang?: Lang }) {
   };
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
@@ -202,5 +204,6 @@ export default function EpubReader({ lang = 'en' }: { lang?: Lang }) {
         </div>
       )}
     </div>
+    </ExpandableViewer>
   );
 }
