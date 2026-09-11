@@ -2083,6 +2083,17 @@ export const tools: ToolDef[] = [
     status: 'stable'
   },
   {
+    id: 'video-recorder',
+    name: 'Video Recorder',
+    category: 'Media',
+    route: '/tools/video-recorder',
+    keywords: ['video recorder', 'webcam recorder', 'record video', 'record webcam', 'camera recorder', 'record from camera', 'webcam video', 'record mic', 'online video recorder', 'record yourself'],
+    icon: Video,
+    summary: 'Record video from your webcam & mic — preview and download',
+    load: () => import('@/islands/media/VideoRecorder'),
+    status: 'beta'
+  },
+  {
     id: 'screenshot',
     name: 'Screenshot',
     category: 'Media',
