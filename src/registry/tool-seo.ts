@@ -1981,14 +1981,14 @@ const en: Record<string, ToolSeoContent> = {
     ],
   },
   'markdown': {
-    title: 'Free Markdown Preview Tool — Live Editor',
-    description: 'A free online Markdown preview tool with a live side-by-side editor. Type Markdown, see rendered HTML instantly — all in your browser, with nothing uploaded.',
-    intro: 'This free Markdown preview tool renders your Markdown to formatted HTML the moment you type, with the editor on the left and a live preview on the right. Everything runs on your device and the output is sanitized locally, so nothing you write is ever uploaded.',
+    title: 'Free Markdown Preview & Viewer — Open .md Files',
+    description: 'A free online Markdown viewer and live editor. Open a local .md file or type Markdown, see rendered HTML instantly, and read it full-screen — all in your browser, nothing uploaded.',
+    intro: 'This free Markdown tool renders your Markdown to formatted HTML the moment you type, with a live editor and preview. Open a local .md file to read it, switch to full-screen for a distraction-free view, and toggle between Edit, Preview and Split. Everything runs on your device and the output is sanitized locally, so nothing is ever uploaded — handy as a lightweight Markdown viewer on your phone.',
     howTo: [
-      'Type or paste your Markdown into the editor on the left.',
-      'Watch the formatted preview update live on the right pane.',
-      'Use standard Markdown — headings, bold, lists, links and inline code all render.',
-      'Copy the rendered text straight from the preview when you\'re done.',
+      'Tap “Open .md file” (or drag a Markdown file onto the page) to load and read a local document — nothing is uploaded.',
+      'Or type/paste Markdown into the editor and watch the preview update live.',
+      'Use the Edit / Preview / Split toggle to focus on writing or reading.',
+      'Tap “Full screen” for a distraction-free reading view — great on mobile.',
     ],
     faqs: [
       { q: 'Is my Markdown uploaded anywhere?', a: 'No. The Markdown is parsed and rendered entirely in your browser with JavaScript, and the HTML is sanitized locally before display. Your text never leaves your device.' },
@@ -5391,14 +5391,14 @@ const id: Record<string, ToolSeoContent> = {
     ],
   },
   'markdown': {
-    title: 'Tool Preview Markdown Gratis — Editor Langsung',
-    description: 'Tool preview Markdown online gratis dengan editor langsung berdampingan. Ketik Markdown, lihat HTML ter-render secara instan — semuanya di browser Anda, tanpa ada yang diunggah.',
-    intro: 'Tool preview Markdown gratis ini me-render Markdown Anda menjadi HTML terformat begitu Anda mengetik, dengan editor di kiri dan preview langsung di kanan. Semuanya berjalan di perangkat Anda dan keluarannya dibersihkan secara lokal, jadi apa pun yang Anda tulis tidak pernah diunggah.',
+    title: 'Preview & Viewer Markdown Gratis — Buka File .md',
+    description: 'Viewer Markdown dan editor langsung online gratis. Buka file .md lokal atau ketik Markdown, lihat HTML ter-render instan, dan baca layar penuh — semuanya di browser Anda, tanpa unggah.',
+    intro: 'Tool Markdown gratis ini me-render Markdown Anda menjadi HTML terformat begitu Anda mengetik, dengan editor dan preview langsung. Buka file .md lokal untuk membacanya, beralih ke layar penuh untuk tampilan bebas gangguan, dan ganti antara Edit, Preview, dan Split. Semuanya berjalan di perangkat Anda dan keluarannya dibersihkan secara lokal, jadi tidak ada yang diunggah — praktis sebagai viewer Markdown ringan di ponsel Anda.',
     howTo: [
-      'Ketik atau tempel Markdown Anda ke dalam editor di sebelah kiri.',
-      'Perhatikan preview terformat diperbarui secara langsung di panel kanan.',
-      'Gunakan Markdown standar — heading, tebal, daftar, tautan, dan kode inline semuanya ter-render.',
-      'Salin teks ter-render langsung dari preview saat Anda selesai.',
+      'Tap “Buka file .md” (atau jatuhkan file Markdown ke halaman) untuk memuat dan membaca dokumen lokal — tidak ada yang diunggah.',
+      'Atau ketik/tempel Markdown ke editor dan perhatikan preview diperbarui langsung.',
+      'Gunakan toggle Edit / Preview / Split untuk fokus menulis atau membaca.',
+      'Tap “Layar penuh” untuk tampilan membaca bebas gangguan — bagus di ponsel.',
     ],
     faqs: [
       { q: 'Apakah Markdown saya diunggah ke suatu tempat?', a: 'Tidak. Markdown diurai dan di-render sepenuhnya di browser Anda dengan JavaScript, dan HTML-nya dibersihkan secara lokal sebelum ditampilkan. Teks Anda tidak pernah meninggalkan perangkat Anda.' },
