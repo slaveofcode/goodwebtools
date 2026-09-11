@@ -17,6 +17,10 @@ export interface Props {
   canonical?: string;
   /** Set for pages that should not be indexed (e.g. 404). */
   noindex?: boolean;
+  /** Per-page web manifest (tool pages link their own installable manifest). */
+  manifestHref?: string;
+  /** Per-page apple-touch icon (tool pages use their own generated icon). */
+  appleTouchIcon?: string;
   /** Replace the "<title> | GoodWebTools" pattern entirely. */
   fullTitle?: string;
   /** JSON-LD structured data object(s) to embed. */
@@ -38,6 +42,8 @@ const {
   jsonLd,
   lang = DEFAULT_LOCALE,
   localized = false,
+  manifestHref = '/manifest.webmanifest',
+  appleTouchIcon = '/apple-touch-icon.png',
 } = Astro.props;
 
 const canonicalURL = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
@@ -111,13 +117,27 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
     />
 
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="manifest" href={manifestHref} />
     <meta name="theme-color" content="#fffdf5" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href={appleTouchIcon} />
+    <script is:inline>
+      // Capture the install prompt before any island hydrates so the
+      // "Install this tool" button can fire it later. Inert where unsupported.
+      window.__gwtInstall = window.__gwtInstall || { evt: null };
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.__gwtInstall.evt = e;
+        window.dispatchEvent(new Event('gwt-installable'));
+      });
+      window.addEventListener('appinstalled', () => {
+        window.__gwtInstall.evt = null;
+        window.dispatchEvent(new Event('gwt-installed'));
+      });
+    </script>
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
