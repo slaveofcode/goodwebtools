@@ -3,6 +3,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { CopyButton } from '@/components/ui/CopyButton';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
@@ -55,6 +56,7 @@ export default function DocViewer({ lang = 'en' }: { lang?: Lang }) {
   const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
@@ -83,5 +85,6 @@ export default function DocViewer({ lang = 'en' }: { lang?: Lang }) {
         </div>
       )}
     </div>
+    </ExpandableViewer>
   );
 }

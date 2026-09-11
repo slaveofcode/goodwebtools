@@ -4,6 +4,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { colLabel, readWorkbook, type SheetView } from '@/tools/documents/spreadsheet.lib';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, {
@@ -65,6 +66,7 @@ export default function SpreadsheetViewer({ lang = 'en' }: { lang?: Lang }) {
   const colCount = sheet?.rows.reduce((m, r) => Math.max(m, r.length), 0) ?? 0;
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
@@ -128,5 +130,6 @@ export default function SpreadsheetViewer({ lang = 'en' }: { lang?: Lang }) {
         </div>
       )}
     </div>
+    </ExpandableViewer>
   );
 }

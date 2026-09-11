@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Alert } from '@/components/ui/Alert';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import { formatAddress, formatAddressList } from '@/tools/documents/eml.lib';
 import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
@@ -68,6 +69,7 @@ export default function EmlViewer({ lang = 'en' }: { lang?: Lang }) {
   ) : null;
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
@@ -117,5 +119,6 @@ export default function EmlViewer({ lang = 'en' }: { lang?: Lang }) {
         </div>
       )}
     </div>
+    </ExpandableViewer>
   );
 }

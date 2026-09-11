@@ -6,6 +6,7 @@ import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { ZoomPane } from '@/components/ui/ZoomPane';
 import { parseSvgSize, rasterizeSvg } from '@/tools/image/svg.lib';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, {
@@ -84,6 +85,7 @@ export default function SvgViewer({ lang = 'en' }: { lang?: Lang }) {
   };
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="image/svg+xml,.svg" multiple={false}>
         <div className="space-y-1">
@@ -138,5 +140,6 @@ export default function SvgViewer({ lang = 'en' }: { lang?: Lang }) {
 
       {result && <ImageResult blob={result} filename={`image.${fmt === 'jpeg' ? 'jpg' : fmt}`} />}
     </div>
+    </ExpandableViewer>
   );
 }

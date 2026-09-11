@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { resolveStyle, MAP_STYLES, type StyleChoice } from '@/tools/geo/map-styles.lib';
 import { parseGeoFile, computeBbox } from '@/tools/geo/geo-parse.lib';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import type { Lang } from '@/i18n/config';
 
 const STYLE_KEY = 'gwt.map.style';
@@ -128,6 +129,7 @@ export default function GeoViewer({ lang = 'en' }: { lang?: Lang }) {
   };
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-3">
       <Dropzone onDrop={onDrop} accept=".geojson,.json,.gpx,.kml,application/geo+json,application/gpx+xml,application/vnd.google-earth.kml+xml" multiple={false}>
         <div className="space-y-1">
@@ -166,5 +168,6 @@ export default function GeoViewer({ lang = 'en' }: { lang?: Lang }) {
         </div>
       )}
     </div>
+    </ExpandableViewer>
   );
 }

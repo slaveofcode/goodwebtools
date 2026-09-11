@@ -8,6 +8,7 @@ import { formatBytes } from '@/tools/image/canvas.lib';
 import { parseIcoEntries, type IcoEntry } from '@/tools/image/ico.lib';
 import { readExifSummary, type ExifSummary } from '@/tools/image/exif.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, {
@@ -118,6 +119,7 @@ export default function ImageViewer({ lang = 'en' }: { lang?: Lang }) {
   );
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <Dropzone onDrop={onDrop} accept="image/*,.ico" multiple={false}>
         <div className="space-y-1">
@@ -158,5 +160,6 @@ export default function ImageViewer({ lang = 'en' }: { lang?: Lang }) {
         </div>
       )}
     </div>
+    </ExpandableViewer>
   );
 }
