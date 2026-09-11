@@ -3,6 +3,7 @@ import { Dropzone } from '@/components/ui/Dropzone';
 import { Alert } from '@/components/ui/Alert';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { applyWindowLevel, isUncompressed, rescale, parseFrameCount, clampFrameCount } from '@/tools/documents/dicom.lib';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import type { Lang } from '@/i18n/config';
 
 interface Loaded {
@@ -134,6 +135,7 @@ export default function DicomViewer({ lang = 'en' }: { lang?: Lang }) {
   }, [loaded, center, width, frame]);
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
@@ -199,5 +201,6 @@ export default function DicomViewer({ lang = 'en' }: { lang?: Lang }) {
         </div>
       )}
     </div>
+    </ExpandableViewer>
   );
 }

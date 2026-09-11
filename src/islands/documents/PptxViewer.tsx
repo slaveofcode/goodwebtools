@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Alert } from '@/components/ui/Alert';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import type { PptxDoc, Shape } from '@/tools/documents/pptx.lib';
 import type { Lang } from '@/i18n/config';
 
@@ -112,6 +113,7 @@ export default function PptxViewer({ lang = 'en' }: { lang?: Lang }) {
   };
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
@@ -153,5 +155,6 @@ export default function PptxViewer({ lang = 'en' }: { lang?: Lang }) {
         </div>
       )}
     </div>
+    </ExpandableViewer>
   );
 }

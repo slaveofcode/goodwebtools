@@ -5,6 +5,7 @@ import { Alert } from '@/components/ui/Alert';
 import { findPreview } from '@/tools/documents/iwork.lib';
 import { readSlideOutline, type SlideOutline } from '@/tools/documents/iwa.lib';
 import { openPdfRenderer, type PdfRenderer } from '@/tools/pdf/render.lib';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, Record<string, string>> = {
@@ -147,6 +148,7 @@ export default function IWorkViewer({ lang = 'en' }: { lang?: Lang }) {
   const label = (s: SlideOutline, i: number) => s.title || s.body[0] || `${t.slide} ${i + 1}`;
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
 
@@ -272,5 +274,6 @@ export default function IWorkViewer({ lang = 'en' }: { lang?: Lang }) {
         <button onClick={reset} className="min-h-11 border-2 border-border px-3 py-1.5 text-sm font-medium hover:shadow-brutal">{t.another}</button>
       )}
     </div>
+    </ExpandableViewer>
   );
 }

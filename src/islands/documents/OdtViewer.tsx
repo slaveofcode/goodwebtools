@@ -3,6 +3,7 @@ import { FileType2, Printer } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
+import { ExpandableViewer } from '@/components/ui/ExpandableViewer';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, {
@@ -94,6 +95,7 @@ export default function OdtViewer({ lang = 'en' }: { lang?: Lang }) {
   const hasDoc = html !== '' || emptyDoc;
 
   return (
+    <ExpandableViewer lang={lang}>
     <div className="space-y-4">
       <style>{DOC_CSS}</style>
       <p className="text-sm text-muted-foreground print:hidden">{t.intro}</p>
@@ -131,5 +133,6 @@ export default function OdtViewer({ lang = 'en' }: { lang?: Lang }) {
         </div>
       )}
     </div>
+    </ExpandableViewer>
   );
 }
