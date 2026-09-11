@@ -1,0 +1,62 @@
+---
+import { ChevronRight, Heart } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import SupportButton from '@/islands/shell/SupportButton';
+import { POLAR_CHECKOUT_URL } from '@/config';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+
+export function getStaticPaths() {
+  return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const homePath = localizePath('/', lang);
+
+const A = {
+  en: {
+    title: 'Support', metaDesc: 'GoodWebTools is free and private, with no accounts. If a tool saved you time, you can buy me a coffee — entirely optional.',
+    crumb: 'Support', home: 'Home', h1: 'Support GoodWebTools',
+    leadH: 'Buy me a coffee',
+    leadP: "GoodWebTools is free, runs entirely in your browser, and has no accounts or paywalls. If a tool saved you time and you'd like to chip in toward the running costs, you can buy me a coffee. It's completely optional — the tools stay free either way.",
+    privP: 'Payment is handled securely by Polar; your files and data never touch it, and nothing here is tracked.',
+    thanks: 'Thank you for using GoodWebTools. ❤️',
+  },
+  id: {
+    title: 'Dukungan', metaDesc: 'GoodWebTools gratis dan privat, tanpa akun. Jika sebuah tool menghemat waktu Anda, Anda bisa membelikan saya kopi — sepenuhnya opsional.',
+    crumb: 'Dukungan', home: 'Beranda', h1: 'Dukung GoodWebTools',
+    leadH: 'Belikan saya kopi',
+    leadP: 'GoodWebTools gratis, berjalan sepenuhnya di browser Anda, tanpa akun atau paywall. Jika sebuah tool menghemat waktu Anda dan Anda ingin ikut membantu biaya operasional, Anda bisa membelikan saya kopi. Ini sepenuhnya opsional — tool-nya tetap gratis.',
+    privP: 'Pembayaran ditangani dengan aman oleh Polar; berkas dan data Anda tidak menyentuhnya, dan tidak ada yang dilacak di sini.',
+    thanks: 'Terima kasih telah memakai GoodWebTools. ❤️',
+  },
+}[lang === 'id' ? 'id' : 'en'];
+---
+
+<Base title={A.title} description={A.metaDesc} lang={lang} localized>
+  <main class="page-container py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li>
+          <a href={homePath} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{A.home}</a>
+        </li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{A.crumb}</li>
+      </ol>
+    </nav>
+
+    <h1 class="mb-6 text-3xl font-bold uppercase tracking-tight">{A.h1}</h1>
+
+    <div class="max-w-2xl space-y-6 text-base leading-relaxed">
+      <section class="space-y-4 border-2 border-border bg-accent/10 p-5 shadow-brutal-sm">
+        <h2 class="flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
+          <Heart className="h-5 w-5" /> {A.leadH}
+        </h2>
+        <p>{A.leadP}</p>
+        {POLAR_CHECKOUT_URL && <SupportButton client:idle lang={lang} />}
+        <p class="text-sm text-muted-foreground">{A.privP}</p>
+      </section>
+
+      <p class="font-bold">{A.thanks}</p>
+    </div>
+  </main>
+</Base>

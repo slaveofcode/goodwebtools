@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Search, Github, Info, ExternalLink, Settings, MoreVertical, Sparkles } from 'lucide-react';
+import { Search, Github, Info, ExternalLink, Settings, MoreVertical, Sparkles, Coffee } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LangSwitcher } from './LangSwitcher';
 import { CommandPalette } from './CommandPalette';
@@ -30,11 +30,13 @@ const menuItem =
 const S: Record<Lang, {
   searchAria: string; searchPre: string; searchPost: string; askAgent: string;
   about: string; contribute: string; contribMenu: string; more: string; settings: string;
+  support: string;
   modalTitle: string; modalBody: ReactNode;
 }> = {
   en: {
     searchAria: 'Search tools', searchPre: 'Press', searchPost: 'to search', askAgent: 'Ask agent',
     about: 'About', contribute: 'Contribute on GitHub', contribMenu: 'Contribute', more: 'More', settings: 'Settings',
+    support: 'Buy me a coffee',
     modalTitle: 'Contribute',
     modalBody: (
       <>
@@ -46,6 +48,7 @@ const S: Record<Lang, {
   id: {
     searchAria: 'Cari tool', searchPre: 'Tekan', searchPost: 'untuk mencari', askAgent: 'Tanya agen',
     about: 'Tentang', contribute: 'Kontribusi di GitHub', contribMenu: 'Kontribusi', more: 'Lainnya', settings: 'Pengaturan',
+    support: 'Belikan saya kopi',
     modalTitle: 'Kontribusi',
     modalBody: (
       <>
@@ -137,6 +140,9 @@ export function ShellIsland() {
                 <a href="/about" aria-label={s.about} title={s.about} className={iconBtn}>
                   <Info className="h-4 w-4" />
                 </a>
+                <a href="/support" aria-label={s.support} title={s.support} className={iconBtn}>
+                  <Coffee className="h-4 w-4" />
+                </a>
                 <button onClick={() => setModal('github')} aria-label={s.contribute} title={s.contribute} className={iconBtn}>
                   <Github className="h-4 w-4" />
                 </button>
@@ -162,6 +168,7 @@ export function ShellIsland() {
                       <a href="/settings" role="menuitem" className={menuItem}><Settings className="h-4 w-4" /> {s.settings}</a>
                     )}
                     <a href="/about" role="menuitem" className={menuItem}><Info className="h-4 w-4" /> {s.about}</a>
+                    <a href="/support" role="menuitem" className={menuItem}><Coffee className="h-4 w-4" /> {s.support}</a>
                     <button role="menuitem" onClick={() => { setMenuOpen(false); setModal('github'); }} className={menuItem}>
                       <Github className="h-4 w-4" /> {s.contribMenu}
                     </button>
