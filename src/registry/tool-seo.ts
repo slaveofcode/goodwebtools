@@ -3208,6 +3208,24 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Why does the first conversion take longer?', a: 'The first run downloads the roughly 31 MB audio engine once. After that it\'s cached, so subsequent conversions start much faster.' },
     ],
   },
+  'video-recorder': {
+    title: 'Free Webcam Video Recorder — Record Video Online',
+    description: 'A free online webcam video recorder — record video from your camera and microphone, preview it, and download. 100% in your browser, nothing uploaded.',
+    intro: 'This free video recorder captures video from your webcam with sound, right in your browser. Pick your camera and microphone, choose a resolution, mirror the preview, record with an optional countdown and pause/resume, grab photo snapshots, then preview and download the clip. Everything is recorded and saved on your device — nothing is uploaded.',
+    howTo: [
+      'Click “Start camera” and allow camera and microphone access.',
+      'Pick the camera, microphone and resolution you want (mirror the view if you like).',
+      'Press Record (optionally after a 3-2-1 countdown); pause/resume or grab a photo any time.',
+      'Press Stop to preview the clip, then Download it — or Record again.',
+    ],
+    faqs: [
+      { q: 'Is my video uploaded anywhere?', a: 'No. Recording uses your browser’s camera and MediaRecorder APIs; the video is encoded and saved entirely on your device and never leaves it.' },
+      { q: 'Can I choose which microphone is used?', a: 'Yes. Once you allow access, both a camera and a microphone picker appear, so you can select exactly which devices record. You can also record video without audio.' },
+      { q: 'What format is the download?', a: 'Recordings download as WebM (VP9/VP8 with Opus audio), the format browsers record natively. To convert to MP4 you can use the Video Converter tool.' },
+      { q: 'Does it work on my phone?', a: 'Yes, in a supported mobile browser — allow camera/mic access and it records from the phone camera. Add it to your home screen to use it like an app.' },
+      { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps working with no connection once loaded; recording never needs the network.' },
+    ],
+  },
   'screen-recorder': {
     title: 'Free Screen Recorder Tool — Record Screen & Tab',
     description: 'A free online screen recorder tool to capture your screen, window or tab with optional mic audio — 100% private. Everything is recorded in your browser, nothing uploaded.',
@@ -6616,6 +6634,24 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Ke format apa saja saya dapat mengonversi?', a: 'Anda dapat mengekspor ke MP3, M4A (AAC), Opus, WAV, atau FLAC. WAV dan FLAC bersifat lossless, sedangkan format lainnya memungkinkan Anda memilih bitrate dari 96 hingga 320 kbps.' },
       { q: 'Bisakah saya memotong audio saat mengonversi?', a: 'Ya. Masukkan Start time dalam detik dan Length dalam detik untuk menyimpan hanya bagian itu; kosongkan Length untuk mengonversi hingga akhir.' },
       { q: 'Mengapa konversi pertama memerlukan waktu lebih lama?', a: 'Proses pertama mengunduh mesin audio berukuran sekitar 31 MB sekali. Setelah itu ia di-cache, sehingga konversi berikutnya dimulai jauh lebih cepat.' },
+    ],
+  },
+  'video-recorder': {
+    title: 'Perekam Video Webcam Gratis — Rekam Video Online',
+    description: 'Perekam video webcam online gratis — rekam video dari kamera dan mikrofon Anda, pratinjau, dan unduh. 100% di browser Anda, tidak ada yang diunggah.',
+    intro: 'Perekam video gratis ini menangkap video dari webcam Anda dengan suara, langsung di browser. Pilih kamera dan mikrofon, pilih resolusi, cerminkan pratinjau, rekam dengan hitung mundur opsional dan jeda/lanjut, ambil foto snapshot, lalu pratinjau dan unduh klipnya. Semuanya direkam dan disimpan di perangkat Anda — tidak ada yang diunggah.',
+    howTo: [
+      'Klik “Mulai kamera” dan izinkan akses kamera serta mikrofon.',
+      'Pilih kamera, mikrofon, dan resolusi yang Anda inginkan (cerminkan tampilan bila perlu).',
+      'Tekan Rekam (opsional setelah hitung mundur 3-2-1); jeda/lanjut atau ambil foto kapan saja.',
+      'Tekan Berhenti untuk pratinjau klip, lalu Unduh — atau Rekam lagi.',
+    ],
+    faqs: [
+      { q: 'Apakah video saya diunggah ke suatu tempat?', a: 'Tidak. Perekaman memakai API kamera dan MediaRecorder browser Anda; video dikodekan dan disimpan sepenuhnya di perangkat Anda dan tidak pernah keluar.' },
+      { q: 'Bisakah memilih mikrofon yang digunakan?', a: 'Bisa. Setelah Anda mengizinkan akses, picker kamera dan mikrofon muncul, jadi Anda bisa memilih perangkat mana yang merekam. Anda juga bisa merekam video tanpa audio.' },
+      { q: 'Format unduhannya apa?', a: 'Rekaman diunduh sebagai WebM (VP9/VP8 dengan audio Opus), format yang direkam browser secara native. Untuk konversi ke MP4 gunakan tool Video Converter.' },
+      { q: 'Apakah bekerja di ponsel saya?', a: 'Ya, di browser seluler yang didukung — izinkan akses kamera/mikrofon dan ia merekam dari kamera ponsel. Tambahkan ke layar utama untuk memakainya seperti aplikasi.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat; perekaman tidak pernah butuh jaringan.' },
     ],
   },
   'screen-recorder': {
