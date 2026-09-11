@@ -156,27 +156,11 @@ export default defineConfig({
       scope: '/',
       includeAssets: ['icon-192.png', 'icon-512.png'],
       registerType: 'autoUpdate',
-      manifest: {
-        name: 'GoodWebTools',
-        short_name: 'GWT',
-        description: 'Privacy-first client-side utilities',
-        theme_color: '#0a0a0a',
-        background_color: '#0a0a0a',
-        icons: [
-          {
-            src: '/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: '/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      },
+      // The web manifest is owned by the app, not the plugin, so tool pages can
+      // link their own per-tool manifest (see public/manifest.webmanifest and
+      // src/pages/manifests/[tool].webmanifest.ts). The plugin still builds the
+      // service worker for offline support.
+      manifest: false,
       workbox: {
         navigateFallback: '/404',
         globPatterns: ['**/*.{css,js,html,svg,png,ico,txt,woff2}'],
