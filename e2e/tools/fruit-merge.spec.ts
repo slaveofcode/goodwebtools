@@ -20,20 +20,25 @@ test('dropping fruits merges pairs and scores points', async ({ page }) => {
   const box = await canvas.boundingBox();
   expect(box).not.toBeNull();
 
-  // Drop repeatedly onto the middle so every fruit lands on the pile and
-  // touches its neighbors; with a 5-tier pool a same-tier contact is near
-  // certain within this many drops (p(miss) < 0.1%). The 550ms cadence
-  // respects the in-game drop cooldown.
-  for (let i = 0; i < 40; i++) {
-    await page.mouse.move(box!.x + box!.width * 0.5, box!.y + 20);
+  // Vary the drop x like a real player — a single perfect center column is
+  // pathological (fruits stack without reliable same-tier lateral contact, so
+  // nothing merges). Spreading the drops piles fruit with neighbors on both
+  // sides, so a same-tier contact — and a score bump — is near certain within
+  // this many drops. The 550ms cadence respects the in-game drop cooldown; we
+  // also stop early once the board fills up.
+  const xs = [0.5, 0.42, 0.58, 0.46, 0.54, 0.38, 0.62];
+  for (let i = 0; i < 45; i++) {
+    await page.mouse.move(box!.x + box!.width * xs[i % xs.length]!, box!.y + 20);
     await page.mouse.down();
     await page.mouse.up();
     await page.waitForTimeout(550);
     const value = await score.textContent();
     if (value && value !== '0') break;
+    if (await page.getByTestId('fm-over').count()) break;
   }
 
-  await expect.poll(async () => await score.textContent(), { timeout: 5000 }).not.toBe('0');
+  // Allow a merge still resolving after the final drop to land.
+  await expect.poll(async () => await score.textContent(), { timeout: 8000 }).not.toBe('0');
 });
 
 test('restart resets the score after game over', async ({ page }) => {
