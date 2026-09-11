@@ -8,6 +8,13 @@ export const SITE_NAME = 'GoodWebTools';
 export const SITE_TAGLINE = 'Privacy-first client-side utilities that run entirely in your browser';
 
 /**
+ * Polar (polar.sh) hosted checkout link for optional "Buy me a coffee" support.
+ * A checkout link is a public payment URL (not a secret). When empty, the
+ * support entry points are hidden. Payment happens in Polar's embedded overlay.
+ */
+export const POLAR_CHECKOUT_URL = 'https://buy.polar.sh/polar_cl_HMptINBlWf8fgwVIg1lGAihltf5FDKUN2yHIE3RNbEH';
+
+/**
  * Google Analytics 4 measurement ID. A GA4 ID is not secret — it's visible in
  * every visitor's page source — so it lives in the repo for reliability (a
  * Cloudflare build var kept getting dropped). Forks/staging/localhost never report
