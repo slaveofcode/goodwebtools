@@ -1,7 +1,6 @@
 ---
-import { ChevronRight, Heart } from 'lucide-react';
+import { ChevronRight, Heart, Coffee } from 'lucide-react';
 import Base from '@/layouts/Base.astro';
-import SupportButton from '@/islands/shell/SupportButton';
 import { POLAR_CHECKOUT_URL } from '@/config';
 import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
 
@@ -16,17 +15,17 @@ const A = {
   en: {
     title: 'Support', metaDesc: 'GoodWebTools is free and private, with no accounts. If a tool saved you time, you can buy me a coffee — entirely optional.',
     crumb: 'Support', home: 'Home', h1: 'Support GoodWebTools',
-    leadH: 'Buy me a coffee',
+    leadH: 'Buy me a coffee', cta: 'Buy me a coffee',
     leadP: "GoodWebTools is free, runs entirely in your browser, and has no accounts or paywalls. If a tool saved you time and you'd like to chip in toward the running costs, you can buy me a coffee. It's completely optional — the tools stay free either way.",
-    privP: 'Payment is handled securely by Polar; your files and data never touch it, and nothing here is tracked.',
+    privP: 'Payment is handled securely by Polar in a new tab; your files and data never touch it, and nothing here is tracked.',
     thanks: 'Thank you for using GoodWebTools. ❤️',
   },
   id: {
     title: 'Dukungan', metaDesc: 'GoodWebTools gratis dan privat, tanpa akun. Jika sebuah tool menghemat waktu Anda, Anda bisa membelikan saya kopi — sepenuhnya opsional.',
     crumb: 'Dukungan', home: 'Beranda', h1: 'Dukung GoodWebTools',
-    leadH: 'Belikan saya kopi',
+    leadH: 'Belikan saya kopi', cta: 'Belikan saya kopi',
     leadP: 'GoodWebTools gratis, berjalan sepenuhnya di browser Anda, tanpa akun atau paywall. Jika sebuah tool menghemat waktu Anda dan Anda ingin ikut membantu biaya operasional, Anda bisa membelikan saya kopi. Ini sepenuhnya opsional — tool-nya tetap gratis.',
-    privP: 'Pembayaran ditangani dengan aman oleh Polar; berkas dan data Anda tidak menyentuhnya, dan tidak ada yang dilacak di sini.',
+    privP: 'Pembayaran ditangani dengan aman oleh Polar di tab baru; berkas dan data Anda tidak menyentuhnya, dan tidak ada yang dilacak di sini.',
     thanks: 'Terima kasih telah memakai GoodWebTools. ❤️',
   },
 }[lang === 'id' ? 'id' : 'en'];
@@ -52,7 +51,16 @@ const A = {
           <Heart className="h-5 w-5" /> {A.leadH}
         </h2>
         <p>{A.leadP}</p>
-        {POLAR_CHECKOUT_URL && <SupportButton client:idle lang={lang} />}
+        {POLAR_CHECKOUT_URL && (
+          <a
+            href={POLAR_CHECKOUT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 border-2 border-border bg-accent px-4 py-2 font-bold uppercase tracking-wide text-accent-foreground shadow-brutal press-brutal"
+          >
+            <Coffee className="h-4 w-4" /> {A.cta}
+          </a>
+        )}
         <p class="text-sm text-muted-foreground">{A.privP}</p>
       </section>
 
