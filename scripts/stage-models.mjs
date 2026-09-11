@@ -35,7 +35,18 @@ async function stageMediapipe() {
     writeFileSync(model, Buffer.from(await res.arrayBuffer()));
     console.log('Downloaded face-detection model.');
   }
-  console.log(`Staged Face-Blur assets → ${DEST}`);
+
+  // Selfie segmenter for the Video Recorder's real-time background blur/replace.
+  const seg = `${DEST}/selfie_segmenter.tflite`;
+  if (!existsSync(seg)) {
+    const url =
+      'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to download selfie segmenter: ${res.status}`);
+    writeFileSync(seg, Buffer.from(await res.arrayBuffer()));
+    console.log('Downloaded selfie-segmenter model.');
+  }
+  console.log(`Staged Face-Blur + segmenter assets → ${DEST}`);
 }
 
 function stageUpscaler() {
