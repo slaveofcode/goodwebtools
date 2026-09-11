@@ -1251,9 +1251,9 @@ export const tools: ToolDef[] = [
     name: 'Markdown Preview',
     category: 'Dev',
     route: '/tools/markdown',
-    keywords: ['markdown', 'md', 'preview', 'render', 'html', 'readme'],
+    keywords: ['markdown', 'md', 'preview', 'render', 'html', 'readme', 'markdown viewer', 'open md file', 'view markdown', 'md viewer', 'markdown reader'],
     icon: FileText,
-    summary: 'Live Markdown editor and preview',
+    summary: 'View, edit & preview Markdown — open .md files, full-screen',
     load: () => import('@/islands/dev/Markdown'),
     status: 'stable'
   },
