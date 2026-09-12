@@ -6,22 +6,13 @@
  * through the same-origin /hf proxy, matching the Whisper setup.
  */
 import { concatWithSilence, floatToPcm16, splitForPause } from './tts-audio.lib';
+import type { NeuralVoice } from './neural-tts.voices';
 
-export interface NeuralVoice { id: string; label: string; model: string; }
-
-// MMS-TTS is multilingual with one small model per language and needs no speaker
-// embedding. A curated set that has ONNX ports on the Hugging Face hub.
-export const NEURAL_VOICES: NeuralVoice[] = [
-  { id: 'eng', label: 'English', model: 'Xenova/mms-tts-eng' },
-  { id: 'ind', label: 'Bahasa Indonesia', model: 'Xenova/mms-tts-ind' },
-  { id: 'spa', label: 'Español', model: 'Xenova/mms-tts-spa' },
-  { id: 'fra', label: 'Français', model: 'Xenova/mms-tts-fra' },
-  { id: 'deu', label: 'Deutsch', model: 'Xenova/mms-tts-deu' },
-  { id: 'por', label: 'Português', model: 'Xenova/mms-tts-por' },
-  { id: 'rus', label: 'Русский', model: 'Xenova/mms-tts-rus' },
-  { id: 'ara', label: 'العربية', model: 'Xenova/mms-tts-ara' },
-  { id: 'hin', label: 'हिन्दी', model: 'Xenova/mms-tts-hin' },
-];
+// Re-exported for compatibility; the catalogue lives in a lightweight module so
+// the TextToSpeech island can import the voice list without pulling this heavy
+// engine into its chunk (see neural-tts.voices.ts).
+export { NEURAL_VOICES } from './neural-tts.voices';
+export type { NeuralVoice } from './neural-tts.voices';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 let cached: { model: string; synth: any } | null = null;
