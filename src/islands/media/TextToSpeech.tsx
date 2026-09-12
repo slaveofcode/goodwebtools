@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { splitIntoChunks } from '@/tools/media/tts.lib';
 import { floatToWav } from '@/tools/media/tts-audio.lib';
-import { NEURAL_VOICES } from '@/tools/media/neural-tts.engine';
+import { NEURAL_VOICES } from '@/tools/media/neural-tts.voices';
 import { downloadService } from '@/services/download';
 import type { Lang } from '@/i18n/config';
 
