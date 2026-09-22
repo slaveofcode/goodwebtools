@@ -48,6 +48,47 @@ export async function saveScene(scene: WhiteboardScene): Promise<boolean> {
   }
 }
 
+/** Outcome of trying to write the scene back to the user's opened .excalidraw file. */
+export type FileSaveResult = 'saved' | 'no-permission' | 'unsupported' | 'error';
+
+// Minimal shape of a File System Access handle. `queryPermission`/`createWritable`
+// aren't in the standard TS DOM lib, so we type just what we use.
+interface WritableFileHandle {
+  createWritable?: () => Promise<{ write: (data: string) => Promise<void>; close: () => Promise<void> }>;
+  queryPermission?: (opts: { mode: 'readwrite' }) => Promise<PermissionState>;
+}
+
+/**
+ * Write the serialized .excalidraw contents back to the file the user opened
+ * (Excalidraw exposes it as `appState.fileHandle`). This is what keeps the
+ * on-disk file — not just the browser copy — in sync with autosave.
+ *
+ * It only writes when the handle ALREADY has read-write permission and never
+ * prompts: autosave runs on a timer with no user gesture, and the File System
+ * Access permission prompt requires one. When permission isn't granted yet it
+ * returns 'no-permission' so the caller can nudge the user to press Save (⌘S),
+ * which grants it; after that first Save, autosave keeps the file in sync.
+ */
+export async function saveToFileHandle(
+  handle: FileSystemFileHandle | null | undefined,
+  contents: string,
+): Promise<FileSaveResult> {
+  const h = handle as WritableFileHandle | null | undefined;
+  if (!h || typeof h.createWritable !== 'function') return 'unsupported';
+  try {
+    const perm = typeof h.queryPermission === 'function'
+      ? await h.queryPermission({ mode: 'readwrite' })
+      : 'granted';
+    if (perm !== 'granted') return 'no-permission';
+    const writable = await h.createWritable();
+    await writable.write(contents);
+    await writable.close();
+    return 'saved';
+  } catch {
+    return 'error';
+  }
+}
+
 /** Default autosave timings (ms). Exported so the island and tests agree. */
 export const AUTOSAVE_DEBOUNCE_MS = 800;
 export const AUTOSAVE_MAX_WAIT_MS = 5000;
