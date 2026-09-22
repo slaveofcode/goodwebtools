@@ -16,7 +16,7 @@ function computeSceneKey(
 }
 import { Maximize2, Minimize2, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { loadScene, saveScene, shouldAutosave, type WhiteboardScene } from '@/tools/draw/whiteboard.store';
+import { loadScene, saveScene, saveToFileHandle, shouldAutosave, type WhiteboardScene } from '@/tools/draw/whiteboard.store';
 import type { Lang } from '@/i18n/config';
 import '@excalidraw/excalidraw/index.css';
 
@@ -24,11 +24,29 @@ import '@excalidraw/excalidraw/index.css';
 // a hard cap (~5s) inside shouldAutosave, so drawings persist promptly.
 const POLL_MS = 400;
 
+// Serializes a scene to the .excalidraw JSON format (grabbed from Excalidraw at
+// runtime). Kept loose so we don't depend on Excalidraw's element types here.
+type SerializeFn = (
+  elements: readonly unknown[],
+  appState: Record<string, unknown>,
+  files: Record<string, unknown>,
+  type: 'local' | 'database',
+) => string;
+
+// The keyboard shortcut Excalidraw uses for "Save to current file", per platform.
+function saveShortcut(): string {
+  if (typeof navigator === 'undefined') return '⌘S';
+  return /Mac|iPhone|iPad/i.test(navigator.userAgent) ? '⌘S' : 'Ctrl+S';
+}
+
 const TR: Record<Lang, {
   saveNow: string;
   unsaved: string;
   saving: string;
   saved: string;
+  savedBoth: string;
+  savedInBrowser: string;
+  toSaveToFile: string;
   saveFailed: string;
   loadError: string;
   loading: string;
@@ -46,6 +64,9 @@ const TR: Record<Lang, {
     unsaved: 'Unsaved · save now',
     saving: 'Saving…',
     saved: 'Saved',
+    savedBoth: 'Saved (browser + file)',
+    savedInBrowser: 'Saved in browser',
+    toSaveToFile: 'to save to file',
     saveFailed: 'Save failed — export a backup',
     loadError: "Couldn't load the whiteboard. Please refresh the page.",
     loading: 'Loading whiteboard…',
@@ -63,6 +84,9 @@ const TR: Record<Lang, {
     unsaved: 'Belum tersimpan · simpan sekarang',
     saving: 'Menyimpan…',
     saved: 'Tersimpan',
+    savedBoth: 'Tersimpan (browser + file)',
+    savedInBrowser: 'Tersimpan di browser',
+    toSaveToFile: 'untuk simpan ke file',
     saveFailed: 'Gagal menyimpan — ekspor cadangan',
     loadError: 'Tidak dapat memuat whiteboard. Silakan muat ulang halaman.',
     loading: 'Memuat whiteboard…',
@@ -96,6 +120,11 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
   // Save status shown in the header. 'unsaved' → buffered edits pending a save,
   // 'saving' → a write is in flight, 'saved' → persisted.
   const [saveState, setSaveState] = useState<'saved' | 'unsaved' | 'saving' | 'error'>('saved');
+  // Sync status of the .excalidraw file the user opened (Excalidraw's "current
+  // file"), separate from the browser copy above. 'none' = no file open,
+  // 'synced' = autosave also wrote the file, 'manual' = a file is open but we
+  // can't auto-write it yet (needs one Save/⌘S to grant write permission).
+  const [fileState, setFileState] = useState<'none' | 'synced' | 'manual'>('none');
 
   // Optionally hide the navbar (only while expanded) for maximum canvas space.
   const [navHidden, setNavHidden] = useState(false);
@@ -128,6 +157,11 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
   const ready = useRef(false);
   const sceneVersionOf = useRef<(els: readonly unknown[]) => number>(() => 0);
   const savedKey = useRef<string | null>(null);
+  // The File System Access handle of the currently opened file (from Excalidraw's
+  // appState.fileHandle), and Excalidraw's serializer — both captured at runtime
+  // so autosave can also write the on-disk file, not just IndexedDB.
+  const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
+  const serializeRef = useRef<SerializeFn | null>(null);
   // Timestamps that drive the debounce: when the last change happened, and when
   // the scene first became dirty since the last save.
   const lastChangeAt = useRef(0);
@@ -156,6 +190,19 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
     savedKey.current = key;
     // A change may have arrived during the write; only show "Saved" if still clean.
     setSaveState(dirty.current ? 'unsaved' : 'saved');
+
+    // Also keep the user's opened .excalidraw file in sync, when one is open and
+    // Excalidraw's serializer is available. Never prompts — if write permission
+    // isn't granted yet, we show a "press Save (⌘S)" hint instead.
+    const handle = fileHandleRef.current;
+    const serialize = serializeRef.current;
+    if (handle && serialize) {
+      const json = serialize(scene.elements, scene.appState ?? {}, scene.files ?? {}, 'local');
+      const res = await saveToFileHandle(handle, json);
+      setFileState(res === 'saved' ? 'synced' : 'manual');
+    } else {
+      setFileState('none');
+    }
   };
 
   const onChange = (
@@ -165,9 +212,14 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
   ) => {
     latestScene.current = {
       elements,
-      appState: { viewBackgroundColor: appState?.viewBackgroundColor },
+      appState: { viewBackgroundColor: appState?.viewBackgroundColor, name: appState?.name },
       files,
     };
+    // Track the opened file so autosave can write it back (and reflect in the UI
+    // whether a file is currently open at all).
+    const handle = (appState?.fileHandle as FileSystemFileHandle | null) ?? null;
+    fileHandleRef.current = handle;
+    if (!handle) setFileState('none');
     const key = computeSceneKey(elements, files, sceneVersionOf.current);
     // Baseline on the first change (restored scene) and during warm-up.
     if (savedKey.current === null || !ready.current) { savedKey.current = key; return; }
@@ -221,6 +273,9 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
         // getSceneVersion changes only on real element edits, not on cursor /
         // selection / hover onChange noise — so we can tell "actually changed".
         sceneVersionOf.current = m.getSceneVersion as (els: readonly unknown[]) => number;
+        // Excalidraw's own serializer produces the exact .excalidraw file format,
+        // so autosave writes the opened file identically to its "Save" action.
+        serializeRef.current = m.serializeAsJSON as unknown as SerializeFn;
         // Rebase savedKey now that we have the real getSceneVersion — the
         // default () => 0 would produce a stale key that mismatches on the
         // next onChange even when nothing actually changed.
@@ -277,11 +332,23 @@ export default function Whiteboard({ lang = 'en' }: { lang?: Lang }) {
       <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
       {t.unsaved}
     </button>
+  ) : saveState === 'saving' ? (
+    <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+      <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-muted-foreground" /> {t.saving}
+    </span>
+  ) : fileState === 'manual' ? (
+    // Browser copy is saved, but the opened file needs a manual Save (⌘S) — the
+    // first Save grants write permission, after which autosave syncs the file too.
+    <span
+      title={`${t.savedInBrowser} · ${saveShortcut()} ${t.toSaveToFile}`}
+      className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-600"
+    >
+      <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
+      {t.savedInBrowser} · {saveShortcut()} {t.toSaveToFile}
+    </span>
   ) : (
     <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-      {saveState === 'saving'
-        ? <><span className="inline-block h-2 w-2 animate-pulse rounded-full bg-muted-foreground" /> {t.saving}</>
-        : <><Check className="h-3.5 w-3.5" /> {t.saved}</>}
+      <Check className="h-3.5 w-3.5" /> {fileState === 'synced' ? t.savedBoth : t.saved}
     </span>
   );
 
