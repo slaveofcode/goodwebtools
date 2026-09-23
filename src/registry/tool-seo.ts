@@ -1428,6 +1428,7 @@ const en: Record<string, ToolSeoContent> = {
     intro: 'This free Redact PDF tool permanently removes sensitive information from a PDF. Draw a box over any text, image or graphic you want to hide and the content underneath is deleted from the file — unlike a black rectangle drawn on top, it cannot be copied out or uncovered later. Everything runs in your browser using an on-device PDF engine, so your confidential document is never uploaded.',
     howTo: [
       'Drop your PDF to open it.',
+      'Use the zoom + / − buttons (or Fit) to enlarge small or dense text before drawing.',
       'Drag on the page to draw a box over anything you want to redact.',
       'Add boxes across pages; remove any box with its × button.',
       'Click Redact & download, then verify the output before sharing.',
@@ -1435,6 +1436,7 @@ const en: Record<string, ToolSeoContent> = {
     faqs: [
       { q: 'Is this true redaction or just a black box on top?', a: 'True redaction. The tool adds redaction annotations and applies them, so the underlying text, images and vector art are physically removed from the PDF — you cannot copy the text out or delete the box to reveal it.' },
       { q: 'Is my document uploaded to a server?', a: 'No. Redaction runs entirely in your browser with an on-device PDF engine, so your file never leaves your device — essential for confidential documents.' },
+      { q: 'Can I zoom in to redact small text precisely?', a: 'Yes. Use the zoom + / − buttons to enlarge the page and scroll around it, then Fit to return to the full-page view. Zooming only changes the preview — your redaction boxes stay pinned to the exact spot on the page.' },
       { q: 'Can the redaction be undone?', a: 'No. Because the content is deleted from the file, it cannot be recovered from the output. Keep your original and check the redacted copy before sharing.' },
       { q: 'Does it redact images as well as text?', a: 'Yes. Anything under a box — text, images and line/vector art — is removed, and a black rectangle is burned in its place.' },
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the redaction tool works with no internet connection.' },
@@ -4860,6 +4862,7 @@ const id: Record<string, ToolSeoContent> = {
     intro: 'Tool Redact PDF gratis ini menghapus permanen informasi sensitif dari PDF. Gambar kotak di atas teks, gambar, atau grafik yang ingin disembunyikan dan konten di baliknya dihapus dari berkas — tidak seperti kotak hitam yang digambar di atas, konten ini tidak bisa disalin atau dibuka kembali. Semuanya berjalan di browser Anda memakai mesin PDF di perangkat, jadi dokumen rahasia Anda tidak pernah diunggah.',
     howTo: [
       'Letakkan PDF Anda untuk membukanya.',
+      'Pakai tombol zoom + / − (atau Paskan) untuk memperbesar teks kecil atau padat sebelum menggambar.',
       'Seret pada halaman untuk menggambar kotak di atas apa pun yang ingin disensor.',
       'Tambahkan kotak di berbagai halaman; hapus kotak mana pun dengan tombol ×.',
       'Klik Sensor & unduh, lalu periksa hasilnya sebelum dibagikan.',
@@ -4867,6 +4870,7 @@ const id: Record<string, ToolSeoContent> = {
     faqs: [
       { q: 'Apakah ini sensor sejati atau sekadar kotak hitam di atas?', a: 'Sensor sejati. Tool menambahkan anotasi redaksi dan menerapkannya, sehingga teks, gambar, dan grafik vektor di baliknya benar-benar dihapus dari PDF — Anda tidak bisa menyalin teksnya atau menghapus kotak untuk membukanya.' },
       { q: 'Apakah dokumen saya diunggah ke server?', a: 'Tidak. Sensor berjalan sepenuhnya di browser Anda dengan mesin PDF di perangkat, jadi berkas tidak pernah meninggalkan perangkat — penting untuk dokumen rahasia.' },
+      { q: 'Bisakah saya zoom untuk menyensor teks kecil dengan presisi?', a: 'Bisa. Pakai tombol zoom + / − untuk memperbesar halaman dan menggesernya, lalu Paskan untuk kembali ke tampilan satu halaman penuh. Zoom hanya mengubah pratinjau — kotak sensor Anda tetap menempel di titik yang sama pada halaman.' },
       { q: 'Bisakah sensor dibatalkan?', a: 'Tidak. Karena konten dihapus dari berkas, ia tidak bisa dipulihkan dari hasilnya. Simpan berkas asli dan periksa salinan yang disensor sebelum dibagikan.' },
       { q: 'Apakah menyensor gambar juga, bukan hanya teks?', a: 'Ya. Apa pun di bawah kotak — teks, gambar, dan grafik garis/vektor — dihapus, dan kotak hitam dibakar di tempatnya.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat tool sensor bekerja tanpa koneksi internet.' },

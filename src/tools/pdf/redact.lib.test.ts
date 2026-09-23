@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeDragRect, boxToRect } from './redact.lib';
+import { normalizeDragRect, boxToRect, clampZoom, fitScale, ZOOM_MIN, ZOOM_MAX, ZOOM_STEP } from './redact.lib';
 
 describe('normalizeDragRect', () => {
   it('converts a top-left → bottom-right drag to ratios', () => {
@@ -35,5 +35,46 @@ describe('boxToRect', () => {
 
   it('honours a non-zero page origin (CropBox offset)', () => {
     expect(boxToRect({ x: 0.5, y: 0.5, w: 0.5, h: 0.5 }, [10, 20, 110, 220])).toEqual([60, 120, 110, 220]);
+  });
+});
+
+describe('clampZoom', () => {
+  it('leaves an in-range value on the step grid untouched', () => {
+    expect(clampZoom(1.5)).toBe(1.5);
+  });
+
+  it('clamps below the minimum', () => {
+    expect(clampZoom(0.01)).toBe(ZOOM_MIN);
+  });
+
+  it('clamps above the maximum', () => {
+    expect(clampZoom(99)).toBe(ZOOM_MAX);
+  });
+
+  it('snaps to the nearest step so repeated +/- stay on a clean grid', () => {
+    expect(clampZoom(1 + ZOOM_STEP + ZOOM_STEP / 3)).toBeCloseTo(1 + ZOOM_STEP, 6);
+  });
+});
+
+describe('fitScale', () => {
+  it('scales down a page wider than the viewport to fit its width', () => {
+    // page 1000 wide, viewport 500 → 0.5; height not the limit
+    expect(fitScale({ w: 1000, h: 1000 }, { w: 500, h: 5000 })).toBeCloseTo(0.5, 6);
+  });
+
+  it('is limited by height when the page is tall', () => {
+    expect(fitScale({ w: 100, h: 1000 }, { w: 5000, h: 500 })).toBeCloseTo(0.5, 6);
+  });
+
+  it('never upscales past 1 when the page already fits', () => {
+    expect(fitScale({ w: 100, h: 100 }, { w: 1000, h: 1000 })).toBe(1);
+  });
+
+  it('returns 1 when the viewport has not been measured yet', () => {
+    expect(fitScale({ w: 1000, h: 1000 }, { w: 0, h: 0 })).toBe(1);
+  });
+
+  it('returns 1 for a not-yet-rendered page', () => {
+    expect(fitScale({ w: 0, h: 0 }, { w: 500, h: 500 })).toBe(1);
   });
 });

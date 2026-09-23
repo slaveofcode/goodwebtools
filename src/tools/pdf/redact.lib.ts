@@ -34,6 +34,32 @@ export function boxToRect(
   ];
 }
 
+/** Zoom bounds for the redaction preview (1 = fit-to-viewport baseline). */
+export const ZOOM_MIN = 0.25;
+export const ZOOM_MAX = 4;
+export const ZOOM_STEP = 0.25;
+
+/** Clamp a zoom multiplier to the allowed range and snap it onto the step grid,
+ * so repeated +/- presses never drift off a clean value. */
+export function clampZoom(z: number): number {
+  const snapped = Math.round(z / ZOOM_STEP) * ZOOM_STEP;
+  return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, snapped));
+}
+
+/** Scale that fits a rendered page fully inside the viewport, never upscaling
+ * past its native pixels. Returns 1 while either size is still unmeasured, so the
+ * preview falls back to plain CSS fit without a flash. */
+export function fitScale(
+  natural: { w: number; h: number },
+  viewport: { w: number; h: number },
+): number {
+  if (natural.w <= 0 || natural.h <= 0) return 1;
+  const byW = viewport.w > 0 ? viewport.w / natural.w : Infinity;
+  const byH = viewport.h > 0 ? viewport.h / natural.h : Infinity;
+  const s = Math.min(byW, byH);
+  return Number.isFinite(s) ? Math.min(s, 1) : 1;
+}
+
 export function normalizeDragRect(
   x1: number,
   y1: number,
