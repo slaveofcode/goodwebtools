@@ -47,6 +47,7 @@ export default function ReportDialog({ lang = 'en' }: { lang?: Lang }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [doneId, setDoneId] = useState('');
+  const [openSeq, setOpenSeq] = useState(0);
   const fileRef = useRef<File | null>(null);
   const tokenRef = useRef('');
   const widgetHost = useRef<HTMLDivElement | null>(null);
@@ -65,6 +66,9 @@ export default function ReportDialog({ lang = 'en' }: { lang?: Lang }) {
       file: fileMeta,
     }));
     setMessage(''); setConsent(false); setAttach(false); setShowData(false); setError(''); setDoneId('');
+    setBusy(false);
+    tokenRef.current = '';
+    setOpenSeq(n => n + 1);
     setOpen(true);
   }), []);
 
@@ -72,6 +76,8 @@ export default function ReportDialog({ lang = 'en' }: { lang?: Lang }) {
   useEffect(() => {
     if (!open) return;
     if (import.meta.env.DEV) return; // DEV path uses the E2E stub; skip Turnstile
+    if (widgetHost.current) widgetHost.current.innerHTML = '';
+    tokenRef.current = '';
     const w = window as unknown as { turnstile?: { render: (el: HTMLElement, opts: Record<string, unknown>) => void } };
     const render = () => { if (widgetHost.current && w.turnstile) w.turnstile.render(widgetHost.current, {
       sitekey: TURNSTILE_SITE_KEY, callback: (tok: string) => { tokenRef.current = tok; }, size: 'flexible',
@@ -79,15 +85,16 @@ export default function ReportDialog({ lang = 'en' }: { lang?: Lang }) {
     if (w.turnstile) { render(); return; }
     const s = document.createElement('script'); s.src = TURNSTILE_SRC; s.async = true; s.onload = render;
     document.head.appendChild(s);
-  }, [open]);
+  }, [open, openSeq]);
 
   if (!open) return null;
 
   const submit = async () => {
+    if (!diag) return;
     if (!consent) { setError(t.needConsent); return; }
     setBusy(true); setError('');
     try {
-      const finalDiag = { ...diag!, user: message ? { message } : undefined };
+      const finalDiag = { ...diag, user: message ? { message } : undefined };
       const { id } = await submitReport(finalDiag, attach ? fileRef.current : null, tokenRef.current);
       setDoneId(id);
     } catch {
