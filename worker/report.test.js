@@ -32,7 +32,9 @@ describe('handleReport', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(typeof body.id).toBe('string');
+    expect(body.id).not.toBe('r1');
     expect(puts.some(p => p.key.endsWith('/report.json'))).toBe(true);
+    expect(puts.some(p => p.key.includes(body.id))).toBe(true);
   });
 
   it('rejects a non-POST with 405', async () => {
@@ -61,5 +63,22 @@ describe('handleReport', () => {
     const { env } = makeEnv();
     const res = await handleReport(makeRequest({ file: big }), env);
     expect(res.status).toBe(413);
+  });
+
+  it('sanitizes a messy file extension before using it in the R2 key', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ success: true }))));
+    // Built by hand (not via makeRequest) so the File keeps its own messy name —
+    // makeRequest's `file` option always pins the FormData filename to 'f.bin'.
+    const fd = new FormData();
+    fd.set('report', new Blob([JSON.stringify({ app: { reportId: 'r1' } })], { type: 'application/json' }), 'report.json');
+    fd.set('token', 'tok');
+    const messy = new File([new Uint8Array([1, 2, 3])], 'evil.We/IRD');
+    fd.set('file', messy);
+    const req = new Request('https://x/api/report', { method: 'POST', body: fd });
+    const { env, puts } = makeEnv();
+    const res = await handleReport(req, env);
+    expect(res.status).toBe(200);
+    expect(puts.length).toBe(2);
+    expect(puts.some(p => p.key.endsWith('/file.weird'))).toBe(true);
   });
 });

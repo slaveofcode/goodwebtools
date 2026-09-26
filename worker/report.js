@@ -23,6 +23,9 @@ async function verifyTurnstile(token, secret, ip) {
 export async function handleReport(request, env) {
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
+  const cl = request.headers.get('content-length');
+  if (cl && Number(cl) > 11 * 1024 * 1024) return json({ error: 'Payload too large' }, 413);
+
   let form;
   try { form = await request.formData(); } catch { return json({ error: 'Bad form data' }, 400); }
 
@@ -42,15 +45,17 @@ export async function handleReport(request, env) {
   let parsed = {};
   try { parsed = JSON.parse(reportText); } catch { /* store raw anyway */ }
   const id = crypto.randomUUID();
+  if (parsed && parsed.app) parsed.app.reportId = id;
+  const storedText = (parsed && parsed.app) ? JSON.stringify(parsed) : reportText;
   const now = new Date();
   const prefix = `reports/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, '0')}/${id}`;
 
-  await env.REPORTS.put(`${prefix}/report.json`, reportText, { httpMetadata: { contentType: 'application/json' } });
-  if (file) {
-    const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop() : 'bin';
-    await env.REPORTS.put(`${prefix}/file.${ext}`, file.stream(), {
-      httpMetadata: { contentType: file.type || 'application/octet-stream' },
-    });
+  const ext = (file && file.name && file.name.includes('.') ? (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) : 'bin') || 'bin';
+  try {
+    await env.REPORTS.put(`${prefix}/report.json`, storedText, { httpMetadata: { contentType: 'application/json' } });
+    if (file) await env.REPORTS.put(`${prefix}/file.${ext}`, file.stream(), { httpMetadata: { contentType: file.type || 'application/octet-stream' } });
+  } catch {
+    return json({ error: 'Storage failed' }, 500);
   }
 
   // Optional webhook ping (Sub-project B enriches this); never send file bytes/PII.
