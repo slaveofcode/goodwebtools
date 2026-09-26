@@ -36,3 +36,7 @@ export const NOINDEX =
 /** Short git SHA of the deployed build, injected at build time (see astro.config.mjs).
  * Falls back to 'dev' for local/dev where it isn't set. Public, non-secret. */
 export const BUILD_SHA = import.meta.env.PUBLIC_BUILD_SHA || 'dev';
+
+/** Cloudflare Turnstile PUBLIC site key (not a secret). Defaults to Cloudflare's
+ * always-pass test key so self-host/staging work before a real key is set. */
+export const TURNSTILE_SITE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
