@@ -7,6 +7,7 @@ import { Blob as NodeBlob, File as NodeFile } from 'node:buffer';
 if (typeof globalThis.Blob !== 'undefined' && !globalThis.Blob.prototype.arrayBuffer) {
   const JsdomBlob = globalThis.Blob;
   const OriginalFileReader = globalThis.FileReader;
+  const OriginalFormData = globalThis.FormData;
 
   globalThis.Blob = NodeBlob as unknown as typeof Blob;
   globalThis.File = NodeFile as unknown as typeof File;
@@ -37,4 +38,51 @@ if (typeof globalThis.Blob !== 'undefined' && !globalThis.Blob.prototype.arrayBu
       return super.readAsArrayBuffer(blob);
     }
   };
+
+  // Patch FormData to accept Node Blobs (which are our globalThis.Blob after replacement).
+  // Store them in a side map; jsdom's native FormData.set() would reject them.
+  class MockFormData {
+    private _storage = new Map<string, unknown>();
+
+    set(name: string, value: string | Blob, filename?: string) {
+      this._storage.set(name, value);
+      return this;
+    }
+
+    append(name: string, value: string | Blob, filename?: string) {
+      this._storage.set(name, value);
+      return this;
+    }
+
+    get(name: string): FormDataEntryValue | null {
+      return (this._storage.get(name) as FormDataEntryValue) || null;
+    }
+
+    delete(name: string) {
+      this._storage.delete(name);
+    }
+
+    has(name: string) {
+      return this._storage.has(name);
+    }
+
+    getAll(name: string) {
+      const val = this._storage.get(name);
+      return val ? [val as FormDataEntryValue] : [];
+    }
+
+    entries() {
+      return this._storage.entries();
+    }
+
+    forEach(cb: (value: FormDataEntryValue, key: string) => void, thisArg?: unknown) {
+      this._storage.forEach((v, k) => cb(v as FormDataEntryValue, k));
+    }
+
+    [Symbol.iterator]() {
+      return this._storage.entries();
+    }
+  }
+
+  globalThis.FormData = MockFormData as unknown as typeof FormData;
 }
