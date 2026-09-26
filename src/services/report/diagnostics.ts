@@ -6,8 +6,8 @@ const probe = <T>(fn: () => T): T | undefined => { try { return fn(); } catch { 
 const has = (fn: () => boolean): boolean => { try { return fn(); } catch { return false; } };
 
 function capabilities(): Record<string, boolean | string | number> {
-  const w = window as unknown as Record<string, unknown>;
-  const nav = navigator as unknown as Record<string, unknown>;
+  const w = (typeof window !== 'undefined' ? window : {}) as unknown as Record<string, unknown>;
+  const nav = (typeof navigator !== 'undefined' ? navigator : {}) as unknown as Record<string, unknown>;
   return {
     wasm: has(() => typeof WebAssembly === 'object'),
     wasmSimd: has(() => 'Memory' in WebAssembly),

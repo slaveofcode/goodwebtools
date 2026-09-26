@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { collectDiagnostics } from './diagnostics';
 
 describe('collectDiagnostics', () => {
@@ -30,5 +30,12 @@ describe('collectDiagnostics', () => {
     Object.defineProperty(window, 'localStorage', { configurable: true, get() { throw new Error('blocked'); } });
     expect(() => collectDiagnostics({ toolId: 't', route: '/r' })).not.toThrow();
     if (desc) Object.defineProperty(window, 'localStorage', desc);
+  });
+
+  it('does not throw when window and navigator are unavailable (SSR-like)', () => {
+    vi.stubGlobal('window', undefined);
+    vi.stubGlobal('navigator', undefined);
+    expect(() => collectDiagnostics({ toolId: 't', route: '/r' })).not.toThrow();
+    vi.unstubAllGlobals();
   });
 });
