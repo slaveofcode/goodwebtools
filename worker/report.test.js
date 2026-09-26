@@ -48,6 +48,13 @@ describe('handleReport', () => {
     expect(res.status).toBe(403);
   });
 
+  it('rejects a missing Turnstile token with 403', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const { env } = makeEnv();
+    const res = await handleReport(makeRequest({ token: null }), env);
+    expect(res.status).toBe(403);
+  });
+
   it('rejects an oversized file with 413', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ success: true }))));
     const big = new File([new Uint8Array(10 * 1024 * 1024 + 1)], 'big.bin');

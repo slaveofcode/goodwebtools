@@ -31,16 +31,17 @@ export async function handleReport(request, env) {
   if (!ok) return json({ error: 'Verification failed' }, 403);
 
   const reportBlob = form.get('report');
-  if (!reportBlob) return json({ error: 'Missing report' }, 400);
+  if (!(reportBlob instanceof Blob)) return json({ error: 'Missing report' }, 400);
   const reportText = await reportBlob.text();
-  if (reportText.length > 512 * 1024) return json({ error: 'Report too large' }, 413);
+  if (new TextEncoder().encode(reportText).length > 512 * 1024) return json({ error: 'Report too large' }, 413);
 
   const file = form.get('file');
+  if (file && !(file instanceof Blob)) return json({ error: 'Bad file field' }, 400);
   if (file && file.size > MAX_FILE_BYTES) return json({ error: 'File too large' }, 413);
 
   let parsed = {};
   try { parsed = JSON.parse(reportText); } catch { /* store raw anyway */ }
-  const id = (parsed.app && parsed.app.reportId) || crypto.randomUUID();
+  const id = crypto.randomUUID();
   const now = new Date();
   const prefix = `reports/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, '0')}/${id}`;
 
