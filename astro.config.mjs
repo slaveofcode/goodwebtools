@@ -3,6 +3,20 @@ import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
 import AstroPWA from '@vite-pwa/astro';
 import sitemap from '@astrojs/sitemap';
+import { execSync } from 'node:child_process';
+
+// --- Build SHA ----------------------------------------------------------------
+// Short commit SHA identifying the deployed build, surfaced in tool error
+// reports so "works on my machine" issues can be tied to a specific build.
+// Prefers an explicitly-set env var, then Cloudflare's own commit env, then
+// falls back to `git rev-parse` — guarded so a missing git (or shallow clone
+// without .git) never breaks the build.
+const BUILD_SHA = (() => {
+  if (process.env.PUBLIC_BUILD_SHA) return process.env.PUBLIC_BUILD_SHA;
+  if (process.env.CF_PAGES_COMMIT_SHA) return process.env.CF_PAGES_COMMIT_SHA.slice(0, 7);
+  try { return execSync('git rev-parse --short HEAD').toString().trim(); } catch { return 'dev'; }
+})();
+process.env.PUBLIC_BUILD_SHA = BUILD_SHA;
 
 // --- Deploy-context gating ---------------------------------------------------
 // Production and staging share one Cloudflare Worker, so we can't tell them apart

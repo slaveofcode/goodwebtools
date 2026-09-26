@@ -32,3 +32,7 @@ export const GA_ALLOWED_HOSTS = ['goodwebtools.com', 'www.goodwebtools.com'];
  */
 export const NOINDEX =
   import.meta.env.PUBLIC_NOINDEX === '1' || import.meta.env.PUBLIC_NOINDEX === 'true';
+
+/** Short git SHA of the deployed build, injected at build time (see astro.config.mjs).
+ * Falls back to 'dev' for local/dev where it isn't set. Public, non-secret. */
+export const BUILD_SHA = import.meta.env.PUBLIC_BUILD_SHA || 'dev';
