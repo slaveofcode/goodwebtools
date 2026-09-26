@@ -12,6 +12,7 @@
  * Media and file bytes travel peer-to-peer and never reach this Worker.
  */
 export { SignalRoom } from './signal-room.js';
+import { handleReport } from './report.js';
 
 export default {
   async fetch(request, env) {
@@ -26,6 +27,10 @@ export default {
         return new Response('Bad room id', { status: 400 });
       }
       return env.SIGNAL.getByName(roomId).fetch(request);
+    }
+
+    if (url.pathname === '/api/report') {
+      return handleReport(request, env);
     }
 
     // Short-lived TURN credentials from Cloudflare Realtime TURN, so the P2P
