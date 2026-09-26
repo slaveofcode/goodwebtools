@@ -40,47 +40,87 @@ if (typeof globalThis.Blob !== 'undefined' && !globalThis.Blob.prototype.arrayBu
   };
 
   // Patch FormData to accept Node Blobs (which are our globalThis.Blob after replacement).
-  // Store them in a side map; jsdom's native FormData.set() would reject them.
+  // jsdom's native FormData rejects Node Blobs before our wrapper can help, so use a corrected custom shim
+  // with proper multi-value storage, filename wrapping, and all required iterators.
   class MockFormData {
-    private _storage = new Map<string, unknown>();
+    private _storage = new Map<string, FormDataEntryValue[]>();
+
+    private wrapValue(value: string | Blob, filename?: string): FormDataEntryValue {
+      // If value is a Node Blob (not already a File) and filename is provided, wrap as File.
+      if (value instanceof NodeBlob && !(value instanceof NodeFile) && filename) {
+        return new NodeFile([value], filename, { type: (value as Blob).type });
+      }
+      // If value is a Node Blob without filename, wrap as a File with default name.
+      if (value instanceof NodeBlob && !(value instanceof NodeFile)) {
+        return new NodeFile([value], 'blob', { type: (value as Blob).type });
+      }
+      return value as FormDataEntryValue;
+    }
 
     set(name: string, value: string | Blob, filename?: string) {
-      this._storage.set(name, value);
+      this._storage.set(name, [this.wrapValue(value, filename)]);
       return this;
     }
 
     append(name: string, value: string | Blob, filename?: string) {
-      this._storage.set(name, value);
+      const wrapped = this.wrapValue(value, filename);
+      if (this._storage.has(name)) {
+        this._storage.get(name)!.push(wrapped);
+      } else {
+        this._storage.set(name, [wrapped]);
+      }
       return this;
     }
 
     get(name: string): FormDataEntryValue | null {
-      return (this._storage.get(name) as FormDataEntryValue) || null;
+      const values = this._storage.get(name);
+      return values && values.length > 0 ? values[0] : null;
     }
 
-    delete(name: string) {
-      this._storage.delete(name);
+    getAll(name: string): FormDataEntryValue[] {
+      return this._storage.get(name) || [];
     }
 
-    has(name: string) {
+    has(name: string): boolean {
       return this._storage.has(name);
     }
 
-    getAll(name: string) {
-      const val = this._storage.get(name);
-      return val ? [val as FormDataEntryValue] : [];
+    delete(name: string): void {
+      this._storage.delete(name);
     }
 
-    entries() {
-      return this._storage.entries();
+    keys(): IterableIterator<string> {
+      return this._storage.keys();
     }
 
-    forEach(cb: (value: FormDataEntryValue, key: string) => void, thisArg?: unknown) {
-      this._storage.forEach((v, k) => cb(v as FormDataEntryValue, k));
+    values(): IterableIterator<FormDataEntryValue> {
+      const allValues: FormDataEntryValue[] = [];
+      for (const vals of this._storage.values()) {
+        allValues.push(...vals);
+      }
+      return allValues[Symbol.iterator]();
     }
 
-    [Symbol.iterator]() {
-      return this._storage.entries();
+    entries(): IterableIterator<[string, FormDataEntryValue]> {
+      const result: [string, FormDataEntryValue][] = [];
+      for (const [key, values] of this._storage.entries()) {
+        for (const value of values) {
+          result.push([key, value]);
+        }
+      }
+      return result[Symbol.iterator]();
+    }
+
+    forEach(callback: (value: FormDataEntryValue, key: string, parent: FormData) => void, thisArg?: unknown): void {
+      for (const [key, values] of this._storage.entries()) {
+        for (const value of values) {
+          callback.call(thisArg, value, key, this as unknown as FormData);
+        }
+      }
+    }
+
+    [Symbol.iterator](): IterableIterator<[string, FormDataEntryValue]> {
+      return this.entries();
     }
   }
 
