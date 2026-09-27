@@ -16,7 +16,8 @@
     "not_found_handling": "404-page"
   },
   "r2_buckets": [
-    { "binding": "MODELS", "bucket_name": "goodwebtools-models" }
+    { "binding": "MODELS", "bucket_name": "goodwebtools-models" },
+    { "binding": "REPORTS", "bucket_name": "goodwebtools-reports" }
   ],
 
   // WebRTC signaling rendezvous for the P2P tools (file transfer, video call).
@@ -63,7 +64,8 @@
         "not_found_handling": "404-page"
       },
       "r2_buckets": [
-        { "binding": "MODELS", "bucket_name": "goodwebtools-models-staging" }
+        { "binding": "MODELS", "bucket_name": "goodwebtools-models-staging" },
+        { "binding": "REPORTS", "bucket_name": "goodwebtools-reports-staging" }
       ],
       "durable_objects": {
         "bindings": [
