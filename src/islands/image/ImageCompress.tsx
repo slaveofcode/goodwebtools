@@ -5,6 +5,9 @@ import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage, formatBytes } from '@/tools/image/canvas.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import { useReportable } from '@/hooks/useReportable';
+import { setLastError } from '@/services/report/reporter';
+import { breadcrumb } from '@/services/report/breadcrumbs';
 import type { Lang } from '@/i18n/config';
 
 const FORMATS = [
@@ -53,6 +56,8 @@ export default function ImageCompress({ lang = 'en' }: { lang?: Lang }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  useReportable({ toolId: 'image-compress', file });
+
   const fmt = FORMATS.find(f => f.mime === mime)!;
   const outName = file ? file.name.replace(/\.[^.]+$/, '') + '.' + fmt.ext : `image.${fmt.ext}`;
 
@@ -60,6 +65,7 @@ export default function ImageCompress({ lang = 'en' }: { lang?: Lang }) {
     setFile(files.find(f => f.type.startsWith('image/')) ?? null);
     setResult(null);
     setError('');
+    breadcrumb('image-compress:file-selected', { type: files[0]?.type, size: files[0]?.size });
   };
 
   usePasteImage(f => onDrop([f]));
@@ -73,6 +79,7 @@ export default function ImageCompress({ lang = 'en' }: { lang?: Lang }) {
       const { blob } = await processImage(file, { mimeType: mime, quality: quality / 100 });
       setResult(blob);
     } catch (e) {
+      setLastError(e instanceof Error ? e : new Error(String(e)));
       setError(e instanceof Error ? e.message : t.failed);
     } finally {
       setBusy(false);

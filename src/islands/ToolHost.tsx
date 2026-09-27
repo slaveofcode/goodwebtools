@@ -1,6 +1,10 @@
-import { Component, lazy, Suspense, useMemo, type ComponentType, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useEffect, useMemo, type ComponentType, type ReactNode } from 'react';
 import { getToolById } from '@/registry/tools';
 import type { Lang } from '@/i18n/config';
+import ReportButton from '@/islands/report/ReportButton';
+import ReportDialog from '@/islands/report/ReportDialog';
+import { installGlobalCapture } from '@/services/report/breadcrumbs';
+import { openReportDialog } from '@/services/report/reporter';
 
 interface ToolHostProps {
   toolId: string;
@@ -36,6 +40,13 @@ class ToolErrorBoundary extends Component<BoundaryProps, BoundaryState> {
           <pre className="overflow-auto whitespace-pre-wrap break-words text-sm">
             {this.state.error.message}
           </pre>
+          <button
+            type="button"
+            onClick={() => openReportDialog({ error: this.state.error })}
+            className="border-2 border-border bg-white px-3 py-1 text-sm font-bold text-black"
+          >
+            Report this crash
+          </button>
         </div>
       );
     }
@@ -51,6 +62,8 @@ class ToolErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 export default function ToolHost({ toolId, lang }: ToolHostProps) {
   const tool = getToolById(toolId);
 
+  useEffect(() => { installGlobalCapture(); }, []);
+
   // `tool` is a stable registry reference derived from `toolId`, so keying on
   // both is equivalent to keying on `toolId` alone — and satisfies the linter.
   const LazyTool = useMemo(() => {
@@ -64,12 +77,18 @@ export default function ToolHost({ toolId, lang }: ToolHostProps) {
   }
 
   return (
-    <ToolErrorBoundary>
-      <Suspense
-        fallback={<div className="py-12 text-center text-muted-foreground">Loading tool…</div>}
-      >
-        <LazyTool lang={lang} />
-      </Suspense>
-    </ToolErrorBoundary>
+    <>
+      <ToolErrorBoundary>
+        <Suspense
+          fallback={<div className="py-12 text-center text-muted-foreground">Loading tool…</div>}
+        >
+          <LazyTool lang={lang} />
+        </Suspense>
+      </ToolErrorBoundary>
+      <div className="mt-6 flex justify-end">
+        <ReportButton lang={lang} />
+      </div>
+      <ReportDialog lang={lang} />
+    </>
   );
 }
