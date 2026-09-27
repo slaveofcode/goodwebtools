@@ -37,6 +37,10 @@ export const NOINDEX =
  * Falls back to 'dev' for local/dev where it isn't set. Public, non-secret. */
 export const BUILD_SHA = import.meta.env.PUBLIC_BUILD_SHA || 'dev';
 
-/** Cloudflare Turnstile PUBLIC site key (not a secret). Defaults to Cloudflare's
- * always-pass test key so self-host/staging work before a real key is set. */
-export const TURNSTILE_SITE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+/** Cloudflare Turnstile PUBLIC site key (not a secret — it renders in every
+ * visitor's page). Hardcoded as the default like GA_ID, because Cloudflare build
+ * vars have been dropped in prod before; the PUBLIC_ override still wins if set.
+ * The matching Secret Key lives in the TURNSTILE_SECRET Worker secret. Forks/
+ * self-host can override with PUBLIC_TURNSTILE_SITE_KEY (Cloudflare test key
+ * 1x00000000000000000000AA always passes). */
+export const TURNSTILE_SITE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAFE6EiMkO_xbnWQL';
