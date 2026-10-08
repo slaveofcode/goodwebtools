@@ -24,4 +24,11 @@ if (existsSync(sqliteSrc)) {
   }
 }
 
+// Draco mesh decoder for the 3D Model Viewer (DRACOLoader.setDecoderPath('/draco/')).
+const dracoSrc = 'node_modules/three/examples/jsm/libs/draco/gltf';
+if (existsSync(dracoSrc)) {
+  mkdirSync('public/draco', { recursive: true });
+  cpSync(dracoSrc, 'public/draco', { recursive: true });
+}
+
 console.log('Copied WASM/worker/font assets into public/.');

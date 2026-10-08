@@ -18,6 +18,7 @@ const SLOT_OVERRIDES: Record<string, ToolSlot[]> = {
   'text-encrypt': [{ key: 'text', label: 'Message', required: false }],
   'timer-stopwatch': [{ key: 'number', label: 'Minutes', required: false }],
   'unit-converter': [{ key: 'number', label: 'Value', required: false }],
+  '3d-viewer': [{ key: 'url', label: 'Model URL', required: false }],
 };
 
 export const toolManifest: ToolManifestEntry[] = tools

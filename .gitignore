@@ -30,6 +30,7 @@ public/excalidraw/
 public/og/
 public/manifests/icons/
 public/sqlite/
+public/draco/
 
 # Impeccable design-lint local config (per-machine tooling, not repo state)
 .impeccable/
