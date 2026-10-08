@@ -134,6 +134,11 @@ export default defineConfig({
             // loaded on demand in the agent chat — keep it in a stable-named
             // chunk so it stays out of the PWA precache via globIgnores.
             if (id.includes('node_modules/@mlc-ai/web-llm')) return 'web-llm';
+            // 3D Model Viewer: three.js (+ its loaders) and the .blend parser are
+            // only loaded when a model is opened — stable names keep them out of
+            // the PWA precache via globIgnores.
+            if (id.includes('node_modules/three/')) return 'three';
+            if (id.includes('node_modules/jsblender/') || id.includes('node_modules/fzstd/')) return 'jsblender';
           },
         },
       },
@@ -151,7 +156,7 @@ export default defineConfig({
       include: ['pdf-lib', 'pdfjs-dist', 'marked', 'dompurify', 'qrcode', 'jsqr', 'comlink', 'fflate', 'gifenc', 'yaml', 'fast-xml-parser', 'smol-toml', 'hash-wasm', 'xlsx', 'turndown', 'highlight.js/lib/core', 'highlight.js/lib/languages/json', 'highlight.js/lib/languages/yaml', 'highlight.js/lib/languages/xml', 'highlight.js/lib/languages/ini', '@imgly/background-removal', '@mediapipe/tasks-vision', 'upscaler', '@tensorflow/tfjs',
         // Pure-JS deps only reached via dynamic import (Code Beautifier / CSS tools) —
         // pre-bundle so they don't 404 on first use in dev. No effect on prod bundling.
-        'csso', 'terser', 'prettier/standalone', 'prettier/plugins/babel', 'prettier/plugins/estree', 'prettier/plugins/html', 'prettier/plugins/markdown', 'prettier/plugins/postcss', 'prettier/plugins/typescript', 'prettier/plugins/yaml'],
+        'three', 'three/examples/jsm/loaders/GLTFLoader.js', 'three/examples/jsm/loaders/DRACOLoader.js', 'three/examples/jsm/loaders/OBJLoader.js', 'three/examples/jsm/loaders/MTLLoader.js', 'three/examples/jsm/loaders/STLLoader.js', 'three/examples/jsm/loaders/FBXLoader.js', 'three/examples/jsm/loaders/PLYLoader.js', 'three/examples/jsm/libs/meshopt_decoder.module.js', 'three/examples/jsm/controls/OrbitControls.js', 'three/examples/jsm/environments/RoomEnvironment.js', 'jsblender', 'fzstd', 'csso', 'terser', 'prettier/standalone', 'prettier/plugins/babel', 'prettier/plugins/estree', 'prettier/plugins/html', 'prettier/plugins/markdown', 'prettier/plugins/postcss', 'prettier/plugins/typescript', 'prettier/plugins/yaml'],
       // mupdf is a large wasm module used only inside a worker — don't pre-bundle it.
       // @tauri-apps/api must be excluded - it's only available in Tauri runtime
       exclude: ['pdfjs-dist/build/pdf.worker.min.mjs', 'mupdf', 'libarchive.js', 'onnxruntime-web', '@ffmpeg/ffmpeg', '@ffmpeg/util', '@sqlite.org/sqlite-wasm', '@tauri-apps/api'],
@@ -207,6 +212,9 @@ export default defineConfig({
           '**/prettier-*.js',
           '**/web-llm*.js',
           '**/webllm*.js',
+          '**/three*.js',
+          '**/jsblender*.js',
+          'draco/**',
           'og/*.png',
         ],
         runtimeCaching: [

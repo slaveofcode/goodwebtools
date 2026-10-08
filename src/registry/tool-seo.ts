@@ -1552,6 +1552,25 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the viewer works with no internet connection.' },
     ],
   },
+  '3d-viewer': {
+    title: 'Free 3D Model Viewer — Open .blend, GLB, OBJ, STL & FBX Online',
+    description: 'View 3D models in your browser — Blender .blend, glTF/GLB, OBJ, STL, FBX and PLY. Orbit, wireframe, stats, animations and PNG screenshots. Nothing uploaded.',
+    intro: 'This free 3D model viewer opens Blender (.blend), glTF/GLB, OBJ, STL, FBX and PLY files right in your browser — no Blender install, no sign-up. Orbit and zoom around the model, switch to wireframe, hide individual objects, check vertex and triangle counts, play glTF/FBX animations and save a PNG screenshot. Everything is rendered on your device with WebGL; your model is never uploaded.',
+    howTo: [
+      'Drop a 3D model onto the page, or paste a link to one and press Open.',
+      'For glTF or OBJ, drop the model together with its .bin, .mtl and texture files.',
+      'Drag to orbit, right-drag or use two fingers to pan, and scroll or pinch to zoom; press Fit to frame the model.',
+      'Toggle Wireframe, Grid or Scene lights, and untick objects in the list to hide them.',
+      'Press PNG to download a screenshot of the current view, or copy it to the clipboard.',
+    ],
+    faqs: [
+      { q: 'Is my 3D model uploaded?', a: 'No. Files are read and rendered entirely in your browser with WebGL, so your model never leaves your device.' },
+      { q: 'Which formats can it open?', a: 'Blender .blend (saved in Blender 5.0 or newer), glTF and GLB (including Draco and meshopt compression), OBJ with MTL, STL (ASCII and binary), FBX and PLY. Older .blend files show a message asking you to re-save them in Blender 5+ or export to .glb.' },
+      { q: 'Can I open a model from a link?', a: 'Yes. Paste the URL and press Open, or share /tools/3d-viewer?url=… — your browser downloads the file directly from that site. The site must allow cross-origin downloads (CORS); if it does not, download the file and drop it in instead.' },
+      { q: 'Why are my glTF or OBJ textures missing?', a: 'Those formats keep geometry, materials and textures in separate files. Drop the .gltf or .obj together with its .bin, .mtl and image files so the viewer can find them.' },
+      { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA; once the viewer has been opened online it keeps working without a connection for local files.' },
+    ],
+  },
   'pdf-booklet': {
     title: 'PDF Booklet Imposition — Print & Fold a Saddle-Stitch Booklet',
     description: 'Rearrange a PDF into booklet (saddle-stitch) order: print double-sided, fold in half, and the pages read in sequence. Two-up imposition, free and in your browser.',
@@ -4984,6 +5003,25 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apa yang ditampilkan?', a: 'Individu beserta nama, jenis kelamin, tanggal/tempat lahir dan wafat, plus tautan keluarga — orang tua, pasangan, dan anak.' },
       { q: 'Versi GEDCOM apa yang didukung?', a: 'Membaca format GEDCOM berbasis baris yang umum (record INDI dan FAM) hasil ekspor sebagian besar program genealogi.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat penampil bekerja tanpa koneksi internet.' },
+    ],
+  },
+  '3d-viewer': {
+    title: 'Penampil Model 3D Gratis — Buka .blend, GLB, OBJ, STL & FBX Online',
+    description: 'Lihat model 3D di browser Anda — Blender .blend, glTF/GLB, OBJ, STL, FBX, dan PLY. Putar, wireframe, statistik, animasi, dan screenshot PNG. Tidak ada yang diunggah.',
+    intro: 'Penampil model 3D gratis ini membuka berkas Blender (.blend), glTF/GLB, OBJ, STL, FBX, dan PLY langsung di browser Anda — tanpa instal Blender, tanpa daftar. Putar dan zoom di sekitar model, beralih ke wireframe, sembunyikan objek tertentu, cek jumlah vertex dan segitiga, putar animasi glTF/FBX, dan simpan screenshot PNG. Semuanya dirender di perangkat Anda dengan WebGL; model Anda tidak pernah diunggah.',
+    howTo: [
+      'Letakkan model 3D di halaman, atau tempel tautannya lalu tekan Buka.',
+      'Untuk glTF atau OBJ, letakkan model bersama berkas .bin, .mtl, dan teksturnya.',
+      'Seret untuk memutar, seret kanan atau dua jari untuk menggeser, dan gulir atau cubit untuk zoom; tekan Pas untuk membingkai model.',
+      'Aktifkan Wireframe, Grid, atau Lampu adegan, dan hapus centang objek di daftar untuk menyembunyikannya.',
+      'Tekan PNG untuk mengunduh screenshot tampilan saat ini, atau salin ke clipboard.',
+    ],
+    faqs: [
+      { q: 'Apakah model 3D saya diunggah?', a: 'Tidak. Berkas dibaca dan dirender sepenuhnya di browser Anda dengan WebGL, jadi model tidak pernah meninggalkan perangkat.' },
+      { q: 'Format apa saja yang bisa dibuka?', a: 'Blender .blend (disimpan di Blender 5.0 atau lebih baru), glTF dan GLB (termasuk kompresi Draco dan meshopt), OBJ dengan MTL, STL (ASCII dan biner), FBX, dan PLY. Berkas .blend lama menampilkan pesan agar disimpan ulang di Blender 5+ atau diekspor ke .glb.' },
+      { q: 'Bisakah membuka model dari tautan?', a: 'Bisa. Tempel URL lalu tekan Buka, atau bagikan /tools/3d-viewer?url=… — browser Anda mengunduh berkas langsung dari situs tersebut. Situs harus mengizinkan unduhan lintas origin (CORS); jika tidak, unduh berkasnya lalu letakkan di sini.' },
+      { q: 'Kenapa tekstur glTF atau OBJ saya tidak muncul?', a: 'Format tersebut menyimpan geometri, material, dan tekstur di berkas terpisah. Letakkan .gltf atau .obj bersama berkas .bin, .mtl, dan gambarnya agar penampil bisa menemukannya.' },
+      { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA; setelah penampil pernah dibuka secara online, tool ini tetap berfungsi tanpa koneksi untuk berkas lokal.' },
     ],
   },
   'pdf-booklet': {
