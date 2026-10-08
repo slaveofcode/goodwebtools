@@ -57,6 +57,7 @@ const ID_LABELS: Record<string, { name: string; summary: string }> = {
   "pptx-to-pdf": { name: "PPTX ke PDF", summary: "Konversi slide PowerPoint (.pptx) menjadi PDF" },
   "doc-viewer": { name: "Penampil .doc Lawas", summary: "Buka dan baca berkas Word .doc lama (biner pra-2007)" },
   "gedcom-viewer": { name: "Penampil GEDCOM", summary: "Buka dan telusuri berkas silsilah keluarga GEDCOM secara privat" },
+  "3d-viewer": { name: "Penampil Model 3D", summary: "Lihat model 3D Blender, glTF, OBJ, STL, FBX, dan PLY secara privat" },
   "eml-viewer": { name: "Penampil Email EML", summary: "Buka dan baca berkas email .eml beserta lampiran" },
   "dicom-viewer": { name: "Penampil DICOM", summary: "Lihat citra medis DICOM (.dcm) dengan window/level" },
   "iwork-viewer": { name: "Penampil iWork (Pages/Numbers/Keynote)", summary: "Buka berkas Apple Pages, Numbers & Keynote di perangkat apa pun" },
