@@ -5,7 +5,9 @@ import {
   computeSceneStats,
   sceneTree,
   fitCameraParams,
+  savedCameraView,
   disposeObject,
+  DEFAULT_VIEW_DIR,
 } from './model3d-scene.lib';
 import type { BlendSceneData } from './blend-scene.lib';
 
@@ -50,19 +52,105 @@ describe('sceneTree', () => {
 });
 
 describe('fitCameraParams', () => {
-  it('places the camera outside a unit box with sane clip planes', () => {
-    const box = new THREE.Box3(new THREE.Vector3(-0.5, -0.5, -0.5), new THREE.Vector3(0.5, 0.5, 0.5));
-    const p = fitCameraParams(box, 45, 16 / 9);
+  const unitBox = () => new THREE.Box3(new THREE.Vector3(-0.5, -0.5, -0.5), new THREE.Vector3(0.5, 0.5, 0.5));
+
+  /** Largest |NDC| coordinate of the box corners seen from the fitted camera. */
+  function maxNdc(box: THREE.Box3, fov: number, aspect: number) {
+    const p = fitCameraParams(box, fov, aspect);
+    const cam = new THREE.PerspectiveCamera(fov, aspect, p.near, p.far);
+    cam.position.copy(p.center).addScaledVector(p.direction, p.distance);
+    cam.lookAt(p.center);
+    cam.updateMatrixWorld();
+    let max = 0;
+    for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+      const v = new THREE.Vector3(x, y, z).project(cam);
+      max = Math.max(max, Math.abs(v.x), Math.abs(v.y));
+    }
+    return max;
+  }
+
+  it.each([
+    ['landscape', 16 / 9],
+    ['square', 1],
+    ['phone portrait', 0.46],
+  ])('frames a box tightly (%s)', (_label, aspect) => {
+    const m = maxNdc(unitBox(), 45, aspect);
+    expect(m).toBeLessThanOrEqual(1);
+    expect(m).toBeGreaterThan(0.85);
+  });
+
+  it('frames flat, wide scenes tightly too', () => {
+    const slab = new THREE.Box3(new THREE.Vector3(-30, 0, -30), new THREE.Vector3(30, 2, 30));
+    const m = maxNdc(slab, 45, 4 / 3);
+    expect(m).toBeLessThanOrEqual(1);
+    expect(m).toBeGreaterThan(0.85);
+  });
+
+  it('keeps sane clip planes and the default view direction', () => {
+    const p = fitCameraParams(unitBox(), 45, 16 / 9);
     expect(p.center.toArray()).toEqual([0, 0, 0]);
-    expect(p.distance).toBeGreaterThan(Math.sqrt(3) / 2);
+    expect(p.direction.toArray()).toEqual(DEFAULT_VIEW_DIR.toArray());
     expect(p.near).toBeGreaterThan(0);
-    expect(p.far).toBeGreaterThan(p.distance);
+    expect(p.far).toBeGreaterThan(p.distance + Math.sqrt(3));
+  });
+
+  it('honours a custom view direction', () => {
+    const p = fitCameraParams(unitBox(), 45, 1, new THREE.Vector3(0, 0, 5));
+    expect(p.direction.toArray()).toEqual([0, 0, 1]);
+    // Straight on, the front face sits 0.5 in front of the centre.
+    expect(p.distance).toBeCloseTo((0.5 / Math.tan((22.5 * Math.PI) / 180) + 0.5) * 1.05, 5);
   });
 
   it('handles an empty box', () => {
     const p = fitCameraParams(new THREE.Box3(), 45, 1);
     expect(Number.isFinite(p.distance)).toBe(true);
     expect(p.distance).toBeGreaterThan(0);
+  });
+});
+
+describe('savedCameraView', () => {
+  // Blender camera at (0, -10, 0) rotated +90° about X, so it looks down +Y (Z-up).
+  const lookAlongY = [1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, -10, 0, 1];
+  const base = (overrides: Partial<BlendSceneData> = {}): BlendSceneData => ({
+    version: 5.01,
+    meshes: new Map(),
+    objects: [{ name: 'CamObj', kind: 'camera', dataName: 'Cam', matrix: lookAlongY }],
+    materials: new Map(),
+    lights: new Map(),
+    cameras: new Map([['Cam', {
+      fov: 39.6, near: 0.1, far: 100, ortho: false, lens: 50, sensorWidth: 36, sensorHeight: 24, sensorFit: 'auto',
+    }]]),
+    activeCamera: 'CamObj',
+    renderAspect: 1920 / 1080,
+    skipped: [],
+    ...overrides,
+  });
+
+  it('converts the active camera to three.js (Y-up) space', () => {
+    const v = savedCameraView(base(), 1920 / 1080)!;
+    expect(v.position.x).toBeCloseTo(0);
+    expect(v.position.y).toBeCloseTo(0);
+    expect(v.position.z).toBeCloseTo(10);
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(v.quaternion);
+    expect(forward.z).toBeCloseTo(-1);
+    expect(v).toMatchObject({ near: 0.1, far: 100 });
+  });
+
+  it('keeps the render frame visible on a portrait screen', () => {
+    const wide = savedCameraView(base(), 1920 / 1080)!;
+    const phone = savedCameraView(base(), 0.5)!;
+    const height = 36 / (1920 / 1080);
+    expect(wide.fov).toBeCloseTo((2 * Math.atan(height / 100) * 180) / Math.PI);
+    expect(phone.fov).toBeCloseTo((2 * Math.atan((height * (1920 / 1080) / 0.5) / 100) * 180) / Math.PI);
+    expect(phone.fov).toBeGreaterThan(wide.fov);
+  });
+
+  it('returns null without a usable active camera', () => {
+    expect(savedCameraView(base({ activeCamera: undefined }), 1)).toBeNull();
+    expect(savedCameraView(base({ activeCamera: 'Missing' }), 1)).toBeNull();
+    const ortho = base();
+    ortho.cameras.get('Cam')!.ortho = true;
+    expect(savedCameraView(ortho, 1)).toBeNull();
   });
 });
 
@@ -103,7 +191,8 @@ describe('buildBlendObject', () => {
     ],
     materials: new Map([['Red', { color: [1, 0, 0], opacity: 1, metalness: 0, roughness: 0.5, emissive: [0, 0, 0] }]]),
     lights: new Map([['Lamp', { type: 'point', color: [1, 1, 1], intensity: 10 }]]),
-    cameras: new Map([['Cam', { fov: 40, near: 0.1, far: 100, ortho: false }]]),
+    cameras: new Map([['Cam', { fov: 40, near: 0.1, far: 100, ortho: false, lens: 50, sensorWidth: 36, sensorHeight: 24, sensorFit: 'auto' }]]),
+    renderAspect: 16 / 9,
     skipped: [],
   };
 
