@@ -183,7 +183,7 @@ const ID_LABELS: Record<string, { name: string; summary: string }> = {
   "file-split": { name: "Pisah / Gabung File", summary: "Pisahkan file besar menjadi beberapa bagian, atau gabungkan kembali (sisi klien)" },
   "hash": { name: "Hash File", summary: "Hasilkan hash SHA-256 dari sebuah file" },
   "video-to-gif": { name: "Video → GIF", summary: "Ubah klip video menjadi GIF animasi (sisi klien)" },
-  "voice-to-text": { name: "Suara ke Teks", summary: "Transkripsi ucapan menjadi teks di perangkat (Whisper), dengan ekspor SRT/VTT" },
+  "voice-to-text": { name: "Suara ke Teks", summary: "Transkripsi ucapan di perangkat, dengan dikte langsung dan ekspor SRT/VTT" },
   "text-to-speech": { name: "Teks ke Suara", summary: "Bacakan teks dengan suara bawaan browser Anda" },
   "live-captions": { name: "Teks Langsung", summary: "Teks langsung berukuran besar dari ucapan (menggunakan pengenalan suara browser)" },
   "teleprompter": { name: "Teleprompter", summary: "Baca naskah di layar dengan gulir otomatis, pelacakan suara, mode cermin dan pratinjau kamera" },

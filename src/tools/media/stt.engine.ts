@@ -2,11 +2,14 @@ import type { TranscriptSegment } from './stt.lib';
 
 export type SttBackend = 'webgpu' | 'wasm';
 
-export type SttModelId =
+export type WhisperModelId =
   | 'onnx-community/whisper-tiny.en'
   | 'onnx-community/whisper-base.en'
   | 'onnx-community/whisper-base'
   | 'onnx-community/whisper-small';
+
+/** Whisper models run here; 'whistle' (Cactus Whistle) runs in whistle.engine.ts. */
+export type SttModelId = WhisperModelId | 'whistle';
 
 export interface TranscribeOptions {
   /** Whisper source language (full lowercase name, e.g. 'indonesian'); omit to auto-detect. */
@@ -37,7 +40,7 @@ async function webgpuAvailable(): Promise<boolean> {
 // Cache the built pipeline so repeated transcriptions with the same model reuse
 // it — otherwise every run re-initializes the ONNX session (re-reading weights,
 // re-running the load progress, blocking the main thread).
-let cached: { model: SttModelId; transcriber: Transcriber } | null = null;
+let cached: { model: WhisperModelId; transcriber: Transcriber } | null = null;
 
 /** Drop the cached transcriber (e.g. for tests). */
 export function resetTranscriber(): void {
@@ -54,7 +57,7 @@ export function resetTranscriber(): void {
  * pipeline is cached in-memory so subsequent runs skip re-initialization.
  */
 export async function createTranscriber(
-  model: SttModelId,
+  model: WhisperModelId,
   onProgress?: (ratio: number) => void,
 ): Promise<Transcriber> {
   if (cached && cached.model === model) return cached.transcriber;

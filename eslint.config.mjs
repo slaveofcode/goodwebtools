@@ -19,6 +19,7 @@ export default [
       'coverage/**',
       '**/*.config.{js,mjs,cjs,ts}',
       'src/env.d.ts', // Astro-generated (triple-slash reference)
+      'src/vendor/**', // third-party code vendored unmodified (see scripts/vendor-needle.mjs)
     ],
   },
   js.configs.recommended,
