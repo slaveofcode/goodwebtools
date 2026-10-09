@@ -2,6 +2,29 @@
 
 All notable changes to GoodWebTools are documented here.
 
+## [1.0.0-beta.7] — 2026-10-09
+
+A big batch of new tools and improvements since beta.6.
+
+### Added
+- **3D Model Viewer:** open GLB/glTF, OBJ, STL, PLY, FBX and Blender `.blend` files (including Blender 5+). You can load them from a file or a URL, with wireframe, grid, auto-rotate and screenshot controls. `.blend` files open from their saved camera.
+- **Voice to Text — Fast engine and live dictation:** a new on-device "Fast" model (Cactus Whistle) for 7 languages, and live dictation that streams words as you speak. Unsupported languages, like Bahasa Indonesia, switch to the Multilingual Whisper model automatically.
+- **Report a problem:** an opt-in report button on every tool page. You choose what to send, and there's a consent step and spam protection.
+- **New tools:** Webcam Video Recorder (with filters, background blur/replace and green screen), Digital Clock, Sort Text Lines, Daily Word Guess (EN + ID) and Fruit Merge.
+- **Install single tools as apps:** each tool page can be installed as its own PWA with a distinct icon.
+- **Full-screen reading** for the document, image, map and Markdown viewers. The Markdown viewer also opens local `.md` files now.
+- **Countdown:** a calendar date-time picker, and timers mirrored in the tab title.
+- **PDF Redact:** a zoom control for precise redaction on small text.
+
+### Changed
+- The 3D viewer frames models tightly, so they no longer look far away on mobile.
+
+### Fixed
+- Downloads now work reliably on mobile. Large files show a clear message when memory runs out.
+- The Whiteboard saves an opened `.excalidraw` file automatically.
+- Clipboard Inspector saves the real bytes, not a blob URL.
+- Sort Lines puts blank lines at the end.
+
 ## [1.0.0-beta.6] — 2026-08-29
 
 A big upgrade to the AI Agent, plus reliability work for smaller models.
