@@ -8,7 +8,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { disposeObject, fitCameraParams } from './model3d-scene.lib';
+import { DEFAULT_VIEW_DIR, disposeObject, fitCameraParams, type SavedView } from './model3d-scene.lib';
 import type { LoadedModel } from './model3d-load.lib';
 
 export class NoWebGLError extends Error {
@@ -20,10 +20,12 @@ export class NoWebGLError extends Error {
 
 export type LightMode = 'studio' | 'file';
 
+const DEFAULT_FOV = 45;
+
 export class ModelStage {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1000);
+  private readonly camera = new THREE.PerspectiveCamera(DEFAULT_FOV, 1, 0.01, 1000);
   private readonly controls: OrbitControls;
   private readonly envTexture: THREE.Texture;
   private readonly fillLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
@@ -121,7 +123,26 @@ export class ModelStage {
     model.root.updateMatrixWorld(true);
     if (model.animations.length) this.mixer = new THREE.AnimationMixer(model.root);
     this.rebuildGrid();
-    this.fit();
+    this.camera.fov = DEFAULT_FOV;
+    const saved = model.savedView?.(this.camera.aspect);
+    if (saved) this.applyView(saved);
+    else this.fit(false);
+  }
+
+  /** Start from the file's own camera; orbit around the model point it looks at. */
+  private applyView(view: SavedView) {
+    this.camera.fov = view.fov;
+    this.camera.near = view.near;
+    this.camera.far = view.far;
+    this.camera.position.copy(view.position);
+    this.camera.quaternion.copy(view.quaternion);
+    this.camera.updateProjectionMatrix();
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(view.quaternion);
+    const center = new THREE.Box3().setFromObject(this.model!.root).getCenter(new THREE.Vector3());
+    const depth = Math.max(center.sub(view.position).dot(forward), view.near * 10, 0.1);
+    this.controls.target.copy(view.position).addScaledVector(forward, depth);
+    this.controls.update();
+    this.dirty = true;
   }
 
   private clearModel() {
@@ -134,13 +155,15 @@ export class ModelStage {
     }
   }
 
-  fit() {
+  /** Frame the whole model — from the current viewing angle, or the default ¾ view. */
+  fit(keepAngle = true) {
     if (!this.model) return;
     const box = new THREE.Box3().setFromObject(this.model.root);
-    const p = fitCameraParams(box, this.camera.fov, this.camera.aspect);
+    const direction = keepAngle ? this.camera.position.clone().sub(this.controls.target) : DEFAULT_VIEW_DIR;
+    const p = fitCameraParams(box, this.camera.fov, this.camera.aspect, direction);
     this.camera.near = p.near;
     this.camera.far = p.far;
-    this.camera.position.copy(p.center).add(new THREE.Vector3(1, 0.7, 1).normalize().multiplyScalar(p.distance));
+    this.camera.position.copy(p.center).addScaledVector(p.direction, p.distance);
     this.camera.updateProjectionMatrix();
     this.controls.target.copy(p.center);
     this.controls.update();

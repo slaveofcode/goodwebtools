@@ -7,6 +7,7 @@ const jb = vi.hoisted(() => ({
   extractMaterials: vi.fn(),
   extractLights: vi.fn(),
   extractCameras: vi.fn(),
+  extractScenes: vi.fn(),
 }));
 vi.mock('jsblender', () => jb);
 
@@ -81,8 +82,9 @@ describe('blendToSceneData', () => {
       { name: 'Lamp', type: 'spot', color: [1, 1, 1], energy: 4 * Math.PI * 10, spotSize: 1, spotBlend: 0.2 },
     ]);
     jb.extractCameras.mockReturnValue([
-      { name: 'Cam', type: 'perspective', lens: 50, sensorWidth: 36, clipStart: 0.1, clipEnd: 100 },
+      { name: 'Cam', type: 'perspective', lens: 50, sensorWidth: 36, sensorHeight: 24, sensorFit: 'auto', clipStart: 0.1, clipEnd: 100 },
     ]);
+    jb.extractScenes.mockReturnValue([{ name: 'Scene', cameraObject: 'Cam', resolutionX: 1920, resolutionY: 1080 }]);
   });
 
   it('maps jsblender output to renderer-free scene data', async () => {
@@ -113,7 +115,9 @@ describe('blendToSceneData', () => {
 
     const cam = data.cameras.get('Cam')!;
     expect(cam.fov).toBeCloseTo((2 * Math.atan(36 / 100) * 180) / Math.PI);
-    expect(cam).toMatchObject({ near: 0.1, far: 100, ortho: false });
+    expect(cam).toMatchObject({ near: 0.1, far: 100, ortho: false, lens: 50, sensorWidth: 36, sensorHeight: 24, sensorFit: 'auto' });
+    expect(data.activeCamera).toBe('Cam');
+    expect(data.renderAspect).toBeCloseTo(1920 / 1080);
     expect(data.skipped).toEqual([]);
   });
 
@@ -122,6 +126,14 @@ describe('blendToSceneData', () => {
     const data = await blendToSceneData(BLEND5);
     expect(data.skipped).toEqual(['lights']);
     expect(data.meshes.size).toBe(1);
+  });
+
+  it('has no active camera when scenes cannot be read', async () => {
+    jb.extractScenes.mockImplementation(() => { throw new Error('bad scene'); });
+    const data = await blendToSceneData(BLEND5);
+    expect(data.activeCamera).toBeUndefined();
+    expect(data.renderAspect).toBeCloseTo(16 / 9);
+    expect(data.skipped).toEqual(['scenes']);
   });
 
   it('decompresses zstd before reading the header', async () => {

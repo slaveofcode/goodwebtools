@@ -178,14 +178,75 @@ function isListed(o: THREE.Object3D): boolean {
   return !(parent && parent.target === o);
 }
 
-/** Camera distance + clip planes that frame a bounding box. */
-export function fitCameraParams(box: THREE.Box3, fovDeg: number, aspect: number) {
-  const center = box.isEmpty() ? new THREE.Vector3() : box.getCenter(new THREE.Vector3());
-  const radius = box.isEmpty() ? 1 : Math.max(box.getBoundingSphere(new THREE.Sphere()).radius, 1e-3);
-  const vFov = (fovDeg * Math.PI) / 180;
-  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * Math.max(aspect, 1e-3));
-  const distance = (radius / Math.sin(Math.min(vFov, hFov) / 2)) * 1.1;
-  return { center, distance, near: Math.max(distance / 1000, 1e-4), far: distance + radius * 100 };
+/** Initial viewing direction (from the target toward the camera): a ¾ view from above. */
+export const DEFAULT_VIEW_DIR = new THREE.Vector3(1, 0.7, 1).normalize();
+
+/** Empty margin left around a fitted model (5%). */
+const FIT_MARGIN = 1.05;
+
+/**
+ * Camera distance + clip planes that frame a bounding box from `viewDir`
+ * (pointing from the target toward the camera). Each box corner is checked
+ * against the frustum, so the model fills the view on any aspect ratio —
+ * tighter than fitting its bounding sphere, which leaves wide margins.
+ */
+export function fitCameraParams(box: THREE.Box3, fovDeg: number, aspect: number, viewDir: THREE.Vector3 = DEFAULT_VIEW_DIR) {
+  const direction = viewDir.lengthSq() > 0 ? viewDir.clone().normalize() : DEFAULT_VIEW_DIR.clone();
+  if (box.isEmpty()) return { center: new THREE.Vector3(), direction, distance: 5, near: 0.005, far: 500 };
+
+  const center = box.getCenter(new THREE.Vector3());
+  const radius = Math.max(box.getBoundingSphere(new THREE.Sphere()).radius, 1e-3);
+  const worldUp = Math.abs(direction.y) > 0.999 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 1, 0);
+  const right = new THREE.Vector3().crossVectors(worldUp, direction).normalize();
+  const up = new THREE.Vector3().crossVectors(direction, right);
+  const tanV = Math.tan(((fovDeg * Math.PI) / 180) / 2);
+  const tanH = tanV * Math.max(aspect, 1e-3);
+
+  let distance = 0;
+  const v = new THREE.Vector3();
+  for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+    v.set(x, y, z).sub(center);
+    // A corner at depth `toward` (toward the camera) needs this much distance to stay in frame.
+    const toward = v.dot(direction);
+    distance = Math.max(distance, toward + Math.abs(v.dot(right)) / tanH, toward + Math.abs(v.dot(up)) / tanV);
+  }
+  distance = Math.max(distance * FIT_MARGIN, radius * 1e-3);
+  return { center, direction, distance, near: Math.max(distance / 1000, 1e-4), far: distance + radius * 100 };
+}
+
+export interface SavedView {
+  position: THREE.Vector3;
+  quaternion: THREE.Quaternion;
+  fov: number;
+  near: number;
+  far: number;
+}
+
+/**
+ * The .blend scene's active camera as a three.js view (Y-up, matching
+ * buildBlendObject's root rotation). The FOV widens on narrow screens so the
+ * author's whole render frame stays visible. Null for no / orthographic camera.
+ */
+export function savedCameraView(data: BlendSceneData, aspect: number): SavedView | null {
+  const obj = data.objects.find(o => o.kind === 'camera' && o.name === data.activeCamera);
+  const cam = obj?.dataName ? data.cameras.get(obj.dataName) : undefined;
+  if (!obj || !cam || cam.ortho) return null;
+
+  // Blender's sensor fit: 'auto' applies the sensor to the larger render dimension.
+  const renderAspect = data.renderAspect > 0 ? data.renderAspect : 16 / 9;
+  const vertical = cam.sensorFit === 'vertical' || (cam.sensorFit === 'auto' && renderAspect < 1);
+  const sensor = cam.sensorFit === 'vertical' ? cam.sensorHeight : cam.sensorWidth;
+  const frameHeight = vertical ? sensor : sensor / renderAspect;
+  const needed = Math.max(frameHeight, (frameHeight * renderAspect) / Math.max(aspect, 1e-3));
+  const fov = (2 * Math.atan(needed / (2 * cam.lens)) * 180) / Math.PI;
+
+  const position = new THREE.Vector3();
+  const quaternion = new THREE.Quaternion();
+  new THREE.Matrix4().fromArray(obj.matrix).decompose(position, quaternion, new THREE.Vector3());
+  const zUpToYUp = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Z_UP_TO_Y_UP);
+  position.applyQuaternion(zUpToYUp);
+  quaternion.premultiply(zUpToYUp);
+  return { position, quaternion, fov: Math.min(Math.max(fov, 1), 150), near: cam.near, far: cam.far };
 }
 
 /** Free every geometry, material and texture under `root`. */
