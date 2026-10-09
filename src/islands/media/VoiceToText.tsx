@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Mic, Square, Upload } from 'lucide-react';
+import { Mic, Radio, Square, Upload } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
@@ -7,11 +7,14 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { CopyButton } from '@/components/ui/CopyButton';
 import { downloadService } from '@/services/download';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { useLiveDictation } from '@/hooks/useLiveDictation';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { decodeToMono16k } from '@/tools/media/stt-audio.lib';
 import { transcribeInWorker } from '@/tools/media/stt.client';
 import { saveRecording, loadRecording } from '@/tools/media/recording-store';
 import { type SttModelId } from '@/tools/media/stt.engine';
+import { resolveModel, defaultLanguageFor, isWhistleLanguage, wordsToSegments } from '@/tools/media/whistle.lib';
+import { WHISTLE_CACHE } from '@/tools/media/whistle.engine';
 import {
   segmentsToText,
   segmentsToSrt,
@@ -34,12 +37,14 @@ const TR: Record<Lang, {
   errTranscribe: string;
   text: string; timestamped: string; subtitles: string;
   downloadTxt: string; downloadSrt: string; downloadVtt: string;
+  switched: (language: string) => string; fastReset: string;
+  live: string; liveHint: string; liveFastOnly: string; listening: string; liveStop: (clock: string) => string;
+  liveStarting: string; liveDenied: string; liveUnsupported: string; liveFailed: string;
 }> = {
   en: {
     models: {
-      'onnx-community/whisper-tiny.en': { label: 'English · Fast', note: 'smallest download' },
-      'onnx-community/whisper-base.en': { label: 'English · Accurate', note: 'larger, more accurate' },
-      'onnx-community/whisper-base': { label: 'Multilingual', note: 'auto-detects language' },
+      whistle: { label: 'Fast · 7 languages', note: '17 MB, quick on phones — English, German, French, Spanish, Italian, Dutch, Polish' },
+      'onnx-community/whisper-base': { label: 'Multilingual', note: 'auto-detects language; use for Bahasa and other languages' },
       'onnx-community/whisper-small': { label: 'Multilingual · Better', note: 'much better for non-English (e.g. Bahasa); larger download' },
     },
     languages: {
@@ -47,7 +52,7 @@ const TR: Record<Lang, {
       sundanese: 'Sundanese', english: 'English', chinese: 'Chinese', japanese: 'Japanese',
       korean: 'Korean', arabic: 'Arabic', hindi: 'Hindi', tagalog: 'Tagalog', thai: 'Thai',
       vietnamese: 'Vietnamese', spanish: 'Spanish', portuguese: 'Portuguese', french: 'French',
-      german: 'German', italian: 'Italian', dutch: 'Dutch', russian: 'Russian', turkish: 'Turkish',
+      german: 'German', italian: 'Italian', dutch: 'Dutch', polish: 'Polish', russian: 'Russian', turkish: 'Turkish',
     },
     stop: c => `Stop (${c})`, record: 'Record', or: 'or',
     dropTitle: 'Drop an audio or video file',
@@ -65,12 +70,22 @@ const TR: Record<Lang, {
     errTranscribe: 'Transcription failed',
     text: 'Text', timestamped: 'Timestamped', subtitles: 'Subtitles',
     downloadTxt: 'Download .txt', downloadSrt: 'Download .srt', downloadVtt: 'Download .vtt',
+    switched: l => `Fast doesn’t support ${l} — switched to Multilingual.`,
+    fastReset: 'Fast handles English, German, French, Spanish, Italian, Dutch and Polish — language reset to Auto-detect.',
+    live: 'Live dictation',
+    liveHint: 'See words appear as you speak (Fast model).',
+    liveFastOnly: 'Live dictation needs the Fast model and one of its languages.',
+    listening: 'Listening…',
+    liveStop: c => `Stop live (${c})`,
+    liveStarting: 'Starting live dictation…',
+    liveDenied: 'Microphone access was blocked — allow it in your browser settings, or upload a file instead.',
+    liveUnsupported: 'This browser can’t do live dictation — record or upload instead.',
+    liveFailed: 'Live dictation stopped',
   },
   id: {
     models: {
-      'onnx-community/whisper-tiny.en': { label: 'Inggris · Cepat', note: 'unduhan terkecil' },
-      'onnx-community/whisper-base.en': { label: 'Inggris · Akurat', note: 'lebih besar, lebih akurat' },
-      'onnx-community/whisper-base': { label: 'Multibahasa', note: 'mendeteksi bahasa otomatis' },
+      whistle: { label: 'Cepat · 7 bahasa', note: '17 MB, cepat di ponsel — Inggris, Jerman, Prancis, Spanyol, Italia, Belanda, Polandia' },
+      'onnx-community/whisper-base': { label: 'Multibahasa', note: 'mendeteksi bahasa otomatis; gunakan untuk Bahasa Indonesia dan bahasa lain' },
       'onnx-community/whisper-small': { label: 'Multibahasa · Lebih Baik', note: 'jauh lebih baik untuk non-Inggris (mis. Bahasa Indonesia); unduhan lebih besar' },
     },
     languages: {
@@ -78,7 +93,7 @@ const TR: Record<Lang, {
       sundanese: 'Sunda', english: 'Inggris', chinese: 'Mandarin', japanese: 'Jepang',
       korean: 'Korea', arabic: 'Arab', hindi: 'Hindi', tagalog: 'Tagalog', thai: 'Thai',
       vietnamese: 'Vietnam', spanish: 'Spanyol', portuguese: 'Portugis', french: 'Prancis',
-      german: 'Jerman', italian: 'Italia', dutch: 'Belanda', russian: 'Rusia', turkish: 'Turki',
+      german: 'Jerman', italian: 'Italia', dutch: 'Belanda', polish: 'Polandia', russian: 'Rusia', turkish: 'Turki',
     },
     stop: c => `Berhenti (${c})`, record: 'Rekam', or: 'atau',
     dropTitle: 'Letakkan berkas audio atau video',
@@ -96,14 +111,24 @@ const TR: Record<Lang, {
     errTranscribe: 'Transkripsi gagal',
     text: 'Teks', timestamped: 'Berstempel waktu', subtitles: 'Subtitel',
     downloadTxt: 'Unduh .txt', downloadSrt: 'Unduh .srt', downloadVtt: 'Unduh .vtt',
+    switched: l => `Model Cepat tidak mendukung ${l} — dialihkan ke Multibahasa.`,
+    fastReset: 'Model Cepat mendukung Inggris, Jerman, Prancis, Spanyol, Italia, Belanda, dan Polandia — bahasa diatur ke Deteksi otomatis.',
+    live: 'Dikte langsung',
+    liveHint: 'Lihat kata muncul saat Anda berbicara (model Cepat).',
+    liveFastOnly: 'Dikte langsung membutuhkan model Cepat dan salah satu bahasanya.',
+    listening: 'Mendengarkan…',
+    liveStop: c => `Hentikan dikte (${c})`,
+    liveStarting: 'Memulai dikte langsung…',
+    liveDenied: 'Akses mikrofon diblokir — izinkan di pengaturan browser, atau unggah berkas.',
+    liveUnsupported: 'Browser ini tidak mendukung dikte langsung — rekam atau unggah berkas saja.',
+    liveFailed: 'Dikte langsung berhenti',
   },
 };
 
-const MODELS: { value: SttModelId; label: string; note: string; multilingual?: boolean }[] = [
-  { value: 'onnx-community/whisper-tiny.en', label: 'English · Fast', note: 'smallest download' },
-  { value: 'onnx-community/whisper-base.en', label: 'English · Accurate', note: 'larger, more accurate' },
-  { value: 'onnx-community/whisper-base', label: 'Multilingual', note: 'auto-detects language', multilingual: true },
-  { value: 'onnx-community/whisper-small', label: 'Multilingual · Better', note: 'much better for non-English (e.g. Bahasa); larger download', multilingual: true },
+const MODELS: { value: SttModelId; label: string; note: string }[] = [
+  { value: 'whistle', label: 'Fast · 7 languages', note: '17 MB, quick on phones' },
+  { value: 'onnx-community/whisper-base', label: 'Multilingual', note: 'auto-detects language' },
+  { value: 'onnx-community/whisper-small', label: 'Multilingual · Better', note: 'much better for non-English (e.g. Bahasa); larger download' },
 ];
 
 // Whisper source-language options (value = the lowercase name Whisper expects).
@@ -129,6 +154,7 @@ const LANGUAGES: { value: string; label: string }[] = [
   { value: 'german', label: 'German' },
   { value: 'italian', label: 'Italian' },
   { value: 'dutch', label: 'Dutch' },
+  { value: 'polish', label: 'Polish' },
   { value: 'russian', label: 'Russian' },
   { value: 'turkish', label: 'Turkish' },
 ];
@@ -138,12 +164,16 @@ type Tab = 'text' | 'timestamped' | 'subtitles';
 export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
   const recorder = useAudioRecorder();
+  const dictation = useLiveDictation();
   const wakeLock = useWakeLock();
   const [restored, setRestored] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
-  const [model, setModel] = useState<SttModelId>('onnx-community/whisper-tiny.en');
-  const [language, setLanguage] = useState('');
+  // Default: the Fast engine, unless the locale's language needs Whisper (Indonesian pages).
+  const [language, setLanguage] = useState(() => defaultLanguageFor(lang));
+  const [model, setModel] = useState<SttModelId>(() => resolveModel('whistle', defaultLanguageFor(lang)).model);
+  const [note, setNote] = useState('');
+  const [liveMode, setLiveMode] = useState(false);
   const [modelProgress, setModelProgress] = useState<number | null>(null);
   const [transcribing, setTranscribing] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -179,13 +209,13 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
     return () => clearInterval(id);
   }, [transcribing]);
 
-  const setAudio = (blob: Blob, persist = true) => {
+  const setAudio = (blob: Blob, persist = true, keepTranscript = false) => {
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     const url = URL.createObjectURL(blob);
     urlRef.current = url;
     setAudioUrl(url);
     setAudioBlob(blob);
-    setSegments(null);
+    if (!keepTranscript) setSegments(null);
     setError('');
     if (persist) { setRestored(false); void saveRecording(blob); }
   };
@@ -230,6 +260,11 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
   // shows even on a cache read, so this tells the user whether it's a real download.)
   const refreshModelCached = async () => {
     try {
+      if (model === 'whistle') {
+        const keys = await (await caches.open(WHISTLE_CACHE)).keys();
+        setModelCached(keys.some(r => r.url.endsWith('whistle.cact')));
+        return;
+      }
       const cache = await caches.open('transformers-cache');
       const keys = await cache.keys();
       setModelCached(keys.some(r => r.url.includes(`${model}/resolve`)));
@@ -250,11 +285,10 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
     void wakeLock.request(); // keep the screen on so the phone doesn't lock + discard the tab
     try {
       const audio = await decodeToMono16k(audioBlob);
-      const isMultilingual = MODELS.find(m => m.value === model)?.multilingual;
       const segs = await transcribeInWorker(
         audio,
         model,
-        isMultilingual ? language || undefined : undefined,
+        language || undefined,
         r => setModelProgress(r),
       );
       setModelProgress(null); // model ready (or cached) — now inference (indeterminate)
@@ -270,6 +304,55 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
       wakeLock.release();
     }
   };
+
+  // Language/model pairing: Fast only covers its 7 languages, so picking another
+  // language switches to Whisper; picking Fast with such a language resets it.
+  const chooseLanguage = (value: string) => {
+    setLanguage(value);
+    const r = resolveModel(model, value);
+    if (r.switched) {
+      setModel(r.model);
+      setLiveMode(false);
+      setNote(t.switched(t.languages[value] ?? value));
+    } else setNote('');
+  };
+  const chooseModel = (value: SttModelId) => {
+    setModel(value);
+    if (value === 'whistle' && !isWhistleLanguage(language)) {
+      setLanguage('');
+      setNote(t.fastReset);
+    } else setNote('');
+    if (value !== 'whistle') setLiveMode(false);
+  };
+
+  // Live dictation: words stream in while recording; on stop they become the result.
+  const toggleLive = async () => {
+    if (dictation.live) {
+      const words = await dictation.stop();
+      const segs = wordsToSegments(words);
+      setSegments(segs);
+      setEditedText(segmentsToText(segs));
+      setTab('text');
+      wakeLock.release();
+    } else {
+      audioRef.current?.pause();
+      setSegments(null);
+      setError('');
+      void wakeLock.request();
+      await dictation.start(language || undefined);
+    }
+  };
+  // Keep the live recording (replay / re-transcribe) without wiping its transcript.
+  useEffect(() => {
+    if (dictation.blob) setAudio(dictation.blob, true, true);
+  }, [dictation.blob]);
+  useEffect(() => {
+    if (!dictation.error) return;
+    const { reason, message } = dictation.error;
+    setError(reason === 'denied' ? t.liveDenied : reason === 'unsupported' ? t.liveUnsupported : `${t.liveFailed}${message ? `: ${message}` : ''}`);
+    wakeLock.release();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dictation.error]);
 
   const srt = useMemo(() => (segments ? segmentsToSrt(segments) : ''), [segments]);
   const vtt = useMemo(() => (segments ? segmentsToVtt(segments) : ''), [segments]);
@@ -287,18 +370,47 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
     downloadService.download(new Blob([content], { type: mime }), `transcript.${kind}`);
   };
 
-  const busy = transcribing;
+  const busy = transcribing || dictation.starting;
+  const liveAvailable = model === 'whistle' && isWhistleLanguage(language);
 
   return (
     <div className="space-y-4">
       {/* Input: record or upload */}
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={toggleRecord} disabled={busy}>
-          {recorder.recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          {recorder.recording ? t.stop(formatClock(recorder.seconds)) : t.record}
-        </Button>
+        {liveMode && liveAvailable ? (
+          <Button onClick={() => void toggleLive()} disabled={transcribing || dictation.starting || recorder.recording}>
+            {dictation.live ? <Square className="h-4 w-4" /> : <Radio className="h-4 w-4" />}
+            {dictation.live ? t.liveStop(formatClock(dictation.seconds)) : dictation.starting ? t.liveStarting : t.live}
+          </Button>
+        ) : (
+          <Button onClick={toggleRecord} disabled={busy || dictation.live}>
+            {recorder.recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            {recorder.recording ? t.stop(formatClock(recorder.seconds)) : t.record}
+          </Button>
+        )}
+        <label className="flex items-center gap-2 text-sm" title={liveAvailable ? t.liveHint : t.liveFastOnly}>
+          <input
+            type="checkbox"
+            checked={liveMode && liveAvailable}
+            disabled={!liveAvailable || recorder.recording || dictation.live || busy}
+            onChange={e => setLiveMode(e.target.checked)}
+          />
+          {t.live}
+        </label>
         <span className="text-sm text-muted-foreground">{t.or}</span>
       </div>
+      <p className="text-xs text-muted-foreground">{liveAvailable ? t.liveHint : t.liveFastOnly}</p>
+
+      {dictation.progress !== null && (
+        <ProgressBar percent={dictation.progress * 100} label={modelCached ? t.loadingCache : t.downloading} />
+      )}
+      {(dictation.live || dictation.words.length > 0 || dictation.pending) && !segments && (
+        <div data-testid="live-transcript" aria-live="polite" className="min-h-[4rem] border-2 border-border bg-muted p-3 text-sm">
+          {dictation.live && <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">{t.listening}</span>}
+          <span>{dictation.words.map(w => w.word).join(' ')}</span>
+          {dictation.pending && <span className="text-muted-foreground"> {dictation.pending}</span>}
+        </div>
+      )}
 
       <Dropzone onDrop={onDrop} accept="audio/*,video/*" multiple={false}>
         <div className="space-y-1">
@@ -327,7 +439,7 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
               key={m.value}
               variant={model === m.value ? 'primary' : 'secondary'}
               aria-pressed={model === m.value}
-              onClick={() => setModel(m.value)}
+              onClick={() => chooseModel(m.value)}
               disabled={busy}
               title={t.models[m.value]?.note ?? m.note}
             >
@@ -337,23 +449,22 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
         </div>
       </div>
 
-      {MODELS.find(m => m.value === model)?.multilingual && (
-        <label className="block space-y-1.5">
+      <label className="block space-y-1.5">
           <span className="block text-sm font-bold uppercase tracking-wide text-muted-foreground">{t.language}</span>
           <select
             value={language}
-            onChange={e => setLanguage(e.target.value)}
-            disabled={busy}
+            onChange={e => chooseLanguage(e.target.value)}
+            disabled={busy || dictation.live}
             className="w-full border-2 border-border bg-muted px-3 py-2 text-sm outline-none focus:shadow-brutal-sm"
           >
             {LANGUAGES.map(l => <option key={l.value} value={l.value}>{t.languages[l.value] ?? l.label}</option>)}
           </select>
           <span className="block text-xs text-muted-foreground">{t.languageHint}</span>
+          {note && <span role="status" className="block text-xs font-bold">{note}</span>}
         </label>
-      )}
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={transcribe} disabled={!audioBlob || busy}>
+        <Button onClick={transcribe} disabled={!audioBlob || busy || dictation.live}>
           {busy ? t.transcribing : t.transcribe}
         </Button>
         {!audioBlob && !busy && (

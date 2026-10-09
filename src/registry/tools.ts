@@ -1988,9 +1988,9 @@ export const tools: ToolDef[] = [
     name: 'Voice to Text',
     category: 'Media',
     route: '/tools/voice-to-text',
-    keywords: ['voice', 'speech', 'transcribe', 'transcription', 'whisper', 'audio to text', 'dictation', 'subtitles', 'srt', 'vtt', 'stt'],
+    keywords: ['voice', 'speech', 'transcribe', 'transcription', 'whisper', 'whistle', 'audio to text', 'dictation', 'live dictation', 'subtitles', 'srt', 'vtt', 'stt'],
     icon: Mic,
-    summary: 'Transcribe speech to text on-device (Whisper), with SRT/VTT export',
+    summary: 'Transcribe speech on-device, with live dictation and SRT/VTT export',
     load: () => import('@/islands/media/VoiceToText'),
     status: 'beta'
   },
