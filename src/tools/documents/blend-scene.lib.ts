@@ -48,6 +48,11 @@ export interface BlendCameraData {
   near: number;
   far: number;
   ortho: boolean;
+  /** Focal length + sensor (mm), for re-deriving the FOV at any aspect. */
+  lens: number;
+  sensorWidth: number;
+  sensorHeight: number;
+  sensorFit: 'auto' | 'horizontal' | 'vertical' | 'unknown';
 }
 
 export interface BlendSceneData {
@@ -57,6 +62,10 @@ export interface BlendSceneData {
   materials: Map<string, BlendMaterialData>;
   lights: Map<string, BlendLightData>;
   cameras: Map<string, BlendCameraData>;
+  /** Object name of the scene's active camera (the view the author framed). */
+  activeCamera?: string;
+  /** Render width / height of the scene, for fitting the saved camera's frame. */
+  renderAspect: number;
   /** Extractors that threw and were skipped (e.g. 'lights'). */
   skipped: string[];
 }
@@ -224,8 +233,18 @@ export async function blendToSceneData(bytes: Uint8Array): Promise<BlendSceneDat
       near: c.clipStart > 0 ? c.clipStart : 0.1,
       far: c.clipEnd > 0 ? c.clipEnd : 1000,
       ortho: c.type === 'orthographic',
+      lens,
+      sensorWidth: sensor,
+      sensorHeight: c.sensorHeight > 0 ? c.sensorHeight : 24,
+      sensorFit: c.sensorFit ?? 'auto',
     });
   }
 
-  return { version: header.version, meshes, objects, materials, lights, cameras, skipped };
+  const scene = safe('scenes', () => jb.extractScenes(blend))[0];
+  const renderAspect = scene && scene.resolutionX > 0 && scene.resolutionY > 0 ? scene.resolutionX / scene.resolutionY : 16 / 9;
+
+  return {
+    version: header.version, meshes, objects, materials, lights, cameras,
+    activeCamera: scene?.cameraObject, renderAspect, skipped,
+  };
 }

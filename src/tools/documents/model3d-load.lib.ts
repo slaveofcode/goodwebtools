@@ -7,6 +7,7 @@
  */
 import * as THREE from 'three';
 import { basename, type ModelFormat } from './model3d-format.lib';
+import type { SavedView } from './model3d-scene.lib';
 
 export interface ModelSource {
   name: string;
@@ -24,6 +25,8 @@ export interface LoadedModel {
   format: ModelFormat;
   /** Source-app version when known (e.g. "Blender 5.01"). */
   version?: string;
+  /** The file's own camera (e.g. a .blend's active camera) for a viewport aspect, if it has one. */
+  savedView?: (aspect: number) => SavedView | null;
 }
 
 /** Give up waiting for sidecar textures after this long (the model still shows). */
@@ -164,12 +167,18 @@ export async function loadModel(src: ModelSource): Promise<LoadedModel> {
 
       case 'blend': {
         await settle();
-        const [{ blendToSceneData }, { buildBlendObject }] = await Promise.all([
+        const [{ blendToSceneData }, { buildBlendObject, savedCameraView }] = await Promise.all([
           import('./blend-scene.lib'),
           import('./model3d-scene.lib'),
         ]);
         const data = await blendToSceneData(new Uint8Array(src.buffer));
-        return { root: buildBlendObject(data), animations: [], format: 'blend', version: `Blender ${data.version.toFixed(2)}` };
+        return {
+          root: buildBlendObject(data),
+          animations: [],
+          format: 'blend',
+          version: `Blender ${data.version.toFixed(2)}`,
+          savedView: aspect => savedCameraView(data, aspect),
+        };
       }
     }
   } catch (e) {
