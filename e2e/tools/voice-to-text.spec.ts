@@ -46,13 +46,17 @@ async function waitForIsland(page: Page) {
 
 const languagePicker = (page: Page) => page.locator('select:has(option[value="indonesian"])');
 
-test('defaults to the Fast model and switches to Whisper for Indonesian', async ({ page }) => {
+test('defaults to Whisper; Fast switches to Whisper for Indonesian', async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto('/tools/voice-to-text?e2e');
   await waitForIsland(page);
 
-  await expect(page.getByRole('button', { name: 'Fast · 7 languages' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Multilingual', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  // Live dictation runs on Fast regardless of the file model.
   await expect(page.getByRole('checkbox', { name: 'Live dictation' })).toBeEnabled();
+
+  await page.getByRole('button', { name: 'Fast · 7 languages' }).click();
+  await expect(page.getByRole('button', { name: 'Fast · 7 languages' })).toHaveAttribute('aria-pressed', 'true');
 
   await languagePicker(page).selectOption('indonesian');
   await expect(page.getByRole('button', { name: 'Multilingual', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -76,6 +80,7 @@ test('transcribes a file with the Fast engine', async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto('/tools/voice-to-text?e2e');
   await waitForIsland(page);
+  await page.getByRole('button', { name: 'Fast · 7 languages' }).click();
   await page.locator('input[type="file"]').setInputFiles({ name: 'tone.wav', mimeType: 'audio/wav', buffer: toneWav() });
   await page.getByRole('button', { name: 'Transcribe', exact: true }).click();
   await expect(page.locator('textarea')).toHaveValue('Stub transcript from the fast engine.', { timeout: 30_000 });

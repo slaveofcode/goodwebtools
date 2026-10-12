@@ -13,7 +13,7 @@ import { decodeToMono16k } from '@/tools/media/stt-audio.lib';
 import { transcribeInWorker } from '@/tools/media/stt.client';
 import { saveRecording, loadRecording } from '@/tools/media/recording-store';
 import { type SttModelId } from '@/tools/media/stt.engine';
-import { resolveModel, defaultLanguageFor, isWhistleLanguage, wordsToSegments } from '@/tools/media/whistle.lib';
+import { resolveModel, defaultLanguageFor, isWhistleLanguage, wordsToSegments, WHISPER_FALLBACK } from '@/tools/media/whistle.lib';
 import { WHISTLE_CACHE } from '@/tools/media/whistle.engine';
 import {
   segmentsToText,
@@ -44,7 +44,7 @@ const TR: Record<Lang, {
   en: {
     models: {
       whistle: { label: 'Fast · 7 languages', note: '17 MB, quick on phones — English, German, French, Spanish, Italian, Dutch, Polish' },
-      'onnx-community/whisper-base': { label: 'Multilingual', note: 'auto-detects language; use for Bahasa and other languages' },
+      'onnx-community/whisper-base': { label: 'Multilingual', note: 'default — auto-detects language; English, Bahasa and many more' },
       'onnx-community/whisper-small': { label: 'Multilingual · Better', note: 'much better for non-English (e.g. Bahasa); larger download' },
     },
     languages: {
@@ -73,8 +73,8 @@ const TR: Record<Lang, {
     switched: l => `Fast doesn’t support ${l} — switched to Multilingual.`,
     fastReset: 'Fast handles English, German, French, Spanish, Italian, Dutch and Polish — language reset to Auto-detect.',
     live: 'Live dictation',
-    liveHint: 'See words appear as you speak (Fast model).',
-    liveFastOnly: 'Live dictation needs the Fast model and one of its languages.',
+    liveHint: 'See words appear as you speak (uses the Fast engine).',
+    liveFastOnly: 'Live dictation uses the Fast engine: English, German, French, Spanish, Italian, Dutch or Polish (or Auto-detect).',
     listening: 'Listening…',
     liveStop: c => `Stop live (${c})`,
     liveStarting: 'Starting live dictation…',
@@ -85,7 +85,7 @@ const TR: Record<Lang, {
   id: {
     models: {
       whistle: { label: 'Cepat · 7 bahasa', note: '17 MB, cepat di ponsel — Inggris, Jerman, Prancis, Spanyol, Italia, Belanda, Polandia' },
-      'onnx-community/whisper-base': { label: 'Multibahasa', note: 'mendeteksi bahasa otomatis; gunakan untuk Bahasa Indonesia dan bahasa lain' },
+      'onnx-community/whisper-base': { label: 'Multibahasa', note: 'default — mendeteksi bahasa otomatis; Bahasa Indonesia, Inggris, dan banyak lagi' },
       'onnx-community/whisper-small': { label: 'Multibahasa · Lebih Baik', note: 'jauh lebih baik untuk non-Inggris (mis. Bahasa Indonesia); unduhan lebih besar' },
     },
     languages: {
@@ -114,8 +114,8 @@ const TR: Record<Lang, {
     switched: l => `Model Cepat tidak mendukung ${l} — dialihkan ke Multibahasa.`,
     fastReset: 'Model Cepat mendukung Inggris, Jerman, Prancis, Spanyol, Italia, Belanda, dan Polandia — bahasa diatur ke Deteksi otomatis.',
     live: 'Dikte langsung',
-    liveHint: 'Lihat kata muncul saat Anda berbicara (model Cepat).',
-    liveFastOnly: 'Dikte langsung membutuhkan model Cepat dan salah satu bahasanya.',
+    liveHint: 'Lihat kata muncul saat Anda berbicara (memakai engine Cepat).',
+    liveFastOnly: 'Dikte langsung memakai engine Cepat: Inggris, Jerman, Prancis, Spanyol, Italia, Belanda, atau Polandia (atau Deteksi otomatis).',
     listening: 'Mendengarkan…',
     liveStop: c => `Hentikan dikte (${c})`,
     liveStarting: 'Memulai dikte langsung…',
@@ -126,9 +126,9 @@ const TR: Record<Lang, {
 };
 
 const MODELS: { value: SttModelId; label: string; note: string }[] = [
-  { value: 'whistle', label: 'Fast · 7 languages', note: '17 MB, quick on phones' },
   { value: 'onnx-community/whisper-base', label: 'Multilingual', note: 'auto-detects language' },
   { value: 'onnx-community/whisper-small', label: 'Multilingual · Better', note: 'much better for non-English (e.g. Bahasa); larger download' },
+  { value: 'whistle', label: 'Fast · 7 languages', note: '17 MB, quick on phones' },
 ];
 
 // Whisper source-language options (value = the lowercase name Whisper expects).
@@ -169,15 +169,17 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
   const [restored, setRestored] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
-  // Default: the Fast engine, unless the locale's language needs Whisper (Indonesian pages).
+  // Files and recordings default to Whisper (more accurate); live dictation always uses Fast.
   const [language, setLanguage] = useState(() => defaultLanguageFor(lang));
-  const [model, setModel] = useState<SttModelId>(() => resolveModel('whistle', defaultLanguageFor(lang)).model);
+  const [model, setModel] = useState<SttModelId>(WHISPER_FALLBACK);
   const [note, setNote] = useState('');
   const [liveMode, setLiveMode] = useState(false);
   const [modelProgress, setModelProgress] = useState<number | null>(null);
   const [transcribing, setTranscribing] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [modelCached, setModelCached] = useState(false);
+  /** Live dictation always loads the Fast engine, so track its cache separately. */
+  const [fastCached, setFastCached] = useState(false);
   const [segments, setSegments] = useState<TranscriptSegment[] | null>(null);
   const [editedText, setEditedText] = useState('');
   const [tab, setTab] = useState<Tab>('text');
@@ -258,17 +260,19 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
 
   // Is the selected model already in the browser cache? (Definitive — the bar
   // shows even on a cache read, so this tells the user whether it's a real download.)
-  const refreshModelCached = async () => {
+  const isCached = async (id: SttModelId): Promise<boolean> => {
     try {
-      if (model === 'whistle') {
+      if (id === 'whistle') {
         const keys = await (await caches.open(WHISTLE_CACHE)).keys();
-        setModelCached(keys.some(r => r.url.endsWith('whistle.cact')));
-        return;
+        return keys.some(r => r.url.endsWith('whistle.cact'));
       }
-      const cache = await caches.open('transformers-cache');
-      const keys = await cache.keys();
-      setModelCached(keys.some(r => r.url.includes(`${model}/resolve`)));
-    } catch { setModelCached(false); }
+      const keys = await (await caches.open('transformers-cache')).keys();
+      return keys.some(r => r.url.includes(`${id}/resolve`));
+    } catch { return false; }
+  };
+  const refreshModelCached = async () => {
+    setModelCached(await isCached(model));
+    setFastCached(await isCached('whistle'));
   };
   useEffect(() => {
     void refreshModelCached();
@@ -312,7 +316,6 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
     const r = resolveModel(model, value);
     if (r.switched) {
       setModel(r.model);
-      setLiveMode(false);
       setNote(t.switched(t.languages[value] ?? value));
     } else setNote('');
   };
@@ -322,7 +325,6 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
       setLanguage('');
       setNote(t.fastReset);
     } else setNote('');
-    if (value !== 'whistle') setLiveMode(false);
   };
 
   // Live dictation: words stream in while recording; on stop they become the result.
@@ -340,6 +342,7 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
       setError('');
       void wakeLock.request();
       await dictation.start(language || undefined);
+      void refreshModelCached();
     }
   };
   // Keep the live recording (replay / re-transcribe) without wiping its transcript.
@@ -371,7 +374,8 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
   };
 
   const busy = transcribing || dictation.starting;
-  const liveAvailable = model === 'whistle' && isWhistleLanguage(language);
+  // Live dictation runs on the Fast engine whatever model files use.
+  const liveAvailable = isWhistleLanguage(language);
 
   return (
     <div className="space-y-4">
@@ -402,7 +406,7 @@ export default function VoiceToText({ lang = 'en' }: { lang?: Lang }) {
       <p className="text-xs text-muted-foreground">{liveAvailable ? t.liveHint : t.liveFastOnly}</p>
 
       {dictation.progress !== null && (
-        <ProgressBar percent={dictation.progress * 100} label={modelCached ? t.loadingCache : t.downloading} />
+        <ProgressBar percent={dictation.progress * 100} label={fastCached ? t.loadingCache : t.downloading} />
       )}
       {(dictation.live || dictation.words.length > 0 || dictation.pending) && !segments && (
         <div data-testid="live-transcript" aria-live="polite" className="min-h-[4rem] border-2 border-border bg-muted p-3 text-sm">
