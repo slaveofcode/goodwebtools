@@ -8,7 +8,7 @@ A big batch of new tools and improvements since beta.6.
 
 ### Added
 - **3D Model Viewer:** open GLB/glTF, OBJ, STL, PLY, FBX and Blender `.blend` files (including Blender 5+). You can load them from a file or a URL, with wireframe, grid, auto-rotate and screenshot controls. `.blend` files open from their saved camera.
-- **Voice to Text — Fast engine and live dictation:** a new on-device "Fast" model (Cactus Whistle) for 7 languages, and live dictation that streams words as you speak. Unsupported languages, like Bahasa Indonesia, switch to the Multilingual Whisper model automatically.
+- **Voice to Text — live dictation and a Fast engine:** live dictation streams words as you speak, powered by a new on-device "Fast" engine (Cactus Whistle) that covers 7 languages. Files and recordings still default to the more accurate Multilingual (Whisper) model, and Fast is one tap away when you want quicker results.
 - **Report a problem:** an opt-in report button on every tool page. You choose what to send, and there's a consent step and spam protection.
 - **New tools:** Webcam Video Recorder (with filters, background blur/replace and green screen), Digital Clock, Sort Text Lines, Daily Word Guess (EN + ID) and Fruit Merge.
 - **Install single tools as apps:** each tool page can be installed as its own PWA with a distinct icon.
