@@ -3,6 +3,7 @@ import { connectSignal, type SignalClient } from '@/tools/webrtc/signal-client';
 import { createPeer, type PeerHandles } from '@/tools/webrtc/peer';
 import { createManualConnection, type ManualConnection } from '@/tools/webrtc/manual';
 import { encodeChat, decodeChat } from '@/tools/webrtc/chat.lib';
+import { SCREEN_CAPTURE, screenScaleFor, videoCodecFromSdp } from '@/tools/webrtc/screen-share.lib';
 
 export type CallStatus = 'idle' | 'connecting' | 'waiting' | 'in-call' | 'ended' | 'error';
 export type Facing = 'user' | 'environment';
@@ -118,8 +119,39 @@ export function useVideoCall() {
   }, []);
   useEffect(() => { handleFailureRef.current = handleFailure; }, [handleFailure]);
 
+  /**
+   * Fit the outgoing video to what the other device can decode: the shared
+   * screen is scaled down (H.264 receivers such as iPhones top out at 1280×720),
+   * the camera goes back to full size.
+   */
+  const fitVideoSender = useCallback(async () => {
+    const sender = videoSenderRef.current;
+    const pc = peerRef.current?.pc ?? manualRef.current?.pc;
+    if (!sender || !pc) return;
+    const screen = sharingRef.current ? screenStreamRef.current?.getVideoTracks()[0] : undefined;
+    const { width, height } = screen?.getSettings() ?? {};
+    const scale = screen ? screenScaleFor(width, height, videoCodecFromSdp(pc.currentRemoteDescription?.sdp)) : 1;
+    try {
+      const params = sender.getParameters();
+      if (!params.encodings?.length) return;
+      params.encodings.forEach(e => { e.scaleResolutionDownBy = scale; });
+      await sender.setParameters(params);
+    } catch { /* best effort — the browser keeps its own scaling */ }
+  }, []);
+
+  /** After a (re)connection the new sender carries the camera; put the shared screen back. */
+  const restoreScreen = useCallback(async () => {
+    const screen = sharingRef.current ? screenStreamRef.current?.getVideoTracks()[0] : undefined;
+    const sender = videoSenderRef.current;
+    if (screen && sender && sender.track !== screen) { try { await sender.replaceTrack(screen); } catch { /* */ } }
+    await fitVideoSender();
+  }, [fitVideoSender]);
+  const restoreScreenRef = useRef(restoreScreen);
+  useEffect(() => { restoreScreenRef.current = restoreScreen; }, [restoreScreen]);
+
   const handlePcState = useCallback((state: RTCPeerConnectionState) => {
     if (state === 'connected') {
+      void restoreScreenRef.current();
       connectedRef.current = true;
       failuresRef.current = 0;
       clearDisconnect();
@@ -340,28 +372,39 @@ export function useVideoCall() {
 
   const stopScreen = useCallback(async () => {
     const cam = cameraTrackRef.current;
+    sharingRef.current = false;
     if (videoSenderRef.current && cam) { try { await videoSenderRef.current.replaceTrack(cam); } catch { /* */ } }
+    await fitVideoSender();
     screenStreamRef.current?.getTracks().forEach(t => t.stop());
     screenStreamRef.current = null;
-    sharingRef.current = false;
     setSharing(false);
-  }, []);
+  }, [fitVideoSender]);
 
   const toggleScreenShare = useCallback(async () => {
     if (sharingRef.current) { await stopScreen(); return; }
     const md = navigator.mediaDevices as MediaDevices & { getDisplayMedia?: (c: MediaStreamConstraints) => Promise<MediaStream> };
     if (!md.getDisplayMedia) { setError('Screen sharing isn’t supported in this browser.'); return; }
+    let display: MediaStream;
     try {
-      const display = await md.getDisplayMedia({ video: true });
-      const screenTrack = display.getVideoTracks()[0];
-      if (!screenTrack) return;
-      screenStreamRef.current = display;
+      // Cap the capture size: a full Retina screen is too big for many phones to decode.
+      display = await md.getDisplayMedia({ video: SCREEN_CAPTURE });
+    } catch (err) {
+      const name = err instanceof Error ? err.name : '';
+      if (name !== 'TypeError' && name !== 'OverconstrainedError') return; // user cancelled the picker
+      try { display = await md.getDisplayMedia({ video: true }); } catch { return; }
+    }
+    const screenTrack = display.getVideoTracks()[0];
+    if (!screenTrack) return;
+    if ('contentHint' in screenTrack) screenTrack.contentHint = 'detail'; // keep text sharp
+    screenStreamRef.current = display;
+    sharingRef.current = true;
+    try {
       if (videoSenderRef.current) await videoSenderRef.current.replaceTrack(screenTrack);
-      screenTrack.onended = () => { void stopScreen(); };
-      sharingRef.current = true;
-      setSharing(true);
-    } catch { /* user cancelled the picker */ }
-  }, [stopScreen]);
+      await fitVideoSender();
+    } catch { /* the call may have dropped; restoreScreen re-applies it on reconnect */ }
+    screenTrack.onended = () => { void stopScreen(); };
+    setSharing(true);
+  }, [stopScreen, fitVideoSender]);
 
   const hangUp = useCallback(() => {
     try { if (chatChannelRef.current?.readyState === 'open') chatChannelRef.current.send(BYE); } catch { /* */ }
