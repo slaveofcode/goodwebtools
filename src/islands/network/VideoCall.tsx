@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  Video, VideoOff, Mic, MicOff, MonitorUp, SwitchCamera, PhoneOff, Send, ShieldCheck, Settings,
+  Video, VideoOff, Mic, MicOff, MonitorUp, SwitchCamera, PhoneOff, Send, ShieldCheck, Settings, Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
@@ -26,7 +26,7 @@ const TR: Record<Lang, {
   callEnded: string; startNew: string;
   overlayShare: string; overlayWaiting: string; overlayConnecting: string; overlaySettingUp: string;
   mute: string; unmute: string; camOff: string; camOn: string;
-  stopSharing: string; shareScreen: string; flip: string; chat: string; hangUp: string;
+  stopSharing: string; shareScreen: string; shareNote: string; flip: string; chat: string; hangUp: string;
   shareInvite: string; copyLink: string;
   pickRole: string; imCalling: string; imAnswering: string;
   step1Invite: string; preparing: string; step2Answer: string; connect: string;
@@ -66,6 +66,7 @@ const TR: Record<Lang, {
     camOn: 'Camera on',
     stopSharing: 'Stop sharing',
     shareScreen: 'Share screen',
+    shareNote: 'Screen sharing is tested in Google Chrome only. In other browsers (e.g. Samsung Internet) the shared screen may not appear — use Chrome on both devices.',
     flip: 'Flip',
     chat: 'Chat',
     hangUp: 'Hang up',
@@ -122,6 +123,7 @@ const TR: Record<Lang, {
     camOn: 'Nyalakan kamera',
     stopSharing: 'Berhenti berbagi',
     shareScreen: 'Bagikan layar',
+    shareNote: 'Berbagi layar hanya diuji di Google Chrome. Di browser lain (mis. Samsung Internet) layar yang dibagikan mungkin tidak muncul — gunakan Chrome di kedua perangkat.',
     flip: 'Balik',
     chat: 'Chat',
     hangUp: 'Tutup',
@@ -332,6 +334,11 @@ export default function VideoCall({ lang = 'en' }: { lang?: Lang }) {
           <Button variant="secondary" onClick={() => setShowChat(s => !s)}>{tr.chat}{c.messages.length ? ` (${c.messages.length})` : ''}</Button>
           <Button variant="ghost" onClick={c.hangUp}><PhoneOff className="h-4 w-4" />{tr.hangUp}</Button>
         </div>
+      )}
+      {(inCall || c.status === 'connecting' || c.status === 'waiting') && (
+        <p role="note" className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr.shareNote}
+        </p>
       )}
 
       {/* Auto link (creator, before connect) */}

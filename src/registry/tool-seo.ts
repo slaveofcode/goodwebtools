@@ -2879,7 +2879,7 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Does my video and audio go through your server?', a: 'No. Video, audio, and chat travel directly between the two devices, peer-to-peer. In automatic mode a tiny signaling server only exchanges connection details (about 2 KB) to introduce the devices; in manual mode no server is used at all.' },
       { q: 'Do I need an account to make a call?', a: 'No. There\'s no sign-up or login. You just share a link or an invite code with the person you want to call and connect directly.' },
       { q: 'The call won\'t connect — why?', a: 'Peer-to-peer connections are best-effort and can fail on restrictive networks or corporate firewalls. You can add your own STUN/TURN servers under Advanced connection settings to make calls work on strict networks.' },
-      { q: 'Can I share my screen and chat during the call?', a: 'Yes. During a call you can share your screen, send text messages in the chat panel, mute your mic, turn your camera on or off, and flip between cameras on devices that have more than one.' },
+      { q: 'Can I share my screen and chat during the call?', a: 'Yes. During a call you can share your screen, send text messages in the chat panel, mute your mic, turn your camera on or off, and flip between cameras on devices that have more than one. Screen sharing is tested in Google Chrome only — in other browsers such as Samsung Internet the shared screen may not appear, so use Chrome on both devices.' },
     ],
   },
   'optical-transfer': {
@@ -6333,7 +6333,7 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah video dan audio saya melewati server Anda?', a: 'Tidak. Video, audio, dan chat berpindah langsung antara kedua perangkat, secara peer-to-peer. Dalam mode otomatis, server signaling kecil hanya bertukar detail koneksi (sekitar 2 KB) untuk memperkenalkan perangkat; dalam mode manual tidak ada server yang digunakan sama sekali.' },
       { q: 'Apakah saya perlu akun untuk melakukan panggilan?', a: 'Tidak. Tidak ada pendaftaran atau login. Anda cukup membagikan tautan atau kode undangan kepada orang yang ingin Anda panggil dan terhubung langsung.' },
       { q: 'Panggilan tidak mau terhubung — mengapa?', a: 'Koneksi peer-to-peer bersifat best-effort dan dapat gagal pada jaringan yang ketat atau firewall perusahaan. Anda dapat menambahkan server STUN/TURN Anda sendiri di bawah Advanced connection settings agar panggilan bekerja pada jaringan yang ketat.' },
-      { q: 'Bisakah saya berbagi layar dan chat selama panggilan?', a: 'Ya. Selama panggilan Anda dapat berbagi layar, mengirim pesan teks di panel chat, mematikan mikrofon, menghidupkan atau mematikan kamera, dan berpindah antar kamera pada perangkat yang memiliki lebih dari satu.' },
+      { q: 'Bisakah saya berbagi layar dan chat selama panggilan?', a: 'Ya. Selama panggilan Anda dapat berbagi layar, mengirim pesan teks di panel chat, mematikan mikrofon, menghidupkan atau mematikan kamera, dan berpindah antar kamera pada perangkat yang memiliki lebih dari satu. Berbagi layar hanya diuji di Google Chrome — di browser lain seperti Samsung Internet layar yang dibagikan mungkin tidak muncul, jadi gunakan Chrome di kedua perangkat.' },
     ],
   },
   'optical-transfer': {
