@@ -46,6 +46,7 @@ test('a shared screen reaches the other side and switches back to the camera', a
   await expect.poll(() => remoteWidth(callee), { timeout: 30_000 }).toBeGreaterThan(0);
   await expect.poll(() => remoteWidth(callee), { timeout: 30_000 }).toBeLessThanOrEqual(640);
 
+  await expect(caller.getByRole('note')).toContainText('Screen sharing is tested in Google Chrome only');
   await caller.getByRole('button', { name: 'Share screen' }).click();
   await expect(caller.getByRole('button', { name: /stop sharing/i })).toBeVisible();
   // The screen is larger than the camera, but capped at 1920 wide.
