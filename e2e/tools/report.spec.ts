@@ -38,3 +38,12 @@ test('a failed submit shows an error, not the thank-you', async ({ page }) => {
   await expect(page.getByText('Sorry — the report could not be sent. Please try again.')).toBeVisible();
   await expect(page.getByTestId('report-thanks')).toHaveCount(0);
 });
+
+// Tools that don't register a report context still report which tool they are.
+test('diagnostics name the tool even when it does not register itself', async ({ page }) => {
+  await page.goto('/tools/word-counter');
+  await page.waitForLoadState('networkidle').catch(() => {});
+  await page.getByRole('button', { name: 'Report a problem' }).click();
+  await page.getByText('See exactly what will be sent').click();
+  await expect(page.getByTestId('report-diag')).toContainText('"toolId": "word-counter"');
+});
