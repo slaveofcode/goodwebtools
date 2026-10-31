@@ -36,7 +36,7 @@ const TR: Record<Lang, Record<string, string>> = {
 
 const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 
-export default function ReportDialog({ lang = 'en' }: { lang?: Lang }) {
+export default function ReportDialog({ lang = 'en', toolId }: { lang?: Lang; toolId?: string }) {
   const t = TR[lang] ?? TR.en;
   const [open, setOpen] = useState(false);
   const [diag, setDiag] = useState<Diagnostics | null>(null);
@@ -60,7 +60,8 @@ export default function ReportDialog({ lang = 'en' }: { lang?: Lang }) {
     fileRef.current = file;
     const fileMeta = file ? await sniffFileMeta(file).catch(() => undefined) : undefined;
     setDiag(collectDiagnostics({
-      toolId: ctx?.toolId || 'unknown',
+      // Tools that register (useReportable) win; otherwise the page's tool id from ToolHost.
+      toolId: ctx?.toolId || toolId || 'unknown',
       route: typeof window !== 'undefined' ? window.location.pathname : '',
       error: prefill.error ?? takeLastError(),
       file: fileMeta,
@@ -70,7 +71,7 @@ export default function ReportDialog({ lang = 'en' }: { lang?: Lang }) {
     tokenRef.current = '';
     setOpenSeq(n => n + 1);
     setOpen(true);
-  }), []);
+  }), [toolId]);
 
   // Lazy-load Turnstile and render an invisible widget while the dialog is open.
   useEffect(() => {

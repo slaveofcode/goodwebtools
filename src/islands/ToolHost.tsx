@@ -88,7 +88,7 @@ export default function ToolHost({ toolId, lang }: ToolHostProps) {
       <div className="mt-6 flex justify-end">
         <ReportButton lang={lang} />
       </div>
-      <ReportDialog lang={lang} />
+      <ReportDialog lang={lang} toolId={toolId} />
     </>
   );
 }
