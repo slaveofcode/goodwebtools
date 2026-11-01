@@ -206,15 +206,18 @@ export async function cropImage(file: File, region: CropRegion): Promise<Process
  * Browser-only (uses createImageBitmap + canvas).
  */
 export async function processImage(file: File, options: ProcessOptions): Promise<ProcessedImage> {
-  const decoded = await decodeImage(file);
   const limits = canvasLimitsFor(navigator.userAgent, navigator.maxTouchPoints);
   if (options.mimeType === 'image/webp') limits.maxSide = Math.min(limits.maxSide, WEBP_MAX_SIDE);
   if (options.mimeType === 'image/jpeg') limits.maxSide = Math.min(limits.maxSide, JPEG_MAX_SIDE);
-  const { width, height, scaled } = fitWithin(
-    Math.max(1, Math.floor(options.width ?? decoded.width)),
-    Math.max(1, Math.floor(options.height ?? decoded.height)),
+  const fit = (w: number, h: number) => fitWithin(
+    Math.max(1, Math.floor(options.width ?? w)),
+    Math.max(1, Math.floor(options.height ?? h)),
     limits,
   );
+  const decoded = await decodeImage(file, fit);
+  const target = fit(decoded.width, decoded.height);
+  const { width, height } = target;
+  const scaled = target.scaled || !!decoded.scaled;
 
   const canvas = document.createElement('canvas');
   canvas.width = width;

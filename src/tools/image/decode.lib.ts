@@ -1,3 +1,5 @@
+import { readExifSummary } from './exif.lib';
+
 /**
  * Robust image decoding for the canvas-based image tools.
  *
@@ -56,15 +58,20 @@ export interface CanvasLimits {
  * Canvas limits for the current engine. WebKit (all iOS browsers, and Safari)
  * caps the canvas area at 16,777,216 px. Chromium (Chrome, Samsung Internet,
  * Edge) handles sides up to 65,535 px and Firefox up to 32,767 px; past
- * ~268 MP neither can encode.
+ * ~268 MP neither can encode. On Android phones we stop at 50 MP: a 108/200 MP
+ * camera photo needs well over 1 GB while it's re-encoded and can crash the tab.
  */
 export function canvasLimitsFor(userAgent: string, maxTouchPoints = 0): CanvasLimits {
   const iOS = /iP(hone|ad|od)/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
   const safari = /Safari\//.test(userAgent) && !/(Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS|SamsungBrowser)\//.test(userAgent);
   if (iOS || safari) return { maxArea: 16_777_216, maxSide: 16_384 };
-  if (/Firefox\//.test(userAgent)) return { maxArea: 268_435_456, maxSide: 32_767 };
-  return { maxArea: 268_435_456, maxSide: 65_535 };
+  const maxSide = /Firefox\//.test(userAgent) ? 32_767 : 65_535;
+  if (/Android|Mobile/.test(userAgent)) return { maxArea: MOBILE_MAX_AREA, maxSide };
+  return { maxArea: 268_435_456, maxSide };
 }
+
+/** Phone cap: just above Samsung's 50 MP mode (8160 × 6120). */
+export const MOBILE_MAX_AREA = 50_000_000;
 
 /** WebP can't encode a side longer than this. */
 export const WEBP_MAX_SIDE = 16_383;
@@ -84,8 +91,44 @@ export function fitWithin(width: number, height: number, limits: CanvasLimits): 
   };
 }
 
+/**
+ * Pixel size from the file header (JPEG SOF, PNG IHDR, GIF), as stored — before
+ * EXIF rotation. null when it can't be read from these bytes.
+ */
+export function probeSize(b: Uint8Array): { width: number; height: number } | null {
+  const u16 = (i: number) => (b[i] << 8) | b[i + 1];
+  const u32 = (i: number) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0;
+  const kind = sniffImage(b);
+  if (kind === 'png' && b.length >= 24) return { width: u32(16), height: u32(20) };
+  if (kind === 'gif' && b.length >= 10) return { width: b[6] | (b[7] << 8), height: b[8] | (b[9] << 8) };
+  if (kind !== 'jpeg') return null;
+  let p = 2;
+  while (p + 9 < b.length) {
+    if (b[p] !== 0xff) return null;
+    const marker = b[p + 1];
+    if (marker === 0xff) { p++; continue; } // fill byte
+    // SOF0–SOF15 carry the frame size (C4/C8/CC are DHT/JPG/DAC, not frames).
+    if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+      return { width: u16(p + 7), height: u16(p + 5) };
+    }
+    if (marker === 0xda) return null;
+    p += 2 + u16(p + 2);
+  }
+  return null;
+}
+
 /** Image source a canvas can draw: a bitmap, or an <img> for formats only it decodes. */
-export type Decoded = { source: CanvasImageSource; width: number; height: number; close(): void };
+export type Decoded = {
+  source: CanvasImageSource;
+  width: number;
+  height: number;
+  /** True when it was decoded straight to a smaller size to fit the limits. */
+  scaled?: boolean;
+  close(): void;
+};
+
+/** Target size for an image of the given (display-oriented) size. */
+export type FitFn = (width: number, height: number) => { width: number; height: number; scaled: boolean };
 
 function loadViaImg(file: Blob): Promise<Decoded> {
   const url = URL.createObjectURL(file);
@@ -107,18 +150,37 @@ async function fromBitmap(blob: Blob): Promise<Decoded> {
   return { source: bmp, width: bmp.width, height: bmp.height, close: () => bmp.close?.() };
 }
 
-/**
- * Decode any image the browser (or our HEIC decoder) can read. Throws an
- * ImageDecodeError whose `kind` explains why it couldn't.
- */
 /** Camera RAW files (Samsung Expert RAW .dng, Sony .arw, Canon .cr2/.cr3, Nikon .nef, …). */
 const RAW_EXT = /\.(dng|arw|cr2|cr3|nef|nrw|orf|raf|rw2|pef|srw)$/i;
 
-export async function decodeImage(file: Blob): Promise<Decoded> {
+/** Enough of the file to reach a JPEG's frame header past large EXIF/thumbnail segments. */
+const HEAD_BYTES = 1 << 20;
+
+/**
+ * Decode any image the browser (or our HEIC decoder) can read. When `fit` asks
+ * for a smaller size, JPEG/PNG/GIF are decoded straight to it, so a 200 MP
+ * photo never has to sit in memory at full size. Throws an ImageDecodeError
+ * whose `kind` explains why it couldn't decode.
+ */
+export async function decodeImage(file: Blob, fit?: FitFn): Promise<Decoded> {
   if (file.size === 0) throw new ImageDecodeError('empty', 'The file is empty.');
   const name = 'name' in file && typeof file.name === 'string' ? file.name : '';
   if (RAW_EXT.test(name)) throw new ImageDecodeError('raw', 'Camera RAW files can’t be opened in the browser.');
-  const kind = sniffImage(new Uint8Array(await file.slice(0, 256).arrayBuffer()));
+  const head = new Uint8Array(await file.slice(0, HEAD_BYTES).arrayBuffer());
+  const kind = sniffImage(head);
+
+  const stored = fit ? probeSize(head) : null;
+  if (fit && stored) {
+    // createImageBitmap applies EXIF rotation before resizing, so ask for the rotated shape.
+    const rotated = kind === 'jpeg' && (readExifSummary(head.buffer as ArrayBuffer)?.orientation ?? 1) >= 5;
+    const target = rotated ? fit(stored.height, stored.width) : fit(stored.width, stored.height);
+    if (target.scaled) {
+      try {
+        const bmp = await createImageBitmap(file, { resizeWidth: target.width, resizeHeight: target.height, resizeQuality: 'high' });
+        return { source: bmp, width: bmp.width, height: bmp.height, scaled: true, close: () => bmp.close?.() };
+      } catch { /* fall back to a full-size decode */ }
+    }
+  }
 
   if (kind === 'heic') {
     try { return await fromBitmap(file); } catch { /* most browsers can't — use the wasm decoder */ }
