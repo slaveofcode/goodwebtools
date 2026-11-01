@@ -1,4 +1,4 @@
-import { decodeImage, canvasLimitsFor, fitWithin, WEBP_MAX_SIDE, ImageDecodeError } from './decode.lib';
+import { decodeImage, canvasLimitsFor, fitWithin, WEBP_MAX_SIDE, JPEG_MAX_SIDE, ImageDecodeError } from './decode.lib';
 
 export interface ProcessOptions {
   /** Output MIME type, e.g. 'image/png' | 'image/jpeg' | 'image/webp'. */
@@ -209,6 +209,7 @@ export async function processImage(file: File, options: ProcessOptions): Promise
   const decoded = await decodeImage(file);
   const limits = canvasLimitsFor(navigator.userAgent, navigator.maxTouchPoints);
   if (options.mimeType === 'image/webp') limits.maxSide = Math.min(limits.maxSide, WEBP_MAX_SIDE);
+  if (options.mimeType === 'image/jpeg') limits.maxSide = Math.min(limits.maxSide, JPEG_MAX_SIDE);
   const { width, height, scaled } = fitWithin(
     Math.max(1, Math.floor(options.width ?? decoded.width)),
     Math.max(1, Math.floor(options.height ?? decoded.height)),

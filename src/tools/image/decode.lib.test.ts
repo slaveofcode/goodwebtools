@@ -33,9 +33,10 @@ describe('canvasLimitsFor', () => {
     expect(canvasLimitsFor('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15', 5).maxArea).toBe(16_777_216);
     expect(canvasLimitsFor('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15').maxArea).toBe(16_777_216);
   });
-  it('allows more on Chrome, Samsung Internet and Firefox', () => {
-    expect(canvasLimitsFor('Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/141.0 Mobile Safari/537.36').maxArea).toBe(268_435_456);
-    expect(canvasLimitsFor('Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 SamsungBrowser/27.0 Chrome/125.0 Mobile Safari/537.36').maxArea).toBe(268_435_456);
+  it('allows 65,535 px sides on Chrome and Samsung Internet, 32,767 px on Firefox', () => {
+    expect(canvasLimitsFor('Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/141.0 Mobile Safari/537.36')).toEqual({ maxArea: 268_435_456, maxSide: 65_535 });
+    expect(canvasLimitsFor('Mozilla/5.0 (Linux; Android 14; SM-S928B) AppleWebKit/537.36 SamsungBrowser/27.0 Chrome/125.0 Mobile Safari/537.36')).toEqual({ maxArea: 268_435_456, maxSide: 65_535 });
+    expect(canvasLimitsFor('Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0').maxSide).toBe(32_767);
   });
 });
 

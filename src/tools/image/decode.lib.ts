@@ -11,7 +11,7 @@
 
 export type ImageKind = 'jpeg' | 'png' | 'gif' | 'webp' | 'heic' | 'avif' | 'tiff' | 'bmp' | 'ico' | 'svg' | 'unknown';
 
-export type DecodeFailure = 'empty' | 'heic' | 'tiff' | 'unsupported' | 'too-large';
+export type DecodeFailure = 'empty' | 'heic' | 'tiff' | 'raw' | 'unsupported' | 'too-large';
 
 /** A decode/encode failure with a reason the UI can explain in the user's language. */
 export class ImageDecodeError extends Error {
@@ -54,18 +54,22 @@ export interface CanvasLimits {
 
 /**
  * Canvas limits for the current engine. WebKit (all iOS browsers, and Safari)
- * caps the canvas area at 16,777,216 px; Chromium and Firefox allow far more,
- * but anything past ~268 MP fails to encode.
+ * caps the canvas area at 16,777,216 px. Chromium (Chrome, Samsung Internet,
+ * Edge) handles sides up to 65,535 px and Firefox up to 32,767 px; past
+ * ~268 MP neither can encode.
  */
 export function canvasLimitsFor(userAgent: string, maxTouchPoints = 0): CanvasLimits {
   const iOS = /iP(hone|ad|od)/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
   const safari = /Safari\//.test(userAgent) && !/(Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS|SamsungBrowser)\//.test(userAgent);
   if (iOS || safari) return { maxArea: 16_777_216, maxSide: 16_384 };
-  return { maxArea: 268_435_456, maxSide: 32_767 };
+  if (/Firefox\//.test(userAgent)) return { maxArea: 268_435_456, maxSide: 32_767 };
+  return { maxArea: 268_435_456, maxSide: 65_535 };
 }
 
 /** WebP can't encode a side longer than this. */
 export const WEBP_MAX_SIDE = 16_383;
+/** Nor can JPEG (libjpeg) past this. */
+export const JPEG_MAX_SIDE = 65_500;
 
 /** Scale width × height down (never up) so it fits within the limits, keeping the aspect ratio. */
 export function fitWithin(width: number, height: number, limits: CanvasLimits): { width: number; height: number; scaled: boolean } {
@@ -107,8 +111,13 @@ async function fromBitmap(blob: Blob): Promise<Decoded> {
  * Decode any image the browser (or our HEIC decoder) can read. Throws an
  * ImageDecodeError whose `kind` explains why it couldn't.
  */
+/** Camera RAW files (Samsung Expert RAW .dng, Sony .arw, Canon .cr2/.cr3, Nikon .nef, …). */
+const RAW_EXT = /\.(dng|arw|cr2|cr3|nef|nrw|orf|raf|rw2|pef|srw)$/i;
+
 export async function decodeImage(file: Blob): Promise<Decoded> {
   if (file.size === 0) throw new ImageDecodeError('empty', 'The file is empty.');
+  const name = 'name' in file && typeof file.name === 'string' ? file.name : '';
+  if (RAW_EXT.test(name)) throw new ImageDecodeError('raw', 'Camera RAW files can’t be opened in the browser.');
   const kind = sniffImage(new Uint8Array(await file.slice(0, 256).arrayBuffer()));
 
   if (kind === 'heic') {
