@@ -1,3 +1,5 @@
+import { decodeImage, canvasLimitsFor, fitWithin, WEBP_MAX_SIDE, JPEG_MAX_SIDE, ImageDecodeError } from './decode.lib';
+
 export interface ProcessOptions {
   /** Output MIME type, e.g. 'image/png' | 'image/jpeg' | 'image/webp'. */
   mimeType: string;
@@ -13,6 +15,8 @@ export interface ProcessedImage {
   blob: Blob;
   width: number;
   height: number;
+  /** True when the output was scaled down to fit the browser's canvas limits. */
+  scaled?: boolean;
 }
 
 /** Scale a height to match a new width, preserving aspect ratio. */
@@ -202,16 +206,22 @@ export async function cropImage(file: File, region: CropRegion): Promise<Process
  * Browser-only (uses createImageBitmap + canvas).
  */
 export async function processImage(file: File, options: ProcessOptions): Promise<ProcessedImage> {
-  const bitmap = await createImageBitmap(file);
-  const width = Math.max(1, Math.floor(options.width ?? bitmap.width));
-  const height = Math.max(1, Math.floor(options.height ?? bitmap.height));
+  const decoded = await decodeImage(file);
+  const limits = canvasLimitsFor(navigator.userAgent, navigator.maxTouchPoints);
+  if (options.mimeType === 'image/webp') limits.maxSide = Math.min(limits.maxSide, WEBP_MAX_SIDE);
+  if (options.mimeType === 'image/jpeg') limits.maxSide = Math.min(limits.maxSide, JPEG_MAX_SIDE);
+  const { width, height, scaled } = fitWithin(
+    Math.max(1, Math.floor(options.width ?? decoded.width)),
+    Math.max(1, Math.floor(options.height ?? decoded.height)),
+    limits,
+  );
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext('2d');
   if (!context) {
-    bitmap.close?.();
+    decoded.close();
     throw new Error('Canvas is not supported in this browser');
   }
   // JPEG has no alpha channel — paint white behind transparent pixels.
@@ -220,15 +230,16 @@ export async function processImage(file: File, options: ProcessOptions): Promise
     context.fillRect(0, 0, width, height);
   }
   context.imageSmoothingQuality = 'high';
-  context.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close?.();
+  context.drawImage(decoded.source, 0, 0, width, height);
+  decoded.close();
 
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(
-      result => (result ? resolve(result) : reject(new Error('Failed to encode image'))),
+      // A null blob almost always means the canvas was too big for the device's memory.
+      result => (result ? resolve(result) : reject(new ImageDecodeError('too-large', 'Failed to encode image'))),
       options.mimeType,
       options.quality
     )
   );
-  return { blob, width, height };
+  return { blob, width, height, scaled };
 }

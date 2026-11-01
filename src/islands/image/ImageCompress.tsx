@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { ImageResult } from '@/components/ui/ImageResult';
 import { processImage, formatBytes } from '@/tools/image/canvas.lib';
+import { ImageDecodeError, type DecodeFailure } from '@/tools/image/decode.lib';
 import { usePasteImage } from '@/hooks/usePasteImage';
+import { isLikelyHeic } from '@/tools/image/heic.lib';
 import { useReportable } from '@/hooks/useReportable';
 import { setLastError } from '@/services/report/reporter';
 import { breadcrumb } from '@/services/report/breadcrumbs';
@@ -24,6 +26,8 @@ const TR: Record<Lang, {
   compress: string;
   clear: string;
   failed: string;
+  errors: Record<DecodeFailure, string>;
+  scaled: (w: number, h: number) => string;
 }> = {
   en: {
     dropTitle: 'Drop an image or click to browse',
@@ -34,6 +38,15 @@ const TR: Record<Lang, {
     compress: 'Compress',
     clear: 'Clear',
     failed: 'Compression failed',
+    errors: {
+      empty: 'This file is empty — pick the image again.',
+      heic: 'This HEIC photo couldn’t be decoded. Try the HEIC to JPG tool first.',
+      tiff: 'Your browser can’t open TIFF images. Open this page in Safari, or convert the image to PNG or JPG first.',
+      raw: 'Camera RAW files (such as Samsung Expert RAW .dng) can’t be opened in the browser. Export the photo as JPEG from your gallery or camera app first.',
+      unsupported: 'This file isn’t an image your browser can open — it may be damaged or in another format.',
+      'too-large': 'This image is too large for your device’s memory. Make it smaller with the Image Resizer first.',
+    },
+    scaled: (w, h) => `Scaled down to ${w}×${h} px to fit your browser’s image size limit.`,
   },
   id: {
     dropTitle: 'Jatuhkan gambar atau klik untuk menelusuri',
@@ -44,6 +57,15 @@ const TR: Record<Lang, {
     compress: 'Kompres',
     clear: 'Bersihkan',
     failed: 'Kompresi gagal',
+    errors: {
+      empty: 'Berkas ini kosong — pilih gambarnya lagi.',
+      heic: 'Foto HEIC ini tidak bisa dibaca. Coba tool HEIC ke JPG dulu.',
+      tiff: 'Browser Anda tidak bisa membuka gambar TIFF. Buka halaman ini di Safari, atau ubah gambar ke PNG atau JPG dulu.',
+      raw: 'Berkas RAW kamera (seperti Samsung Expert RAW .dng) tidak bisa dibuka di browser. Ekspor dulu fotonya sebagai JPEG dari galeri atau aplikasi kamera.',
+      unsupported: 'Berkas ini bukan gambar yang bisa dibuka browser Anda — mungkin rusak atau berformat lain.',
+      'too-large': 'Gambar ini terlalu besar untuk memori perangkat Anda. Perkecil dulu dengan Pengubah Ukuran Gambar.',
+    },
+    scaled: (w, h) => `Diperkecil ke ${w}×${h} px agar sesuai batas ukuran gambar di browser Anda.`,
   },
 };
 
@@ -55,6 +77,7 @@ export default function ImageCompress({ lang = 'en' }: { lang?: Lang }) {
   const [result, setResult] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [scaledTo, setScaledTo] = useState<{ w: number; h: number } | null>(null);
 
   useReportable({ toolId: 'image-compress', file });
 
@@ -62,8 +85,10 @@ export default function ImageCompress({ lang = 'en' }: { lang?: Lang }) {
   const outName = file ? file.name.replace(/\.[^.]+$/, '') + '.' + fmt.ext : `image.${fmt.ext}`;
 
   const onDrop = (files: File[]) => {
-    setFile(files.find(f => f.type.startsWith('image/')) ?? null);
+    // HEIC often arrives with an empty MIME type; let the decoder judge anything that isn't clearly non-image.
+    setFile(files.find(f => f.type.startsWith('image/')) ?? files.find(f => f.type === '' || isLikelyHeic(f)) ?? null);
     setResult(null);
+    setScaledTo(null);
     setError('');
     breadcrumb('image-compress:file-selected', { type: files[0]?.type, size: files[0]?.size });
   };
@@ -75,12 +100,14 @@ export default function ImageCompress({ lang = 'en' }: { lang?: Lang }) {
     setBusy(true);
     setError('');
     setResult(null);
+    setScaledTo(null);
     try {
-      const { blob } = await processImage(file, { mimeType: mime, quality: quality / 100 });
+      const { blob, width, height, scaled } = await processImage(file, { mimeType: mime, quality: quality / 100 });
       setResult(blob);
+      if (scaled) setScaledTo({ w: width, h: height });
     } catch (e) {
       setLastError(e instanceof Error ? e : new Error(String(e)));
-      setError(e instanceof Error ? e.message : t.failed);
+      setError(e instanceof ImageDecodeError ? t.errors[e.kind] : e instanceof Error ? e.message : t.failed);
     } finally {
       setBusy(false);
     }
@@ -138,12 +165,13 @@ export default function ImageCompress({ lang = 'en' }: { lang?: Lang }) {
         <Button onClick={run} disabled={!file || busy}>
           {busy ? t.compressing : t.compress}
         </Button>
-        <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>
+        <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setScaledTo(null); setError(''); }}>
           {t.clear}
         </Button>
       </div>
 
       {error && <Alert variant="error">{error}</Alert>}
+      {result && scaledTo && <p className="text-sm text-muted-foreground" data-testid="scaled-note">{t.scaled(scaledTo.w, scaledTo.h)}</p>}
       {result && <ImageResult blob={result} filename={outName} originalSize={file?.size} />}
     </div>
   );
