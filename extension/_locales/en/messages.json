@@ -73,5 +73,11 @@
   },
   "actionTitle": {
     "message": "GoodWebTools — search tools"
+  },
+  "commandRecord": {
+    "message": "Start / stop recording this tab"
+  },
+  "notifyRecFailedTitle": {
+    "message": "Recording didn't start"
   }
 }

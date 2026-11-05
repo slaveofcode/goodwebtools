@@ -2,18 +2,21 @@
 // and run quick actions on the current page.
 import { DEFAULT_BASE, pickLang, toolUrl } from './lib/menus.js';
 import { searchTools, pushRecent, toggleFavorite } from './lib/search.js';
+import { formatDuration } from './lib/recording.js';
 
 const T = {
   en: {
     search: 'Search 200+ tools…', favorites: 'Favorites', recent: 'Recent', quick: 'Quick actions', none: 'No tools match.',
     qrPage: 'QR code of this page', capture: 'Capture screen', hotkey: 'Screenshot hotkey:', shortcuts: 'change',
     star: 'Add to favorites', unstar: 'Remove from favorites', panel: 'Open side panel', inPanel: 'Open in the side panel',
+    rec: 'Record', recTab: 'Record this tab', recScreen: 'Record screen…', recMic: 'Include my microphone', recStop: (t) => `■ Stop recording · ${t}`,
     access: 'Allow the Companion to read images on websites so right-click image actions work everywhere.', grant: 'Allow images from websites',
   },
   id: {
     search: 'Cari 200+ tool…', favorites: 'Favorit', recent: 'Terakhir', quick: 'Aksi cepat', none: 'Tidak ada tool yang cocok.',
     qrPage: 'Kode QR halaman ini', capture: 'Tangkap layar', hotkey: 'Pintasan tangkap layar:', shortcuts: 'ubah',
     star: 'Tambah ke favorit', unstar: 'Hapus dari favorit', panel: 'Buka panel samping', inPanel: 'Buka di panel samping',
+    rec: 'Rekam', recTab: 'Rekam tab ini', recScreen: 'Rekam layar…', recMic: 'Sertakan mikrofon saya', recStop: (t) => `■ Hentikan rekaman · ${t}`,
     access: 'Izinkan Companion membaca gambar di situs web agar aksi klik kanan pada gambar berfungsi di mana saja.', grant: 'Izinkan gambar dari situs web',
   },
 };
@@ -111,10 +114,34 @@ function render() {
   $('qrPage').textContent = t.qrPage;
   $('capture').textContent = t.capture;
   $('panel').textContent = t.panel;
+  $('recTitle').textContent = t.rec;
+  $('recTab').textContent = t.recTab;
+  $('recScreen').textContent = t.recScreen;
+  $('recMicLabel').textContent = t.recMic;
+  renderRec();
   $('hotkeyLabel').textContent = t.hotkey;
   $('shortcuts').textContent = t.shortcuts;
   $('accessText').textContent = t.access;
   $('grant').textContent = t.grant;
+}
+
+/** Recording controls: start buttons, or Stop with a running timer. */
+let recTimer = null;
+function renderRec() {
+  const on = !!state.rec;
+  $('recIdle').hidden = on;
+  $('recOn').hidden = !on;
+  clearInterval(recTimer);
+  if (!on) return;
+  const tick = () => { $('recStop').textContent = T[state.lang].recStop(formatDuration(Date.now() - state.rec.startedAt)); };
+  tick();
+  recTimer = setInterval(tick, 1000);
+}
+
+async function startRec(source) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const res = await chrome.runtime.sendMessage({ type: 'rec-start', source, tabId: tab?.id });
+  if (res?.ok) window.close();
 }
 
 async function open(id) {
@@ -127,7 +154,9 @@ async function open(id) {
 async function init() {
   // The window id is needed synchronously when opening the side panel (it must stay inside the click).
   chrome.windows.getCurrent().then((w) => { state.windowId = w.id; });
-  const saved = await chrome.storage.local.get(['gwtBase', 'gwtLang', 'favs', 'recents']);
+  const saved = await chrome.storage.local.get(['gwtBase', 'gwtLang', 'favs', 'recents', 'recMic']);
+  state.rec = (await chrome.runtime.sendMessage({ type: 'rec-state' }).catch(() => null))?.state || null;
+  $('recMic').checked = !!saved.recMic;
   state.base = saved.gwtBase || DEFAULT_BASE;
   state.lang = pickLang(saved.gwtLang, chrome.i18n.getUILanguage());
   state.favs = saved.favs || [];
@@ -154,6 +183,18 @@ async function init() {
     window.close();
   });
   $('panel').addEventListener('click', () => openPanel());
+  $('recTab').addEventListener('click', () => startRec('tab'));
+  $('recScreen').addEventListener('click', () => startRec('screen'));
+  $('recStop').addEventListener('click', async () => { await chrome.runtime.sendMessage({ type: 'rec-stop' }); window.close(); });
+  $('recMic').addEventListener('change', async (e) => {
+    const on = e.target.checked;
+    await chrome.storage.local.set({ recMic: on });
+    // Offscreen documents can't ask for the microphone, so ask once from a normal page.
+    if (on) {
+      const perm = await navigator.permissions.query({ name: 'microphone' }).catch(() => null);
+      if (perm?.state !== 'granted') chrome.tabs.create({ url: chrome.runtime.getURL('mic.html') });
+    }
+  });
   $('capture').addEventListener('click', async () => {
     const res = await chrome.runtime.sendMessage({ type: 'capture' });
     if (res?.ok) {
