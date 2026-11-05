@@ -20,6 +20,14 @@ physically **cannot** do:
   from the popup or with <kbd>Alt + Shift + R</kbd>; a red REC badge shows while it
   runs. The result page previews the video, downloads it (.webm) and hands it to
   the site's Video Converter (MP4), Video → GIF or Video Compressor.
+- **This page** — a color picker (click anywhere on screen; copy HEX/RGB/HSL),
+  save the page's images (pick, optionally convert to WebP/PNG/JPG, download as a
+  zip) and a full-page scrolling screenshot (download, or open in the Image
+  Annotator / Compressor / Images → PDF). Fixed headers are shown once, not on
+  every screen.
+- **JSON pages** (optional) — on API responses and .json/.jsonl files, a small bar
+  offers to open the page in the JSON Viewer. Turn it on in the popup; it needs
+  site access.
 - **Global hotkey screenshot** — capture the screen with <kbd>Ctrl/⌘ + Shift + Y</kbd>
   even while another application is focused, then drag a crop region.
 - **Page bridge** — the Screenshot tool's "Enhanced capture" uses the extension.

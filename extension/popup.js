@@ -9,6 +9,7 @@ const T = {
     search: 'Search 200+ tools…', favorites: 'Favorites', recent: 'Recent', quick: 'Quick actions', none: 'No tools match.',
     qrPage: 'QR code of this page', capture: 'Capture screen', hotkey: 'Screenshot hotkey:', shortcuts: 'change',
     star: 'Add to favorites', unstar: 'Remove from favorites', panel: 'Open side panel', inPanel: 'Open in the side panel',
+    page: 'This page', pgColor: 'Pick a color', pgImages: 'Save images', pgShot: 'Full-page screenshot', jsonTabs: 'Offer the JSON Viewer on JSON pages',
     rec: 'Record', recTab: 'Record this tab', recScreen: 'Record screen…', recMic: 'Include my microphone', recStop: (t) => `■ Stop recording · ${t}`,
     access: 'Allow the Companion to read images on websites so right-click image actions work everywhere.', grant: 'Allow images from websites',
   },
@@ -16,6 +17,7 @@ const T = {
     search: 'Cari 200+ tool…', favorites: 'Favorit', recent: 'Terakhir', quick: 'Aksi cepat', none: 'Tidak ada tool yang cocok.',
     qrPage: 'Kode QR halaman ini', capture: 'Tangkap layar', hotkey: 'Pintasan tangkap layar:', shortcuts: 'ubah',
     star: 'Tambah ke favorit', unstar: 'Hapus dari favorit', panel: 'Buka panel samping', inPanel: 'Buka di panel samping',
+    page: 'Halaman ini', pgColor: 'Ambil warna', pgImages: 'Simpan gambar', pgShot: 'Tangkapan layar penuh', jsonTabs: 'Tawarkan Penampil JSON di halaman JSON',
     rec: 'Rekam', recTab: 'Rekam tab ini', recScreen: 'Rekam layar…', recMic: 'Sertakan mikrofon saya', recStop: (t) => `■ Hentikan rekaman · ${t}`,
     access: 'Izinkan Companion membaca gambar di situs web agar aksi klik kanan pada gambar berfungsi di mana saja.', grant: 'Izinkan gambar dari situs web',
   },
@@ -114,6 +116,11 @@ function render() {
   $('qrPage').textContent = t.qrPage;
   $('capture').textContent = t.capture;
   $('panel').textContent = t.panel;
+  $('pageTitle').textContent = t.page;
+  $('pgColor').textContent = t.pgColor;
+  $('pgImages').textContent = t.pgImages;
+  $('pgShot').textContent = t.pgShot;
+  $('jsonTabsLabel').textContent = t.jsonTabs;
   $('recTitle').textContent = t.rec;
   $('recTab').textContent = t.recTab;
   $('recScreen').textContent = t.recScreen;
@@ -154,7 +161,8 @@ async function open(id) {
 async function init() {
   // The window id is needed synchronously when opening the side panel (it must stay inside the click).
   chrome.windows.getCurrent().then((w) => { state.windowId = w.id; });
-  const saved = await chrome.storage.local.get(['gwtBase', 'gwtLang', 'favs', 'recents', 'recMic']);
+  const saved = await chrome.storage.local.get(['gwtBase', 'gwtLang', 'favs', 'recents', 'recMic', 'jsonTabs']);
+  $('jsonTabs').checked = !!saved.jsonTabs;
   state.rec = (await chrome.runtime.sendMessage({ type: 'rec-state' }).catch(() => null))?.state || null;
   $('recMic').checked = !!saved.recMic;
   state.base = saved.gwtBase || DEFAULT_BASE;
@@ -183,6 +191,21 @@ async function init() {
     window.close();
   });
   $('panel').addEventListener('click', () => openPanel());
+  // Page helpers work on the current tab (the popup's activeTab grant); the popup
+  // closes at once so it isn't in the way of the picker or the screenshot.
+  for (const [btn, type] of [['pgColor', 'page-color'], ['pgImages', 'page-images'], ['pgShot', 'page-shot']]) {
+    $(btn).addEventListener('click', async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      chrome.runtime.sendMessage({ type, tabId: tab?.id });
+      setTimeout(() => window.close(), 50);
+    });
+  }
+  $('jsonTabs').addEventListener('change', async (e) => {
+    const on = e.target.checked;
+    // Detecting JSON pages needs site access; ask inside this click.
+    if (on && !(await chrome.permissions.request({ origins: ['<all_urls>'] }).catch(() => false))) { e.target.checked = false; return; }
+    await chrome.runtime.sendMessage({ type: 'json-tabs', enabled: on });
+  });
   $('recTab').addEventListener('click', () => startRec('tab'));
   $('recScreen').addEventListener('click', () => startRec('screen'));
   $('recStop').addEventListener('click', async () => { await chrome.runtime.sendMessage({ type: 'rec-stop' }); window.close(); });

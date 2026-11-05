@@ -79,5 +79,38 @@
   },
   "notifyRecFailedTitle": {
     "message": "Rekaman tidak dimulai"
+  },
+  "color_title": {
+    "message": "Pengambil warna"
+  },
+  "color_hint": {
+    "message": "Tekan Ambil, lalu klik di mana saja di layar."
+  },
+  "color_pick": {
+    "message": "Ambil warna"
+  },
+  "color_copy": {
+    "message": "Salin"
+  },
+  "color_copied": {
+    "message": "Disalin"
+  },
+  "color_close": {
+    "message": "Tutup"
+  },
+  "color_unsupported": {
+    "message": "Browser ini tidak punya pengambil warna (EyeDropper)."
+  },
+  "jsonBarText": {
+    "message": "Halaman ini berisi JSON."
+  },
+  "jsonBarOpen": {
+    "message": "Buka di Penampil JSON"
+  },
+  "shotTabChanged": {
+    "message": "Tangkapan layar berhenti karena Anda berpindah tab. Coba lagi dan tetap di halaman sampai selesai."
+  },
+  "notifyPageFailedTitle": {
+    "message": "Tidak berhasil di halaman ini"
   }
 }
