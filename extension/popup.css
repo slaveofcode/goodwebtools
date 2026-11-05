@@ -19,6 +19,8 @@ li .star[aria-pressed="true"] { color: #f59e0b; }
 h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 12px 0 2px; }
 h2:empty, ul:empty { display: none; }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+.actions .wide { grid-column: 1 / -1; background: var(--row); color: var(--fg); }
+li .side { border: 0; background: none; color: var(--muted); font-size: 14px; cursor: pointer; padding: 0 2px; }
 .actions button, #grant { border: 2px solid var(--fg); background: var(--accent); color: #fff; font: inherit; font-weight: 700; padding: 8px; cursor: pointer; box-shadow: 3px 3px 0 var(--fg); }
 #access { margin-top: 10px; padding: 8px; border: 2px dashed var(--muted); }
 #access p { margin: 0 0 6px; color: var(--muted); }

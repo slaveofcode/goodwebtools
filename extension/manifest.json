@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "__MSG_extDescription__",
   "minimum_chrome_version": "116",
   "icons": {
@@ -29,7 +29,8 @@
     "storage",
     "notifications",
     "desktopCapture",
-    "offscreen"
+    "offscreen",
+    "sidePanel"
   ],
   "commands": {
     "capture-screenshot": {
@@ -78,5 +79,8 @@
   ],
   "optional_host_permissions": [
     "<all_urls>"
-  ]
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
 }

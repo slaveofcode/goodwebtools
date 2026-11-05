@@ -11,6 +11,10 @@ physically **cannot** do:
 - **Tool launcher** — the toolbar popup searches all tools (English and Bahasa
   Indonesia names and keywords), keeps ★ favorites and recents, and has quick
   actions (QR code of the current page, screen capture).
+- **Side panel** — a GoodWebTools tool next to any page (Music Player, JSON
+  Viewer, Notepad, Unit Converter… pin your own). The panel stays open while you
+  switch tabs, so music keeps playing as you browse. Tools load in the site's
+  compact embed mode (`?embed=1`).
 - **Global hotkey screenshot** — capture the screen with <kbd>Ctrl/⌘ + Shift + Y</kbd>
   even while another application is focused, then drag a crop region.
 - **Page bridge** — the Screenshot tool's "Enhanced capture" uses the extension.
@@ -18,7 +22,7 @@ physically **cannot** do:
 Everything stays on your device: data handed to a tool goes from the extension to
 the open GoodWebTools tab through the page, never to a server. Permissions are kept
 narrow — `contextMenus`, `activeTab`, `scripting`, `storage`, `notifications`,
-`desktopCapture`, `offscreen`, host access to goodwebtools.com only, and **optional**
+`desktopCapture`, `offscreen`, `sidePanel`, host access to goodwebtools.com only, and **optional**
 access to other sites (asked for the first time an image action needs it, or via
 the popup's "Allow images from websites" button).
 
