@@ -11,7 +11,9 @@ const test = base.extend<{ ctx: BrowserContext; sw: Worker; extId: string }>({
     const ctx = await chromium.launchPersistentContext('', {
       channel: 'chromium',
       executablePath: process.env.PW_CHROMIUM_PATH || undefined,
-      args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
+      args: [
+        `--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`,
+      ],
     });
     await use(ctx);
     await ctx.close();
@@ -86,4 +88,56 @@ test('the side panel shows a tool in embed mode and switches tools', async ({ ct
   await panel.locator('#pin').click();
   await expect(panel.locator('#pin')).toHaveAttribute('aria-pressed', 'true');
   expect(await panel.evaluate(async () => (await chrome.storage.local.get('panelTools')).panelTools)).toContain('base64');
+});
+
+test('a recording is saved and shown with download and tool handoff', async ({ ctx, sw, extId }) => {
+  // Chrome only allows tab/screen capture after a real click on the extension, so
+  // the recorder is fed a generated stream (canvas video + tone) here; everything
+  // after capture — recording, saving, the result page, handoff — is the real code.
+  test.setTimeout(90_000);
+  void sw;
+  const host = await ctx.newPage();
+  await host.goto(`chrome-extension://${extId}/mic.html`);
+  await host.evaluate(async () => {
+    const { recordStream } = await import('/lib/recorder.js');
+    const { saveRecording } = await import('/lib/recordings-db.js');
+    const canvas = Object.assign(document.createElement('canvas'), { width: 320, height: 240 });
+    const g = canvas.getContext('2d')!;
+    let frame = 0;
+    const timer = setInterval(() => { g.fillStyle = `hsl(${(frame++ * 12) % 360} 70% 50%)`; g.fillRect(0, 0, 320, 240); }, 33);
+    const audio = new AudioContext();
+    const osc = audio.createOscillator();
+    const dest = audio.createMediaStreamDestination();
+    osc.connect(dest);
+    osc.start();
+    const session = recordStream(new MediaStream([...canvas.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]));
+    await new Promise(r => setTimeout(r, 2500));
+    const { blob, durationMs } = await session.stop();
+    clearInterval(timer);
+    await saveRecording({ blob, type: blob.type, durationMs, at: Date.now() });
+  });
+
+  const result = await ctx.newPage();
+  await result.goto(`chrome-extension://${extId}/recording.html`);
+  await expect(result.locator('#meta')).toContainText(/gwt-recording-.*\.webm · 0:0[2-4] · /);
+  await expect.poll(() => result.locator('#video').evaluate((v: HTMLVideoElement) => v.videoWidth), { timeout: 15_000 }).toBe(320);
+  await expect(result.locator('#download')).toHaveAttribute('download', /\.webm$/);
+
+  // Hand the recording to the site's Video Converter.
+  const [tool] = await Promise.all([ctx.waitForEvent('page', p => p.url().includes('/tools/video-convert/')), result.locator('#toMp4').click()]);
+  await expect(tool.getByText(/gwt-recording-.*\.webm/).first()).toBeVisible({ timeout: 45_000 });
+});
+
+test('recording without a tab or picker choice reports why, and nothing is left running', async ({ ctx, sw, extId }) => {
+  void sw;
+  const popup = await ctx.newPage();
+  await popup.goto(`chrome-extension://${extId}/popup.html`);
+  // No user click on the extension → Chrome refuses tab capture; the state stays clean.
+  const res = await popup.evaluate(async () => {
+    const t = await chrome.tabs.getCurrent();
+    return chrome.runtime.sendMessage({ type: 'rec-start', source: 'tab', tabId: t!.id });
+  });
+  expect(res.ok).toBe(false);
+  expect(await popup.evaluate(() => chrome.runtime.sendMessage({ type: 'rec-state' }))).toMatchObject({ state: null });
+  await expect(popup.locator('#recIdle')).toBeVisible();
 });
