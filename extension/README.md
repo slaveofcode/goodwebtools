@@ -78,6 +78,13 @@ Web app  ──postMessage──▶ content.js ──runtime msg──▶ backgr
 
 Works in Chrome / Edge / Brave / other Chromium browsers (MV3, Chrome ≥ 116).
 
+## Chrome Web Store
+
+Listing text (EN + ID), permission justifications, data-usage answers and the
+submission steps are in [`store/LISTING.md`](store/LISTING.md); the screenshots and
+promo tile are in `store/` (regenerate with `node scripts/store-assets.mjs`). The
+privacy policy is the "Browser extension" section of https://goodwebtools.com/privacy#extension.
+
 ## Package for a store
 
 ```bash

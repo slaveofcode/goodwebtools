@@ -29,6 +29,15 @@ const P = {
     s4P: 'After first use, tools work with your network completely off. This is the strongest proof that nothing leaves your device.',
     s5H: 'Open source',
     s5Pa: 'The code is open source on GitHub — you can audit it yourself or run it locally: ',
+    s6H: 'Browser extension (GoodWebTools Companion)',
+    s6P: 'The optional Chrome extension follows the same rule: your data stays on your device.',
+    s6: [
+      'It only acts when you use it — a right-click action, a popup button, the side panel, a recording or a hotkey. It does not read pages in the background or collect your browsing history.',
+      'An image, text or URL you send to a tool goes from the extension straight to the GoodWebTools tab it opens, inside your browser. It is kept for at most 5 minutes and used once.',
+      'Recordings and full-page screenshots are stored only in the extension’s storage on your device, and replaced by the next one. Favorites, recent tools, pinned tools and settings are stored in your browser.',
+      'Its only network requests are: loading GoodWebTools pages, refreshing the tool list from goodwebtools.com, and fetching the images you choose to send or save.',
+      'There are no analytics, ads or tracking in the extension. Access to other websites is optional, asked for only when a feature needs it, and can be removed at any time in Chrome’s extension settings.',
+    ],
   },
   id: {
     title: 'Privasi', home: 'Beranda', crumb: 'Privasi',
@@ -47,6 +56,15 @@ const P = {
     s4P: 'Setelah pemakaian pertama, tool bekerja dengan jaringan Anda dimatikan sepenuhnya. Ini adalah bukti terkuat bahwa tidak ada yang meninggalkan perangkat Anda.',
     s5H: 'Sumber terbuka',
     s5Pa: 'Kode bersifat sumber terbuka di GitHub — Anda dapat mengauditnya sendiri atau menjalankannya secara lokal: ',
+    s6H: 'Ekstensi browser (GoodWebTools Companion)',
+    s6P: 'Ekstensi Chrome opsional ini mengikuti aturan yang sama: data Anda tetap di perangkat Anda.',
+    s6: [
+      'Ekstensi hanya bekerja saat Anda memakainya — aksi klik kanan, tombol popup, panel samping, rekaman, atau pintasan keyboard. Ekstensi tidak membaca halaman di latar belakang dan tidak mengumpulkan riwayat penjelajahan Anda.',
+      'Gambar, teks, atau URL yang Anda kirim ke tool berpindah dari ekstensi langsung ke tab GoodWebTools yang dibuka, di dalam browser Anda. Data disimpan paling lama 5 menit dan hanya dipakai sekali.',
+      'Rekaman dan tangkapan layar satu halaman penuh hanya disimpan di penyimpanan ekstensi di perangkat Anda, dan diganti oleh yang berikutnya. Favorit, tool terakhir, tool yang disematkan, dan pengaturan disimpan di browser Anda.',
+      'Permintaan jaringannya hanya: memuat halaman GoodWebTools, memperbarui daftar tool dari goodwebtools.com, dan mengambil gambar yang Anda pilih untuk dikirim atau disimpan.',
+      'Tidak ada analitik, iklan, atau pelacakan di ekstensi ini. Akses ke situs lain bersifat opsional, hanya diminta saat sebuah fitur membutuhkannya, dan bisa dicabut kapan saja di pengaturan ekstensi Chrome.',
+    ],
   },
 }[lang];
 ---
@@ -88,12 +106,20 @@ const P = {
       <p class="text-muted-foreground">{P.s4P}</p>
     </section>
 
-    <section>
+    <section class="mb-8">
       <h2 class="mb-4 text-2xl font-semibold">{P.s5H}</h2>
       <p class="text-muted-foreground">
         {P.s5Pa}
         <a href={REPO_URL} target="_blank" rel="noopener noreferrer" class="font-bold underline decoration-2 underline-offset-2">slaveofcode/goodwebtools</a>.
       </p>
+    </section>
+
+    <section id="extension" class="scroll-mt-24">
+      <h2 class="mb-4 text-2xl font-semibold">{P.s6H}</h2>
+      <p class="mb-4 text-muted-foreground">{P.s6P}</p>
+      <ul class="list-inside list-disc space-y-2 text-muted-foreground">
+        {P.s6.map(item => <li>{item}</li>)}
+      </ul>
     </section>
   </main>
 </Base>
