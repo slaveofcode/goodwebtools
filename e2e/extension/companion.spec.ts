@@ -63,3 +63,27 @@ test('data handed over by the extension lands in the tool page', async ({ ctx, s
   // The single-use id is gone from the URL.
   await expect.poll(() => new URL(tab.url()).hash).toBe('');
 });
+
+test('the side panel shows a tool in embed mode and switches tools', async ({ ctx, sw, extId }) => {
+  void sw;
+  const panel = await ctx.newPage();
+  await panel.setViewportSize({ width: 380, height: 800 });
+  await panel.goto(`chrome-extension://${extId}/sidepanel.html`);
+  // Music Player first, shown without the site's header and SEO sections.
+  await expect(panel.locator('#tool')).toHaveValue('music-player');
+  const frame = panel.frameLocator('#frame');
+  await expect(frame.getByText('Drop music files or click to choose')).toBeVisible({ timeout: 45_000 });
+  await expect(frame.locator('nav[aria-label]').first()).toBeHidden();
+  await expect(frame.getByText('Frequently asked questions', { exact: false })).toBeHidden();
+
+  // Switch tools from the pinned list, then find and pin another one.
+  await panel.locator('#tool').selectOption('json-viewer');
+  await expect(frame.getByRole('button', { name: 'Sample' })).toBeVisible({ timeout: 45_000 });
+  await panel.locator('#find').click();
+  await panel.locator('#q').fill('base64');
+  await panel.locator('#q').press('Enter');
+  await expect(panel.locator('#tool')).toHaveValue('base64');
+  await panel.locator('#pin').click();
+  await expect(panel.locator('#pin')).toHaveAttribute('aria-pressed', 'true');
+  expect(await panel.evaluate(async () => (await chrome.storage.local.get('panelTools')).panelTools)).toContain('base64');
+});

@@ -188,3 +188,13 @@ body {
 html.tauri [data-desktop-only] {
   display: flex;
 }
+
+/* Embedded in the Companion extension's side panel (?embed=1): just the tool. */
+html.embed [data-embed-hide],
+html.embed astro-island[component-url*="ShellIsland"],
+html.embed astro-island[component-url*="ConsentRibbon"] {
+  display: none !important;
+}
+html.embed main.page-container {
+  padding: 0.75rem;
+}

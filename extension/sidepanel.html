@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header>
+      <select id="tool" aria-label="Tool"></select>
+      <button type="button" id="pin" class="icon" aria-pressed="false"></button>
+      <button type="button" id="find" class="icon" aria-expanded="false"></button>
+      <button type="button" id="popout" class="icon"></button>
+    </header>
+    <div id="search" hidden>
+      <input id="q" type="search" autocomplete="off" spellcheck="false" />
+      <ul id="results" role="listbox"></ul>
+    </div>
+    <iframe id="frame" allow="autoplay; clipboard-read; clipboard-write; microphone; camera; fullscreen; display-capture; screen-wake-lock"></iframe>
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>

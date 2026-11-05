@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { MENU_ITEMS, toolUrl, pickLang, findMenuItem } from './menus.js';
+import { MENU_ITEMS, toolUrl, pickLang, findMenuItem, embedUrl, DEFAULT_PANEL_TOOLS } from './menus.js';
 import { createHandoffStore, isFresh, bytesToBase64, TTL_MS } from './handoff-store.js';
 import { searchTools, pushRecent, toggleFavorite } from './search.js';
 
@@ -17,6 +17,11 @@ describe('menus', () => {
     expect(toolUrl('https://goodwebtools.com', 'json-viewer', 'en', 'abc-12345')).toBe('https://goodwebtools.com/tools/json-viewer/#gwt-handoff=abc-12345');
     expect(toolUrl('http://localhost:4321/', 'qr-gen', 'id')).toBe('http://localhost:4321/id/tools/qr-gen/');
     expect(toolUrl(undefined, 'base64', 'en')).toBe('https://goodwebtools.com/tools/base64/');
+  });
+  it('builds embed URLs for the side panel', () => {
+    expect(embedUrl('https://goodwebtools.com', 'music-player', 'en')).toBe('https://goodwebtools.com/tools/music-player/?embed=1');
+    expect(embedUrl('https://goodwebtools.com', 'notepad', 'id')).toBe('https://goodwebtools.com/id/tools/notepad/?embed=1');
+    expect(DEFAULT_PANEL_TOOLS[0]).toBe('music-player');
   });
   it('picks the site language', () => {
     expect(pickLang('en', 'id')).toBe('en');

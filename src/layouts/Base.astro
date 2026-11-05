@@ -158,6 +158,9 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
         var root = document.documentElement;
         root.classList.toggle('dark', localStorage.getItem('theme') === 'dark');
         root.classList.toggle('tauri', __isTauri);
+        // `embed` = shown inside the Companion extension's side panel (?embed=1):
+        // only the tool itself, without the site header, footer or SEO sections.
+        root.classList.toggle('embed', new URLSearchParams(location.search).has('embed'));
       }
       applyEnvClasses();
       document.addEventListener('astro:after-swap', applyEnvClasses);

@@ -7,19 +7,25 @@ const T = {
   en: {
     search: 'Search 200+ tools…', favorites: 'Favorites', recent: 'Recent', quick: 'Quick actions', none: 'No tools match.',
     qrPage: 'QR code of this page', capture: 'Capture screen', hotkey: 'Screenshot hotkey:', shortcuts: 'change',
-    star: 'Add to favorites', unstar: 'Remove from favorites',
+    star: 'Add to favorites', unstar: 'Remove from favorites', panel: 'Open side panel', inPanel: 'Open in the side panel',
     access: 'Allow the Companion to read images on websites so right-click image actions work everywhere.', grant: 'Allow images from websites',
   },
   id: {
     search: 'Cari 200+ tool…', favorites: 'Favorit', recent: 'Terakhir', quick: 'Aksi cepat', none: 'Tidak ada tool yang cocok.',
     qrPage: 'Kode QR halaman ini', capture: 'Tangkap layar', hotkey: 'Pintasan tangkap layar:', shortcuts: 'ubah',
-    star: 'Tambah ke favorit', unstar: 'Hapus dari favorit',
+    star: 'Tambah ke favorit', unstar: 'Hapus dari favorit', panel: 'Buka panel samping', inPanel: 'Buka di panel samping',
     access: 'Izinkan Companion membaca gambar di situs web agar aksi klik kanan pada gambar berfungsi di mana saja.', grant: 'Izinkan gambar dari situs web',
   },
 };
 
 const $ = (id) => document.getElementById(id);
-let state = { tools: [], lang: 'en', base: DEFAULT_BASE, favs: [], recents: [], sel: 0, shown: [] };
+let state = { tools: [], lang: 'en', base: DEFAULT_BASE, favs: [], recents: [], sel: 0, shown: [], windowId: undefined };
+
+/** Open the side panel, optionally switching it to a tool. Must run inside the click (user gesture). */
+function openPanel(toolId) {
+  if (toolId) chrome.storage.local.set({ panelTool: toolId });
+  chrome.sidePanel.open({ windowId: state.windowId }).then(() => window.close()).catch(() => { /* no side panel support */ });
+}
 
 /** Bundled snapshot, then the cached copy, refreshed from the site in the background. */
 async function loadTools() {
@@ -65,7 +71,13 @@ function row(t, i, listId) {
     await chrome.storage.local.set({ favs: state.favs });
     render();
   });
-  li.append(txt, star);
+  const side = document.createElement('button');
+  side.className = 'side';
+  side.textContent = '◧';
+  side.title = T[state.lang].inPanel;
+  side.setAttribute('aria-label', side.title);
+  side.addEventListener('click', (e) => { e.stopPropagation(); openPanel(t.id); });
+  li.append(txt, side, star);
   li.addEventListener('click', () => open(t.id));
   return li;
 }
@@ -98,6 +110,7 @@ function render() {
   $('quickTitle').textContent = t.quick;
   $('qrPage').textContent = t.qrPage;
   $('capture').textContent = t.capture;
+  $('panel').textContent = t.panel;
   $('hotkeyLabel').textContent = t.hotkey;
   $('shortcuts').textContent = t.shortcuts;
   $('accessText').textContent = t.access;
@@ -112,6 +125,8 @@ async function open(id) {
 }
 
 async function init() {
+  // The window id is needed synchronously when opening the side panel (it must stay inside the click).
+  chrome.windows.getCurrent().then((w) => { state.windowId = w.id; });
   const saved = await chrome.storage.local.get(['gwtBase', 'gwtLang', 'favs', 'recents']);
   state.base = saved.gwtBase || DEFAULT_BASE;
   state.lang = pickLang(saved.gwtLang, chrome.i18n.getUILanguage());
@@ -138,6 +153,7 @@ async function init() {
     await chrome.runtime.sendMessage({ type: 'open-tool', tool: 'qr-gen', payload: { kind: 'text', text: tab?.url || '' } });
     window.close();
   });
+  $('panel').addEventListener('click', () => openPanel());
   $('capture').addEventListener('click', async () => {
     const res = await chrome.runtime.sendMessage({ type: 'capture' });
     if (res?.ok) {
