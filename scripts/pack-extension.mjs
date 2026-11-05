@@ -24,7 +24,7 @@ const files = {};
 const walk = (dir) => {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (name.startsWith('.') || name.endsWith('.test.js') || name === 'README.md') continue;
+    if (name.startsWith('.') || name.endsWith('.test.js') || name === 'README.md' || name === 'store') continue; // store/ = listing assets, not packaged
     if (statSync(p).isDirectory()) walk(p);
     else files[relative(ext, p)] = readFileSync(p);
   }

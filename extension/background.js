@@ -15,6 +15,9 @@
 
 import { MENU_ITEMS, PARENT_ID, DEFAULT_BASE, pickLang, toolUrl, findMenuItem } from './lib/menus.js';
 import { createHandoffStore, bytesToBase64 } from './lib/handoff-store.js';
+import { colorPickerOverlay, collectPageImages, pageMetrics, scrollForCapture, restoreAfterCapture } from './lib/inject.js';
+import { capturePlan } from './lib/page-helpers.js';
+import { saveShot } from './lib/recordings-db.js';
 
 const handoffs = createHandoffStore(chrome.storage.session);
 const MAX_HANDOFF_BYTES = 50 * 1024 * 1024;
@@ -147,7 +150,8 @@ async function createMenus() {
     }
   }
 }
-chrome.runtime.onInstalled.addListener(() => { void createMenus(); });
+chrome.runtime.onInstalled.addListener(() => { void createMenus(); void syncJsonTabs(); });
+chrome.runtime.onStartup.addListener(() => { void syncJsonTabs(); });
 
 /** Site base URL (overridable for local development) and language. */
 async function siteSettings() {
@@ -269,6 +273,19 @@ chrome.runtime.onMessage.addListener((m, sender, sendResponse) => {
     stopRecording().then(sendResponse);
     return true;
   }
+  if (m?.type === 'page-color' || m?.type === 'page-images' || m?.type === 'page-shot') {
+    const run = { 'page-color': pickColor, 'page-images': saveImages, 'page-shot': fullPageShot }[m.type];
+    chrome.tabs.get(m.tabId).then(run).then((r) => sendResponse({ ok: true, ...r }), (e) => {
+      // The popup has already closed, so say what went wrong in a notification.
+      notify(msg('notifyPageFailedTitle'), e.message || String(e));
+      sendResponse({ ok: false, error: e.message || String(e) });
+    });
+    return true;
+  }
+  if (m?.type === 'json-tabs') {
+    syncJsonTabs(m.enabled).then(() => sendResponse({ ok: true }), (e) => sendResponse({ ok: false, error: e.message }));
+    return true;
+  }
   if (m?.type === 'rec-state') {
     recState().then((state) => sendResponse({ ok: true, state }));
     return true;
@@ -335,3 +352,82 @@ async function stopRecording() {
 
 // A restarted worker shouldn't show a stale badge.
 recState().then((state) => setBadge(!!state));
+
+// --- Page helpers (run on the current tab, with the popup's activeTab grant) --
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function inTab(tab, func, args = []) {
+  const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func, args });
+  return res?.result;
+}
+
+/** Color picker panel in the page (EyeDropper needs a click inside the page). */
+async function pickColor(tab) {
+  const t = {};
+  for (const k of ['title', 'hint', 'pick', 'copy', 'copied', 'close', 'unsupported']) t[k] = msg(`color_${k}`);
+  await inTab(tab, colorPickerOverlay, [t]);
+  return {};
+}
+
+/** Collect the page's images, then show them on images.html to pick and download. */
+async function saveImages(tab) {
+  const found = await inTab(tab, collectPageImages);
+  await chrome.storage.session.set({ pageImages: { ...found, at: Date.now() } });
+  await chrome.tabs.create({ url: chrome.runtime.getURL('images.html'), index: tab.index + 1, openerTabId: tab.id });
+  return { count: found?.images?.length || 0 };
+}
+
+/**
+ * Full-page screenshot: scroll the page a viewport at a time, capture each view
+ * (Chrome allows ~2 captures a second), stitch them in an OffscreenCanvas.
+ */
+async function fullPageShot(tab) {
+  // captureVisibleTab grabs whichever tab is active, so make sure it's this one.
+  await chrome.tabs.update(tab.id, { active: true });
+  const m = await inTab(tab, pageMetrics);
+  // Keep the stitched image inside canvas limits (~30k device pixels tall).
+  const plan = capturePlan(m.scrollHeight, m.innerHeight, Math.floor(30000 / m.dpr));
+  let canvas = null;
+  let ctx = null;
+  try {
+    for (let i = 0; i < plan.ys.length; i++) {
+      const y = await inTab(tab, scrollForCapture, [plan.ys[i], i > 0]);
+      await sleep(i ? 550 : 150); // let the page settle; respect the capture rate limit
+      const [active] = await chrome.tabs.query({ active: true, windowId: tab.windowId });
+      if (active?.id !== tab.id) throw new Error(msg('shotTabChanged'));
+      const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
+      const bmp = await createImageBitmap(await (await fetch(dataUrl)).blob());
+      const scale = bmp.width / m.innerWidth;
+      if (!canvas) {
+        canvas = new OffscreenCanvas(bmp.width, Math.round(plan.height * scale));
+        ctx = canvas.getContext('2d');
+      }
+      ctx.drawImage(bmp, 0, Math.round(y * scale));
+      bmp.close();
+    }
+  } finally {
+    await inTab(tab, restoreAfterCapture, [m.x, m.y]).catch(() => {});
+  }
+  const blob = await canvas.convertToBlob({ type: 'image/png' });
+  await saveShot({ blob, width: canvas.width, height: canvas.height, truncated: plan.truncated, title: tab.title || '', at: Date.now() });
+  await chrome.tabs.create({ url: chrome.runtime.getURL('shot.html'), index: tab.index + 1, openerTabId: tab.id });
+  return { width: canvas.width, height: canvas.height };
+}
+
+// --- JSON tabs: offer the JSON Viewer on pages that are JSON ------------------
+const JSON_SCRIPT = 'gwt-json-tabs';
+
+/** Register the JSON detector when the setting is on and site access is granted. */
+async function syncJsonTabs(enabled) {
+  if (typeof enabled === 'boolean') await chrome.storage.local.set({ jsonTabs: enabled });
+  const { jsonTabs } = await chrome.storage.local.get('jsonTabs');
+  const allowed = await chrome.permissions.contains({ origins: ['<all_urls>'] });
+  const existing = await chrome.scripting.getRegisteredContentScripts({ ids: [JSON_SCRIPT] });
+  const want = !!jsonTabs && allowed;
+  if (want && !existing.length) {
+    await chrome.scripting.registerContentScripts([{ id: JSON_SCRIPT, matches: ['<all_urls>'], js: ['inject/json-detect.js'], runAt: 'document_idle' }]);
+  } else if (!want && existing.length) {
+    await chrome.scripting.unregisterContentScripts({ ids: [JSON_SCRIPT] });
+  }
+}
+chrome.permissions.onRemoved.addListener(() => { void syncJsonTabs(); });

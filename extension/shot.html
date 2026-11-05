@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>GoodWebTools — full-page screenshot</title>
+    <link rel="stylesheet" href="popup.css" />
+    <style>
+      body { width: auto; max-width: 1100px; margin: 24px auto; padding: 16px; }
+      .frame { max-height: 70vh; overflow: auto; border: 3px solid var(--fg); background: #fff; }
+      .frame img { display: block; width: 100%; }
+      .meta { color: var(--muted); margin: 8px 0 12px; }
+      .actions { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+      .actions a { text-decoration: none; text-align: center; border: 2px solid var(--fg); background: var(--accent); color: #fff; font-weight: 700; padding: 8px; box-shadow: 3px 3px 0 var(--fg); }
+      .actions button { background: var(--row); color: var(--fg); }
+    </style>
+  </head>
+  <body>
+    <h1 id="title"></h1>
+    <div class="frame"><img id="img" alt="" /></div>
+    <p class="meta" id="meta"></p>
+    <div class="actions">
+      <a id="download" href="#"></a>
+      <button type="button" data-tool="image-annotate" id="annotate"></button>
+      <button type="button" data-tool="image-compress" id="compress"></button>
+      <button type="button" data-tool="images-to-pdf" id="pdf"></button>
+    </div>
+    <p class="hint" id="note"></p>
+    <script type="module" src="shot.js"></script>
+  </body>
+</html>

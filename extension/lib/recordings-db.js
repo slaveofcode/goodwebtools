@@ -1,5 +1,5 @@
-// The last recording, kept in the extension's own IndexedDB so the offscreen
-// document (which records) and recording.html (which shows it) can share it.
+// The last recording and full-page screenshot, kept in the extension's own
+// IndexedDB so the page that makes them and the page that shows them can share them.
 
 const DB = 'gwt-companion';
 const STORE = 'recordings';
@@ -23,10 +23,14 @@ function run(mode, fn) {
 }
 
 /** Save the latest recording ({ blob, type, durationMs, at }). */
-export function saveRecording(rec) {
-  return run('readwrite', (s) => s.put(rec, 'last'));
+export function saveRecording(rec, key = 'last') {
+  return run('readwrite', (s) => s.put(rec, key));
 }
 
-export function loadRecording() {
-  return run('readonly', (s) => s.get('last'));
+export function loadRecording(key = 'last') {
+  return run('readonly', (s) => s.get(key));
 }
+
+/** The latest full-page screenshot ({ blob, width, height, truncated, title, at }). */
+export const saveShot = (shot) => saveRecording(shot, 'shot');
+export const loadShot = () => loadRecording('shot');

@@ -79,5 +79,38 @@
   },
   "notifyRecFailedTitle": {
     "message": "Recording didn't start"
+  },
+  "color_title": {
+    "message": "Color picker"
+  },
+  "color_hint": {
+    "message": "Press Pick, then click anywhere on the screen."
+  },
+  "color_pick": {
+    "message": "Pick a color"
+  },
+  "color_copy": {
+    "message": "Copy"
+  },
+  "color_copied": {
+    "message": "Copied"
+  },
+  "color_close": {
+    "message": "Close"
+  },
+  "color_unsupported": {
+    "message": "This browser has no color picker (EyeDropper)."
+  },
+  "jsonBarText": {
+    "message": "This page is JSON."
+  },
+  "jsonBarOpen": {
+    "message": "Open in JSON Viewer"
+  },
+  "shotTabChanged": {
+    "message": "The screenshot stopped because you switched tabs. Try again and stay on the page until it finishes."
+  },
+  "notifyPageFailedTitle": {
+    "message": "That didn't work on this page"
   }
 }

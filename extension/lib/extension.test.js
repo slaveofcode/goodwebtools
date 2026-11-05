@@ -123,3 +123,39 @@ describe('recording helpers', () => {
     expect(formatBytes(52_428_800)).toBe('50 MB');
   });
 });
+
+import { colorFormats, largestFromSrcset, cleanImageList, imageFileName, uniqueNames, capturePlan } from './page-helpers.js';
+
+describe('page helpers', () => {
+  it('formats a picked color', () => {
+    expect(colorFormats('#7c3aed')).toEqual({ hex: '#7C3AED', rgb: 'rgb(124, 58, 237)', hsl: 'hsl(262, 83%, 58%)' });
+    expect(colorFormats('#ffffff').hsl).toBe('hsl(0, 0%, 100%)');
+    expect(colorFormats('nope')).toBeNull();
+  });
+  it('picks the largest srcset candidate', () => {
+    expect(largestFromSrcset('a.jpg 480w, b.jpg 1080w, c.jpg 720w')).toBe('b.jpg');
+    expect(largestFromSrcset('a.jpg 1x, a@2x.jpg 2x')).toBe('a@2x.jpg');
+    expect(largestFromSrcset('')).toBeNull();
+  });
+  it('cleans an image list: no duplicates, icons or odd URLs; biggest first', () => {
+    const list = cleanImageList([
+      { src: 'https://x/a.jpg', width: 800, height: 600 },
+      { src: 'https://x/a.jpg', width: 800, height: 600 },
+      { src: 'https://x/icon.png', width: 16, height: 16 },
+      { src: 'blob:https://x/1', width: 500, height: 500 },
+      { src: 'https://x/big.png', width: 2000, height: 1000 },
+      { src: 'data:image/png;base64,AAA', width: 0, height: 0 },
+    ]);
+    expect(list.map(i => i.src)).toEqual(['https://x/big.png', 'https://x/a.jpg', 'data:image/png;base64,AAA']);
+  });
+  it('names downloaded images, keeping them unique', () => {
+    expect(imageFileName('https://x/photos/My%20Cat.JPG?w=1', 0, 'webp')).toBe('001-My-Cat.webp');
+    expect(imageFileName('data:image/png;base64,AA', 4, 'png')).toBe('005-image-5.png');
+    expect(uniqueNames(['a.png', 'a.png', 'b.png', 'a.png'])).toEqual(['a.png', 'a-2.png', 'b.png', 'a-3.png']);
+  });
+  it('plans full-page capture steps', () => {
+    expect(capturePlan(2500, 1000)).toEqual({ ys: [0, 1000, 1500], height: 2500, truncated: false });
+    expect(capturePlan(800, 1000)).toEqual({ ys: [0], height: 800, truncated: false });
+    expect(capturePlan(50000, 1000, 3000)).toEqual({ ys: [0, 1000, 2000], height: 3000, truncated: true });
+  });
+});
