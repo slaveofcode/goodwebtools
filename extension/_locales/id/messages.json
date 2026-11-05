@@ -73,5 +73,11 @@
   },
   "actionTitle": {
     "message": "GoodWebTools — cari tool"
+  },
+  "commandRecord": {
+    "message": "Mulai / hentikan rekaman tab ini"
+  },
+  "notifyRecFailedTitle": {
+    "message": "Rekaman tidak dimulai"
   }
 }

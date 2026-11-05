@@ -98,3 +98,28 @@ describe('search', () => {
     expect(toggleFavorite(['a', 'b'], 'a')).toEqual(['b']);
   });
 });
+
+import { pickMimeType, formatDuration, recordingFileName, canHandOff, formatBytes, MAX_HANDOFF_BYTES } from './recording.js';
+
+describe('recording helpers', () => {
+  it('picks the best supported WebM type', () => {
+    expect(pickMimeType(t => t === 'video/webm;codecs=vp8,opus' || t === 'video/webm')).toBe('video/webm;codecs=vp8,opus');
+    expect(pickMimeType(() => false)).toBe('');
+    expect(pickMimeType(() => { throw new Error('x'); })).toBe('');
+  });
+  it('formats durations', () => {
+    expect(formatDuration(0)).toBe('0:00');
+    expect(formatDuration(65_000)).toBe('1:05');
+    expect(formatDuration(3_723_000)).toBe('1:02:03');
+  });
+  it('names recordings by local date and time', () => {
+    expect(recordingFileName(new Date(2026, 10, 5, 14, 3))).toBe('gwt-recording-2026-11-05-1403.webm');
+  });
+  it('hands off only reasonably small recordings', () => {
+    expect(canHandOff(0)).toBe(false);
+    expect(canHandOff(MAX_HANDOFF_BYTES)).toBe(true);
+    expect(canHandOff(MAX_HANDOFF_BYTES + 1)).toBe(false);
+    expect(formatBytes(1536)).toBe('1.5 KB');
+    expect(formatBytes(52_428_800)).toBe('50 MB');
+  });
+});

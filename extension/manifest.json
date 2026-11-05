@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "__MSG_extDescription__",
   "minimum_chrome_version": "116",
   "icons": {
@@ -30,7 +30,8 @@
     "notifications",
     "desktopCapture",
     "offscreen",
-    "sidePanel"
+    "sidePanel",
+    "tabCapture"
   ],
   "commands": {
     "capture-screenshot": {
@@ -39,6 +40,13 @@
         "mac": "Command+Shift+Y"
       },
       "description": "__MSG_commandCapture__"
+    },
+    "toggle-recording": {
+      "suggested_key": {
+        "default": "Alt+Shift+R",
+        "mac": "Alt+Shift+R"
+      },
+      "description": "__MSG_commandRecord__"
     }
   },
   "content_scripts": [

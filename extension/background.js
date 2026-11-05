@@ -38,15 +38,15 @@ async function ensureOffscreen() {
   if (await hasOffscreen()) return;
   await chrome.offscreen.createDocument({
     url: OFFSCREEN_PATH,
-    reasons: ['DISPLAY_MEDIA', 'USER_MEDIA'],
-    justification: 'Grab a frame from the chosen screen/window for a screenshot.',
+    reasons: ['DISPLAY_MEDIA', 'USER_MEDIA', 'AUDIO_PLAYBACK'],
+    justification: 'Grab a frame for a screenshot, and record the chosen tab or screen (playing the tab\'s sound back while it is captured).',
   });
 }
 
 /** Show the desktop picker and return a media stream id (or null if cancelled). */
-function chooseDesktopMedia() {
+function chooseDesktopMedia(sources = ['screen', 'window']) {
   return new Promise((resolve) => {
-    chrome.desktopCapture.chooseDesktopMedia(['screen', 'window'], (streamId) => {
+    chrome.desktopCapture.chooseDesktopMedia(sources, (streamId) => {
       resolve(streamId || null);
     });
   });
@@ -84,7 +84,12 @@ function notify(title, message, id = '') {
 }
 
 // --- Global hotkey → capture → open the crop overlay -------------------------
-chrome.commands.onCommand.addListener(async (command) => {
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  if (command === 'toggle-recording') {
+    const res = (await recState()) ? await stopRecording() : await startRecording('tab', tab);
+    if (!res.ok && res.error !== 'cancelled') notify(msg('notifyRecFailedTitle'), res.error);
+    return;
+  }
   if (command !== 'capture-screenshot') return;
   try {
     const shot = await capture();
@@ -249,8 +254,23 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 // --- Handoff + launcher messages (content.js / popup) --------------------------
 chrome.runtime.onMessage.addListener((m, sender, sendResponse) => {
+  if (m?.target === 'offscreen') return; // meant for the offscreen document
   if (m?.type === 'handoff-get') {
     handoffs.take(m.handoffId).then((payload) => sendResponse({ ok: !!payload, payload }));
+    return true;
+  }
+  if (m?.type === 'rec-start') {
+    // A screen recording needs no tab; tabs.get(undefined) would throw synchronously.
+    const tab = Number.isInteger(m.tabId) ? chrome.tabs.get(m.tabId).catch(() => null) : Promise.resolve(null);
+    tab.then((t) => startRecording(m.source, t)).then(sendResponse);
+    return true;
+  }
+  if (m?.type === 'rec-stop' || m?.type === 'rec-ended') {
+    stopRecording().then(sendResponse);
+    return true;
+  }
+  if (m?.type === 'rec-state') {
+    recState().then((state) => sendResponse({ ok: true, state }));
     return true;
   }
   if (m?.type === 'open-tool') {
@@ -263,3 +283,55 @@ chrome.runtime.onMessage.addListener((m, sender, sendResponse) => {
 chrome.notifications.onClicked.addListener((id) => {
   if (id === NEED_ACCESS) chrome.tabs.create({ url: chrome.runtime.getURL('popup.html') });
 });
+
+// --- Recording (tab via tabCapture, screen/window via desktopCapture) ---------
+const REC_KEY = 'rec';
+
+async function recState() {
+  return (await chrome.storage.session.get(REC_KEY))[REC_KEY] || null;
+}
+
+function setBadge(on) {
+  chrome.action.setBadgeText({ text: on ? 'REC' : '' });
+  if (on) chrome.action.setBadgeBackgroundColor({ color: '#dc2626' });
+}
+
+/** Start recording "tab" (the given tab, no picker) or "screen" (screen/window picker). */
+async function startRecording(source, tab) {
+  if (await recState()) return { ok: false, error: 'already-recording' };
+  try {
+    let streamId;
+    if (source === 'tab') {
+      if (!tab?.id) return { ok: false, error: 'no-tab' };
+      streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id });
+    } else {
+      streamId = await chooseDesktopMedia(['screen', 'window', 'tab', 'audio']);
+      if (!streamId) return { ok: false, error: 'cancelled' };
+    }
+    const { recMic } = await chrome.storage.local.get('recMic');
+    await ensureOffscreen();
+    const res = await chrome.runtime.sendMessage({
+      target: 'offscreen', type: 'rec-start', source: source === 'tab' ? 'tab' : 'desktop', streamId, mic: !!recMic,
+    });
+    if (!res?.ok) return { ok: false, error: res?.error || 'record-failed' };
+    await chrome.storage.session.set({ [REC_KEY]: { source, startedAt: res.startedAt, title: tab?.title || '' } });
+    setBadge(true);
+    return { ok: true, startedAt: res.startedAt };
+  } catch (e) {
+    return { ok: false, error: e.message || String(e) };
+  }
+}
+
+/** Stop, save (offscreen → IndexedDB) and open the result page. */
+async function stopRecording() {
+  if (!(await recState())) return { ok: false, error: 'not-recording' };
+  await chrome.storage.session.remove(REC_KEY);
+  setBadge(false);
+  const res = await chrome.runtime.sendMessage({ target: 'offscreen', type: 'rec-stop' }).catch((e) => ({ error: e.message }));
+  if (!res?.ok) return { ok: false, error: res?.error || 'stop-failed' };
+  await chrome.tabs.create({ url: chrome.runtime.getURL('recording.html') });
+  return { ok: true, ...res };
+}
+
+// A restarted worker shouldn't show a stale badge.
+recState().then((state) => setBadge(!!state));
