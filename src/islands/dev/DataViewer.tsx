@@ -29,6 +29,7 @@ const TR: Record<Lang, {
   showMore: (n: number) => string; copyPath: string; copyValue: string; copied: string; empty: string;
   detected: (f: string) => string;
   largeLoaded: (name: string, size: string) => string; showText: string;
+  readAsJsonl: (n: number) => string; readAsJson5: string;
 }> = {
   en: {
     input: 'Input', placeholder: 'Paste JSON, YAML or TOML here, load a file, or fetch a URL', loadFile: 'Load file',
@@ -41,6 +42,8 @@ const TR: Record<Lang, {
     showMore: n => `Show ${n} more`, copyPath: 'Copy path', copyValue: 'Copy value', copied: 'Copied', empty: 'empty',
     detected: f => `Detected ${f}.`,
     largeLoaded: (n, sz) => `${n} (${sz}) is loaded — the raw text is hidden to keep the page fast.`, showText: 'Show and edit the text',
+    readAsJsonl: n => `Read as JSON Lines — ${n.toLocaleString('en')} record${n === 1 ? '' : 's'}.`,
+    readAsJson5: 'Read as JSON5 / JSON with comments.',
   },
   id: {
     input: 'Masukan', placeholder: 'Tempel JSON, YAML, atau TOML di sini, muat berkas, atau ambil dari URL', loadFile: 'Muat berkas',
@@ -53,6 +56,8 @@ const TR: Record<Lang, {
     showMore: n => `Tampilkan ${n} lagi`, copyPath: 'Salin path', copyValue: 'Salin nilai', copied: 'Disalin', empty: 'kosong',
     detected: f => `Terdeteksi ${f}.`,
     largeLoaded: (n, sz) => `${n} (${sz}) sudah dimuat — teks mentahnya disembunyikan agar halaman tetap cepat.`, showText: 'Tampilkan dan edit teks',
+    readAsJsonl: n => `Dibaca sebagai JSON Lines — ${n.toLocaleString('id')} record.`,
+    readAsJson5: 'Dibaca sebagai JSON5 / JSON dengan komentar.',
   },
 };
 
@@ -175,7 +180,7 @@ export default function DataViewer({ lang = 'en', initialFormat = 'json' }: { la
   const [loadedName, setLoadedName] = useState('');
   const [showRaw, setShowRaw] = useState(false);
 
-  const parsed = useMemo(() => (text.trim() ? parseData(text, format) : null), [text, format]);
+  const parsed = useMemo(() => (text.trim() ? parseData(text, format, loadedName) : null), [text, format, loadedName]);
   const root = parsed?.ok ? parsed.value : undefined;
   const stats = useMemo(() => (root !== undefined ? statsOf(root) : null), [root]);
   const search = useMemo(() => (root !== undefined && query.trim() ? searchJson(root, query) : null), [root, query]);
@@ -192,7 +197,7 @@ export default function DataViewer({ lang = 'en', initialFormat = 'json' }: { la
     const detected = detectFormat(value, fileName);
     if (detected && detected !== format) { setFormat(detected); setNote(t.detected(FORMAT_LABEL[detected])); } else setNote('');
     // Open the root and its direct children so the shape is visible at once.
-    const r = detected ? parseData(value, detected) : null;
+    const r = detected ? parseData(value, detected, fileName) : null;
     const open = new Set([ROOT_PATH]);
     if (r?.ok) for (const [k, v] of entriesOf(r.value)) if (kindOf(v) === 'object' || kindOf(v) === 'array') open.add(childPath(ROOT_PATH, k));
     setExpanded(open);
@@ -218,7 +223,7 @@ export default function DataViewer({ lang = 'en', initialFormat = 'json' }: { la
   const [capped, setCapped] = useState(false);
   const expandAll = () => { if (root === undefined) return; const r = containerPaths(root); setExpanded(r.paths); setCapped(r.truncated); };
   const collapseAll = () => { setExpanded(new Set([ROOT_PATH])); setCapped(false); };
-  const clear = () => { setShowRaw(false); setText(''); setUrl(''); setQuery(''); setNote(''); setFetchError(''); setExpanded(new Set([ROOT_PATH])); setCapped(false); };
+  const clear = () => { setShowRaw(false); setLoadedName(''); setText(''); setUrl(''); setQuery(''); setNote(''); setFetchError(''); setExpanded(new Set([ROOT_PATH])); setCapped(false); };
 
   return (
     <div className="space-y-4">
@@ -229,7 +234,7 @@ export default function DataViewer({ lang = 'en', initialFormat = 'json' }: { la
           </Button>
         ))}
         <span className="mx-1 hidden h-6 w-px bg-border sm:block" aria-hidden="true" />
-        <LoadFileButton onLoad={load} accept=".json,.geojson,.yaml,.yml,.toml,.txt,application/json,text/yaml,application/toml,text/plain" label={t.loadFile} />
+        <LoadFileButton onLoad={load} accept=".json,.jsonl,.ndjson,.ldjson,.json5,.jsonc,.geojson,.topojson,.har,.ipynb,.webmanifest,.map,.jsonld,.yaml,.yml,.toml,.txt,application/json,application/x-ndjson,text/yaml,application/toml,text/plain" label={t.loadFile} />
         <Button variant="secondary" onClick={() => load(SAMPLES[format], `sample.${format}`)}>{t.sample}</Button>
         <Button variant="ghost" onClick={clear}>{t.clear}</Button>
       </div>
@@ -257,6 +262,8 @@ export default function DataViewer({ lang = 'en', initialFormat = 'json' }: { la
         <TextArea label={t.input} value={text} onChange={e => setText(e.target.value)} placeholder={t.placeholder} rows={8} spellCheck={false} />
       )}
       {note && <p className="text-sm text-muted-foreground">{note}</p>}
+      {parsed?.ok && parsed.variant === 'jsonl' && <p className="text-sm text-muted-foreground" data-testid="variant-note">{t.readAsJsonl(parsed.records ?? 0)}</p>}
+      {parsed?.ok && parsed.variant === 'json5' && <p className="text-sm text-muted-foreground" data-testid="variant-note">{t.readAsJson5}</p>}
 
       {parsed && !parsed.ok && (
         <Alert variant="error">
