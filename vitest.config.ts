@@ -8,7 +8,7 @@ export default defineConfig({
     // Vitest owns unit tests under src/; Playwright owns the e2e/ specs. Scoping
     // the include here stops vitest from matching e2e/*.spec.ts (which use the
     // Playwright runner and would fail as empty "0 test" suites).
-    include: ['src/**/*.{test,spec}.{ts,tsx}', 'worker/**/*.test.js'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'worker/**/*.test.js', 'extension/**/*.test.js'],
   },
   resolve: {
     alias: {

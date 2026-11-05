@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "GoodWebTools Companion",
-  "version": "1.0.0",
-  "description": "Adds a global-hotkey screenshot and desktop region-select to GoodWebTools. Nothing is uploaded — captures stay on your device.",
+  "name": "__MSG_extName__",
+  "version": "2.0.0",
+  "description": "__MSG_extDescription__",
   "minimum_chrome_version": "116",
   "icons": {
     "16": "icons/icon16.png",
@@ -10,7 +10,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "GoodWebTools Companion — capture screen",
+    "default_title": "__MSG_actionTitle__",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
@@ -22,14 +22,22 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["desktopCapture", "offscreen", "storage", "notifications"],
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "scripting",
+    "storage",
+    "notifications",
+    "desktopCapture",
+    "offscreen"
+  ],
   "commands": {
     "capture-screenshot": {
       "suggested_key": {
         "default": "Ctrl+Shift+Y",
         "mac": "Command+Shift+Y"
       },
-      "description": "Capture the screen (works while another window is focused)"
+      "description": "__MSG_commandCapture__"
     }
   },
   "content_scripts": [
@@ -41,7 +49,9 @@
         "http://localhost/*",
         "http://127.0.0.1/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_start"
     }
   ],
@@ -54,8 +64,19 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["select.html"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "select.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
+  ],
+  "default_locale": "en",
+  "host_permissions": [
+    "https://goodwebtools.com/*"
+  ],
+  "optional_host_permissions": [
+    "<all_urls>"
   ]
 }

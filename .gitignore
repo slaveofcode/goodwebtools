@@ -44,3 +44,4 @@ docs/superpowers/specs/2026-08-09-api-client-design.md
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+dist-extension/

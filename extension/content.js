@@ -4,8 +4,8 @@
 // talks to us with window.postMessage and we relay to the service worker. This
 // keeps the bridge working for unpacked / self-hosted builds where the id varies.
 //
-// Page → us:   { source: 'gwt-page', type: 'ping' | 'capture', id }
-// Us → page:   { source: 'gwt-ext',  type: 'pong' | 'capture-result', id, ... }
+// Page → us:   { source: 'gwt-page', type: 'ping' | 'capture' | 'handoff-get', id }
+// Us → page:   { source: 'gwt-ext',  type: 'pong' | 'capture-result' | 'handoff-result', id, ... }
 
 const PAGE = 'gwt-page';
 const EXT = 'gwt-ext';
@@ -21,6 +21,14 @@ window.addEventListener('message', (event) => {
 
   if (data.type === 'ping') {
     post({ type: 'pong', id: data.id, version: chrome.runtime.getManifest().version });
+    return;
+  }
+
+  if (data.type === 'handoff-get') {
+    chrome.runtime.sendMessage({ type: 'handoff-get', handoffId: String(data.handoffId || '') }, (res) => {
+      const ok = !chrome.runtime.lastError && !!res?.ok;
+      post({ type: 'handoff-result', id: data.id, ok, payload: ok ? res.payload : undefined });
+    });
     return;
   }
 

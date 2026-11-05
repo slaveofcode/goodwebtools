@@ -1,0 +1,77 @@
+{
+  "extName": {
+    "message": "GoodWebTools Companion"
+  },
+  "extDescription": {
+    "message": "Right-click images or text to open them in 200+ free tools, search every tool, and capture the screen — all in your browser."
+  },
+  "menuParent": {
+    "message": "GoodWebTools"
+  },
+  "menuImgCompress": {
+    "message": "Compress image"
+  },
+  "menuImgConvert": {
+    "message": "Convert image (WebP, PNG, JPG…)"
+  },
+  "menuImgResize": {
+    "message": "Resize image"
+  },
+  "menuImgBg": {
+    "message": "Remove background"
+  },
+  "menuImgOcr": {
+    "message": "Extract text (OCR)"
+  },
+  "menuImgQr": {
+    "message": "Read QR code"
+  },
+  "menuImgUpscale": {
+    "message": "Upscale image"
+  },
+  "menuSelJson": {
+    "message": "Format as JSON"
+  },
+  "menuSelJsonTree": {
+    "message": "View as JSON tree"
+  },
+  "menuSelBase64": {
+    "message": "Base64 encode / decode"
+  },
+  "menuSelHash": {
+    "message": "Hash text"
+  },
+  "menuSelCount": {
+    "message": "Count words"
+  },
+  "menuSelSpeak": {
+    "message": "Read aloud"
+  },
+  "menuSelQr": {
+    "message": "Make a QR code"
+  },
+  "menuLinkQr": {
+    "message": "QR code for this link"
+  },
+  "menuPageQr": {
+    "message": "QR code for this page"
+  },
+  "notifyNoAccessTitle": {
+    "message": "Can't read that image"
+  },
+  "notifyNoAccess": {
+    "message": "Allow GoodWebTools Companion to read images on websites to send them to a tool."
+  },
+  "notifyFailedTitle": {
+    "message": "Couldn't open the tool"
+  },
+  "notifyTooBig": {
+    "message": "That file is too large to hand over (over 50 MB). Download it and open it in the tool instead."
+  },
+  "commandCapture": {
+    "message": "Capture the screen (works while another window is focused)"
+  },
+  "actionTitle": {
+    "message": "GoodWebTools — search tools"
+  }
+}
