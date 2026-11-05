@@ -1,20 +1,36 @@
 # GoodWebTools Companion (browser extension)
 
-A thin **MV3 capability-shim** for [GoodWebTools](https://github.com/slaveofcode/goodwebtools).
-The website does everything client-side; this extension only adds the few things a
-web page physically **cannot** do:
+The companion extension for [GoodWebTools](https://github.com/slaveofcode/goodwebtools).
+The website does all the work client-side; the extension adds what a web page
+physically **cannot** do:
 
-- **Global hotkey** — capture the screen with <kbd>Ctrl/⌘ + Shift + Y</kbd> even
-  while another application is focused.
-- **Cross-window desktop capture** — grab any screen/window without the
-  GoodWebTools tab needing focus, then **drag a crop region** and download or copy.
-- **Page bridge** — the Screenshot tool detects the extension and offers an
-  "Enhanced capture" button that hands the frame back to the web app's own crop
-  pipeline.
+- **Right-click menus** — send an image (compress, convert, resize, remove
+  background, OCR, read QR, upscale), selected text (format/view JSON, Base64,
+  hash, word count, read aloud, QR) or a link/page URL (QR) straight into the
+  matching tool, already loaded.
+- **Tool launcher** — the toolbar popup searches all tools (English and Bahasa
+  Indonesia names and keywords), keeps ★ favorites and recents, and has quick
+  actions (QR code of the current page, screen capture).
+- **Global hotkey screenshot** — capture the screen with <kbd>Ctrl/⌘ + Shift + Y</kbd>
+  even while another application is focused, then drag a crop region.
+- **Page bridge** — the Screenshot tool's "Enhanced capture" uses the extension.
 
-Everything stays on your device. The extension uploads nothing and requests the
-**narrowest permissions** per feature (`desktopCapture`, `offscreen`, `storage`,
-`notifications`, `commands`) — no broad host access.
+Everything stays on your device: data handed to a tool goes from the extension to
+the open GoodWebTools tab through the page, never to a server. Permissions are kept
+narrow — `contextMenus`, `activeTab`, `scripting`, `storage`, `notifications`,
+`desktopCapture`, `offscreen`, host access to goodwebtools.com only, and **optional**
+access to other sites (asked for the first time an image action needs it, or via
+the popup's "Allow images from websites" button).
+
+### Handoff (right-click → tool)
+
+```
+menu click ─▶ background.js reads the image / selection / URL
+            ─▶ stores it under a random single-use id (lib/handoff-store.js, 5 min TTL)
+            ─▶ opens https://goodwebtools.com/tools/<tool>/#gwt-handoff=<id>
+tool page  ─▶ postMessage handoff-get ─▶ content.js ─▶ background ─▶ payload
+            ─▶ src/services/companion-handoff.ts loads it into the tool's file input / text box
+```
 
 ## How it works
 
@@ -48,9 +64,12 @@ Works in Chrome / Edge / Brave / other Chromium browsers (MV3, Chrome ≥ 116).
 ## Package for a store
 
 ```bash
-cd extension
-zip -r ../goodwebtools-companion.zip . -x '*.DS_Store'
+npm run build                    # refreshes dist/tools-index.json
+node scripts/pack-extension.mjs  # → dist-extension/goodwebtools-companion-<version>.zip
 ```
+
+For local development, point the extension at the dev server from the service
+worker console: `chrome.storage.local.set({ gwtBase: 'http://localhost:4321' })`.
 
 Upload the zip to the Chrome Web Store / Edge Add-ons dashboard. When published,
 add the store origin nothing else is needed — the content-script bridge already
