@@ -1798,7 +1798,7 @@ const en: Record<string, ToolSeoContent> = {
   'json-viewer': {
     title: 'Free JSON Viewer — Collapsible Tree, Search & JSON Path',
     description: 'A free online JSON viewer that shows JSON as a collapsible tree. Search keys and values, copy JSON paths, and open big files or API URLs — 100% in your browser.',
-    intro: 'This free JSON viewer turns raw JSON into a collapsible tree you can explore. Expand only what you need, search across keys and values, and copy any value or its path (like $.items[3].id). It handles large files and API responses, and everything runs on your device, so nothing is uploaded.',
+    intro: 'This free JSON viewer turns raw JSON into a collapsible tree you can explore. Expand only what you need, search across keys and values, and copy any value or its path (like $.items[3].id). It also reads JSON Lines (.jsonl/.ndjson) as a list of records, JSON with comments and JSON5 (.jsonc/.json5, tsconfig, VS Code settings), and JSON-based files like .har, .ipynb and .webmanifest. It handles large files and API responses, and everything runs on your device, so nothing is uploaded.',
     howTo: [
       'Paste JSON, load a .json file, or enter an API URL and press Fetch.',
       'Click the arrows to expand or collapse objects and arrays, or use Expand all.',
@@ -1808,6 +1808,7 @@ const en: Record<string, ToolSeoContent> = {
     faqs: [
       { q: 'Is my JSON uploaded anywhere?', a: 'No. The JSON is parsed and displayed entirely in your browser. When you fetch a URL, your browser requests it directly — it never passes through our server.' },
       { q: 'Can it open very large JSON files?', a: 'Yes. Only the parts you expand are drawn, and big arrays show 100 items at a time with a “Show more” button, so files with tens of thousands of entries stay responsive.' },
+      { q: 'Does it open JSON Lines, NDJSON, JSONC or JSON5?', a: 'Yes. .jsonl, .ndjson and log files with one JSON object per line are shown as a list of records — a bad line is reported with its line number. Files with comments or trailing commas (tsconfig.json, VS Code settings, .jsonc) and JSON5 (.json5) are read too, as are JSON-based files like .har, .ipynb, .webmanifest and source maps.' },
       { q: 'What is the copied path format?', a: 'Paths use JSONPath-style notation starting at $, for example $.users[0].name or $["odd key"] for keys with spaces — ready for jq-like tools or code.' },
       { q: 'Why does fetching a URL fail?', a: 'The server must allow requests from other websites (CORS). Many public APIs do; if one doesn’t, download the file and load it instead.' },
     ],
@@ -5301,7 +5302,7 @@ const id: Record<string, ToolSeoContent> = {
   'json-viewer': {
     title: 'Penampil JSON Gratis — Pohon Buka-Tutup, Cari & JSON Path',
     description: 'Penampil JSON online gratis yang menampilkan JSON sebagai pohon yang bisa dibuka-tutup. Cari kunci dan nilai, salin JSON path, dan buka berkas besar atau URL API — 100% di browser Anda.',
-    intro: 'Penampil JSON gratis ini mengubah JSON mentah menjadi pohon yang bisa dibuka-tutup. Buka hanya bagian yang Anda perlukan, cari di semua kunci dan nilai, dan salin nilai apa pun atau path-nya (seperti $.items[3].id). Berkas besar dan respons API bisa dibuka, dan semuanya berjalan di perangkat Anda tanpa diunggah.',
+    intro: 'Penampil JSON gratis ini mengubah JSON mentah menjadi pohon yang bisa dibuka-tutup. Buka hanya bagian yang Anda perlukan, cari di semua kunci dan nilai, dan salin nilai apa pun atau path-nya (seperti $.items[3].id). Penampil ini juga membaca JSON Lines (.jsonl/.ndjson) sebagai daftar record, JSON dengan komentar dan JSON5 (.jsonc/.json5, tsconfig, pengaturan VS Code), serta berkas berbasis JSON seperti .har, .ipynb, dan .webmanifest. Berkas besar dan respons API bisa dibuka, dan semuanya berjalan di perangkat Anda tanpa diunggah.',
     howTo: [
       'Tempel JSON, muat berkas .json, atau masukkan URL API lalu tekan Ambil.',
       'Klik panah untuk membuka atau menutup objek dan array, atau gunakan Buka semua.',
@@ -5311,6 +5312,7 @@ const id: Record<string, ToolSeoContent> = {
     faqs: [
       { q: 'Apakah JSON saya diunggah?', a: 'Tidak. JSON diurai dan ditampilkan sepenuhnya di browser Anda. Saat mengambil URL, browser Anda memintanya langsung — tidak pernah melewati server kami.' },
       { q: 'Bisakah membuka berkas JSON yang sangat besar?', a: 'Bisa. Hanya bagian yang Anda buka yang digambar, dan array besar ditampilkan 100 item sekaligus dengan tombol “Tampilkan lagi”, jadi berkas dengan puluhan ribu entri tetap responsif.' },
+      { q: 'Apakah bisa membuka JSON Lines, NDJSON, JSONC, atau JSON5?', a: 'Bisa. Berkas .jsonl, .ndjson, dan log dengan satu objek JSON per baris ditampilkan sebagai daftar record — baris yang salah dilaporkan beserta nomor barisnya. Berkas dengan komentar atau koma di akhir (tsconfig.json, pengaturan VS Code, .jsonc) dan JSON5 (.json5) juga terbaca, begitu pula berkas berbasis JSON seperti .har, .ipynb, .webmanifest, dan source map.' },
       { q: 'Seperti apa format path yang disalin?', a: 'Path memakai notasi gaya JSONPath yang dimulai dari $, misalnya $.users[0].name atau $["kunci aneh"] untuk kunci berspasi — siap dipakai di tool mirip jq atau kode.' },
       { q: 'Mengapa mengambil URL gagal?', a: 'Server harus mengizinkan permintaan dari situs lain (CORS). Banyak API publik mengizinkannya; jika tidak, unduh berkasnya lalu muat di sini.' },
     ],

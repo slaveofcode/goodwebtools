@@ -14,7 +14,7 @@ const ID_LABELS: Record<string, { name: string; summary: string }> = {
   "uuid-gen": { name: "Generator UUID", summary: "Buat identifier UUID v4 acak" },
   "password-gen": { name: "Generator Password", summary: "Buat password acak yang kuat" },
   "text-diff": { name: "Text Diff", summary: "Bandingkan dua teks baris per baris" },
-  "json-viewer": { name: "Penampil JSON", summary: "Jelajahi JSON sebagai pohon yang bisa dibuka-tutup — cari, salin path dan nilai, berkas besar" },
+  "json-viewer": { name: "Penampil JSON", summary: "Jelajahi JSON, JSON Lines, dan JSON5 sebagai pohon yang bisa dibuka-tutup — cari, salin path, berkas besar" },
   "yaml-viewer": { name: "Penampil YAML", summary: "Jelajahi YAML sebagai pohon yang bisa dibuka-tutup — cari, salin path, berkas multi-dokumen" },
   "toml-viewer": { name: "Penampil TOML", summary: "Jelajahi TOML sebagai pohon yang bisa dibuka-tutup — Cargo.toml, pyproject.toml, dan konfigurasi lain" },
   "json-compare": { name: "Perbandingan Mendalam JSON", summary: "Bandingkan objek JSON secara mendalam tanpa mempedulikan urutan properti" },
