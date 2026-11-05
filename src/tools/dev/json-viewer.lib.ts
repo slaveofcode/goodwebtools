@@ -6,12 +6,23 @@
 
 import { parseAllDocuments } from 'yaml';
 import { parse as parseTomlText } from 'smol-toml';
+import JSON5 from 'json5';
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
+/** Which flavour of JSON text was read. */
+export type JsonVariant = 'json' | 'jsonl' | 'json5';
+
 export type ParseResult =
-  | { ok: true; value: JsonValue }
+  | { ok: true; value: JsonValue; variant?: JsonVariant; records?: number }
   | { ok: false; message: string; line?: number; column?: number };
+
+/** JSON-family extensions: JSON Lines, JSON5/JSONC, and formats that are JSON inside. */
+const JSONL_EXT = new Set(['jsonl', 'ndjson', 'ldjson', 'jsonlines']);
+const JSON5_EXT = new Set(['json5', 'jsonc']);
+const JSON_EXT = new Set(['json', 'geojson', 'topojson', 'har', 'ipynb', 'webmanifest', 'map', 'jsonld', 'gltf', 'avsc', 'babelrc', 'eslintrc', 'prettierrc']);
+
+const extOf = (fileName: string) => /\.([a-z0-9]+)$/i.exec(fileName)?.[1]?.toLowerCase() ?? '';
 
 /** 1-based line/column of a character offset. */
 export function lineColumn(text: string, offset: number): { line: number; column: number } {
@@ -128,16 +139,72 @@ export function parseToml(text: string): ParseResult {
   }
 }
 
-export function parseData(text: string, format: DataFormat): ParseResult {
+/** JSON Lines / NDJSON: one JSON value per non-empty line, read as an array of records. */
+export function parseJsonLines(text: string): ParseResult {
+  const lines = text.split(/\r?\n/);
+  const records: JsonValue[] = [];
+  for (let n = 0; n < lines.length; n++) {
+    const line = lines[n].trim();
+    if (!line) continue;
+    try {
+      records.push(JSON.parse(line) as JsonValue);
+    } catch (e) {
+      const at = jsonErrorOffset(lines[n]);
+      return { ok: false, message: `Record on line ${n + 1}: ${e instanceof Error ? e.message : String(e)}`, line: n + 1, column: at >= 0 ? at + 1 : undefined };
+    }
+  }
+  return { ok: true, value: records, variant: 'jsonl', records: records.length };
+}
+
+/** JSON5, which also covers JSONC: comments, trailing commas, single quotes, unquoted keys. */
+export function parseJson5(text: string): ParseResult {
+  try {
+    return { ok: true, value: JSON5.parse(text) as JsonValue, variant: 'json5' };
+  } catch (e) {
+    const err = e as { message?: string; lineNumber?: number; columnNumber?: number };
+    return { ok: false, message: err.message ?? String(e), line: err.lineNumber, column: err.columnNumber };
+  }
+}
+
+/** Several lines that each parse as JSON on their own (and the whole doesn't). */
+function looksLikeJsonLines(text: string): boolean {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return false;
+  try { JSON.parse(lines[0]); JSON.parse(lines[lines.length - 1]); return true; } catch { return false; }
+}
+
+/**
+ * Any JSON-family text: plain JSON first, then — by extension or by content —
+ * JSON Lines/NDJSON or JSON5/JSONC. A strict-JSON error is reported when none fit.
+ */
+export function parseJsonFamily(text: string, fileName = ''): ParseResult {
+  const t = text.replace(/^\uFEFF/, '');
+  // The extension is a hint, not a rule: text edited or pasted after loading a
+  // file may be another flavour, so fall back to detection before failing.
+  const ext = extOf(fileName);
+  const hinted = JSONL_EXT.has(ext) ? parseJsonLines(t) : JSON5_EXT.has(ext) ? parseJson5(t) : null;
+  if (hinted?.ok) return hinted;
+  const strict = parseJson(t);
+  if (strict.ok) return strict;
+  if (looksLikeJsonLines(t)) {
+    const lines = parseJsonLines(t);
+    if (lines.ok) return lines;
+  }
+  const loose = parseJson5(t);
+  if (loose.ok) return loose;
+  return hinted ?? strict;
+}
+
+export function parseData(text: string, format: DataFormat, fileName = ''): ParseResult {
   if (format === 'yaml') return parseYaml(text);
   if (format === 'toml') return parseToml(text);
-  return parseJson(text);
+  return parseJsonFamily(text, fileName);
 }
 
 /** Best guess at the format of pasted text or a file (extension wins when known). */
 export function detectFormat(text: string, fileName = ''): DataFormat | null {
-  const ext = /\.([a-z]+)$/i.exec(fileName)?.[1]?.toLowerCase();
-  if (ext === 'json' || ext === 'geojson') return 'json';
+  const ext = extOf(fileName);
+  if (JSON_EXT.has(ext) || JSONL_EXT.has(ext) || JSON5_EXT.has(ext)) return 'json';
   if (ext === 'yaml' || ext === 'yml') return 'yaml';
   if (ext === 'toml') return 'toml';
   const t = text.trim();
@@ -181,7 +248,8 @@ export function preview(v: JsonValue, max = 60): string {
     const shown = keys.slice(0, 3).join(', ');
     return `{${shown}${keys.length > 3 ? ', …' : ''}}`;
   }
-  const s = JSON.stringify(v);
+  // JSON5 allows Infinity/NaN, which JSON.stringify would print as null.
+  const s = typeof v === 'number' && !Number.isFinite(v) ? String(v) : JSON.stringify(v);
   return s.length > max ? s.slice(0, max - 1) + '…"' : s;
 }
 

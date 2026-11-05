@@ -57,3 +57,18 @@ test('the sample loads, and a loaded file switches to its detected format', asyn
   await expect(page.getByRole('button', { name: 'TOML' })).toHaveAttribute('aria-pressed', 'true');
   await expect(row(page, '$.package.name')).toContainText('"x"');
 });
+
+test('reads JSON Lines files and JSON with comments', async ({ page }) => {
+  await openViewer(page, '/tools/json-viewer');
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'events.jsonl', mimeType: 'application/x-ndjson',
+    buffer: Buffer.from('{"event":"open","ok":true}\n{"event":"click","x":10}\n{"event":"close"}\n'),
+  });
+  await expect(page.getByTestId('variant-note')).toHaveText('Read as JSON Lines — 3 records.');
+  // A loaded file opens its top-level records straight away.
+  await expect(row(page, '$[1].event')).toContainText('"click"');
+
+  await page.locator('textarea').fill('{\n  // editor settings\n  "tabSize": 2,\n  "rulers": [80, 120,],\n}');
+  await expect(page.getByTestId('variant-note')).toHaveText('Read as JSON5 / JSON with comments.');
+  await expect(row(page, '$.tabSize')).toContainText('2');
+});

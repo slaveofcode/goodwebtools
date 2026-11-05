@@ -84,9 +84,9 @@ export const tools: ToolDef[] = [
     name: 'JSON Viewer',
     category: 'Dev',
     route: '/tools/json-viewer',
-    keywords: ['json viewer', 'json tree', 'tree view', 'collapsible json', 'json explorer', 'json path', 'jsonpath', 'view json', 'large json', 'api response', 'search json'],
+    keywords: ['json viewer', 'json tree', 'tree view', 'collapsible json', 'json explorer', 'json path', 'jsonpath', 'view json', 'large json', 'api response', 'search json', 'jsonl viewer', 'json lines', 'ndjson', 'json5', 'jsonc', 'json with comments', 'har viewer', 'ipynb'],
     icon: ListTree,
-    summary: 'Explore JSON as a collapsible tree — search, copy paths and values, big files',
+    summary: 'Explore JSON, JSON Lines and JSON5 as a collapsible tree — search, copy paths, big files',
     load: () => import('@/islands/dev/JsonViewer'),
     status: 'beta'
   },
