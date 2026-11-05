@@ -1795,6 +1795,55 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'What if I lose the password and the shares?', a: 'Then the letter cannot be opened — by design, so no one else can read it either. Keep the file and the way to unlock it stored separately and safely.' },
     ],
   },
+  'json-viewer': {
+    title: 'Free JSON Viewer — Collapsible Tree, Search & JSON Path',
+    description: 'A free online JSON viewer that shows JSON as a collapsible tree. Search keys and values, copy JSON paths, and open big files or API URLs — 100% in your browser.',
+    intro: 'This free JSON viewer turns raw JSON into a collapsible tree you can explore. Expand only what you need, search across keys and values, and copy any value or its path (like $.items[3].id). It handles large files and API responses, and everything runs on your device, so nothing is uploaded.',
+    howTo: [
+      'Paste JSON, load a .json file, or enter an API URL and press Fetch.',
+      'Click the arrows to expand or collapse objects and arrays, or use Expand all.',
+      'Type in the search box to highlight matching keys and values; their parents open automatically.',
+      'Hover a row to copy its path or value. Invalid JSON shows the exact line and column of the error.',
+    ],
+    faqs: [
+      { q: 'Is my JSON uploaded anywhere?', a: 'No. The JSON is parsed and displayed entirely in your browser. When you fetch a URL, your browser requests it directly — it never passes through our server.' },
+      { q: 'Can it open very large JSON files?', a: 'Yes. Only the parts you expand are drawn, and big arrays show 100 items at a time with a “Show more” button, so files with tens of thousands of entries stay responsive.' },
+      { q: 'What is the copied path format?', a: 'Paths use JSONPath-style notation starting at $, for example $.users[0].name or $["odd key"] for keys with spaces — ready for jq-like tools or code.' },
+      { q: 'Why does fetching a URL fail?', a: 'The server must allow requests from other websites (CORS). Many public APIs do; if one doesn’t, download the file and load it instead.' },
+    ],
+  },
+  'yaml-viewer': {
+    title: 'Free YAML Viewer — Collapsible Tree for YAML & YML Files',
+    description: 'A free online YAML viewer that shows YAML as a collapsible tree — Kubernetes manifests, Docker Compose, GitHub Actions, OpenAPI and multi-document files. Runs in your browser.',
+    intro: 'This free YAML viewer turns YAML into a collapsible tree so you can explore deep configs at a glance. It reads Kubernetes manifests, Docker Compose files, GitHub Actions workflows, OpenAPI specs and multi-document files separated by ---, with search and copyable paths. Your file never leaves your device.',
+    howTo: [
+      'Paste YAML or load a .yaml/.yml file.',
+      'Expand or collapse sections, or use Expand all and Collapse all.',
+      'Search for a key or value to jump to it; matching sections open automatically.',
+      'Copy any value or its path. A syntax error shows the line and column to fix.',
+    ],
+    faqs: [
+      { q: 'Does it support multi-document YAML?', a: 'Yes. Files with several documents separated by --- are shown as a list, one entry per document.' },
+      { q: 'Is my YAML file uploaded?', a: 'No. It is parsed and displayed entirely in your browser, so secrets in config files stay on your device.' },
+      { q: 'Can I switch to JSON or TOML?', a: 'Yes. The same viewer reads JSON and TOML — use the format buttons, or load a file and the format is detected from its extension.' },
+    ],
+  },
+  'toml-viewer': {
+    title: 'Free TOML Viewer — Collapsible Tree for Cargo.toml & pyproject.toml',
+    description: 'A free online TOML viewer that shows TOML as a collapsible tree — Cargo.toml, pyproject.toml and other config files. Search, copy paths and find syntax errors in your browser.',
+    intro: 'This free TOML viewer turns TOML into a collapsible tree, so tables, arrays of tables and nested keys are easy to follow. Open Cargo.toml, pyproject.toml, Hugo or Netlify configs, search across keys and values, and copy any path or value. Everything runs locally in your browser.',
+    howTo: [
+      'Paste TOML or load a .toml file.',
+      'Expand tables and arrays of tables, or use Expand all.',
+      'Search to highlight matching keys and values.',
+      'Copy any value or path. Invalid TOML shows the line and column of the error.',
+    ],
+    faqs: [
+      { q: 'How are TOML dates shown?', a: 'Dates and times are shown as ISO 8601 text, e.g. 1979-05-27T07:32:00.000Z.' },
+      { q: 'Is my file uploaded?', a: 'No. Parsing and display happen entirely in your browser.' },
+      { q: 'Can it open JSON and YAML too?', a: 'Yes. Use the format buttons, or load a file and the format is detected from its extension.' },
+    ],
+  },
   'json-format': {
     title: 'Free JSON Formatter Tool — Validate & Minify',
     description: 'A free online JSON formatter tool to format, beautify, minify and validate JSON — 100% private. Your JSON is processed in your browser and never uploaded.',
@@ -5247,6 +5296,55 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bagaimana cara kerja bagian keluarga?', a: 'Kunci dibagi menjadi beberapa bagian (misalnya 5) menggunakan Shamir Secret Sharing, dan sejumlah tertentu (misalnya 3) diperlukan untuk membuka surat. Tidak ada satu orang pun yang bisa membukanya sendirian, dan tetap berfungsi meski beberapa bagian hilang. Tips: berikan satu bagian kepada notaris atau pelaksana wasiat Anda.' },
       { q: 'Bisakah surat terbuka otomatis saat saya meninggal?', a: 'Tidak secara otomatis — tool privat di browser tidak bisa mengetahui kapan Anda meninggal tanpa server yang menyimpan data Anda. Sebagai gantinya, Anda mengendalikan penyerahannya: bagikan kata sandi atau bagian keluarga agar hanya dapat disatukan saat waktunya tiba.' },
       { q: 'Bagaimana jika saya kehilangan kata sandi dan bagiannya?', a: 'Maka surat tidak bisa dibuka — memang dirancang begitu, agar tidak ada orang lain yang bisa membacanya. Simpan berkas dan cara membukanya secara terpisah dan aman.' },
+    ],
+  },
+  'json-viewer': {
+    title: 'Penampil JSON Gratis — Pohon Buka-Tutup, Cari & JSON Path',
+    description: 'Penampil JSON online gratis yang menampilkan JSON sebagai pohon yang bisa dibuka-tutup. Cari kunci dan nilai, salin JSON path, dan buka berkas besar atau URL API — 100% di browser Anda.',
+    intro: 'Penampil JSON gratis ini mengubah JSON mentah menjadi pohon yang bisa dibuka-tutup. Buka hanya bagian yang Anda perlukan, cari di semua kunci dan nilai, dan salin nilai apa pun atau path-nya (seperti $.items[3].id). Berkas besar dan respons API bisa dibuka, dan semuanya berjalan di perangkat Anda tanpa diunggah.',
+    howTo: [
+      'Tempel JSON, muat berkas .json, atau masukkan URL API lalu tekan Ambil.',
+      'Klik panah untuk membuka atau menutup objek dan array, atau gunakan Buka semua.',
+      'Ketik di kotak pencarian untuk menyorot kunci dan nilai yang cocok; induknya terbuka otomatis.',
+      'Arahkan ke baris untuk menyalin path atau nilainya. JSON tidak valid menunjukkan baris dan kolom kesalahannya.',
+    ],
+    faqs: [
+      { q: 'Apakah JSON saya diunggah?', a: 'Tidak. JSON diurai dan ditampilkan sepenuhnya di browser Anda. Saat mengambil URL, browser Anda memintanya langsung — tidak pernah melewati server kami.' },
+      { q: 'Bisakah membuka berkas JSON yang sangat besar?', a: 'Bisa. Hanya bagian yang Anda buka yang digambar, dan array besar ditampilkan 100 item sekaligus dengan tombol “Tampilkan lagi”, jadi berkas dengan puluhan ribu entri tetap responsif.' },
+      { q: 'Seperti apa format path yang disalin?', a: 'Path memakai notasi gaya JSONPath yang dimulai dari $, misalnya $.users[0].name atau $["kunci aneh"] untuk kunci berspasi — siap dipakai di tool mirip jq atau kode.' },
+      { q: 'Mengapa mengambil URL gagal?', a: 'Server harus mengizinkan permintaan dari situs lain (CORS). Banyak API publik mengizinkannya; jika tidak, unduh berkasnya lalu muat di sini.' },
+    ],
+  },
+  'yaml-viewer': {
+    title: 'Penampil YAML Gratis — Pohon Buka-Tutup untuk Berkas YAML & YML',
+    description: 'Penampil YAML online gratis yang menampilkan YAML sebagai pohon yang bisa dibuka-tutup — manifest Kubernetes, Docker Compose, GitHub Actions, OpenAPI, dan berkas multi-dokumen. Berjalan di browser Anda.',
+    intro: 'Penampil YAML gratis ini mengubah YAML menjadi pohon yang bisa dibuka-tutup sehingga konfigurasi yang dalam mudah ditelusuri. Mendukung manifest Kubernetes, berkas Docker Compose, workflow GitHub Actions, spesifikasi OpenAPI, dan berkas multi-dokumen yang dipisah ---, dengan pencarian dan path yang bisa disalin. Berkas Anda tidak pernah meninggalkan perangkat.',
+    howTo: [
+      'Tempel YAML atau muat berkas .yaml/.yml.',
+      'Buka atau tutup bagian, atau gunakan Buka semua dan Tutup semua.',
+      'Cari kunci atau nilai untuk menemukannya; bagian yang cocok terbuka otomatis.',
+      'Salin nilai apa pun atau path-nya. Kesalahan sintaksis menunjukkan baris dan kolom yang perlu diperbaiki.',
+    ],
+    faqs: [
+      { q: 'Apakah mendukung YAML multi-dokumen?', a: 'Ya. Berkas dengan beberapa dokumen yang dipisah --- ditampilkan sebagai daftar, satu entri per dokumen.' },
+      { q: 'Apakah berkas YAML saya diunggah?', a: 'Tidak. Berkas diurai dan ditampilkan sepenuhnya di browser Anda, jadi rahasia di berkas konfigurasi tetap di perangkat Anda.' },
+      { q: 'Bisakah beralih ke JSON atau TOML?', a: 'Bisa. Penampil yang sama membaca JSON dan TOML — gunakan tombol format, atau muat berkas dan formatnya dideteksi dari ekstensinya.' },
+    ],
+  },
+  'toml-viewer': {
+    title: 'Penampil TOML Gratis — Pohon Buka-Tutup untuk Cargo.toml & pyproject.toml',
+    description: 'Penampil TOML online gratis yang menampilkan TOML sebagai pohon yang bisa dibuka-tutup — Cargo.toml, pyproject.toml, dan berkas konfigurasi lain. Cari, salin path, dan temukan kesalahan sintaksis di browser Anda.',
+    intro: 'Penampil TOML gratis ini mengubah TOML menjadi pohon yang bisa dibuka-tutup, sehingga tabel, array tabel, dan kunci bersarang mudah diikuti. Buka Cargo.toml, pyproject.toml, konfigurasi Hugo atau Netlify, cari di semua kunci dan nilai, dan salin path atau nilai apa pun. Semuanya berjalan lokal di browser Anda.',
+    howTo: [
+      'Tempel TOML atau muat berkas .toml.',
+      'Buka tabel dan array tabel, atau gunakan Buka semua.',
+      'Cari untuk menyorot kunci dan nilai yang cocok.',
+      'Salin nilai atau path apa pun. TOML tidak valid menunjukkan baris dan kolom kesalahannya.',
+    ],
+    faqs: [
+      { q: 'Bagaimana tanggal TOML ditampilkan?', a: 'Tanggal dan waktu ditampilkan sebagai teks ISO 8601, misalnya 1979-05-27T07:32:00.000Z.' },
+      { q: 'Apakah berkas saya diunggah?', a: 'Tidak. Penguraian dan tampilan terjadi sepenuhnya di browser Anda.' },
+      { q: 'Bisakah membuka JSON dan YAML juga?', a: 'Bisa. Gunakan tombol format, atau muat berkas dan formatnya dideteksi dari ekstensinya.' },
     ],
   },
   'json-format': {
