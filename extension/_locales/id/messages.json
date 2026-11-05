@@ -1,0 +1,77 @@
+{
+  "extName": {
+    "message": "GoodWebTools Companion"
+  },
+  "extDescription": {
+    "message": "Klik kanan gambar atau teks untuk membukanya di 200+ tool gratis, cari semua tool, dan tangkap layar — semua di browser Anda."
+  },
+  "menuParent": {
+    "message": "GoodWebTools"
+  },
+  "menuImgCompress": {
+    "message": "Kompres gambar"
+  },
+  "menuImgConvert": {
+    "message": "Konversi gambar (WebP, PNG, JPG…)"
+  },
+  "menuImgResize": {
+    "message": "Ubah ukuran gambar"
+  },
+  "menuImgBg": {
+    "message": "Hapus latar belakang"
+  },
+  "menuImgOcr": {
+    "message": "Ambil teks (OCR)"
+  },
+  "menuImgQr": {
+    "message": "Baca kode QR"
+  },
+  "menuImgUpscale": {
+    "message": "Perbesar gambar"
+  },
+  "menuSelJson": {
+    "message": "Format sebagai JSON"
+  },
+  "menuSelJsonTree": {
+    "message": "Lihat sebagai pohon JSON"
+  },
+  "menuSelBase64": {
+    "message": "Encode / decode Base64"
+  },
+  "menuSelHash": {
+    "message": "Hash teks"
+  },
+  "menuSelCount": {
+    "message": "Hitung kata"
+  },
+  "menuSelSpeak": {
+    "message": "Bacakan"
+  },
+  "menuSelQr": {
+    "message": "Buat kode QR"
+  },
+  "menuLinkQr": {
+    "message": "Kode QR untuk tautan ini"
+  },
+  "menuPageQr": {
+    "message": "Kode QR untuk halaman ini"
+  },
+  "notifyNoAccessTitle": {
+    "message": "Gambar tidak bisa dibaca"
+  },
+  "notifyNoAccess": {
+    "message": "Izinkan GoodWebTools Companion membaca gambar di situs web agar bisa dikirim ke tool."
+  },
+  "notifyFailedTitle": {
+    "message": "Tool tidak bisa dibuka"
+  },
+  "notifyTooBig": {
+    "message": "Berkas terlalu besar untuk dikirim (lebih dari 50 MB). Unduh lalu buka di tool-nya."
+  },
+  "commandCapture": {
+    "message": "Tangkap layar (berfungsi saat jendela lain sedang aktif)"
+  },
+  "actionTitle": {
+    "message": "GoodWebTools — cari tool"
+  }
+}

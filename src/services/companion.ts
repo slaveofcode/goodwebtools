@@ -65,3 +65,33 @@ export function companionCapture(timeout = 120000): Promise<CompanionCapture> {
     window.postMessage({ source: PAGE, type: 'capture', id }, window.location.origin);
   });
 }
+
+/** Data the extension hands to a tool page (right-click menu / launcher). */
+export type HandoffPayload =
+  | { kind: 'text'; text: string }
+  | { kind: 'file'; name: string; type: string; base64: string };
+
+/** Fetch a handoff payload from the extension by id; null if it's gone, expired or there's no extension. */
+export function requestHandoff(id: string, timeout = 5000): Promise<HandoffPayload | null> {
+  if (typeof window === 'undefined') return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const reqId = `handoff-${nextId++}`;
+    let done = false;
+    const finish = (v: HandoffPayload | null) => {
+      if (done) return;
+      done = true;
+      window.removeEventListener('message', onMsg);
+      clearTimeout(timer);
+      resolve(v);
+    };
+    const onMsg = (e: MessageEvent) => {
+      if (e.source !== window) return;
+      const d = e.data;
+      if (!d || d.source !== EXT || d.type !== 'handoff-result' || d.id !== reqId) return;
+      finish(d.ok && d.payload ? (d.payload as HandoffPayload) : null);
+    };
+    const timer = setTimeout(() => finish(null), timeout);
+    window.addEventListener('message', onMsg);
+    window.postMessage({ source: PAGE, type: 'handoff-get', id: reqId, handoffId: id }, window.location.origin);
+  });
+}

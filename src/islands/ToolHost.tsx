@@ -5,6 +5,7 @@ import ReportButton from '@/islands/report/ReportButton';
 import ReportDialog from '@/islands/report/ReportDialog';
 import { installGlobalCapture } from '@/services/report/breadcrumbs';
 import { openReportDialog } from '@/services/report/reporter';
+import { runHandoff } from '@/services/companion-handoff';
 
 interface ToolHostProps {
   toolId: string;
@@ -63,6 +64,8 @@ export default function ToolHost({ toolId, lang }: ToolHostProps) {
   const tool = getToolById(toolId);
 
   useEffect(() => { installGlobalCapture(); }, []);
+  // Data handed over by the Companion extension (right-click menu / launcher).
+  useEffect(() => { void runHandoff(); }, []);
 
   // `tool` is a stable registry reference derived from `toolId`, so keying on
   // both is equivalent to keying on `toolId` alone — and satisfies the linter.
