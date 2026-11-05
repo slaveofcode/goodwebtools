@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Apple, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2, AlarmClock, Scale, Flame, GraduationCap, ArrowDownAZ, Box } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Apple, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2, AlarmClock, Scale, Flame, GraduationCap, ArrowDownAZ, Box, ListTree } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -78,6 +78,39 @@ export const tools: ToolDef[] = [
     summary: 'Compare two texts line by line',
     load: () => import('@/islands/dev/TextDiff'),
     status: 'stable'
+  },
+  {
+    id: 'json-viewer',
+    name: 'JSON Viewer',
+    category: 'Dev',
+    route: '/tools/json-viewer',
+    keywords: ['json viewer', 'json tree', 'tree view', 'collapsible json', 'json explorer', 'json path', 'jsonpath', 'view json', 'large json', 'api response', 'search json'],
+    icon: ListTree,
+    summary: 'Explore JSON as a collapsible tree — search, copy paths and values, big files',
+    load: () => import('@/islands/dev/JsonViewer'),
+    status: 'beta'
+  },
+  {
+    id: 'yaml-viewer',
+    name: 'YAML Viewer',
+    category: 'Dev',
+    route: '/tools/yaml-viewer',
+    keywords: ['yaml viewer', 'yml viewer', 'yaml tree', 'view yaml', 'kubernetes yaml', 'docker compose', 'github actions', 'openapi', 'yaml explorer', 'multi document yaml'],
+    icon: ListTree,
+    summary: 'Explore YAML as a collapsible tree — search, copy paths, multi-document files',
+    load: () => import('@/islands/dev/YamlViewer'),
+    status: 'beta'
+  },
+  {
+    id: 'toml-viewer',
+    name: 'TOML Viewer',
+    category: 'Dev',
+    route: '/tools/toml-viewer',
+    keywords: ['toml viewer', 'toml tree', 'view toml', 'cargo.toml', 'pyproject.toml', 'config viewer', 'toml explorer', 'toml validator'],
+    icon: ListTree,
+    summary: 'Explore TOML as a collapsible tree — Cargo.toml, pyproject.toml and other configs',
+    load: () => import('@/islands/dev/TomlViewer'),
+    status: 'beta'
   },
   {
     id: 'json-compare',
