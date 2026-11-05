@@ -45,3 +45,11 @@ export function toolUrl(base, toolId, lang, handoffId) {
 export function findMenuItem(id) {
   return MENU_ITEMS.find(m => m.id === id) || null;
 }
+
+/** Tools pinned in the side panel until the user changes them. */
+export const DEFAULT_PANEL_TOOLS = ['music-player', 'json-viewer', 'notepad', 'unit-converter', 'word-counter', 'qr-gen'];
+
+/** Tool page URL in embed mode (just the tool, no site header/footer) for the side panel. */
+export function embedUrl(base, toolId, lang) {
+  return `${toolUrl(base, toolId, lang)}?embed=1`;
+}
