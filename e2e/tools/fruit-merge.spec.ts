@@ -43,6 +43,13 @@ test('dropping fruits merges pairs and scores points', async ({ page }) => {
 
 test('restart resets the score after game over', async ({ page }) => {
   test.setTimeout(120_000);
+  // Fruit sizes come from Math.random; with small fruit merging away, the box
+  // sometimes didn't fill within the drop budget (a flaky test). Drop only the
+  // two largest sizes, alternating, so the box reliably overflows.
+  await page.addInitScript(() => {
+    let i = 0;
+    Math.random = () => (i++ % 2 ? 0.95 : 0.75); // tiers 4 and 3 (MAX_DROP_TIER = 4)
+  });
   await page.goto('/tools/fruit-merge');
 
   const canvas = page.getByTestId('fm-canvas');
@@ -51,10 +58,11 @@ test('restart resets the score after game over', async ({ page }) => {
   const box = await canvas.boundingBox();
   expect(box).not.toBeNull();
 
-  // Vary the drop positions like a real player — a single perfect column is
-  // pathological. ~45+ effective drops overflow the box.
+  // Vary the drop positions like a real player — a single perfect column is pathological.
   const xs = [0.5, 0.42, 0.58, 0.46, 0.54, 0.38, 0.62];
+  let drops = 0;
   for (let i = 0; i < 100; i++) {
+    drops = i + 1;
     await page.mouse.move(box!.x + box!.width * xs[i % xs.length]!, box!.y + 20);
     await page.mouse.down();
     await page.mouse.up();
@@ -63,7 +71,7 @@ test('restart resets the score after game over', async ({ page }) => {
   }
 
   const overlay = page.getByTestId('fm-over');
-  await expect(overlay).toBeVisible();
+  await expect(overlay, `no game over after ${drops} drops`).toBeVisible();
 
   await overlay.getByRole('button', { name: /restart|mulai ulang/i }).click();
   await expect(page.getByTestId('fm-score')).toHaveText('0');

@@ -1,4 +1,5 @@
 // worker/report.js
+import { notifyReportByEmail } from './report-email.js';
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
@@ -20,7 +21,7 @@ async function verifyTurnstile(token, secret, ip) {
 }
 
 /** POST /api/report — verify Turnstile, cap size, store report (+ optional file) in R2. */
-export async function handleReport(request, env) {
+export async function handleReport(request, env, ctx) {
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
   const cl = request.headers.get('content-length');
@@ -57,6 +58,11 @@ export async function handleReport(request, env) {
   } catch {
     return json({ error: 'Storage failed' }, 500);
   }
+
+  // Email the owner that a report arrived (summary only — no message or file).
+  // waitUntil keeps the user's submit fast; without a ctx (tests) we just await.
+  const mail = notifyReportByEmail(env, { id, prefix, report: parsed, file: file ? { type: file.type, size: file.size } : null });
+  if (ctx?.waitUntil) ctx.waitUntil(mail); else await mail;
 
   // Optional webhook ping (Sub-project B enriches this); never send file bytes/PII.
   if (env.REPORT_WEBHOOK_URL) {

@@ -32,6 +32,14 @@
     { "tag": "v1", "new_sqlite_classes": ["SignalRoom"] }
   ],
 
+  // Emails the owner when a "Report a problem" arrives (worker/report-email.js).
+  // Sends from reports@goodwebtools.com via Cloudflare Email Routing to
+  // contact@goodwebtools.com (override with REPORT_EMAIL_FROM / REPORT_EMAIL_TO).
+  // Production only — staging reports don't email.
+  "send_email": [
+    { "name": "REPORT_EMAIL" }
+  ],
+
   // Workers observability, declared here so deploys stay in sync with the
   // dashboard-configured settings (otherwise each deploy can reset them).
   // Named environments don't inherit this, so it's repeated under `staging`.
