@@ -6,7 +6,7 @@ import { saveRecording } from './lib/recordings-db.js';
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.target !== 'offscreen') return;
-  const work = msg.type === 'grab' ? grab(msg.streamId)
+  const work = msg.type === 'grab' ? grab()
     : msg.type === 'rec-start' ? startRecording(msg)
     : msg.type === 'rec-stop' ? stopRecording()
     : null;
@@ -15,19 +15,29 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true; // async
 });
 
-async function grab(streamId) {
+/**
+ * Chrome's screen/window/tab picker. It has to be opened here: a service worker
+ * can't show it ("A target tab is required when called from a service worker").
+ * Throws Error('cancelled') when the user closes the picker.
+ */
+async function pickDisplay(withAudio) {
+  try {
+    return await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: { ideal: 30 } },
+      audio: withAudio,
+      systemAudio: withAudio ? 'include' : 'exclude',
+      selfBrowserSurface: 'exclude',
+    });
+  } catch (e) {
+    if (e?.name === 'NotAllowedError' || e?.name === 'AbortError') throw new Error('cancelled');
+    throw e;
+  }
+}
+
+async function grab() {
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        // Legacy mandatory constraints are how a desktopCapture streamId is consumed.
-        mandatory: {
-          chromeMediaSource: 'desktop',
-          chromeMediaSourceId: streamId,
-        },
-      },
-    });
+    stream = await pickDisplay(false);
 
     const video = document.createElement('video');
     video.srcObject = stream;
@@ -55,7 +65,7 @@ async function grab(streamId) {
 // --- Recording ----------------------------------------------------------------
 let rec = null; // { session, streams, audioCtx }
 
-/** Legacy mandatory constraints are how tabCapture / desktopCapture stream ids are consumed. */
+/** Legacy mandatory constraints are how a tabCapture stream id is consumed. */
 function sourceConstraints(source, streamId, withAudio) {
   const m = { chromeMediaSource: source, chromeMediaSourceId: streamId };
   return { video: { mandatory: { ...m, maxFrameRate: 30 } }, audio: withAudio ? { mandatory: m } : false };
@@ -64,11 +74,22 @@ function sourceConstraints(source, streamId, withAudio) {
 async function startRecording({ source, streamId, mic }) {
   if (rec) throw new Error('already-recording');
   let captured;
-  try {
-    captured = await navigator.mediaDevices.getUserMedia(sourceConstraints(source, streamId, true));
-  } catch {
-    // Screen/window shares often come without audio; record the picture alone.
-    captured = await navigator.mediaDevices.getUserMedia(sourceConstraints(source, streamId, false));
+  if (source === 'display') {
+    // Screen/window/tab chosen in Chrome's picker (system/tab audio where offered).
+    try {
+      captured = await pickDisplay(true);
+    } catch (e) {
+      if (e.message === 'cancelled') throw e;
+      // No usable audio for that choice (e.g. a whole screen on macOS): picture only.
+      captured = await pickDisplay(false);
+    }
+  } else {
+    try {
+      captured = await navigator.mediaDevices.getUserMedia(sourceConstraints(source, streamId, true));
+    } catch {
+      // Some sources come without audio; record the picture alone.
+      captured = await navigator.mediaDevices.getUserMedia(sourceConstraints(source, streamId, false));
+    }
   }
   const streams = [captured];
   const audioCtx = new AudioContext();

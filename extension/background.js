@@ -46,19 +46,10 @@ async function ensureOffscreen() {
   });
 }
 
-/** Show the desktop picker and return a media stream id (or null if cancelled). */
-function chooseDesktopMedia(sources = ['screen', 'window']) {
-  return new Promise((resolve) => {
-    chrome.desktopCapture.chooseDesktopMedia(sources, (streamId) => {
-      resolve(streamId || null);
-    });
-  });
-}
-
-/** Ask the offscreen document to turn a streamId into a PNG data URL. */
-async function grabFrame(streamId) {
+/** The offscreen document shows Chrome's picker and grabs one frame as a PNG. */
+async function grabFrame() {
   await ensureOffscreen();
-  return chrome.runtime.sendMessage({ target: 'offscreen', type: 'grab', streamId });
+  return chrome.runtime.sendMessage({ target: 'offscreen', type: 'grab' });
 }
 
 /**
@@ -66,9 +57,7 @@ async function grabFrame(streamId) {
  * Returns { dataUrl, width, height } or throws.
  */
 async function capture() {
-  const streamId = await chooseDesktopMedia();
-  if (!streamId) throw new Error('cancelled');
-  const res = await grabFrame(streamId);
+  const res = await grabFrame();
   if (!res || res.error) throw new Error(res?.error || 'grab-failed');
   return res;
 }
@@ -314,7 +303,7 @@ chrome.notifications.onClicked.addListener((id) => {
   if (id === NEED_ACCESS) chrome.tabs.create({ url: chrome.runtime.getURL('popup.html') });
 });
 
-// --- Recording (tab via tabCapture, screen/window via desktopCapture) ---------
+// --- Recording (tab via tabCapture, screen/window via the offscreen picker) ---
 const REC_KEY = 'rec';
 
 async function recState() {
@@ -335,13 +324,12 @@ async function startRecording(source, tab) {
       if (!tab?.id) return { ok: false, error: 'no-tab' };
       streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id });
     } else {
-      streamId = await chooseDesktopMedia(['screen', 'window', 'tab', 'audio']);
-      if (!streamId) return { ok: false, error: 'cancelled' };
+      streamId = null; // the offscreen document shows Chrome's picker (getDisplayMedia)
     }
     const { recMic } = await chrome.storage.local.get('recMic');
     await ensureOffscreen();
     const res = await chrome.runtime.sendMessage({
-      target: 'offscreen', type: 'rec-start', source: source === 'tab' ? 'tab' : 'desktop', streamId, mic: !!recMic,
+      target: 'offscreen', type: 'rec-start', source: source === 'tab' ? 'tab' : 'display', streamId, mic: !!recMic,
     });
     if (!res?.ok) return { ok: false, error: res?.error || 'record-failed' };
     await chrome.storage.session.set({ [REC_KEY]: { source, startedAt: res.startedAt, title: tab?.title || '' } });
