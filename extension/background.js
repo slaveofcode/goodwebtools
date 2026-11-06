@@ -94,6 +94,14 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     return;
   }
   if (command !== 'capture-screenshot') return;
+  await captureToOverlay();
+});
+
+/**
+ * Picker → capture → open the crop overlay. Runs entirely in the worker, so it
+ * keeps going when the popup closes (Chrome's picker takes focus and closes it).
+ */
+async function captureToOverlay() {
   try {
     const shot = await capture();
     // Stash the capture for the overlay page (data URLs are too big for a query string).
@@ -102,7 +110,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   } catch (e) {
     if (e.message !== 'cancelled') notify('Capture failed', e.message);
   }
-});
+}
 
 // --- Bridge from the web app (via content.js) --------------------------------
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -281,6 +289,11 @@ chrome.runtime.onMessage.addListener((m, sender, sendResponse) => {
       sendResponse({ ok: false, error: e.message || String(e) });
     });
     return true;
+  }
+  if (m?.type === 'capture-open') {
+    void captureToOverlay();
+    sendResponse({ ok: true });
+    return;
   }
   if (m?.type === 'json-tabs') {
     syncJsonTabs(m.enabled).then(() => sendResponse({ ok: true }), (e) => sendResponse({ ok: false, error: e.message }));
