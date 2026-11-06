@@ -15,7 +15,7 @@ export { SignalRoom } from './signal-room.js';
 import { handleReport } from './report.js';
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     if (url.pathname.startsWith('/api/signal/')) {
@@ -30,7 +30,7 @@ export default {
     }
 
     if (url.pathname === '/api/report') {
-      return handleReport(request, env);
+      return handleReport(request, env, ctx);
     }
 
     // Short-lived TURN credentials from Cloudflare Realtime TURN, so the P2P
