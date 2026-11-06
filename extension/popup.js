@@ -7,7 +7,7 @@ import { formatDuration } from './lib/recording.js';
 const T = {
   en: {
     search: 'Search 200+ tools…', favorites: 'Favorites', recent: 'Recent', quick: 'Quick actions', none: 'No tools match.',
-    qrPage: 'QR code of this page', capture: 'Capture screen', hotkey: 'Screenshot hotkey:', shortcuts: 'change',
+    qrPage: 'QR code of this page', capture: 'Capture screen', hotkey: 'Screenshot:', recKey: 'Record:', unset: 'not set', shortcuts: 'set hotkeys',
     star: 'Add to favorites', unstar: 'Remove from favorites', panel: 'Open side panel', inPanel: 'Open in the side panel',
     page: 'This page', pgColor: 'Pick a color', pgImages: 'Save images', pgShot: 'Full-page screenshot', jsonTabs: 'Offer the JSON Viewer on JSON pages',
     rec: 'Record', recTab: 'Record this tab', recScreen: 'Record screen…', recMic: 'Include my microphone', recStop: (t) => `■ Stop recording · ${t}`,
@@ -15,7 +15,7 @@ const T = {
   },
   id: {
     search: 'Cari 200+ tool…', favorites: 'Favorit', recent: 'Terakhir', quick: 'Aksi cepat', none: 'Tidak ada tool yang cocok.',
-    qrPage: 'Kode QR halaman ini', capture: 'Tangkap layar', hotkey: 'Pintasan tangkap layar:', shortcuts: 'ubah',
+    qrPage: 'Kode QR halaman ini', capture: 'Tangkap layar', hotkey: 'Tangkap layar:', recKey: 'Rekam:', unset: 'belum diatur', shortcuts: 'atur pintasan',
     star: 'Tambah ke favorit', unstar: 'Hapus dari favorit', panel: 'Buka panel samping', inPanel: 'Buka di panel samping',
     page: 'Halaman ini', pgColor: 'Ambil warna', pgImages: 'Simpan gambar', pgShot: 'Tangkapan layar penuh', jsonTabs: 'Tawarkan Penampil JSON di halaman JSON',
     rec: 'Rekam', recTab: 'Rekam tab ini', recScreen: 'Rekam layar…', recMic: 'Sertakan mikrofon saya', recStop: (t) => `■ Hentikan rekaman · ${t}`,
@@ -127,9 +127,18 @@ function render() {
   $('recMicLabel').textContent = t.recMic;
   renderRec();
   $('hotkeyLabel').textContent = t.hotkey;
+  $('recKeyLabel').textContent = t.recKey;
+  renderHotkeys();
   $('shortcuts').textContent = t.shortcuts;
   $('accessText').textContent = t.access;
   $('grant').textContent = t.grant;
+}
+
+/** Current shortcuts; Chrome leaves one unset when its suggested key clashes or on updates. */
+function renderHotkeys() {
+  const key = (name) => (state.commands || []).find((c) => c.name === name)?.shortcut || T[state.lang].unset;
+  $('hotkey').textContent = key('capture-screenshot');
+  $('recKey').textContent = key('toggle-recording');
 }
 
 /** Recording controls: start buttons, or Stop with a running timer. */
@@ -218,17 +227,13 @@ async function init() {
       if (perm?.state !== 'granted') chrome.tabs.create({ url: chrome.runtime.getURL('mic.html') });
     }
   });
-  $('capture').addEventListener('click', async () => {
-    const res = await chrome.runtime.sendMessage({ type: 'capture' });
-    if (res?.ok) {
-      await chrome.storage.session.set({ pendingCapture: res });
-      await chrome.tabs.create({ url: chrome.runtime.getURL('select.html') });
-      window.close();
-    }
+  // The screen picker closes this popup, so the worker runs the whole capture
+  // (picker → frame → crop page); the popup just hands it over.
+  $('capture').addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'capture-open' });
+    setTimeout(() => window.close(), 50);
   });
-  chrome.commands.getAll((cmds) => {
-    $('hotkey').textContent = cmds.find((c) => c.name === 'capture-screenshot')?.shortcut || '—';
-  });
+  chrome.commands.getAll((cmds) => { state.commands = cmds; renderHotkeys(); });
   $('shortcuts').addEventListener('click', (e) => { e.preventDefault(); chrome.tabs.create({ url: 'chrome://extensions/shortcuts' }); });
 
   const granted = await chrome.permissions.contains({ origins: ['<all_urls>'] });
