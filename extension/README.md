@@ -35,7 +35,7 @@ physically **cannot** do:
 Everything stays on your device: data handed to a tool goes from the extension to
 the open GoodWebTools tab through the page, never to a server. Permissions are kept
 narrow — `contextMenus`, `activeTab`, `scripting`, `storage`, `notifications`,
-`desktopCapture`, `tabCapture`, `offscreen`, `sidePanel`, host access to goodwebtools.com only, and **optional**
+`tabCapture`, `offscreen`, `sidePanel`, host access to goodwebtools.com only, and **optional**
 access to other sites (asked for the first time an image action needs it, or via
 the popup's "Allow images from websites" button).
 
@@ -52,8 +52,8 @@ tool page  ─▶ postMessage handoff-get ─▶ content.js ─▶ background �
 ## How it works
 
 ```
-Global hotkey ─▶ background.js ─▶ desktopCapture picker ─▶ offscreen.js (getUserMedia
-                                                            + canvas grab) ─▶ select.html
+Global hotkey ─▶ background.js ─▶ offscreen.js (Chrome's picker via getDisplayMedia
+                                                + canvas grab) ─▶ select.html
                                                             (crop / download / copy)
 
 Web app  ──postMessage──▶ content.js ──runtime msg──▶ background.js ─▶ capture
@@ -62,8 +62,8 @@ Web app  ──postMessage──▶ content.js ──runtime msg──▶ backgr
 
 - `background.js` — service worker: hotkey command, message routing, orchestrates
   the capture. No DOM, so it delegates the pixel grab to an offscreen document.
-- `offscreen.js` — turns a `desktopCapture` stream id into a PNG via
-  `getUserMedia` + `<canvas>`.
+- `offscreen.js` — shows Chrome's screen/window picker (`getDisplayMedia`;
+  a service worker can't) and turns the choice into a PNG via `<canvas>`, or records it.
 - `content.js` — injected only on GoodWebTools origins; bridges the page to the
   worker with `window.postMessage` (id-agnostic, so unpacked builds work).
 - `select.html/js/css` — the region-select overlay for hotkey captures.

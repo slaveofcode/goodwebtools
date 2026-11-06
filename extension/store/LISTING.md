@@ -126,9 +126,8 @@ and side panel.
 | `scripting` | Injects the color-picker panel, collects image URLs for "Save images", scrolls for the full-page screenshot, and registers the optional JSON-page detector — only after a user action. |
 | `storage` | Stores settings (language, favorites, recent and pinned tools, microphone choice) and passes a payload to the tool page for up to 5 minutes. |
 | `notifications` | Tells the user when an action couldn't run (e.g. an image that can't be read, a capture that failed). |
-| `desktopCapture` | Screen/window capture for the screenshot hotkey and "Record screen", chosen by the user in Chrome's picker. |
 | `tabCapture` | "Record this tab" — records the tab the user invoked the extension on, with its sound. |
-| `offscreen` | Captures frames and runs the MediaRecorder (and plays the captured tab's sound back) — these need a document, which a service worker lacks. |
+| `offscreen` | Shows Chrome's screen/window picker (getDisplayMedia) for the screenshot and "Record screen", captures frames, runs the MediaRecorder and plays a captured tab's sound back — these need a document, which a service worker lacks. |
 | `sidePanel` | Shows GoodWebTools tools in Chrome's side panel. |
 | Host: `https://goodwebtools.com/*` | Hands data to GoodWebTools tool pages and refreshes the tool list (`/tools-index.json`). |
 | Optional host: `<all_urls>` | Requested only when needed: reading right-clicked images on other sites, downloading a page's images, and showing the "Open in JSON Viewer" bar on JSON pages. Can be revoked anytime. |
