@@ -14,7 +14,7 @@ const homePath = localizePath('/', lang);
 const P = {
   en: {
     title: 'Privacy', home: 'Home', crumb: 'Privacy',
-    metaDesc: 'How GoodWebTools protects your privacy: files never leave your browser, and analytics are optional, anonymized, and only load with your consent.',
+    metaDesc: 'How GoodWebTools protects your privacy: files never leave your browser, analytics only load with your consent, and how Google ads on the site use cookies.',
     h1: 'Privacy & Verifiability',
     s1H: 'No data leaves your device',
     s1P: 'All processing happens in your browser. No files, images, or documents are ever uploaded to a server.',
@@ -23,8 +23,21 @@ const P = {
     s2Strong: 'only loads after you click “Accept”',
     s2Pb: ' in the cookie banner — decline and no analytics cookie is set. This never includes your files or their contents; your documents are always processed entirely on your device.',
     s2P2: "You can change your mind anytime by clearing this site's data in your browser settings, which resets the banner.",
+    adsH: 'Advertising',
+    adsP: [
+      'GoodWebTools is free and funded by ads served by Google AdSense. Ads appear on the website only — never inside your files, and never in the browser extension or the results of a tool.',
+      'Third-party vendors, including Google, use cookies to serve ads based on your previous visits to this website and other websites. Google’s advertising cookies let Google and its partners show you ads based on those visits.',
+      'In the European Economic Area, the UK and Switzerland, you are asked for consent before personalised ads or advertising cookies are used. If you decline, Google may still show non-personalised ads, which use cookies only for things like frequency capping and fraud prevention.',
+      'We also use Google Ads measurement to see how many visitors arrive from our own ads.',
+      'Ad scripts never receive your files, text or tool results — those are processed on your device and are not sent anywhere.',
+    ],
+    adsOptOut: 'Opt out of personalised advertising in',
+    adsOptOutGoogle: 'Google’s My Ad Center',
+    adsOptOutOr: ', or opt out of other vendors’ personalised ads at',
+    adsHow: 'Learn',
+    adsHowLink: 'how Google uses information from sites that use its services',
     s3H: 'Verify it yourself',
-    s3: ['Open Developer Tools (F12)', 'Go to the Network tab', 'Use any tool and process a file', 'Watch: zero network requests to external servers'],
+    s3: ['Open Developer Tools (F12)', 'Go to the Network tab', 'Use any tool and process a file', 'Watch: your file is never sent — the only external requests are the page’s own ads and analytics, which never contain it'],
     s4H: 'Works offline',
     s4P: 'After first use, tools work with your network completely off. This is the strongest proof that nothing leaves your device.',
     s5H: 'Open source',
@@ -41,7 +54,7 @@ const P = {
   },
   id: {
     title: 'Privasi', home: 'Beranda', crumb: 'Privasi',
-    metaDesc: 'Bagaimana GoodWebTools melindungi privasi Anda: berkas tidak pernah meninggalkan browser, dan analitik bersifat opsional, dianonimkan, serta hanya dimuat dengan persetujuan Anda.',
+    metaDesc: 'Bagaimana GoodWebTools melindungi privasi Anda: berkas tidak pernah meninggalkan browser, analitik hanya dimuat dengan persetujuan Anda, dan bagaimana iklan Google di situs ini memakai cookie.',
     h1: 'Privasi & Keterverifikasian',
     s1H: 'Tidak ada data yang meninggalkan perangkat Anda',
     s1P: 'Semua pemrosesan terjadi di browser Anda. Tidak ada berkas, gambar, atau dokumen yang pernah diunggah ke server.',
@@ -50,8 +63,21 @@ const P = {
     s2Strong: 'hanya dimuat setelah Anda mengeklik “Terima”',
     s2Pb: ' pada banner cookie — jika menolak, tidak ada cookie analitik yang dipasang. Ini tidak pernah menyertakan berkas Anda atau isinya; dokumen Anda selalu diproses sepenuhnya di perangkat Anda.',
     s2P2: 'Anda dapat berubah pikiran kapan saja dengan menghapus data situs ini di pengaturan browser, yang akan mengatur ulang banner.',
+    adsH: 'Iklan',
+    adsP: [
+      'GoodWebTools gratis dan didanai oleh iklan dari Google AdSense. Iklan hanya tampil di situs web — tidak pernah di dalam berkas Anda, dan tidak pernah di ekstensi browser atau di hasil sebuah tool.',
+      'Vendor pihak ketiga, termasuk Google, menggunakan cookie untuk menampilkan iklan berdasarkan kunjungan Anda sebelumnya ke situs ini dan situs lain. Cookie iklan Google memungkinkan Google dan mitranya menampilkan iklan kepada Anda berdasarkan kunjungan tersebut.',
+      'Di Wilayah Ekonomi Eropa, Inggris, dan Swiss, Anda dimintai persetujuan sebelum iklan yang dipersonalisasi atau cookie iklan digunakan. Jika Anda menolak, Google masih dapat menampilkan iklan non-personal, yang memakai cookie hanya untuk hal seperti pembatasan frekuensi dan pencegahan penipuan.',
+      'Kami juga memakai pengukuran Google Ads untuk melihat berapa banyak pengunjung yang datang dari iklan kami sendiri.',
+      'Skrip iklan tidak pernah menerima berkas, teks, atau hasil tool Anda — semuanya diproses di perangkat Anda dan tidak dikirim ke mana pun.',
+    ],
+    adsOptOut: 'Matikan iklan yang dipersonalisasi di',
+    adsOptOutGoogle: 'Pusat Iklan Saya dari Google',
+    adsOptOutOr: ', atau matikan iklan yang dipersonalisasi dari vendor lain di',
+    adsHow: 'Pelajari',
+    adsHowLink: 'bagaimana Google menggunakan informasi dari situs yang memakai layanannya',
     s3H: 'Verifikasi sendiri',
-    s3: ['Buka Developer Tools (F12)', 'Buka tab Network', 'Gunakan tool apa pun dan proses sebuah berkas', 'Perhatikan: nol permintaan jaringan ke server eksternal'],
+    s3: ['Buka Developer Tools (F12)', 'Buka tab Network', 'Gunakan tool apa pun dan proses sebuah berkas', 'Perhatikan: berkas Anda tidak pernah dikirim — satu-satunya permintaan eksternal adalah iklan dan analitik halaman, yang tidak pernah berisi berkas tersebut'],
     s4H: 'Bekerja offline',
     s4P: 'Setelah pemakaian pertama, tool bekerja dengan jaringan Anda dimatikan sepenuhnya. Ini adalah bukti terkuat bahwa tidak ada yang meninggalkan perangkat Anda.',
     s5H: 'Sumber terbuka',
@@ -92,6 +118,20 @@ const P = {
       <h2 class="mb-4 text-2xl font-semibold">{P.s2H}</h2>
       <p class="mb-4 text-muted-foreground">{P.s2Pa}<strong>{P.s2Strong}</strong>{P.s2Pb}</p>
       <p class="text-muted-foreground">{P.s2P2}</p>
+    </section>
+
+    <section id="ads" class="mb-8 scroll-mt-24">
+      <h2 class="mb-4 text-2xl font-semibold">{P.adsH}</h2>
+      {P.adsP.map(para => <p class="mb-4 text-muted-foreground">{para}</p>)}
+      <p class="mb-4 text-muted-foreground">
+        {P.adsOptOut}{' '}
+        <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer" class="font-bold underline decoration-2 underline-offset-2">{P.adsOptOutGoogle}</a>{P.adsOptOutOr}{' '}
+        <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" class="font-bold underline decoration-2 underline-offset-2">aboutads.info</a>.
+      </p>
+      <p class="text-muted-foreground">
+        {P.adsHow}{' '}
+        <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer" class="font-bold underline decoration-2 underline-offset-2">{P.adsHowLink}</a>.
+      </p>
     </section>
 
     <section class="mb-8">
