@@ -6,6 +6,7 @@ import ReportDialog from '@/islands/report/ReportDialog';
 import { installGlobalCapture } from '@/services/report/breadcrumbs';
 import { openReportDialog } from '@/services/report/reporter';
 import { runHandoff } from '@/services/companion-handoff';
+import ExtensionPromo from '@/islands/ExtensionPromo';
 
 interface ToolHostProps {
   toolId: string;
@@ -88,6 +89,7 @@ export default function ToolHost({ toolId, lang }: ToolHostProps) {
           <LazyTool lang={lang} />
         </Suspense>
       </ToolErrorBoundary>
+      <ExtensionPromo lang={lang} variant="tool" toolId={toolId} category={tool.category} />
       <div className="mt-6 flex justify-end">
         <ReportButton lang={lang} />
       </div>

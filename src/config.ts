@@ -4,6 +4,9 @@ export const REPO_URL = 'https://github.com/slaveofcode/goodwebtools';
 /** Canonical production origin — used for canonical URLs, sitemap, and OG tags. */
 export const SITE_URL = 'https://goodwebtools.com';
 
+/** GoodWebTools Companion on the Chrome Web Store (installs in Chrome, Edge, Brave, Opera…). */
+export const CHROME_EXTENSION_URL = 'https://chrome.google.com/webstore/detail/lpmlplhainfelpnahbjfhjmajhkcoojg';
+
 export const SITE_NAME = 'GoodWebTools';
 export const SITE_TAGLINE = 'Privacy-first client-side utilities that run entirely in your browser';
 

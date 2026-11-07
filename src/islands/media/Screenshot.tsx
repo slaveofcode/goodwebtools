@@ -479,7 +479,7 @@ export default function Screenshot({ lang = 'en' }: { lang?: Lang }) {
           ) : (
             <p className="text-xs text-muted-foreground">
               {t.companionCta1}
-              <span className="font-bold text-foreground">GoodWebTools Companion</span>{t.companionCta2}
+              <a href={lang === 'id' ? '/id/extension' : '/extension'} className="font-bold text-foreground underline underline-offset-2">GoodWebTools Companion</a>{t.companionCta2}
             </p>
           )}
           {capturing && countdown > 0 && (

@@ -4,7 +4,7 @@
 
 **Compress images, edit PDFs, remove backgrounds, decode JWTs, scan QR codes, and 180+ more — with nothing ever uploaded.** Every tool runs 100% client-side with WebAssembly, Canvas, and on-device AI, so your files never leave your device.
 
-[**🚀 Open goodwebtools.com**](https://goodwebtools.com) · [**🖥️ Desktop app**](https://github.com/slaveofcode/goodwebtools/releases) · [**🤖 Ask Agent**](https://goodwebtools.com/ask-agent)
+[**🚀 Open goodwebtools.com**](https://goodwebtools.com) · [**🧩 Chrome extension**](https://chrome.google.com/webstore/detail/lpmlplhainfelpnahbjfhjmajhkcoojg) · [**🖥️ Desktop app**](https://github.com/slaveofcode/goodwebtools/releases) · [**🤖 Ask Agent**](https://goodwebtools.com/ask-agent)
 
 ![CI](https://github.com/slaveofcode/goodwebtools/actions/workflows/ci.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
@@ -58,6 +58,12 @@ Most "online tools" quietly **upload your files to a server**. GoodWebTools does
 | **🌐 Network** (3) | — | [P2P File Transfer](https://goodwebtools.com/tools/file-transfer) · [Video Call](https://goodwebtools.com/tools/video-call) · [Optical File Transfer](https://goodwebtools.com/tools/optical-transfer) |
 | **🎮 Games** (7) | — | [Wheel Spinner](https://goodwebtools.com/tools/wheel-spinner) · [2048](https://goodwebtools.com/tools/2048) · [Block Puzzle](https://goodwebtools.com/tools/block-puzzle) · [Dino Run](https://goodwebtools.com/tools/dino-run) |
 | **🧪 Playground** (4) | — | [Code Scratchpad](https://goodwebtools.com/tools/code-scratchpad) · [SQLite Playground](https://goodwebtools.com/tools/sqlite-playground) · [Online Notepad](https://goodwebtools.com/tools/notepad) · [Quick To-Do](https://goodwebtools.com/tools/todo) |
+
+## 🧩 Chrome extension — GoodWebTools Companion
+
+[**Add to Chrome →**](https://chrome.google.com/webstore/detail/lpmlplhainfelpnahbjfhjmajhkcoojg) · [goodwebtools.com/extension](https://goodwebtools.com/extension)
+
+Right-click any image or selected text to open it in the right tool, already loaded; search every tool from the toolbar; pin tools in the side panel; record a tab or your screen; save a page's images or take a full-page screenshot — all still processed in your browser. Works in Chrome, Edge, Brave and other Chromium browsers. Source: [`extension/`](extension/).
 
 ## 🤖 Ask Agent — the tools, driven for you
 

@@ -1,0 +1,155 @@
+---
+import { ChevronRight, ExternalLink, Puzzle, ShieldCheck } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import { CHROME_EXTENSION_URL, SITE_URL } from '@/config';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+
+export function getStaticPaths() {
+  return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const homePath = localizePath('/', lang);
+const privacyPath = `${localizePath('/privacy', lang)}#extension`;
+
+const P = {
+  en: {
+    title: 'Chrome Extension — GoodWebTools Companion',
+    metaDesc: 'Free GoodWebTools browser extension: right-click images and text into 200+ private tools, search every tool, record tabs, take full-page screenshots. Works in Chrome, Edge and Brave.',
+    crumb: 'Chrome extension', home: 'Home',
+    h1: 'GoodWebTools for Chrome',
+    lead: 'The free Companion extension brings GoodWebTools to every page you visit. Right-click an image or some text and it opens in the right tool, already loaded — still processed entirely in your browser.',
+    cta: 'Add to Chrome — it’s free',
+    works: 'Works in Chrome, Edge, Brave, Opera and other Chromium browsers on desktop.',
+    features: [
+      { h: 'Right-click → the right tool', p: 'On any image: compress, convert, resize, remove the background, extract text or read a QR code. On selected text: format or view JSON, Base64, hash, count words or read it aloud. It opens already loaded — no downloading and re-uploading.', img: '01-right-click', alt: 'Right-click menu on an image with GoodWebTools actions, and the Image Compressor opened with that image' },
+      { h: '200+ tools, one search away', p: 'Search every tool from the toolbar in English or Bahasa Indonesia. Star favorites, reopen recent tools and make a QR code of the page you’re on.', img: '02-launcher', alt: 'The extension popup searching for "compress"' },
+      { h: 'Tools beside any page', p: 'Pin tools to Chrome’s side panel — Music Player, JSON Viewer, Notepad, Unit Converter and more. Music keeps playing while you switch tabs.', img: '03-side-panel', alt: 'The Music Player playing in Chrome’s side panel next to a web page' },
+      { h: 'Record a tab or your screen', p: 'Record the current tab with its sound — no picker — or a screen or window, optionally with your mic. Alt+Shift+R starts and stops. Then convert to MP4 or a GIF.', img: '04-recording', alt: 'A finished recording with download, MP4, GIF and compress options' },
+      { h: 'Grab what you need from a page', p: 'Save all of a page’s images (converted to WebP, PNG or JPG, zipped), take a full-page screenshot, or pick any color on screen.', img: '05-page-helpers', alt: 'The page images list with format choice and zip download' },
+    ],
+    privH: 'Private by design',
+    privP: 'No accounts, no analytics and no ads in the extension. What you send to a tool goes from the extension to the GoodWebTools tab in your own browser — nothing is uploaded. Access to other websites is optional and only asked for when a feature needs it.',
+    privLink: 'Read the extension privacy details',
+    faqH: 'Questions',
+    faqs: [
+      { q: 'Is it free?', a: 'Yes. The extension and every GoodWebTools tool are free, with no account.' },
+      { q: 'Which browsers does it work in?', a: 'Chrome, Microsoft Edge, Brave, Opera, Vivaldi and other Chromium-based browsers on Windows, macOS, Linux and ChromeOS. Mobile browsers don’t support extensions.' },
+      { q: 'Does it upload my files?', a: 'No. The image, text or recording you choose is passed to the GoodWebTools page in your browser and processed there, like every tool on the site.' },
+      { q: 'Why does it ask for access to all websites?', a: 'Only if you use a feature that needs it — reading an image you right-clicked on another site, saving a page’s images, or offering the JSON Viewer on JSON pages. It’s optional and you can remove it anytime in Chrome’s extension settings.' },
+      { q: 'Do I need it to use GoodWebTools?', a: 'No — every tool works in the browser without it. The extension just saves steps: no downloading an image to upload it again, no copying text between tabs.' },
+    ],
+  },
+  id: {
+    title: 'Ekstensi Chrome — GoodWebTools Companion',
+    metaDesc: 'Ekstensi browser GoodWebTools gratis: klik kanan gambar dan teks ke 200+ tool privat, cari semua tool, rekam tab, ambil tangkapan layar satu halaman penuh. Berjalan di Chrome, Edge, dan Brave.',
+    crumb: 'Ekstensi Chrome', home: 'Beranda',
+    h1: 'GoodWebTools untuk Chrome',
+    lead: 'Ekstensi Companion gratis menghadirkan GoodWebTools di setiap halaman yang Anda buka. Klik kanan gambar atau teks dan langsung terbuka di tool yang tepat, sudah dimuat — tetap diproses sepenuhnya di browser Anda.',
+    cta: 'Tambahkan ke Chrome — gratis',
+    works: 'Berjalan di Chrome, Edge, Brave, Opera, dan browser Chromium lain di desktop.',
+    features: [
+      { h: 'Klik kanan → tool yang tepat', p: 'Pada gambar apa pun: kompres, konversi, ubah ukuran, hapus latar belakang, ambil teks, atau baca kode QR. Pada teks yang dipilih: format atau lihat JSON, Base64, hash, hitung kata, atau bacakan. Terbuka sudah dimuat — tanpa unduh lalu unggah ulang.', img: '01-right-click', alt: 'Menu klik kanan pada gambar dengan aksi GoodWebTools, dan Kompres Gambar terbuka dengan gambar tersebut' },
+      { h: '200+ tool, cukup sekali cari', p: 'Cari semua tool dari toolbar dalam Bahasa Indonesia atau Inggris. Tandai favorit, buka lagi tool terakhir, dan buat kode QR halaman yang sedang dibuka.', img: '02-launcher', alt: 'Popup ekstensi mencari "compress"' },
+      { h: 'Tool di samping halaman apa pun', p: 'Sematkan tool di panel samping Chrome — Pemutar Musik, Penampil JSON, Notepad, Pengonversi Satuan, dan lainnya. Musik tetap diputar saat Anda berpindah tab.', img: '03-side-panel', alt: 'Pemutar Musik di panel samping Chrome di sebelah halaman web' },
+      { h: 'Rekam tab atau layar', p: 'Rekam tab yang sedang dibuka beserta suaranya — tanpa memilih sumber — atau layar/jendela, bisa dengan mikrofon. Alt+Shift+R untuk mulai dan berhenti. Lalu ubah ke MP4 atau GIF.', img: '04-recording', alt: 'Rekaman selesai dengan pilihan unduh, MP4, GIF, dan kompres' },
+      { h: 'Ambil yang Anda perlukan dari halaman', p: 'Simpan semua gambar di halaman (diubah ke WebP, PNG, atau JPG, dalam zip), ambil tangkapan layar satu halaman penuh, atau ambil warna apa pun di layar.', img: '05-page-helpers', alt: 'Daftar gambar halaman dengan pilihan format dan unduhan zip' },
+    ],
+    privH: 'Privat sejak awal',
+    privP: 'Tanpa akun, tanpa analitik, dan tanpa iklan di ekstensi. Yang Anda kirim ke tool berpindah dari ekstensi ke tab GoodWebTools di browser Anda sendiri — tidak ada yang diunggah. Akses ke situs lain bersifat opsional dan hanya diminta saat sebuah fitur membutuhkannya.',
+    privLink: 'Baca detail privasi ekstensi',
+    faqH: 'Pertanyaan',
+    faqs: [
+      { q: 'Apakah gratis?', a: 'Ya. Ekstensi dan semua tool GoodWebTools gratis, tanpa akun.' },
+      { q: 'Berjalan di browser apa saja?', a: 'Chrome, Microsoft Edge, Brave, Opera, Vivaldi, dan browser berbasis Chromium lain di Windows, macOS, Linux, dan ChromeOS. Browser ponsel tidak mendukung ekstensi.' },
+      { q: 'Apakah berkas saya diunggah?', a: 'Tidak. Gambar, teks, atau rekaman yang Anda pilih diteruskan ke halaman GoodWebTools di browser Anda dan diproses di sana, seperti semua tool di situs ini.' },
+      { q: 'Mengapa meminta akses ke semua situs?', a: 'Hanya jika Anda memakai fitur yang membutuhkannya — membaca gambar yang Anda klik kanan di situs lain, menyimpan gambar halaman, atau menawarkan Penampil JSON di halaman JSON. Ini opsional dan bisa dicabut kapan saja di pengaturan ekstensi Chrome.' },
+      { q: 'Apakah wajib untuk memakai GoodWebTools?', a: 'Tidak — semua tool berjalan di browser tanpa ekstensi. Ekstensi hanya menghemat langkah: tanpa mengunduh gambar untuk diunggah lagi, tanpa menyalin teks antar tab.' },
+    ],
+  },
+}[lang === 'id' ? 'id' : 'en'];
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'GoodWebTools Companion',
+    applicationCategory: 'BrowserApplication',
+    operatingSystem: 'Chrome, Edge, Brave (desktop)',
+    description: P.metaDesc,
+    url: `${SITE_URL}${localizePath('/extension', lang)}`,
+    downloadUrl: CHROME_EXTENSION_URL,
+    image: `${SITE_URL}/extension/01-right-click.webp`,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    inLanguage: lang === 'id' ? 'id' : 'en',
+    mainEntity: P.faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  },
+];
+
+const btn = 'inline-flex items-center gap-2 border-2 border-border bg-accent px-5 py-3 text-base font-bold uppercase tracking-wide text-accent-foreground shadow-brutal press-brutal';
+---
+
+<Base title={P.title} description={P.metaDesc} lang={lang} localized jsonLd={jsonLd} image="/extension/og.png">
+  <main class="page-container max-w-5xl py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li><a href={homePath} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{P.home}</a></li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{P.crumb}</li>
+      </ol>
+    </nav>
+
+    <header class="mb-10 max-w-3xl">
+      <h1 class="mb-4 flex items-center gap-3 text-4xl font-bold uppercase tracking-tight">
+        <Puzzle className="h-9 w-9 text-accent" aria-hidden="true" />{P.h1}
+      </h1>
+      <p class="mb-6 text-lg text-muted-foreground">{P.lead}</p>
+      <a href={CHROME_EXTENSION_URL} target="_blank" rel="noopener noreferrer" class={btn} data-testid="add-to-chrome">
+        {P.cta}<ExternalLink className="h-4 w-4" aria-hidden="true" />
+      </a>
+      <p class="mt-3 text-sm text-muted-foreground">{P.works}</p>
+    </header>
+
+    <div class="space-y-14">
+      {P.features.map((f, i) => (
+        <section class={`grid items-center gap-6 md:grid-cols-2 ${i % 2 ? 'md:[&>div:first-child]:order-2' : ''}`}>
+          <div>
+            <h2 class="mb-3 text-2xl font-bold">{f.h}</h2>
+            <p class="text-muted-foreground">{f.p}</p>
+          </div>
+          <div>
+            <img src={`/extension/${f.img}.webp`} alt={f.alt} width="1280" height="800" loading={i ? 'lazy' : 'eager'} decoding="async" class="w-full border-2 border-border shadow-brutal" />
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <section class="mt-14 max-w-3xl border-2 border-border bg-muted p-6 shadow-brutal-sm">
+      <h2 class="mb-3 flex items-center gap-2 text-2xl font-bold"><ShieldCheck className="h-6 w-6 text-accent" aria-hidden="true" />{P.privH}</h2>
+      <p class="mb-3 text-muted-foreground">{P.privP}</p>
+      <a href={privacyPath} class="font-bold underline decoration-2 underline-offset-2">{P.privLink}</a>
+    </section>
+
+    <section class="mt-14 max-w-3xl">
+      <h2 class="mb-4 text-2xl font-bold">{P.faqH}</h2>
+      <div class="space-y-3">
+        {P.faqs.map(f => (
+          <details class="border-2 border-border p-4">
+            <summary class="cursor-pointer font-bold">{f.q}</summary>
+            <p class="mt-2 text-muted-foreground">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <div class="mt-14 text-center">
+      <a href={CHROME_EXTENSION_URL} target="_blank" rel="noopener noreferrer" class={btn}>
+        {P.cta}<ExternalLink className="h-4 w-4" aria-hidden="true" />
+      </a>
+    </div>
+  </main>
+</Base>

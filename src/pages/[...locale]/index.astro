@@ -3,6 +3,7 @@ import Base from '@/layouts/Base.astro';
 import { ToolGrid } from '@/components/ToolGrid';
 import MobileCategoryNav from '@/islands/home/MobileCategoryNav';
 import ShareButton from '@/islands/share/ShareButton';
+import ExtensionPromo from '@/islands/ExtensionPromo';
 import { tools } from '@/registry/tools';
 import { localizedTool } from '@/registry/tool-i18n';
 import { SITE_URL, SITE_NAME, SITE_TAGLINE } from '@/config';
@@ -80,6 +81,8 @@ const toolList = {
         <ShareButton client:idle url={shareUrl} title={SITE_NAME} text={SITE_TAGLINE} />
       </div>
     </header>
+
+    <ExtensionPromo client:idle lang={lang} variant="home" />
 
     <ToolGrid lang={lang} />
     <MobileCategoryNav client:idle lang={lang} />
