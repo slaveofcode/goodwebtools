@@ -38,7 +38,8 @@
     "download:ffmpeg": "node scripts/download-ffmpeg-binaries.mjs",
     "bundle:check": "node scripts/bundle-tauri-assets.mjs",
     "pretauri:build": "npm run bundle:check",
-    "icons:tools": "node scripts/make-tool-icons.mjs"
+    "icons:tools": "node scripts/make-tool-icons.mjs",
+    "hooks": "git config core.hooksPath .githooks"
   },
   "repository": {
     "type": "git",
