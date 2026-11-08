@@ -1018,7 +1018,7 @@ const en: Record<string, ToolSeoContent> = {
   },
   '2048': {
     title: 'Play 2048 Online — Free, with Undo & Auto-Play Cheat',
-    description: 'Play the 2048 tile puzzle in your browser: combine tiles to reach 2048. Includes cheats — Undo and an Auto-play that simulates the best moves. Free, no ads, works offline.',
+    description: 'Play the 2048 tile puzzle in your browser: combine tiles to reach 2048. Includes cheats — Undo and an Auto-play that simulates the best moves. Free, no account, works offline.',
     intro: 'Play the classic 2048 puzzle: use the arrow keys or swipe to slide the tiles, and matching tiles merge into their sum — reach the 2048 tile to win, then keep going for a high score. This version adds two cheats: Undo to take back a move, and an Auto-play that simulates the best move each turn and plays for you. Everything runs in your browser.',
     howTo: [
       'Use the arrow keys, or swipe on touch, to slide all tiles one way.',
@@ -1030,14 +1030,14 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'How do I win 2048?', a: 'Keep merging tiles until you create a tile worth 2048. Keeping your biggest tile in a corner and building in one direction is the classic strategy.' },
       { q: 'What does the Auto-play cheat do?', a: 'It simulates each possible move, scores the resulting board, and plays the best one every turn — a hands-free way to watch the game solve itself.' },
       { q: 'Is there an undo?', a: 'Yes. Undo steps back through your recent moves, so you can recover from a mistake.' },
-      { q: 'Is it free and ad-free?', a: 'Yes — completely free with no ads, no account and no limits.' },
+      { q: 'Is it free?', a: 'Yes — completely free, with no account and no limits.' },
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the game works with no internet connection.' },
     ],
   },
   'flappy-bird': {
     title: 'Flying Bird — Free Flappy-Bird Style Game Online',
-    description: 'Play a free flappy-bird style arcade game in your browser: tap, click or press Space to flap and fly through the gaps between pipes. No ads, works offline.',
-    intro: 'A simple, addictive flappy-bird style game: your bird falls under gravity, and each tap, click or Space press makes it flap upward. Steer through the gaps between the pipes — one point per pipe — and see how far you can get before you crash. It runs entirely in your browser with no ads and no account.',
+    description: 'Play a free flappy-bird style arcade game in your browser: tap, click or press Space to flap and fly through the gaps between pipes. No account, works offline.',
+    intro: 'A simple, addictive flappy-bird style game: your bird falls under gravity, and each tap, click or Space press makes it flap upward. Steer through the gaps between the pipes — one point per pipe — and see how far you can get before you crash. It runs entirely in your browser with no account.',
     howTo: [
       'Click, tap or press Space to make the bird flap upward.',
       'Fly through the gap in each pair of pipes.',
@@ -1048,7 +1048,7 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'How do I play?', a: 'Tap the screen, click, or press Space to flap. Time your taps to keep the bird flying through the gaps between pipes.' },
       { q: 'How is the score counted?', a: 'You earn one point for every pair of pipes you fly through. Your best score of the session is shown when you crash.' },
       { q: 'Does it work on mobile?', a: 'Yes. Tap anywhere on the game to flap — it works on phones, tablets and desktops.' },
-      { q: 'Is it free and ad-free?', a: 'Yes — completely free with no ads and no account.' },
+      { q: 'Is it free?', a: 'Yes — completely free, with no account.' },
       { q: 'Does it work offline?', a: 'Yes. GoodWebTools is a PWA, so once loaded the game works with no internet connection.' },
     ],
   },
@@ -1073,7 +1073,7 @@ const en: Record<string, ToolSeoContent> = {
   'dino-run': {
     title: 'Dino Run — Free Endless Runner Game (Offline Dino Style)',
     description: 'Play a free endless runner in your browser — jump and duck past cacti, rocks and birds. Double jump, fast-fall, day/night cycles and a saved best score. Works offline.',
-    intro: 'An endless side-scrolling runner in the spirit of the browser’s offline dinosaur game, but with more to it: a double jump, a fast-fall dive, ducking under low-flying birds, three obstacle types, a speed ramp, day/night cycles and a best score saved on your device. Runs entirely in your browser — no ads, no account.',
+    intro: 'An endless side-scrolling runner in the spirit of the browser’s offline dinosaur game, but with more to it: a double jump, a fast-fall dive, ducking under low-flying birds, three obstacle types, a speed ramp, day/night cycles and a best score saved on your device. Runs entirely in your browser — no account needed.',
     howTo: [
       'Press Space, tap the game, or press ↑ to jump.',
       'Tap or press again in mid-air for a double jump.',
@@ -1089,8 +1089,8 @@ const en: Record<string, ToolSeoContent> = {
   },
   'onet': {
     title: 'Onet Connect — Free Tile Matching Game Online',
-    description: 'Play Onet free in your browser: match pairs of identical tiles that a line can join with at most two turns. Three difficulties, relaxed or timed. No ads, works offline.',
-    intro: 'Onet Connect is the classic tile-matching puzzle: clear the board by pairing identical tiles that can be joined by a line with at most two turns. The line can also travel around the outside of the board, which is what makes edge tiles matchable. Pick a difficulty, play relaxed or against the clock, and use a hint or shuffle when you get stuck. Everything runs in your browser — no ads, no account.',
+    description: 'Play Onet free in your browser: match pairs of identical tiles that a line can join with at most two turns. Three difficulties, relaxed or timed. No account, works offline.',
+    intro: 'Onet Connect is the classic tile-matching puzzle: clear the board by pairing identical tiles that can be joined by a line with at most two turns. The line can also travel around the outside of the board, which is what makes edge tiles matchable. Pick a difficulty, play relaxed or against the clock, and use a hint or shuffle when you get stuck. Everything runs in your browser — no account needed.',
     howTo: [
       'Tap one tile, then tap a matching tile to connect them.',
       'The connecting line may bend at most twice, and may pass around the outside of the board.',
@@ -1107,7 +1107,7 @@ const en: Record<string, ToolSeoContent> = {
   },
   'snake': {
     title: 'Snake Game — Play the Classic Snake Online Free',
-    description: 'Play classic snake in your browser: swipe or use arrow keys, grab golden bonus food, and optionally wrap through the walls. Free, no ads, works offline.',
+    description: 'Play classic snake in your browser: swipe or use arrow keys, grab golden bonus food, and optionally wrap through the walls. Free, no account, works offline.',
     intro: 'The classic snake game, improved: eat to grow, avoid your own tail, and speed up as you score. This version queues up to two turns so quick moves are never dropped, adds golden bonus food worth five points that fades if you are too slow, and lets you switch walls off to wrap around the edges. Everything runs in your browser.',
     howTo: [
       'Press an arrow key (or WASD), or swipe, to start moving.',
@@ -1125,8 +1125,8 @@ const en: Record<string, ToolSeoContent> = {
   },
   'fruit-merge': {
     title: 'Fruit Merge — Free Suika-Style Watermelon Game',
-    description: 'Drop and merge fruits in this Suika-style physics puzzle: equal fruits fuse on contact, from cherry to watermelon. Free, no ads, runs in your browser offline.',
-    intro: 'Fruit Merge is a Suika / watermelon-game style physics puzzle. Aim and drop circular fruits into the box — whenever two fruits of the same kind touch, they fuse into the next bigger fruit and score points. The catch: the box fills up fast, and when fruit piles stay above the line, the game is over. The physics runs entirely in your browser with a hand-built engine — no uploads, no ads, works offline.',
+    description: 'Drop and merge fruits in this Suika-style physics puzzle: equal fruits fuse on contact, from cherry to watermelon. Free, no account, runs in your browser offline.',
+    intro: 'Fruit Merge is a Suika / watermelon-game style physics puzzle. Aim and drop circular fruits into the box — whenever two fruits of the same kind touch, they fuse into the next bigger fruit and score points. The catch: the box fills up fast, and when fruit piles stay above the line, the game is over. The physics runs entirely in your browser with a hand-built engine — no uploads, no account, works offline.',
     howTo: [
       'Move your finger or mouse across the box to aim; the next fruit follows along the top.',
       'Tap or click to drop the fruit where the guide line points.',
@@ -4522,7 +4522,7 @@ const id: Record<string, ToolSeoContent> = {
   },
   '2048': {
     title: 'Main 2048 Online — Gratis, dengan Urungkan & Cheat Auto-Play',
-    description: 'Main puzzle ubin 2048 di browser: gabungkan ubin untuk mencapai 2048. Termasuk cheat — Urungkan dan Auto-play yang mensimulasikan langkah terbaik. Gratis, tanpa iklan, bisa offline.',
+    description: 'Main puzzle ubin 2048 di browser: gabungkan ubin untuk mencapai 2048. Termasuk cheat — Urungkan dan Auto-play yang mensimulasikan langkah terbaik. Gratis, tanpa akun, bisa offline.',
     intro: 'Main puzzle klasik 2048: pakai tombol panah atau geser untuk menggeser ubin, dan ubin yang sama akan bergabung menjadi jumlahnya — capai ubin 2048 untuk menang, lalu lanjutkan untuk skor tinggi. Versi ini menambahkan dua cheat: Urungkan untuk membatalkan langkah, dan Auto-play yang mensimulasikan langkah terbaik tiap giliran dan bermain untuk Anda. Semuanya berjalan di browser Anda.',
     howTo: [
       'Pakai tombol panah, atau geser di layar sentuh, untuk menggeser semua ubin ke satu arah.',
@@ -4534,14 +4534,14 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bagaimana cara menang 2048?', a: 'Terus gabungkan ubin sampai membuat ubin bernilai 2048. Menjaga ubin terbesar di sudut dan membangun ke satu arah adalah strategi klasiknya.' },
       { q: 'Apa fungsi cheat Auto-play?', a: 'Ia mensimulasikan setiap langkah yang mungkin, menilai papan hasilnya, dan memainkan yang terbaik tiap giliran — cara bebas-tangan untuk melihat game menyelesaikan dirinya.' },
       { q: 'Apakah ada urungkan?', a: 'Ya. Urungkan mundur melalui langkah-langkah terakhir Anda, jadi Anda bisa memperbaiki kesalahan.' },
-      { q: 'Apakah gratis dan tanpa iklan?', a: 'Ya — sepenuhnya gratis tanpa iklan, tanpa akun, dan tanpa batas.' },
+      { q: 'Apakah gratis?', a: 'Ya — sepenuhnya gratis, tanpa akun, dan tanpa batas.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat game bekerja tanpa koneksi internet.' },
     ],
   },
   'flappy-bird': {
     title: 'Burung Terbang — Game Gaya Flappy Bird Gratis Online',
-    description: 'Main game arcade gaya flappy bird gratis di browser: ketuk, klik, atau tekan Spasi untuk mengepak dan terbang melewati celah antar pipa. Tanpa iklan, bisa offline.',
-    intro: 'Game gaya flappy bird yang sederhana dan bikin ketagihan: burung Anda jatuh karena gravitasi, dan tiap ketukan, klik, atau tekan Spasi membuatnya mengepak ke atas. Kemudikan melewati celah antar pipa — satu poin per pipa — dan lihat sejauh apa Anda bisa sebelum menabrak. Berjalan sepenuhnya di browser Anda tanpa iklan dan tanpa akun.',
+    description: 'Main game arcade gaya flappy bird gratis di browser: ketuk, klik, atau tekan Spasi untuk mengepak dan terbang melewati celah antar pipa. Tanpa akun, bisa offline.',
+    intro: 'Game gaya flappy bird yang sederhana dan bikin ketagihan: burung Anda jatuh karena gravitasi, dan tiap ketukan, klik, atau tekan Spasi membuatnya mengepak ke atas. Kemudikan melewati celah antar pipa — satu poin per pipa — dan lihat sejauh apa Anda bisa sebelum menabrak. Berjalan sepenuhnya di browser Anda tanpa perlu akun.',
     howTo: [
       'Klik, ketuk, atau tekan Spasi untuk membuat burung mengepak ke atas.',
       'Terbang melewati celah di tiap pasang pipa.',
@@ -4552,7 +4552,7 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bagaimana cara mainnya?', a: 'Ketuk layar, klik, atau tekan Spasi untuk mengepak. Atur waktu ketukan agar burung tetap terbang melewati celah antar pipa.' },
       { q: 'Bagaimana skor dihitung?', a: 'Anda mendapat satu poin untuk tiap pasang pipa yang dilewati. Skor terbaik sesi ditampilkan saat Anda menabrak.' },
       { q: 'Apakah bisa di ponsel?', a: 'Ya. Ketuk di mana saja pada game untuk mengepak — bekerja di ponsel, tablet, dan desktop.' },
-      { q: 'Apakah gratis dan tanpa iklan?', a: 'Ya — sepenuhnya gratis tanpa iklan dan tanpa akun.' },
+      { q: 'Apakah gratis?', a: 'Ya — sepenuhnya gratis, tanpa akun.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. GoodWebTools adalah PWA, jadi setelah dimuat game bekerja tanpa koneksi internet.' },
     ],
   },
@@ -4577,7 +4577,7 @@ const id: Record<string, ToolSeoContent> = {
   'dino-run': {
     title: 'Dino Run — Game Lari Tanpa Akhir Gratis (Gaya Dino Offline)',
     description: 'Main game lari tanpa akhir gratis di browser — lompat dan menunduk melewati kaktus, batu, dan burung. Lompat ganda, jatuh cepat, siklus siang/malam, skor terbaik tersimpan. Bekerja offline.',
-    intro: 'Game lari samping tanpa akhir bergaya game dinosaurus offline di browser, tapi dengan lebih banyak isi: lompat ganda, menukik cepat, menunduk di bawah burung terbang rendah, tiga jenis rintangan, kecepatan yang meningkat, siklus siang/malam, dan skor terbaik tersimpan di perangkat Anda. Berjalan sepenuhnya di browser — tanpa iklan, tanpa akun.',
+    intro: 'Game lari samping tanpa akhir bergaya game dinosaurus offline di browser, tapi dengan lebih banyak isi: lompat ganda, menukik cepat, menunduk di bawah burung terbang rendah, tiga jenis rintangan, kecepatan yang meningkat, siklus siang/malam, dan skor terbaik tersimpan di perangkat Anda. Berjalan sepenuhnya di browser — tanpa perlu akun.',
     howTo: [
       'Tekan Spasi, ketuk game, atau tekan ↑ untuk lompat.',
       'Ketuk atau tekan lagi di udara untuk lompat ganda.',
@@ -4593,8 +4593,8 @@ const id: Record<string, ToolSeoContent> = {
   },
   'onet': {
     title: 'Onet Connect — Game Cocokkan Ubin Gratis Online',
-    description: 'Main Onet gratis di browser: cocokkan pasangan ubin identik yang bisa dihubungkan garis dengan maksimal dua belokan. Tiga tingkat kesulitan, santai atau berwaktu. Tanpa iklan, bekerja offline.',
-    intro: 'Onet Connect adalah puzzle cocokkan ubin klasik: bersihkan papan dengan memasangkan ubin identik yang bisa dihubungkan garis dengan maksimal dua belokan. Garisnya juga boleh lewat di luar papan — itulah yang membuat ubin di tepi tetap bisa dipasangkan. Pilih tingkat kesulitan, main santai atau berpacu dengan waktu, dan gunakan petunjuk atau acak saat buntu. Semuanya berjalan di browser Anda — tanpa iklan, tanpa akun.',
+    description: 'Main Onet gratis di browser: cocokkan pasangan ubin identik yang bisa dihubungkan garis dengan maksimal dua belokan. Tiga tingkat kesulitan, santai atau berwaktu. Tanpa akun, bekerja offline.',
+    intro: 'Onet Connect adalah puzzle cocokkan ubin klasik: bersihkan papan dengan memasangkan ubin identik yang bisa dihubungkan garis dengan maksimal dua belokan. Garisnya juga boleh lewat di luar papan — itulah yang membuat ubin di tepi tetap bisa dipasangkan. Pilih tingkat kesulitan, main santai atau berpacu dengan waktu, dan gunakan petunjuk atau acak saat buntu. Semuanya berjalan di browser Anda — tanpa perlu akun.',
     howTo: [
       'Ketuk satu ubin, lalu ketuk ubin yang sama untuk menghubungkannya.',
       'Garis penghubung boleh berbelok maksimal dua kali, dan boleh lewat di luar papan.',
@@ -4611,7 +4611,7 @@ const id: Record<string, ToolSeoContent> = {
   },
   'snake': {
     title: 'Game Ular — Main Snake Klasik Online Gratis',
-    description: 'Main snake klasik di browser: geser atau pakai tombol panah, ambil makanan bonus emas, dan opsional tembus dinding. Gratis, tanpa iklan, bekerja offline.',
+    description: 'Main snake klasik di browser: geser atau pakai tombol panah, ambil makanan bonus emas, dan opsional tembus dinding. Gratis, tanpa akun, bekerja offline.',
     intro: 'Game ular klasik yang ditingkatkan: makan untuk tumbuh, hindari ekor sendiri, dan makin cepat seiring skor. Versi ini mengantre hingga dua belokan agar gerakan cepat tidak pernah hilang, menambahkan makanan bonus emas bernilai lima poin yang memudar jika Anda terlalu lambat, dan memungkinkan Anda mematikan dinding untuk tembus ke sisi seberang. Semuanya berjalan di browser Anda.',
     howTo: [
       'Tekan tombol panah (atau WASD), atau geser, untuk mulai bergerak.',
@@ -4629,8 +4629,8 @@ const id: Record<string, ToolSeoContent> = {
   },
   'fruit-merge': {
     title: 'Gabung Buah — Game Fisika Seperti Suika, Gratis',
-    description: 'Jatuhkan dan gabungkan buah dalam puzzle fisika bergaya Suika: buah yang sama menyatu saat bersentuhan, dari ceri sampai semangka. Gratis, tanpa iklan, offline.',
-    intro: 'Gabung Buah adalah puzzle fisika bergaya Suika / game semangka. Bidik dan jatuhkan buah bulat ke dalam kotak — setiap dua buah yang sama bersentuhan langsung menyatu menjadi buah yang lebih besar dan memberi poin. Jebakannya: kotak cepat penuh, dan ketika tumpukan buah bertahan di atas garis, permainan berakhir. Fisikanya berjalan sepenuhnya di browser Anda dengan engine buatan sendiri — tidak ada unggahan, tanpa iklan, dan bisa dimainkan offline.',
+    description: 'Jatuhkan dan gabungkan buah dalam puzzle fisika bergaya Suika: buah yang sama menyatu saat bersentuhan, dari ceri sampai semangka. Gratis, tanpa akun, offline.',
+    intro: 'Gabung Buah adalah puzzle fisika bergaya Suika / game semangka. Bidik dan jatuhkan buah bulat ke dalam kotak — setiap dua buah yang sama bersentuhan langsung menyatu menjadi buah yang lebih besar dan memberi poin. Jebakannya: kotak cepat penuh, dan ketika tumpukan buah bertahan di atas garis, permainan berakhir. Fisikanya berjalan sepenuhnya di browser Anda dengan engine buatan sendiri — tidak ada unggahan, tanpa akun, dan bisa dimainkan offline.',
     howTo: [
       'Gerakkan jari atau mouse melintasi kotak untuk membidik; buah berikutnya mengikuti di bagian atas.',
       'Ketuk atau klik untuk menjatuhkan buah di tempat yang ditunjuk garis panduan.',
