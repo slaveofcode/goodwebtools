@@ -78,3 +78,105 @@ export function capturePlan(pageHeight, viewportHeight, maxHeight = 30000) {
   for (let y = 0; y < height; y += viewportHeight) ys.push(Math.min(y, Math.max(0, height - viewportHeight)));
   return { ys: [...new Set(ys)], height, truncated: pageHeight > maxHeight };
 }
+
+// ── Media (audio, video, HLS streams) ────────────────────────────────────────
+
+const AUDIO_EXT = ['mp3', 'm4a', 'aac', 'wav', 'ogg', 'oga', 'opus', 'flac', 'weba', 'mka'];
+const VIDEO_EXT = ['mp4', 'm4v', 'webm', 'mov', 'mkv', 'ogv', 'avi', '3gp'];
+const HLS_EXT = ['m3u8'];
+
+/** File extension of a URL's path ("https://x/a.MP3?x=1" → "mp3"), or "". */
+export function urlExtension(src) {
+  try {
+    const m = /\.([a-z0-9]{2,5})$/i.exec(new URL(src).pathname);
+    return m ? m[1].toLowerCase() : '';
+  } catch { return ''; }
+}
+
+/** 'audio' | 'video' | 'hls' | null, from a MIME type hint or the URL's extension. */
+export function mediaKind(src, type = '') {
+  const t = (type || '').toLowerCase();
+  if (/mpegurl/.test(t)) return 'hls';
+  if (t.startsWith('audio/')) return 'audio';
+  if (t.startsWith('video/')) return 'video';
+  const ext = urlExtension(src);
+  if (HLS_EXT.includes(ext)) return 'hls';
+  if (AUDIO_EXT.includes(ext)) return 'audio';
+  if (VIDEO_EXT.includes(ext)) return 'video';
+  return null;
+}
+
+/**
+ * Clean the media found on a page: http(s) only, classified, one entry per URL
+ * (the first label wins; an element's own kind beats a guess from the URL).
+ * Anything the page marked as protected is left out — and on a DRM page
+ * (`drm`), so is everything seen only in the network list.
+ */
+export function cleanMediaList(items, { drm = false } = {}) {
+  const locked = new Set(items.filter((it) => it.restricted).map((it) => (it.src || '').replace(/#.*$/, '')));
+  const byUrl = new Map();
+  for (const it of items) {
+    if (it.restricted || (drm && it.via === 'network')) continue;
+    if (locked.has((it.src || '').replace(/#.*$/, ''))) continue;
+    if (!/^https?:/.test(it.src || '')) continue;
+    const key = it.src.replace(/#.*$/, '');
+    const kind = mediaKind(key, it.type) || it.kind || null;
+    if (!kind) continue;
+    const prev = byUrl.get(key);
+    if (!prev) byUrl.set(key, { src: key, kind, label: (it.label || '').trim().slice(0, 120) });
+    else if (!prev.label && it.label) prev.label = it.label.trim().slice(0, 120);
+  }
+  const order = { video: 0, hls: 1, audio: 2 };
+  return [...byUrl.values()].sort((a, b) => order[a.kind] - order[b.kind]);
+}
+
+/** Pages where saving media isn't offered (their terms and the Chrome Web Store policy forbid it). */
+export function isMediaBlockedSite(pageUrl) {
+  try {
+    const h = new URL(pageUrl).hostname.replace(/^www\.|^m\.|^music\./, '');
+    return ['youtube.com', 'youtu.be', 'youtube-nocookie.com', 'soundcloud.com'].some((d) => h === d || h.endsWith(`.${d}`));
+  } catch { return false; }
+}
+
+/**
+ * Parse an HLS playlist. A master playlist gives `variants` (best first); a media
+ * playlist gives `segments`, an fMP4 `init` segment, and whether it is encrypted
+ * (any key other than METHOD=NONE) or live (no #EXT-X-ENDLIST).
+ */
+export function parseM3u8(text, baseUrl) {
+  const lines = String(text || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines[0] !== '#EXTM3U') return null;
+  const abs = (u) => new URL(u, baseUrl).href;
+  const attr = (line, name) => {
+    const m = new RegExp(`[:,]${name}=("([^"]*)"|[^,]*)`).exec(line);
+    return m ? (m[2] ?? m[1]) : null;
+  };
+  if (lines.some((l) => l.startsWith('#EXT-X-STREAM-INF'))) {
+    const variants = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (!lines[i].startsWith('#EXT-X-STREAM-INF')) continue;
+      const uri = lines.slice(i + 1).find((l) => !l.startsWith('#'));
+      if (!uri) continue;
+      variants.push({ url: abs(uri), bandwidth: Number(attr(lines[i], 'BANDWIDTH')) || 0, resolution: attr(lines[i], 'RESOLUTION') || '' });
+    }
+    variants.sort((a, b) => b.bandwidth - a.bandwidth);
+    return { type: 'master', variants };
+  }
+  const segments = [];
+  let init = null;
+  let encrypted = false;
+  for (const l of lines) {
+    if (l.startsWith('#EXT-X-KEY') && (attr(l, 'METHOD') || 'NONE').toUpperCase() !== 'NONE') encrypted = true;
+    else if (l.startsWith('#EXT-X-MAP')) { const u = attr(l, 'URI'); if (u) init = abs(u); }
+    else if (!l.startsWith('#')) segments.push(abs(l));
+  }
+  return { type: 'media', segments, init, encrypted, live: !lines.includes('#EXT-X-ENDLIST') };
+}
+
+/** File extension to save a media file under, from its type or URL. */
+export function mediaExtension(src, mime, kind) {
+  const fromMime = { 'audio/mpeg': 'mp3', 'audio/mp4': 'm4a', 'audio/aac': 'aac', 'audio/wav': 'wav', 'audio/x-wav': 'wav', 'audio/ogg': 'ogg', 'audio/opus': 'opus', 'audio/flac': 'flac', 'audio/webm': 'weba', 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov', 'video/x-matroska': 'mkv', 'video/ogg': 'ogv', 'video/mp2t': 'ts' }[(mime || '').split(';')[0].trim().toLowerCase()];
+  const ext = urlExtension(src);
+  if ([...AUDIO_EXT, ...VIDEO_EXT].includes(ext)) return ext;
+  return fromMime || (kind === 'audio' ? 'mp3' : 'mp4');
+}

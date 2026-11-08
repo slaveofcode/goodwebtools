@@ -101,16 +101,28 @@
   "color_unsupported": {
     "message": "Browser ini tidak punya pengambil warna (EyeDropper)."
   },
-  "jsonBarText": {
-    "message": "Halaman ini berisi JSON."
-  },
-  "jsonBarOpen": {
-    "message": "Buka di Penampil JSON"
-  },
   "shotTabChanged": {
     "message": "Tangkapan layar berhenti karena Anda berpindah tab. Coba lagi dan tetap di halaman sampai selesai."
   },
   "notifyPageFailedTitle": {
     "message": "Tidak berhasil di halaman ini"
+  },
+  "dataBarText": {
+    "message": "Halaman ini berisi $NAME$.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "JSON"
+      }
+    }
+  },
+  "dataBarOpen": {
+    "message": "Buka di $VIEWER$",
+    "placeholders": {
+      "viewer": {
+        "content": "$1",
+        "example": "JSON Viewer"
+      }
+    }
   }
 }

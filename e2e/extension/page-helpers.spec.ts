@@ -19,6 +19,7 @@ const test = base.extend<{ ctx: BrowserContext; sw: Worker; extId: string }>({
       executablePath: process.env.PW_CHROMIUM_PATH || undefined,
       args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
       acceptDownloads: true,
+      permissions: ['clipboard-read', 'clipboard-write'],
     });
     await use(ctx);
     await ctx.close();
@@ -89,28 +90,54 @@ test('the color picker panel appears in the page and closes with Escape', async 
   await expect(page.locator('#gwt-color-picker')).toHaveCount(0);
 });
 
-test('a JSON page gets an "Open in JSON Viewer" bar that hands the JSON over', async ({ ctx }) => {
+/** Load the data-file detector on a fixture served with the given type, with a stub `chrome`. */
+async function dataPage(ctx: BrowserContext, url: string, contentType: string, body: string, auto = false) {
   const page = await ctx.newPage();
-  await page.addInitScript(() => {
+  await page.addInitScript((a) => {
+    const msgs: Record<string, string> = { dataBarText: 'This page is $1.', dataBarOpen: 'Open in $1', color_close: 'Close' };
     (window as unknown as { chrome: unknown }).chrome = {
-      i18n: { getMessage: (k: string) => ({ jsonBarText: 'This page is JSON.', jsonBarOpen: 'Open in JSON Viewer', color_close: 'Close' } as Record<string, string>)[k] },
+      i18n: { getMessage: (k: string, sub?: string[]) => (msgs[k] || '').replace('$1', sub?.[0] ?? '') },
       runtime: { sendMessage: (m: unknown) => { (window as unknown as { __sent: unknown }).__sent = m; } },
+      storage: { local: { get: async () => ({ dataAuto: a }) } },
     };
-  });
-  await page.route('http://fixture.test/**', r => r.fulfill({ contentType: 'application/json', body: '{"api":"response","items":[1,2]}' }));
-  await page.goto('http://fixture.test/data.json');
+  }, auto);
+  await page.route('http://fixture.test/**', r => r.fulfill({ contentType, body }));
+  await page.goto(url);
   await page.addScriptTag({ path: path.join(EXT, 'inject', 'json-detect.js') });
+  return page;
+}
+const sent = (page: Page) => page.evaluate(() => (window as unknown as { __sent: unknown }).__sent);
+
+test('a JSON page gets an "Open in JSON Viewer" bar that hands the JSON over', async ({ ctx }) => {
+  const page = await dataPage(ctx, 'http://fixture.test/data.json', 'application/json', '{"api":"response","items":[1,2]}');
+  await expect(page.getByText('This page is JSON.')).toBeVisible();
   await page.getByRole('button', { name: 'Open in JSON Viewer' }).click();
-  expect(await page.evaluate(() => (window as unknown as { __sent: unknown }).__sent)).toEqual({ type: 'open-tool', tool: 'json-viewer', payload: { kind: 'text', text: '{"api":"response","items":[1,2]}' } });
+  expect(await sent(page)).toEqual({ type: 'open-tool', tool: 'json-viewer', payload: { kind: 'text', text: '{"api":"response","items":[1,2]}' }, replace: false });
 });
 
-test('a normal page gets no JSON bar', async ({ ctx }) => {
-  const page = await ctx.newPage();
-  await page.addInitScript(() => { (window as unknown as { chrome: unknown }).chrome = { i18n: { getMessage: () => 'x' }, runtime: { sendMessage: () => {} } }; });
-  await page.route('http://fixture.test/**', r => r.fulfill({ contentType: 'text/html', body: '<p>{"looks":"like json"}</p>' }));
-  await page.goto('http://fixture.test/');
-  await page.addScriptTag({ path: path.join(EXT, 'inject', 'json-detect.js') });
+test('YAML, TOML and Markdown files get their own viewers', async ({ ctx }) => {
+  const yaml = await dataPage(ctx, 'http://fixture.test/config.yaml', 'text/plain', 'name: gwt\nitems:\n  - 1\n');
+  await yaml.getByRole('button', { name: 'Open in YAML Viewer' }).click();
+  expect(await sent(yaml)).toMatchObject({ tool: 'yaml-viewer', payload: { text: 'name: gwt\nitems:\n  - 1\n' } });
+  const toml = await dataPage(ctx, 'http://fixture.test/Cargo.toml', 'text/plain', '[package]\nname = "gwt"\n');
+  await expect(toml.getByRole('button', { name: 'Open in TOML Viewer' })).toBeVisible();
+  const md = await dataPage(ctx, 'http://fixture.test/notes', 'text/markdown', '# Hello\n\nSome *text*.');
+  await md.getByRole('button', { name: 'Open in Markdown Preview' }).click();
+  expect(await sent(md)).toMatchObject({ tool: 'markdown' });
+});
+
+test('with "Open them automatically", the viewer replaces the tab without a bar', async ({ ctx }) => {
+  const page = await dataPage(ctx, 'http://fixture.test/data.json', 'application/json', '{"a":1}', true);
+  await expect.poll(() => sent(page)).toEqual({ type: 'open-tool', tool: 'json-viewer', payload: { kind: 'text', text: '{"a":1}' }, replace: true });
   await expect(page.locator('#gwt-json-bar')).toHaveCount(0);
+});
+
+test('a normal page, or a .json URL that isn\'t JSON, gets no bar', async ({ ctx }) => {
+  const html = await dataPage(ctx, 'http://fixture.test/', 'text/html', '<p>{"looks":"like json"}</p>');
+  const fake = await dataPage(ctx, 'http://fixture.test/x.json', 'text/plain', 'not json at all');
+  await html.waitForTimeout(300);
+  await expect(html.locator('#gwt-json-bar')).toHaveCount(0);
+  await expect(fake.locator('#gwt-json-bar')).toHaveCount(0);
 });
 
 test('the images page zips the chosen images, converted to WebP', async ({ ctx, sw, extId }) => {
@@ -143,6 +170,57 @@ test('the screenshot page shows the stitched image and hands it to the Image Ann
   const [tool] = await Promise.all([ctx.waitForEvent('page', p => p.url().includes('/tools/image-annotate/')), page.locator('#annotate').click()]);
   await tool.waitForLoadState();
   await expect.poll(() => new URL(tool.url()).pathname).toBe('/tools/image-annotate/');
+});
+
+test('the screenshot page copies the image to the clipboard', async ({ ctx, extId }) => {
+  const page = await ctx.newPage();
+  await page.goto(`chrome-extension://${extId}/shot.html`);
+  await page.evaluate(async (b64) => {
+    const { saveShot } = await import('/lib/recordings-db.js');
+    const blob = await (await fetch(`data:image/png;base64,${b64}`)).blob();
+    await saveShot({ blob, width: 40, height: 30, truncated: false, title: 'Copy me', at: Date.now() });
+  }, png(40, 30, [200, 0, 100]).toString('base64'));
+  await page.reload();
+  await page.getByRole('button', { name: 'Copy image' }).click();
+  await expect(page.locator('#note')).toHaveText('Copied to the clipboard — paste it anywhere.');
+  const types = await page.evaluate(async () => (await navigator.clipboard.read())[0].types);
+  expect(types).toContain('image/png');
+});
+
+test('the recording page makes an animated GIF without leaving the extension', async ({ ctx, extId }) => {
+  test.setTimeout(60_000);
+  const page = await ctx.newPage();
+  await page.goto(`chrome-extension://${extId}/recording.html`);
+  // A 2-second recording of a moving square, made the way the recorder does (MediaRecorder → webm).
+  await page.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 180;
+    const g = c.getContext('2d')!;
+    const rec = new MediaRecorder(c.captureStream(30), { mimeType: 'video/webm' });
+    const chunks: Blob[] = [];
+    rec.ondataavailable = (e) => chunks.push(e.data);
+    const started = performance.now();
+    let x = 0;
+    const draw = () => { g.fillStyle = '#fff'; g.fillRect(0, 0, 320, 180); g.fillStyle = '#7c3aed'; g.fillRect(x % 300, 60, 40, 40); x += 8; };
+    const timer = setInterval(draw, 33);
+    rec.start(200);
+    await new Promise(r => setTimeout(r, 2000));
+    rec.stop();
+    clearInterval(timer);
+    await new Promise(r => { rec.onstop = r; });
+    const { saveRecording } = await import('/lib/recordings-db.js');
+    await saveRecording({ blob: new Blob(chunks, { type: 'video/webm' }), type: 'video/webm', durationMs: performance.now() - started, at: Date.now() });
+  });
+  await page.reload();
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 45_000 }), page.getByRole('button', { name: 'Download GIF' }).click()]);
+  expect(dl.suggestedFilename()).toMatch(/^gwt-recording-.*\.gif$/);
+  const gif = fs.readFileSync(await dl.path());
+  expect(gif.subarray(0, 6).toString()).toBe('GIF89a');
+  expect(gif.readUInt16LE(6)).toBe(320);
+  // More than a few frames: count graphic control extensions (0x21 0xF9).
+  let frames = 0;
+  for (let i = 0; i < gif.length - 1; i++) if (gif[i] === 0x21 && gif[i + 1] === 0xf9) frames++;
+  expect(frames).toBeGreaterThan(5);
+  await expect(page.locator('#gifStatus')).toContainText('GIF saved');
 });
 
 // The real service-worker paths (scroll + capture + stitch, collecting images)

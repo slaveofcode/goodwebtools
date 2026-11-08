@@ -15,7 +15,7 @@
 
 import { MENU_ITEMS, PARENT_ID, DEFAULT_BASE, pickLang, toolUrl, findMenuItem } from './lib/menus.js';
 import { createHandoffStore, bytesToBase64 } from './lib/handoff-store.js';
-import { colorPickerOverlay, collectPageImages, pageMetrics, scrollForCapture, restoreAfterCapture } from './lib/inject.js';
+import { colorPickerOverlay, collectPageImages, collectPageMedia, pageMetrics, scrollForCapture, restoreAfterCapture } from './lib/inject.js';
 import { capturePlan } from './lib/page-helpers.js';
 import { saveShot } from './lib/recordings-db.js';
 
@@ -157,9 +157,11 @@ async function siteSettings() {
 }
 
 /** Open a tool, handing it a payload when given. */
-async function openTool(toolId, payload, openerTab) {
+async function openTool(toolId, payload, openerTab, replace = false) {
   const { base, lang } = await siteSettings();
   const id = payload ? await handoffs.put(payload) : undefined;
+  // "Open data files automatically": the viewer takes the file's place in the same tab.
+  if (replace && openerTab?.id) { await chrome.tabs.update(openerTab.id, { url: toolUrl(base, toolId, lang, id) }); return; }
   await chrome.tabs.create({
     url: toolUrl(base, toolId, lang, id),
     index: openerTab ? openerTab.index + 1 : undefined,
@@ -293,7 +295,7 @@ chrome.runtime.onMessage.addListener((m, sender, sendResponse) => {
     return true;
   }
   if (m?.type === 'open-tool') {
-    openTool(m.tool, m.payload).then(() => sendResponse({ ok: true }), (e) => sendResponse({ ok: false, error: e.message }));
+    openTool(m.tool, m.payload, sender.tab, !!m.replace).then(() => sendResponse({ ok: true }), (e) => sendResponse({ ok: false, error: e.message }));
     return true;
   }
 });
@@ -370,10 +372,11 @@ async function pickColor(tab) {
   return {};
 }
 
-/** Collect the page's images, then show them on images.html to pick and download. */
+/** Collect the page's images, audio and video, then show them on images.html to pick and download. */
 async function saveImages(tab) {
   const found = await inTab(tab, collectPageImages);
-  await chrome.storage.session.set({ pageImages: { ...found, at: Date.now() } });
+  const media = await inTab(tab, collectPageMedia).catch(() => null);
+  await chrome.storage.session.set({ pageImages: { ...found, media: media?.media || [], streamed: !!media?.streamed, drm: !!media?.drm, restricted: media?.restricted || 0, at: Date.now() } });
   await chrome.tabs.create({ url: chrome.runtime.getURL('images.html'), index: tab.index + 1, openerTabId: tab.id });
   return { count: found?.images?.length || 0 };
 }
