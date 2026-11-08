@@ -9,7 +9,7 @@ const T = {
     search: 'Search 200+ tools…', favorites: 'Favorites', recent: 'Recent', quick: 'Quick actions', none: 'No tools match.',
     qrPage: 'QR code of this page', capture: 'Capture screen', hotkey: 'Screenshot:', recKey: 'Record:', unset: 'not set', shortcuts: 'set hotkeys',
     star: 'Add to favorites', unstar: 'Remove from favorites', panel: 'Open side panel', inPanel: 'Open in the side panel',
-    page: 'This page', pgColor: 'Pick a color', pgImages: 'Save images & media', pgShot: 'Full-page screenshot', jsonTabs: 'Offer the JSON Viewer on JSON pages',
+    page: 'This page', pgColor: 'Pick a color', pgImages: 'Save images & media', pgShot: 'Full-page screenshot', jsonTabs: 'Open data files (JSON, YAML, TOML, Markdown) in GoodWebTools', dataAuto: 'Open them automatically',
     rec: 'Record', recTab: 'Record this tab', recScreen: 'Record screen…', recMic: 'Include my microphone', recStop: (t) => `■ Stop recording · ${t}`,
     access: 'Allow the Companion to read images on websites so right-click image actions work everywhere.', grant: 'Allow images from websites',
   },
@@ -17,7 +17,7 @@ const T = {
     search: 'Cari 200+ tool…', favorites: 'Favorit', recent: 'Terakhir', quick: 'Aksi cepat', none: 'Tidak ada tool yang cocok.',
     qrPage: 'Kode QR halaman ini', capture: 'Tangkap layar', hotkey: 'Tangkap layar:', recKey: 'Rekam:', unset: 'belum diatur', shortcuts: 'atur pintasan',
     star: 'Tambah ke favorit', unstar: 'Hapus dari favorit', panel: 'Buka panel samping', inPanel: 'Buka di panel samping',
-    page: 'Halaman ini', pgColor: 'Ambil warna', pgImages: 'Simpan gambar & media', pgShot: 'Tangkapan layar penuh', jsonTabs: 'Tawarkan Penampil JSON di halaman JSON',
+    page: 'Halaman ini', pgColor: 'Ambil warna', pgImages: 'Simpan gambar & media', pgShot: 'Tangkapan layar penuh', jsonTabs: 'Buka berkas data (JSON, YAML, TOML, Markdown) di GoodWebTools', dataAuto: 'Buka otomatis',
     rec: 'Rekam', recTab: 'Rekam tab ini', recScreen: 'Rekam layar…', recMic: 'Sertakan mikrofon saya', recStop: (t) => `■ Hentikan rekaman · ${t}`,
     access: 'Izinkan Companion membaca gambar di situs web agar aksi klik kanan pada gambar berfungsi di mana saja.', grant: 'Izinkan gambar dari situs web',
   },
@@ -121,6 +121,7 @@ function render() {
   $('pgImages').textContent = t.pgImages;
   $('pgShot').textContent = t.pgShot;
   $('jsonTabsLabel').textContent = t.jsonTabs;
+  $('dataAutoLabel').textContent = t.dataAuto;
   $('recTitle').textContent = t.rec;
   $('recTab').textContent = t.recTab;
   $('recScreen').textContent = t.recScreen;
@@ -170,8 +171,10 @@ async function open(id) {
 async function init() {
   // The window id is needed synchronously when opening the side panel (it must stay inside the click).
   chrome.windows.getCurrent().then((w) => { state.windowId = w.id; });
-  const saved = await chrome.storage.local.get(['gwtBase', 'gwtLang', 'favs', 'recents', 'recMic', 'jsonTabs']);
+  const saved = await chrome.storage.local.get(['gwtBase', 'gwtLang', 'favs', 'recents', 'recMic', 'jsonTabs', 'dataAuto']);
   $('jsonTabs').checked = !!saved.jsonTabs;
+  $('dataAuto').checked = !!saved.dataAuto;
+  $('dataAutoRow').hidden = !saved.jsonTabs;
   state.rec = (await chrome.runtime.sendMessage({ type: 'rec-state' }).catch(() => null))?.state || null;
   $('recMic').checked = !!saved.recMic;
   state.base = saved.gwtBase || DEFAULT_BASE;
@@ -214,7 +217,9 @@ async function init() {
     // Detecting JSON pages needs site access; ask inside this click.
     if (on && !(await chrome.permissions.request({ origins: ['<all_urls>'] }).catch(() => false))) { e.target.checked = false; return; }
     await chrome.runtime.sendMessage({ type: 'json-tabs', enabled: on });
+    $('dataAutoRow').hidden = !on;
   });
+  $('dataAuto').addEventListener('change', (e) => chrome.storage.local.set({ dataAuto: e.target.checked }));
   $('recTab').addEventListener('click', () => startRec('tab'));
   $('recScreen').addEventListener('click', () => startRec('screen'));
   $('recStop').addEventListener('click', async () => { await chrome.runtime.sendMessage({ type: 'rec-stop' }); window.close(); });

@@ -44,3 +44,15 @@ export function formatBytes(n) {
   while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
   return `${v.toFixed(v < 10 ? 1 : 0)} ${units[i]}`;
 }
+
+/**
+ * GIF size and timing for a recording: at most `maxWidth` wide (even numbers),
+ * `fps` frames a second, and only the first `maxSeconds` (GIFs get huge fast).
+ */
+export function gifPlan(videoWidth, videoHeight, durationMs, { fps = 10, maxWidth = 480, maxSeconds = 30 } = {}) {
+  const scale = Math.min(1, maxWidth / (videoWidth || maxWidth));
+  const width = Math.max(2, Math.round((videoWidth || maxWidth) * scale / 2) * 2);
+  const height = Math.max(2, Math.round((videoHeight || maxWidth * 9 / 16) * scale / 2) * 2);
+  const seconds = Number.isFinite(durationMs) && durationMs > 0 ? durationMs / 1000 : maxSeconds;
+  return { width, height, fps, seconds: Math.min(seconds, maxSeconds), truncated: seconds > maxSeconds };
+}

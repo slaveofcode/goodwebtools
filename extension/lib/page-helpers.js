@@ -109,10 +109,15 @@ export function mediaKind(src, type = '') {
 /**
  * Clean the media found on a page: http(s) only, classified, one entry per URL
  * (the first label wins; an element's own kind beats a guess from the URL).
+ * Anything the page marked as protected is left out — and on a DRM page
+ * (`drm`), so is everything seen only in the network list.
  */
-export function cleanMediaList(items) {
+export function cleanMediaList(items, { drm = false } = {}) {
+  const locked = new Set(items.filter((it) => it.restricted).map((it) => (it.src || '').replace(/#.*$/, '')));
   const byUrl = new Map();
   for (const it of items) {
+    if (it.restricted || (drm && it.via === 'network')) continue;
+    if (locked.has((it.src || '').replace(/#.*$/, ''))) continue;
     if (!/^https?:/.test(it.src || '')) continue;
     const key = it.src.replace(/#.*$/, '');
     const kind = mediaKind(key, it.type) || it.kind || null;

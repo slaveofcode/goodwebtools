@@ -24,6 +24,7 @@ const T = {
     live: 'This is a live stream, so there is no complete file to save.', tooBig: 'Too large to hand over — download it, then open it in the converter.',
     blocked: 'Saving video and audio isn’t available on YouTube or SoundCloud.',
     streamed: 'A player on this page streams its media in small pieces, so there is no single file to save.',
+    protected: 'Some media on this page is protected (DRM, or the site turned off downloads), so it isn’t offered.',
   },
   id: {
     title: 'Gambar dan media di halaman ini',
@@ -40,6 +41,7 @@ const T = {
     live: 'Ini siaran langsung, jadi tidak ada berkas utuh untuk disimpan.', tooBig: 'Terlalu besar untuk dikirim — unduh dulu, lalu buka di konverter.',
     blocked: 'Menyimpan video dan audio tidak tersedia di YouTube atau SoundCloud.',
     streamed: 'Pemutar di halaman ini mengalirkan medianya dalam potongan kecil, jadi tidak ada satu berkas untuk disimpan.',
+    protected: 'Sebagian media di halaman ini dilindungi (DRM, atau situsnya menonaktifkan unduhan), jadi tidak ditawarkan.',
   },
 };
 const $ = (id) => document.getElementById(id);
@@ -48,7 +50,7 @@ const t = T[pickLang(gwtLang, chrome.i18n.getUILanguage())];
 const { pageImages } = await chrome.storage.session.get('pageImages');
 const images = cleanImageList(pageImages?.images || []);
 const blocked = isMediaBlockedSite(pageImages?.url);
-const media = blocked ? [] : cleanMediaList(pageImages?.media || []);
+const media = blocked ? [] : cleanMediaList(pageImages?.media || [], { drm: !!pageImages?.drm });
 const videos = media.filter((m) => m.kind !== 'audio');
 const audios = media.filter((m) => m.kind === 'audio');
 let host = '';
@@ -59,6 +61,7 @@ $('title').textContent = t.title;
 const parts = [images.length && t.nImages(images.length), videos.length && t.nVideo(videos.length), audios.length && t.nAudio(audios.length)].filter(Boolean);
 $('from').textContent = parts.length ? t.from(parts.join(', '), host) : t.empty;
 if (blocked) { $('note').textContent = t.blocked; $('note').hidden = false; }
+else if (pageImages?.drm || pageImages?.restricted) { $('note').textContent = t.protected; $('note').hidden = false; }
 else if (pageImages?.streamed && !media.length) { $('note').textContent = t.streamed; $('note').hidden = false; }
 $('all').textContent = t.all;
 $('none').textContent = t.none;

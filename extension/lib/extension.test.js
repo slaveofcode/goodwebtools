@@ -99,7 +99,7 @@ describe('search', () => {
   });
 });
 
-import { pickMimeType, formatDuration, recordingFileName, canHandOff, formatBytes, MAX_HANDOFF_BYTES } from './recording.js';
+import { pickMimeType, formatDuration, recordingFileName, canHandOff, formatBytes, MAX_HANDOFF_BYTES, gifPlan } from './recording.js';
 
 describe('recording helpers', () => {
   it('picks the best supported WebM type', () => {
@@ -209,5 +209,23 @@ describe('media helpers', () => {
     expect(mediaExtension('https://x/stream', 'audio/mpeg', 'audio')).toBe('mp3');
     expect(mediaExtension('https://x/stream', 'video/webm; codecs=vp9', 'video')).toBe('webm');
     expect(mediaExtension('https://x/stream', '', 'video')).toBe('mp4');
+  });
+});
+
+describe('protected media and GIF plans', () => {
+  it('drops protected media, and network-only finds on a DRM page', () => {
+    const items = [
+      { src: 'https://x/locked.mp4', kind: 'video', restricted: true },
+      { src: 'https://x/locked.mp4', kind: null },
+      { src: 'https://x/seg.mp4', kind: null, via: 'network' },
+      { src: 'https://x/free.mp3', kind: 'audio' },
+    ];
+    expect(cleanMediaList(items).map(m => m.src)).toEqual(['https://x/seg.mp4', 'https://x/free.mp3']);
+    expect(cleanMediaList(items, { drm: true }).map(m => m.src)).toEqual(['https://x/free.mp3']);
+  });
+  it('plans GIF size and length', () => {
+    expect(gifPlan(1920, 1080, 45000)).toEqual({ width: 480, height: 270, fps: 10, seconds: 30, truncated: true });
+    expect(gifPlan(320, 240, 4000)).toEqual({ width: 320, height: 240, fps: 10, seconds: 4, truncated: false });
+    expect(gifPlan(641, 361, Infinity, { maxSeconds: 10 })).toMatchObject({ width: 480, height: 270, seconds: 10, truncated: false });
   });
 });

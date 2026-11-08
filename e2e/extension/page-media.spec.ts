@@ -98,6 +98,25 @@ test('a player fed by MediaSource is reported as streamed', async ({ ctx, server
   expect(found.media.some(m => m.src.startsWith('blob:'))).toBe(false);
 });
 
+test('media the site protects (DRM keys, controlslist=nodownload) is flagged', async ({ ctx, server }) => {
+  const page = await ctx.newPage();
+  await page.goto(`${server}/page`);
+  await page.evaluate(async () => {
+    // A player with the site's "no download" switch.
+    const nd = document.createElement('video'); nd.src = '/nodl.mp4'; nd.setAttribute('controlslist', 'nodownload'); document.body.append(nd);
+    // A player with DRM keys attached (Clear Key, the test key system every Chromium has).
+    const access = await navigator.requestMediaKeySystemAccess('org.w3.clearkey', [{ initDataTypes: ['keyids'], videoCapabilities: [{ contentType: 'video/webm; codecs="vp8"' }] }]);
+    const drmVideo = document.createElement('video'); drmVideo.src = '/drm.webm'; document.body.append(drmVideo);
+    await drmVideo.setMediaKeys(await access.createMediaKeys());
+  });
+  await page.addScriptTag({ content: inject });
+  const found = await page.evaluate(() => (window as unknown as { collectPageMedia: () => Found & { drm: boolean; restricted: number } }).collectPageMedia());
+  expect(found.drm).toBe(true);
+  expect(found.restricted).toBe(2);
+  const flagged = found.media.filter(m => (m as { restricted?: boolean }).restricted).map(m => m.src);
+  expect(flagged).toEqual(expect.arrayContaining([`${server}/nodl.mp4`, `${server}/drm.webm`]));
+});
+
 async function openPicker(ctx: BrowserContext, sw: Worker, extId: string, pageImages: unknown) {
   await sw.evaluate((v) => chrome.storage.session.set({ pageImages: v }), pageImages);
   const page = await ctx.newPage();
@@ -138,6 +157,17 @@ test('an encrypted stream is explained, not downloaded', async ({ ctx, sw, extId
   const row = page.locator('#rows-video .row');
   await row.getByRole('button', { name: 'Download' }).click();
   await expect(row.locator('.status')).toHaveText('This stream is encrypted, so it can’t be saved.');
+});
+
+test('on a DRM page the picker explains and offers only unprotected files', async ({ ctx, sw, extId, server }) => {
+  const page = await openPicker(ctx, sw, extId, { url: `${server}/page`, title: 'x', images: [], drm: true, restricted: 1, media: [
+    { src: `${server}/drm.webm`, kind: 'video', restricted: true },
+    { src: `${server}/chunk.mp4`, kind: null, via: 'network' },
+    { src: `${server}/song.mp3`, kind: 'audio' },
+  ] });
+  await expect(page.locator('#note')).toHaveText('Some media on this page is protected (DRM, or the site turned off downloads), so it isn’t offered.');
+  await expect(page.getByRole('tab', { name: 'Video (0)' })).toBeHidden();
+  await expect(page.getByRole('tab', { name: 'Audio (1)' })).toBeVisible();
 });
 
 test('YouTube pages get a note instead of a media list', async ({ ctx, sw, extId }) => {
