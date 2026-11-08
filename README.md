@@ -63,7 +63,7 @@ Most "online tools" quietly **upload your files to a server**. GoodWebTools does
 
 [**Add to Chrome →**](https://chrome.google.com/webstore/detail/lpmlplhainfelpnahbjfhjmajhkcoojg) · [goodwebtools.com/extension](https://goodwebtools.com/extension)
 
-Right-click any image or selected text to open it in the right tool, already loaded; search every tool from the toolbar; pin tools in the side panel; record a tab or your screen; save a page's images or take a full-page screenshot — all still processed in your browser. Works in Chrome, Edge, Brave and other Chromium browsers. Source: [`extension/`](extension/).
+Right-click any image or selected text to open it in the right tool, already loaded; search every tool from the toolbar; pin tools in the side panel; record a tab or your screen; save a page's images, video and audio or take a full-page screenshot — all still processed in your browser. Works in Chrome, Edge, Brave and other Chromium browsers. Source: [`extension/`](extension/).
 
 ## 🤖 Ask Agent — the tools, driven for you
 

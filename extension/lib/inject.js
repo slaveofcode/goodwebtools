@@ -146,3 +146,58 @@ export function restoreAfterCapture(x, y) {
   window.scrollTo(x, y);
   return true;
 }
+
+/**
+ * Audio and video on the page: <audio>/<video> and their <source>s, links to
+ * media files, og:audio/og:video, and media the page fetched by other means
+ * (from the browser's resource timing list). Classification happens later, in
+ * the extension; here we only gather candidates. `streamed` is true when a
+ * player plays from a blob: URL (MediaSource), i.e. there is no single file.
+ *
+ * Protection is read from the page itself: a player with DRM keys attached
+ * (Encrypted Media Extensions, e.g. Spotify, Netflix) or one the site marked
+ * `controlslist="nodownload"` is never offered, and on a DRM page nothing found
+ * only in the network list is offered either.
+ */
+export function collectPageMedia() {
+  const MEDIA = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|weba|mka|mp4|m4v|webm|mov|mkv|ogv|avi|3gp|m3u8)(\?|#|$)/i;
+  const abs = (u) => { try { return new URL(u, location.href).href; } catch { return null; } };
+  const out = [];
+  let streamed = false;
+  let drm = false;
+  let restricted = 0;
+  const add = (src, kind, label, type, extra) => { const u = src && abs(src); if (u) out.push({ src: u, kind, label: label || '', type: type || '', ...extra }); };
+  for (const el of document.querySelectorAll('audio, video')) {
+    const kind = el.tagName.toLowerCase();
+    const label = el.getAttribute('title') || el.getAttribute('aria-label') || '';
+    const hasDrm = !!el.mediaKeys;
+    const noDownload = /\bnodownload\b/i.test(el.getAttribute('controlslist') || '');
+    if (hasDrm) drm = true;
+    const lock = hasDrm || noDownload ? { restricted: true } : undefined;
+    if (lock) restricted++;
+    for (const s of [el.currentSrc, el.getAttribute('src')]) {
+      if (!s) continue;
+      if (s.startsWith('blob:')) streamed = true;
+      else add(s, kind, label, '', lock);
+    }
+    for (const s of el.querySelectorAll('source[src]')) add(s.getAttribute('src'), kind, label, s.type, lock);
+  }
+  for (const a of document.querySelectorAll('a[href]')) {
+    const href = a.getAttribute('href');
+    if (MEDIA.test(href)) add(href, null, a.textContent.trim() || a.getAttribute('download') || '');
+  }
+  for (const el of document.querySelectorAll('embed[src], object[data], iframe[src]')) {
+    const s = el.getAttribute('src') || el.getAttribute('data');
+    if (MEDIA.test(s)) add(s, null, '', el.getAttribute('type') || '');
+  }
+  for (const m of document.querySelectorAll('meta[property^="og:audio"], meta[property^="og:video"], meta[name="twitter:player:stream"]')) {
+    const p = m.getAttribute('property') || m.getAttribute('name');
+    if (/:(type|width|height|duration|alt)$/.test(p)) continue;
+    add(m.getAttribute('content'), p.startsWith('og:audio') ? 'audio' : p.startsWith('og:video') ? 'video' : null, document.title);
+  }
+  for (const r of performance.getEntriesByType('resource')) {
+    if (r.initiatorType === 'audio' || r.initiatorType === 'video') add(r.name, r.initiatorType, '', '', { via: 'network' });
+    else if (MEDIA.test(r.name)) add(r.name, null, '', '', { via: 'network' });
+  }
+  return { media: out, streamed, drm, restricted, title: document.title, url: location.href };
+}
