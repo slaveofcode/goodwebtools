@@ -2,33 +2,60 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>GoodWebTools — page images</title>
+    <title>GoodWebTools — page images and media</title>
     <link rel="stylesheet" href="popup.css" />
     <style>
       body { width: auto; max-width: 1100px; margin: 24px auto; padding: 16px; }
       .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
-      .bar button, .bar select { border: 2px solid var(--fg); font: inherit; font-weight: 700; padding: 7px 10px; background: var(--row); color: var(--fg); cursor: pointer; }
-      .bar .go { background: var(--accent); color: #fff; box-shadow: 3px 3px 0 var(--fg); }
+      .bar button, .bar select, .row button { border: 2px solid var(--fg); font: inherit; font-weight: 700; padding: 7px 10px; background: var(--row); color: var(--fg); cursor: pointer; }
+      .bar .go, .row .go { background: var(--accent); color: #fff; box-shadow: 3px 3px 0 var(--fg); }
+      .bar button:disabled, .row button:disabled { opacity: .5; cursor: default; }
+      .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 4px; }
+      .tabs button { border: 2px solid var(--fg); font: inherit; font-weight: 700; padding: 6px 12px; background: var(--row); color: var(--fg); cursor: pointer; }
+      .tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); }
       .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
       label.card { display: block; border: 2px solid var(--fg); background: var(--row); padding: 6px; cursor: pointer; }
       label.card img { width: 100%; height: 120px; object-fit: contain; background: repeating-conic-gradient(#ddd 0 25%, #fff 0 50%) 0 0 / 16px 16px; display: block; }
       label.card span { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; }
       label.card:has(input:checked) { border-color: var(--accent); box-shadow: 3px 3px 0 var(--accent); }
+      .rows { display: grid; gap: 10px; margin-top: 12px; }
+      .row { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; border: 2px solid var(--fg); background: var(--row); padding: 10px; }
+      .row .info { min-width: 0; }
+      .row .name { font-weight: 700; display: block; overflow-wrap: anywhere; }
+      .row .src { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .row .badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border: 2px solid var(--fg); padding: 0 5px; margin-right: 6px; }
+      .row .btns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+      .row audio, .row video { grid-column: 1 / -1; width: 100%; max-height: 240px; background: #000; }
+      .row audio { background: none; }
+      .row .status { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+      .row .status:empty { display: none; }
+      .note { border: 2px dashed var(--muted); padding: 8px 10px; color: var(--muted); margin: 12px 0 0; }
+      @media (max-width: 560px) { .row { grid-template-columns: 1fr; } .row .btns { justify-content: flex-start; } }
     </style>
   </head>
   <body>
     <h1 id="title"></h1>
     <p class="hint" id="from"></p>
-    <div class="bar">
-      <button type="button" id="all"></button>
-      <button type="button" id="none"></button>
-      <select id="format" aria-label="Format">
-        <option value="original"></option><option value="webp">WebP</option><option value="png">PNG</option><option value="jpg">JPG</option>
-      </select>
-      <button type="button" id="zip" class="go"></button>
-      <span id="status" class="hint"></span>
+    <p class="note" id="note" hidden></p>
+    <div class="tabs" role="tablist" id="tabs">
+      <button type="button" role="tab" id="tab-images" data-panel="images"></button>
+      <button type="button" role="tab" id="tab-video" data-panel="video"></button>
+      <button type="button" role="tab" id="tab-audio" data-panel="audio"></button>
     </div>
-    <div class="grid" id="grid"></div>
+    <section id="panel-images" role="tabpanel" aria-labelledby="tab-images">
+      <div class="bar">
+        <button type="button" id="all"></button>
+        <button type="button" id="none"></button>
+        <select id="format" aria-label="Format">
+          <option value="original"></option><option value="webp">WebP</option><option value="png">PNG</option><option value="jpg">JPG</option>
+        </select>
+        <button type="button" id="zip" class="go"></button>
+        <span id="status" class="hint"></span>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+    <section id="panel-video" role="tabpanel" aria-labelledby="tab-video" hidden><div class="rows" id="rows-video"></div></section>
+    <section id="panel-audio" role="tabpanel" aria-labelledby="tab-audio" hidden><div class="rows" id="rows-audio"></div></section>
     <script type="module" src="images.js"></script>
   </body>
 </html>

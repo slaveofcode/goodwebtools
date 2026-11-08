@@ -22,7 +22,9 @@ physically **cannot** do:
   the site's Video Converter (MP4), Video → GIF or Video Compressor.
 - **This page** — a color picker (click anywhere on screen; copy HEX/RGB/HSL),
   save the page's images (pick, optionally convert to WebP/PNG/JPG, download as a
-  zip) and a full-page scrolling screenshot (download, or open in the Image
+  zip) and its video and audio (`<video>`/`<audio>`, media links, og:video/audio and
+  media the page fetched; HLS `.m3u8` streams are joined into one file; encrypted or
+  live streams, and YouTube/SoundCloud, are not supported), and a full-page scrolling screenshot (download, or open in the Image
   Annotator / Compressor / Images → PDF). Fixed headers are shown once, not on
   every screen.
 - **JSON pages** (optional) — on API responses and .json/.jsonl files, a small bar

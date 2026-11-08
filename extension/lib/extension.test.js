@@ -124,7 +124,7 @@ describe('recording helpers', () => {
   });
 });
 
-import { colorFormats, largestFromSrcset, cleanImageList, imageFileName, uniqueNames, capturePlan } from './page-helpers.js';
+import { colorFormats, largestFromSrcset, cleanImageList, imageFileName, uniqueNames, capturePlan, mediaKind, cleanMediaList, isMediaBlockedSite, parseM3u8, mediaExtension } from './page-helpers.js';
 
 describe('page helpers', () => {
   it('formats a picked color', () => {
@@ -157,5 +157,57 @@ describe('page helpers', () => {
     expect(capturePlan(2500, 1000)).toEqual({ ys: [0, 1000, 1500], height: 2500, truncated: false });
     expect(capturePlan(800, 1000)).toEqual({ ys: [0], height: 800, truncated: false });
     expect(capturePlan(50000, 1000, 3000)).toEqual({ ys: [0, 1000, 2000], height: 3000, truncated: true });
+  });
+});
+
+describe('media helpers', () => {
+  it('classifies media by type or extension', () => {
+    expect(mediaKind('https://x/a.MP3?t=1')).toBe('audio');
+    expect(mediaKind('https://x/clip.webm')).toBe('video');
+    expect(mediaKind('https://x/live/index.m3u8')).toBe('hls');
+    expect(mediaKind('https://x/stream', 'application/vnd.apple.mpegurl')).toBe('hls');
+    expect(mediaKind('https://x/file', 'audio/ogg')).toBe('audio');
+    expect(mediaKind('https://x/page.html')).toBeNull();
+  });
+  it('cleans the media list: http(s) only, one per URL, video first, labels kept', () => {
+    const list = cleanMediaList([
+      { src: 'https://x/song.mp3', kind: null, label: '' },
+      { src: 'https://x/song.mp3#t=10', kind: 'audio', label: 'My song' },
+      { src: 'blob:https://x/1', kind: 'video' },
+      { src: 'https://x/page', kind: null },
+      { src: 'https://x/v.mp4', kind: 'video', label: 'Clip' },
+      { src: 'https://x/hls/master.m3u8', kind: null },
+      { src: 'https://x/no-ext', kind: 'video', label: '' },
+    ]);
+    expect(list).toEqual([
+      { src: 'https://x/v.mp4', kind: 'video', label: 'Clip' },
+      { src: 'https://x/no-ext', kind: 'video', label: '' },
+      { src: 'https://x/hls/master.m3u8', kind: 'hls', label: '' },
+      { src: 'https://x/song.mp3', kind: 'audio', label: 'My song' },
+    ]);
+  });
+  it('blocks YouTube and SoundCloud pages', () => {
+    for (const u of ['https://www.youtube.com/watch?v=a', 'https://m.youtube.com/', 'https://music.youtube.com/x', 'https://youtu.be/a', 'https://soundcloud.com/artist/track']) expect(isMediaBlockedSite(u)).toBe(true);
+    for (const u of ['https://example.com/', 'https://notyoutube.com/', 'nope']) expect(isMediaBlockedSite(u)).toBe(false);
+  });
+  it('parses an HLS master playlist, best variant first', () => {
+    const pl = parseM3u8('#EXTM3U\n#EXT-X-STREAM-INF:AVERAGE-BANDWIDTH=9,BANDWIDTH=800000,RESOLUTION=640x360\nlow/index.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=2400000,RESOLUTION=1280x720\nhttps://cdn/hi.m3u8\n', 'https://x/v/master.m3u8');
+    expect(pl).toEqual({ type: 'master', variants: [
+      { url: 'https://cdn/hi.m3u8', bandwidth: 2400000, resolution: '1280x720' },
+      { url: 'https://x/v/low/index.m3u8', bandwidth: 800000, resolution: '640x360' },
+    ] });
+  });
+  it('parses an HLS media playlist: segments, init, encryption, live', () => {
+    const vod = parseM3u8('#EXTM3U\n#EXT-X-MAP:URI="init.mp4"\n#EXTINF:4,\ns1.m4s\n#EXTINF:4,\ns2.m4s\n#EXT-X-ENDLIST', 'https://x/a/p.m3u8');
+    expect(vod).toEqual({ type: 'media', segments: ['https://x/a/s1.m4s', 'https://x/a/s2.m4s'], init: 'https://x/a/init.mp4', encrypted: false, live: false });
+    expect(parseM3u8('#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="k"\n#EXTINF:4,\na.ts\n#EXT-X-ENDLIST', 'https://x/').encrypted).toBe(true);
+    expect(parseM3u8('#EXTM3U\n#EXT-X-KEY:METHOD=NONE\n#EXTINF:4,\na.ts', 'https://x/')).toMatchObject({ encrypted: false, live: true });
+    expect(parseM3u8('not a playlist', 'https://x/')).toBeNull();
+  });
+  it('picks a file extension for saved media', () => {
+    expect(mediaExtension('https://x/a.ogg', 'audio/ogg', 'audio')).toBe('ogg');
+    expect(mediaExtension('https://x/stream', 'audio/mpeg', 'audio')).toBe('mp3');
+    expect(mediaExtension('https://x/stream', 'video/webm; codecs=vp9', 'video')).toBe('webm');
+    expect(mediaExtension('https://x/stream', '', 'video')).toBe('mp4');
   });
 });

@@ -15,7 +15,7 @@
 
 import { MENU_ITEMS, PARENT_ID, DEFAULT_BASE, pickLang, toolUrl, findMenuItem } from './lib/menus.js';
 import { createHandoffStore, bytesToBase64 } from './lib/handoff-store.js';
-import { colorPickerOverlay, collectPageImages, pageMetrics, scrollForCapture, restoreAfterCapture } from './lib/inject.js';
+import { colorPickerOverlay, collectPageImages, collectPageMedia, pageMetrics, scrollForCapture, restoreAfterCapture } from './lib/inject.js';
 import { capturePlan } from './lib/page-helpers.js';
 import { saveShot } from './lib/recordings-db.js';
 
@@ -370,10 +370,11 @@ async function pickColor(tab) {
   return {};
 }
 
-/** Collect the page's images, then show them on images.html to pick and download. */
+/** Collect the page's images, audio and video, then show them on images.html to pick and download. */
 async function saveImages(tab) {
   const found = await inTab(tab, collectPageImages);
-  await chrome.storage.session.set({ pageImages: { ...found, at: Date.now() } });
+  const media = await inTab(tab, collectPageMedia).catch(() => null);
+  await chrome.storage.session.set({ pageImages: { ...found, media: media?.media || [], streamed: !!media?.streamed, at: Date.now() } });
   await chrome.tabs.create({ url: chrome.runtime.getURL('images.html'), index: tab.index + 1, openerTabId: tab.id });
   return { count: found?.images?.length || 0 };
 }
