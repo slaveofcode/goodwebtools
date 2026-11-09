@@ -22,10 +22,23 @@ export function localeParams(): { params: { locale: string | undefined }; props:
   return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
 }
 
-/** Prefix a root-relative path for a locale. localizePath('/tools/x','id') → '/id/tools/x'. */
+/**
+ * A page path with its trailing slash ('/tools/x' → '/tools/x/'), the form the
+ * site is served at — without it every link costs a redirect, which search
+ * engines report as "Page with redirect". Files ('/a.json') and any ?query or
+ * #hash are left as they are.
+ */
+export function withSlash(path: string): string {
+  const m = /^([^?#]*)(.*)$/.exec(path) as RegExpExecArray;
+  const p = m[1];
+  if (p.endsWith('/') || /\.[a-z0-9]+$/i.test(p)) return path;
+  return `${p}/${m[2]}`;
+}
+
+/** Prefix a root-relative path for a locale, with its trailing slash. localizePath('/tools/x','id') → '/id/tools/x/'. */
 export function localizePath(path: string, lang: Lang): string {
-  const clean = '/' + path.replace(/^\/+/, '');
-  return lang === DEFAULT_LOCALE ? clean : `/${lang}${clean === '/' ? '' : clean}`;
+  const clean = withSlash('/' + path.replace(/^\/+/, ''));
+  return lang === DEFAULT_LOCALE ? clean : `/${lang}${clean}`;
 }
 
 /** Remove any locale prefix from a path. stripLocale('/id/tools/x') → '/tools/x'. */

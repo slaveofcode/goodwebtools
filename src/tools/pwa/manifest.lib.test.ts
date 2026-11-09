@@ -16,7 +16,7 @@ describe('buildToolManifest', () => {
   const m = buildToolManifest({ id: 'markdown', name: 'Markdown Preview', summary: 'View Markdown' });
 
   it('scopes and starts at the tool route with a unique id', () => {
-    expect(m.start_url).toBe('/tools/markdown');
+    expect(m.start_url).toBe('/tools/markdown/');
     expect(m.scope).toBe('/tools/markdown');
     expect(m.id).toBe('/tools/markdown');
     expect(m.display).toBe('standalone');

@@ -156,7 +156,7 @@ export default function ImageViewer({ lang = 'en' }: { lang?: Lang }) {
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => downloadService.download(file, file.name)}>{t.download}</Button>
           <EditInAnnotatorButton blob={() => file} filename={file.name} />
-          <a href="/tools/image-convert" className="inline-flex items-center border-2 border-border bg-background px-3 py-2 text-sm font-bold shadow-brutal-sm hover:bg-muted">{t.convert}</a>
+          <a href="/tools/image-convert/" className="inline-flex items-center border-2 border-border bg-background px-3 py-2 text-sm font-bold shadow-brutal-sm hover:bg-muted">{t.convert}</a>
         </div>
       )}
     </div>

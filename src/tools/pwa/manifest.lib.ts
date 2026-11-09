@@ -19,7 +19,7 @@ export function buildToolManifest(t: { id: string; name: string; summary: string
     name: `${t.name} — GoodWebTools`,
     short_name: t.name,
     description: t.summary,
-    start_url: `/tools/${t.id}`,
+    start_url: `/tools/${t.id}/`,
     scope: `/tools/${t.id}`,
     display: 'standalone',
     theme_color: '#0a0a0a',
