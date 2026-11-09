@@ -124,5 +124,29 @@
         "example": "JSON Viewer"
       }
     }
+  },
+  "notifyWaitTabTitle": {
+    "message": "Pindah ke tab yang Anda pilih"
+  },
+  "notifyWaitTabShot": {
+    "message": "Chrome hanya menangkap tab saat sedang ditampilkan. Klik tab itu dan tangkapan layar selesai otomatis."
+  },
+  "notifyWaitTabRec": {
+    "message": "Chrome hanya merekam tab saat sedang ditampilkan. Klik tab itu — rekaman akan menampilkannya sejak saat itu."
+  },
+  "notifyWaitWindowTitle": {
+    "message": "Tampilkan jendela yang Anda pilih"
+  },
+  "notifyWaitWindowShot": {
+    "message": "Jendelanya tampak diperkecil atau tersembunyi. Tampilkan dan tangkapan layar selesai otomatis."
+  },
+  "notifyWaitWindowRec": {
+    "message": "Jendelanya tampak diperkecil atau tersembunyi. Tampilkan — rekaman akan menampilkannya sejak saat itu."
+  },
+  "notifyCaptureFailedTitle": {
+    "message": "Tangkapan gagal"
+  },
+  "notifyCaptureNoFrame": {
+    "message": "Tab atau jendela yang dipilih tidak pernah ditampilkan, jadi tidak ada yang ditangkap. Coba lagi lalu pindah ke sana."
   }
 }

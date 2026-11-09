@@ -124,5 +124,29 @@
         "example": "JSON Viewer"
       }
     }
+  },
+  "notifyWaitTabTitle": {
+    "message": "Switch to the tab you picked"
+  },
+  "notifyWaitTabShot": {
+    "message": "Chrome only captures a tab while it’s showing. Click that tab and the screenshot finishes by itself."
+  },
+  "notifyWaitTabRec": {
+    "message": "Chrome only records a tab while it’s showing. Click that tab — the recording shows it from then on."
+  },
+  "notifyWaitWindowTitle": {
+    "message": "Show the window you picked"
+  },
+  "notifyWaitWindowShot": {
+    "message": "It looks minimised or hidden. Bring it up and the screenshot finishes by itself."
+  },
+  "notifyWaitWindowRec": {
+    "message": "It looks minimised or hidden. Bring it up — the recording shows it from then on."
+  },
+  "notifyCaptureFailedTitle": {
+    "message": "Capture failed"
+  },
+  "notifyCaptureNoFrame": {
+    "message": "The picked tab or window never came into view, so nothing was captured. Try again and switch to it."
   }
 }

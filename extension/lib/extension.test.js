@@ -229,3 +229,43 @@ describe('protected media and GIF plans', () => {
     expect(gifPlan(641, 361, Infinity, { maxSeconds: 10 })).toMatchObject({ width: 480, height: 270, seconds: 10, truncated: false });
   });
 });
+
+import { waitForFrame, surfaceOf } from './capture-wait.js';
+
+describe('waiting for the first capture frame', () => {
+  it('resolves at once when a frame is there, without warning', async () => {
+    const onSlow = vi.fn();
+    await expect(waitForFrame({ readyState: 4, videoWidth: 800 }, { onSlow })).resolves.toEqual({ waited: false });
+    expect(onSlow).not.toHaveBeenCalled();
+  });
+  it('warns once while a background tab sends nothing, then resolves when it shows', async () => {
+    vi.useFakeTimers();
+    try {
+      const video = { readyState: 0, videoWidth: 0 };
+      const onSlow = vi.fn();
+      const done = waitForFrame(video, { slowMs: 1000, onSlow });
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(onSlow).toHaveBeenCalledTimes(1);
+      Object.assign(video, { readyState: 2, videoWidth: 1280 }); // the user switched to the tab
+      await vi.advanceTimersByTimeAsync(200);
+      await expect(done).resolves.toEqual({ waited: true });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it('gives up with no-frame after the timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      const done = waitForFrame({ readyState: 0, videoWidth: 0 }, { slowMs: 10, timeoutMs: 500 });
+      const caught = done.catch((e) => e.message);
+      await vi.advanceTimersByTimeAsync(600);
+      expect(await caught).toBe('no-frame');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it('reads what was picked', () => {
+    expect(surfaceOf({ getVideoTracks: () => [{ getSettings: () => ({ displaySurface: 'browser' }) }] })).toBe('browser');
+    expect(surfaceOf(null)).toBe('');
+  });
+});
