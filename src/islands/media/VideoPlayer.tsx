@@ -282,7 +282,7 @@ export default function VideoPlayer({ lang = 'en' }: { lang?: Lang }) {
 
       {pl.rejected.length > 0 && (
         <Alert variant="error">
-          {t.unsupported} {pl.rejected.join(', ')} — <a href="/tools/video-convert" className="underline">{t.convert}</a>
+          {t.unsupported} {pl.rejected.join(', ')} — <a href="/tools/video-convert/" className="underline">{t.convert}</a>
         </Alert>
       )}
     </div>

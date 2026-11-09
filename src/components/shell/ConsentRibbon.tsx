@@ -29,7 +29,7 @@ export function ConsentRibbon() {
         <p className="text-sm text-muted-foreground">
           We use a privacy-friendly analytics cookie to understand which tools are useful. Your files
           never leave your browser.{' '}
-          <a href="/privacy" className="font-bold text-foreground underline underline-offset-2 hover:text-accent">
+          <a href="/privacy/" className="font-bold text-foreground underline underline-offset-2 hover:text-accent">
             Learn more
           </a>
           .
