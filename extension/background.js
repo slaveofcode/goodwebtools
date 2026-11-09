@@ -62,6 +62,8 @@ async function capture() {
   return res;
 }
 
+const CAPTURE_WAIT = 'gwt-capture-wait';
+
 function notify(title, message, id = '') {
   try {
     chrome.notifications.create(id, {
@@ -97,7 +99,7 @@ async function captureToOverlay() {
     await chrome.storage.session.set({ pendingCapture: shot });
     await chrome.tabs.create({ url: chrome.runtime.getURL('select.html') });
   } catch (e) {
-    if (e.message !== 'cancelled') notify('Capture failed', e.message);
+    if (e.message !== 'cancelled') notify(msg('notifyCaptureFailedTitle'), e.message === 'no-frame' ? msg('notifyCaptureNoFrame') : e.message);
   }
 }
 
@@ -280,6 +282,16 @@ chrome.runtime.onMessage.addListener((m, sender, sendResponse) => {
       sendResponse({ ok: false, error: e.message || String(e) });
     });
     return true;
+  }
+  if (m?.type === 'capture-waiting') {
+    // The picked tab/window isn't showing, so it sends no frames yet.
+    const kind = m.surface === 'window' ? 'Window' : 'Tab';
+    notify(msg(`notifyWait${kind}Title`), msg(m.what === 'rec' ? `notifyWait${kind}Rec` : `notifyWait${kind}Shot`), CAPTURE_WAIT);
+    return;
+  }
+  if (m?.type === 'capture-waiting-done') {
+    chrome.notifications.clear(CAPTURE_WAIT).catch(() => {});
+    return;
   }
   if (m?.type === 'capture-open') {
     void captureToOverlay();
