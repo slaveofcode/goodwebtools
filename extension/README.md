@@ -33,6 +33,10 @@ physically **cannot** do:
   and Markdown files shown as plain text, a small bar offers to open the file in
   its viewer; with "Open them automatically" the viewer replaces the tab (not when
   you come back with the Back button). Turn it on in the popup; it needs site access.
+- **Capturing a background tab** — Chrome only paints a tab while it is showing,
+  so "Capture screen" / "Record screen…" ask Chrome to bring the picked tab or
+  window to the front (`CaptureController`), and if no frame arrives within ~1 s a
+  notification says to switch to it (`lib/capture-wait.js`).
 - **Protected media** — players with DRM keys (EME, e.g. Spotify, Netflix) or
   `controlslist="nodownload"` are never offered by "Save images & media".
 - **Global hotkey screenshot** — capture the screen with <kbd>Ctrl/⌘ + Shift + Y</kbd>

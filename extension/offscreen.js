@@ -3,6 +3,7 @@
 // for tab/screen recordings.
 import { recordStream } from './lib/recorder.js';
 import { saveRecording } from './lib/recordings-db.js';
+import { waitForFrame, surfaceOf } from './lib/capture-wait.js';
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.target !== 'offscreen') return;
@@ -21,13 +22,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
  * Throws Error('cancelled') when the user closes the picker.
  */
 async function pickDisplay(withAudio) {
+  // Ask Chrome to bring the picked tab/window to the front: a tab that isn't
+  // showing sends no frames. Must be set right after the picker resolves.
+  const controller = typeof CaptureController === 'function' ? new CaptureController() : undefined;
   try {
-    return await navigator.mediaDevices.getDisplayMedia({
+    const stream = await navigator.mediaDevices.getDisplayMedia({
       video: { frameRate: { ideal: 30 } },
       audio: withAudio,
       systemAudio: withAudio ? 'include' : 'exclude',
       selfBrowserSurface: 'exclude',
+      ...(controller ? { controller } : {}),
     });
+    try { controller?.setFocusBehavior('focus-captured-surface'); } catch { /* a whole screen, or not supported */ }
+    return stream;
   } catch (e) {
     if (e?.name === 'NotAllowedError' || e?.name === 'AbortError') throw new Error('cancelled');
     throw e;
@@ -42,9 +49,15 @@ async function grab() {
     const video = document.createElement('video');
     video.srcObject = stream;
     video.muted = true;
-    await video.play();
-    // One frame is enough; give the stream a beat to deliver dimensions.
-    await new Promise((r) => setTimeout(r, 120));
+    video.play().catch(() => {});
+    // A background tab or minimised window sends nothing until it's showing: say so.
+    const surface = surfaceOf(stream);
+    let warned = false;
+    await waitForFrame(video, {
+      onSlow: () => { warned = true; chrome.runtime.sendMessage({ type: 'capture-waiting', surface, what: 'shot' }).catch(() => {}); },
+    }).finally(() => { if (warned) chrome.runtime.sendMessage({ type: 'capture-waiting-done' }).catch(() => {}); });
+    // Give a tab that just came to the front a beat to paint a fresh frame.
+    await new Promise((r) => setTimeout(r, warned ? 300 : 120));
 
     const w = video.videoWidth;
     const h = video.videoHeight;
@@ -71,6 +84,23 @@ function sourceConstraints(source, streamId, withAudio) {
   return { video: { mandatory: { ...m, maxFrameRate: 30 } }, audio: withAudio ? { mandatory: m } : false };
 }
 
+/** Recording a background tab works, but shows nothing until the tab is showing: tell the user. */
+function watchFirstFrame(stream) {
+  const video = document.createElement('video');
+  video.srcObject = stream;
+  video.muted = true;
+  video.play().catch(() => {});
+  const surface = surfaceOf(stream);
+  let warned = false;
+  waitForFrame(video, {
+    timeoutMs: 10 * 60_000,
+    onSlow: () => { warned = true; chrome.runtime.sendMessage({ type: 'capture-waiting', surface, what: 'rec' }).catch(() => {}); },
+  }).catch(() => {}).finally(() => {
+    video.srcObject = null;
+    if (warned) chrome.runtime.sendMessage({ type: 'capture-waiting-done' }).catch(() => {});
+  });
+}
+
 async function startRecording({ source, streamId, mic }) {
   if (rec) throw new Error('already-recording');
   let captured;
@@ -91,6 +121,7 @@ async function startRecording({ source, streamId, mic }) {
       captured = await navigator.mediaDevices.getUserMedia(sourceConstraints(source, streamId, false));
     }
   }
+  if (source === 'display') watchFirstFrame(captured);
   const streams = [captured];
   const audioCtx = new AudioContext();
   const mix = audioCtx.createMediaStreamDestination();
