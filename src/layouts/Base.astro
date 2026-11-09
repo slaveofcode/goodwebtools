@@ -170,7 +170,7 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
       document.addEventListener('click', function (e) {
         if (!e.target || !e.target.closest) return;
         if (e.target.closest('#home-search')) window.dispatchEvent(new CustomEvent('gwt:open-search'));
-        else if (e.target.closest('#home-agent')) window.location.href = /^\/id(\/|$)/.test(location.pathname) ? '/id/ask-agent' : '/ask-agent';
+        else if (e.target.closest('#home-agent')) window.location.href = /^\/id(\/|$)/.test(location.pathname) ? '/id/ask-agent/' : '/ask-agent/';
       });
 
       // Assemble contact emails from parts so the address never appears in the

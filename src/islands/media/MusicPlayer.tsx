@@ -295,7 +295,7 @@ export default function MusicPlayer({ lang = 'en' }: { lang?: Lang }) {
 
       {pl.rejected.length > 0 && (
         <Alert variant="error">
-          {t.unsupported} {pl.rejected.join(', ')} — <a href="/tools/audio-convert" className="underline">{t.convert}</a>
+          {t.unsupported} {pl.rejected.join(', ')} — <a href="/tools/audio-convert/" className="underline">{t.convert}</a>
         </Alert>
       )}
 

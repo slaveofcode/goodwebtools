@@ -168,6 +168,8 @@ export default defineConfig({
     sitemap({
       // Emit hreflang alternates linking each page to its /id/ counterpart.
       i18n: { defaultLocale: 'en', locales: { en: 'en', id: 'id' } },
+      // Desktop-app screens (noindex) aren't web pages; keep them out of the sitemap.
+      filter: (page) => !/^\/(first-run|overlay|countdown|screen-selector)\/$/.test(new URL(page).pathname),
     }),
     AstroPWA({
       mode: 'production',

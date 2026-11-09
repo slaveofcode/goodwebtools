@@ -57,5 +57,5 @@ test('no suggestion inside the extension side panel (embed mode)', async ({ page
 
 test('the header links to the extension page', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('link', { name: 'Chrome extension' })).toHaveAttribute('href', '/extension');
+  await expect(page.getByRole('link', { name: 'Chrome extension' })).toHaveAttribute('href', '/extension/');
 });

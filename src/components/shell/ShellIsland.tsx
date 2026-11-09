@@ -17,7 +17,7 @@ export function openSearch() {
 export function openAgent() {
   // Keep the visitor in their locale (the /id/ page exists too).
   const inId = /^\/id(\/|$)/.test(window.location.pathname);
-  window.location.href = inId ? '/id/ask-agent' : '/ask-agent';
+  window.location.href = inId ? '/id/ask-agent/' : '/ask-agent/';
 }
 
 const iconBtn =
@@ -133,19 +133,19 @@ export function ShellIsland() {
               {/* Secondary actions — inline on ≥sm, in an overflow menu on mobile. */}
               <div className="hidden items-center gap-2 sm:flex sm:gap-3">
                 {isDesktop && (
-                  <a href="/settings" aria-label={s.settings} title={s.settings} className={iconBtn}>
+                  <a href="/settings/" aria-label={s.settings} title={s.settings} className={iconBtn}>
                     <Settings className="h-4 w-4" />
                   </a>
                 )}
                 {!isDesktop && (
-                  <a href="/extension" aria-label={s.extension} title={s.extension} className={iconBtn}>
+                  <a href="/extension/" aria-label={s.extension} title={s.extension} className={iconBtn}>
                     <Puzzle className="h-4 w-4" />
                   </a>
                 )}
-                <a href="/about" aria-label={s.about} title={s.about} className={iconBtn}>
+                <a href="/about/" aria-label={s.about} title={s.about} className={iconBtn}>
                   <Info className="h-4 w-4" />
                 </a>
-                <a href="/support" aria-label={s.support} title={s.support} className={iconBtn}>
+                <a href="/support/" aria-label={s.support} title={s.support} className={iconBtn}>
                   <Coffee className="h-4 w-4" />
                 </a>
                 <button onClick={() => setModal('github')} aria-label={s.contribute} title={s.contribute} className={iconBtn}>
@@ -170,13 +170,13 @@ export function ShellIsland() {
                       <ThemeToggle />
                     </div>
                     {isDesktop && (
-                      <a href="/settings" role="menuitem" className={menuItem}><Settings className="h-4 w-4" /> {s.settings}</a>
+                      <a href="/settings/" role="menuitem" className={menuItem}><Settings className="h-4 w-4" /> {s.settings}</a>
                     )}
                     {!isDesktop && (
-                      <a href="/extension" role="menuitem" className={menuItem}><Puzzle className="h-4 w-4" /> {s.extension}</a>
+                      <a href="/extension/" role="menuitem" className={menuItem}><Puzzle className="h-4 w-4" /> {s.extension}</a>
                     )}
-                    <a href="/about" role="menuitem" className={menuItem}><Info className="h-4 w-4" /> {s.about}</a>
-                    <a href="/support" role="menuitem" className={menuItem}><Coffee className="h-4 w-4" /> {s.support}</a>
+                    <a href="/about/" role="menuitem" className={menuItem}><Info className="h-4 w-4" /> {s.about}</a>
+                    <a href="/support/" role="menuitem" className={menuItem}><Coffee className="h-4 w-4" /> {s.support}</a>
                     <button role="menuitem" onClick={() => { setMenuOpen(false); setModal('github'); }} className={menuItem}>
                       <Github className="h-4 w-4" /> {s.contribMenu}
                     </button>

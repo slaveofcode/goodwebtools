@@ -31,7 +31,7 @@ export default function DeviceTest({ lang = 'en' }: { lang?: Lang }) {
           return (
             <a
               key={item.id}
-              href={`${prefix}/tools/${item.id}`}
+              href={`${prefix}/tools/${item.id}/`}
               className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-4 transition-colors hover:border-accent hover:bg-muted"
             >
               <Icon className="mt-0.5 h-6 w-6 shrink-0 text-accent" />

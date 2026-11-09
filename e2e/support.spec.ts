@@ -15,6 +15,6 @@ test('support page renders with the Buy me a coffee button', async ({ page }) =>
 test('header links to the support page', async ({ page }) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle').catch(() => {});
-  const link = page.locator('a[href="/support"]').first();
+  const link = page.locator('a[href="/support/"]').first();
   await expect(link).toHaveCount(1);
 });

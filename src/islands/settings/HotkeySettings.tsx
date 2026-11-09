@@ -72,7 +72,7 @@ export default function HotkeySettings() {
     return (
       <Alert variant="info">
         <Info className="h-4 w-4" />
-        <span>Global hotkeys are only available in the desktop app. <a href="/download" className="underline">Download GoodWebTools Desktop</a> to use this feature.</span>
+        <span>Global hotkeys are only available in the desktop app. <a href="/download/" className="underline">Download GoodWebTools Desktop</a> to use this feature.</span>
       </Alert>
     );
   }
