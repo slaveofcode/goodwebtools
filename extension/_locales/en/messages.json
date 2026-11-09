@@ -148,5 +148,77 @@
   },
   "notifyCaptureNoFrame": {
     "message": "The picked tab or window never came into view, so nothing was captured. Try again and switch to it."
+  },
+  "menuImgCrop": {
+    "message": "Crop"
+  },
+  "menuImgAnnotate": {
+    "message": "Annotate (arrows, text, blur)"
+  },
+  "menuImgWatermark": {
+    "message": "Add a watermark"
+  },
+  "menuImgPalette": {
+    "message": "Extract color palette"
+  },
+  "menuImgPdf": {
+    "message": "Save as PDF"
+  },
+  "menuSelCase": {
+    "message": "Change case (UPPER, lower, Title…)"
+  },
+  "menuSelCompare": {
+    "message": "Compare… (pick this, then the other text)"
+  },
+  "menuSelCompareWith": {
+    "message": "Compare with the first selection"
+  },
+  "menuGroupDev": {
+    "message": "Developer"
+  },
+  "menuSelJwt": {
+    "message": "Decode JWT"
+  },
+  "menuSelUrl": {
+    "message": "URL encode / decode"
+  },
+  "menuSelTime": {
+    "message": "Convert timestamp"
+  },
+  "menuSelSql": {
+    "message": "Format SQL"
+  },
+  "menuSelRegex": {
+    "message": "Test a regex on this text"
+  },
+  "menuSelMd": {
+    "message": "Preview Markdown"
+  },
+  "menuEditPassword": {
+    "message": "Insert a strong password"
+  },
+  "menuPageRead": {
+    "message": "Read this page aloud"
+  },
+  "menuPageCount": {
+    "message": "Word count & reading time"
+  },
+  "menuPageLinks": {
+    "message": "List all links on this page"
+  },
+  "menuPagePalette": {
+    "message": "Color palette of this page"
+  },
+  "notifyCompareFirstTitle": {
+    "message": "First text saved"
+  },
+  "notifyCompareFirst": {
+    "message": "Now select the other text, right-click and choose “Compare with the first selection”."
+  },
+  "notifyNoText": {
+    "message": "No readable text found on this page."
+  },
+  "notifyNoField": {
+    "message": "Click into a text field first, then right-click it."
   }
 }

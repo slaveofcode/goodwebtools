@@ -51,3 +51,28 @@ export function toggleFavorite(list, id) {
   const l = list || [];
   return l.includes(id) ? l.filter(x => x !== id) : [...l, id];
 }
+
+const CATEGORY_ORDER = ['Dev', 'Image', 'PDF', 'Documents', 'Media', 'Calculators', 'Files', 'Network', 'Maps', 'Draw', 'Testers', 'Playground', 'Games'];
+
+/**
+ * The side panel's browse list: pinned tools, then productivity and handy picks
+ * not already pinned, then every tool by category (A–Z inside each).
+ * Returns [{ key, title, tools }]; `key` is 'pinned' | 'productivity' | 'handy' | 'category'.
+ */
+export function panelSections(tools, { pinned = [], productivity = [], handy = [] } = {}) {
+  const byId = new Map(tools.map((t) => [t.id, t]));
+  const pick = (ids, skip) => ids.filter((id) => !skip.has(id)).map((id) => byId.get(id)).filter(Boolean);
+  const seen = new Set(pinned);
+  const out = [{ key: 'pinned', title: 'pinned', tools: pick(pinned, new Set()) }];
+  const prod = pick(productivity, seen);
+  prod.forEach((t) => seen.add(t.id));
+  out.push({ key: 'productivity', title: 'productivity', tools: prod });
+  out.push({ key: 'handy', title: 'handy', tools: pick(handy, seen) });
+  const cats = [...new Set(tools.map((t) => t.category))]
+    .filter((c) => c && c !== 'Legacy')
+    .sort((a, b) => (CATEGORY_ORDER.indexOf(a) + 1 || 99) - (CATEGORY_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
+  for (const c of cats) {
+    out.push({ key: 'category', title: c, tools: tools.filter((t) => t.category === c).sort((a, b) => a.name.localeCompare(b.name)) });
+  }
+  return out.filter((s) => s.tools.length);
+}

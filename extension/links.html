@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>GoodWebTools — page links</title>
+    <link rel="stylesheet" href="popup.css" />
+    <style>
+      body { width: auto; max-width: 1000px; margin: 24px auto; padding: 16px; }
+      .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+      .bar input { flex: 1; min-width: 200px; border: 2px solid var(--fg); padding: 7px 10px; font: inherit; background: var(--row); color: var(--fg); }
+      .bar button { border: 2px solid var(--fg); font: inherit; font-weight: 700; padding: 7px 10px; background: var(--row); color: var(--fg); cursor: pointer; }
+      .bar .go { background: var(--accent); color: #fff; box-shadow: 3px 3px 0 var(--fg); }
+      .bar label { display: flex; align-items: center; gap: 6px; }
+      table { width: 100%; border-collapse: collapse; background: var(--row); border: 2px solid var(--fg); }
+      th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--muted); vertical-align: top; }
+      td.url { word-break: break-all; font-family: ui-monospace, monospace; font-size: 12px; }
+      td a { color: var(--fg); }
+    </style>
+  </head>
+  <body>
+    <h1 id="title"></h1>
+    <p class="hint" id="from"></p>
+    <div class="bar">
+      <input id="filter" type="search" />
+      <label><input type="checkbox" id="external" /> <span id="externalLabel"></span></label>
+      <button type="button" id="copy" class="go"></button>
+      <button type="button" id="csv"></button>
+      <span id="status" class="hint" role="status"></span>
+    </div>
+    <table>
+      <thead><tr><th id="hText"></th><th id="hUrl"></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <script type="module" src="links.js"></script>
+  </body>
+</html>

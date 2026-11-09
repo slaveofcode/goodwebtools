@@ -13,10 +13,10 @@
 // The actual pixel grab needs a DOM (getUserMedia + canvas), which a service
 // worker doesn't have — so we run it in an offscreen document.
 
-import { MENU_ITEMS, PARENT_ID, DEFAULT_BASE, pickLang, toolUrl, findMenuItem } from './lib/menus.js';
+import { MENU_ITEMS, MENU_GROUPS, PARENT_ID, DEFAULT_BASE, pickLang, toolUrl, findMenuItem } from './lib/menus.js';
 import { createHandoffStore, bytesToBase64 } from './lib/handoff-store.js';
-import { colorPickerOverlay, collectPageImages, collectPageMedia, pageMetrics, scrollForCapture, restoreAfterCapture } from './lib/inject.js';
-import { capturePlan } from './lib/page-helpers.js';
+import { colorPickerOverlay, collectPageImages, collectPageMedia, pageMetrics, scrollForCapture, restoreAfterCapture, pageText, collectPageLinks, insertIntoField } from './lib/inject.js';
+import { capturePlan, strongPassword } from './lib/page-helpers.js';
 import { saveShot } from './lib/recordings-db.js';
 
 const handoffs = createHandoffStore(chrome.storage.session);
@@ -143,11 +143,66 @@ async function createMenus() {
   for (const ctx of contexts) {
     chrome.contextMenus.create({ id: `${PARENT_ID}-${ctx}`, title: msg('menuParent'), contexts: [ctx] });
   }
+  // Submenus (e.g. "Developer") go after the plain items of their context.
+  const groups = new Set();
   for (const item of MENU_ITEMS) {
     for (const ctx of item.contexts) {
-      chrome.contextMenus.create({ id: item.id, parentId: `${PARENT_ID}-${ctx}`, title: msg(item.message), contexts: [ctx] });
+      let parentId = `${PARENT_ID}-${ctx}`;
+      if (item.group) {
+        const gid = `${PARENT_ID}-${ctx}-${item.group}`;
+        if (!groups.has(gid)) { groups.add(gid); chrome.contextMenus.create({ id: gid, parentId, title: msg(MENU_GROUPS[item.group]), contexts: [ctx] }); }
+        parentId = gid;
+      }
+      chrome.contextMenus.create({ id: item.id, parentId, title: msg(item.message), contexts: [ctx] });
     }
   }
+  void syncCompareTitle();
+}
+
+// --- Compare two selections: the first click remembers, the second opens Text Diff ---
+const COMPARE_KEY = 'compareFirst';
+async function syncCompareTitle() {
+  const { [COMPARE_KEY]: first } = await chrome.storage.session.get(COMPARE_KEY);
+  chrome.contextMenus.update('sel-compare', { title: msg(first ? 'menuSelCompareWith' : 'menuSelCompare') }, () => void chrome.runtime.lastError);
+}
+async function compareSelection(text, tab) {
+  const { [COMPARE_KEY]: first } = await chrome.storage.session.get(COMPARE_KEY);
+  if (!first) {
+    await chrome.storage.session.set({ [COMPARE_KEY]: text });
+    await syncCompareTitle();
+    notify(msg('notifyCompareFirstTitle'), msg('notifyCompareFirst'));
+    return;
+  }
+  await chrome.storage.session.remove(COMPARE_KEY);
+  await syncCompareTitle();
+  await openTool('text-diff', { kind: 'texts', texts: [first, text] }, tab);
+}
+
+/** "This page" actions that hand the page's text, links or look to a tool. */
+async function pageAction(kind, tab, toolId) {
+  if (kind === 'page-text') {
+    const { text } = await inTab(tab, pageText);
+    if (!text) throw new Error(msg('notifyNoText'));
+    return openTool(toolId, { kind: 'text', text }, tab);
+  }
+  if (kind === 'page-links') {
+    const found = await inTab(tab, collectPageLinks);
+    await chrome.storage.session.set({ pageLinks: { ...found, at: Date.now() } });
+    return chrome.tabs.create({ url: chrome.runtime.getURL('links.html'), index: tab.index + 1, openerTabId: tab.id });
+  }
+  if (kind === 'page-shot') {
+    // What's on screen now, as a PNG for the Color Palette tool.
+    const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
+    const blob = await (await fetch(dataUrl)).blob();
+    return openTool(toolId, { kind: 'file', name: 'page.png', type: 'image/png', base64: bytesToBase64(new Uint8Array(await blob.arrayBuffer())) }, tab);
+  }
+  throw new Error(kind);
+}
+
+/** Fill the right-clicked field with a strong password, made here and never stored. */
+async function insertPassword(info, tab) {
+  const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id, frameIds: [info.frameId ?? 0] }, func: insertIntoField, args: [strongPassword(20)] });
+  if (!res?.result) throw new Error(msg('notifyNoField'));
 }
 chrome.runtime.onInstalled.addListener(() => { void createMenus(); void syncJsonTabs(); });
 chrome.runtime.onStartup.addListener(() => { void syncJsonTabs(); });
@@ -243,9 +298,12 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     : Promise.resolve(true);
   void (async () => {
     try {
+      if (item.payload === 'compare') { await compareSelection(await readSelection(info, tab), tab); return; }
+      if (item.payload === 'password') { await insertPassword(info, tab); return; }
+      if (item.payload.startsWith('page-')) { await pageAction(item.payload, tab, item.tool); return; }
       let payload;
       if (item.payload === 'image') payload = await readImage(info, tab, await access);
-      else if (item.payload === 'selection') payload = { kind: 'text', text: await readSelection(info, tab) };
+      else if (item.payload === 'selection') payload = { kind: 'text', text: await readSelection(info, tab), ...(item.field ? { field: item.field } : {}) };
       else if (item.payload === 'link') payload = { kind: 'text', text: info.linkUrl || '' };
       else payload = { kind: 'text', text: info.pageUrl || tab?.url || '' };
       await openTool(item.tool, payload, tab);
@@ -272,6 +330,12 @@ chrome.runtime.onMessage.addListener((m, sender, sendResponse) => {
   }
   if (m?.type === 'rec-stop' || m?.type === 'rec-ended') {
     stopRecording().then(sendResponse);
+    return true;
+  }
+  if (m?.type === 'page-tool') {
+    // Popup "This page" buttons for page text, links and colors.
+    chrome.tabs.get(m.tabId).then((tab) => pageAction(m.kind, tab, m.tool))
+      .then(() => sendResponse({ ok: true }), (e) => { notify(msg('notifyFailedTitle'), e.message); sendResponse({ ok: false, error: e.message }); });
     return true;
   }
   if (m?.type === 'page-color' || m?.type === 'page-images' || m?.type === 'page-shot') {

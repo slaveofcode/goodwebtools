@@ -180,3 +180,26 @@ export function mediaExtension(src, mime, kind) {
   if ([...AUDIO_EXT, ...VIDEO_EXT].includes(ext)) return ext;
   return fromMime || (kind === 'audio' ? 'mp3' : 'mp4');
 }
+
+// ── Password, links ──────────────────────────────────────────────────────────
+
+/** A strong random password: letters, digits and symbols, at least one of each. */
+export function strongPassword(length = 20, rand = crypto) {
+  const sets = ['abcdefghijkmnopqrstuvwxyz', 'ABCDEFGHJKLMNPQRSTUVWXYZ', '23456789', '!@#$%^&*-_=+?'];
+  const all = sets.join('');
+  const pickFrom = (s) => { const b = new Uint32Array(1); rand.getRandomValues(b); return s[b[0] % s.length]; };
+  const chars = sets.map(pickFrom);
+  while (chars.length < length) chars.push(pickFrom(all));
+  for (let i = chars.length - 1; i > 0; i--) { // shuffle so the required ones aren't always first
+    const b = new Uint32Array(1); rand.getRandomValues(b);
+    const j = b[0] % (i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join('');
+}
+
+/** Links as CSV (URL, text), quoted where needed. */
+export function linksToCsv(links) {
+  const q = (v) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+  return ['url,text', ...links.map((l) => `${q(l.href)},${q(l.text || '')}`)].join('\n');
+}

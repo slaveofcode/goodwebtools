@@ -25,33 +25,49 @@ export function payloadToFile(p: Extract<HandoffPayload, { kind: 'file' }>): Fil
 const hydrated = (el: Element) => Object.keys(el).some(k => k.startsWith('__reactProps'));
 const visible = (el: HTMLElement) => !el.closest('[hidden]') && el.getAttribute('aria-hidden') !== 'true';
 
-/** The element a payload goes into, once React owns it. */
-function findTarget(root: ParentNode, p: HandoffPayload): HTMLInputElement | HTMLTextAreaElement | null {
-  if (p.kind === 'file') {
-    const input = root.querySelector<HTMLInputElement>('input[type=file]');
-    return input && hydrated(input) ? input : null;
-  }
-  const boxes = [...root.querySelectorAll<HTMLTextAreaElement | HTMLInputElement>('textarea, input[type=text], input:not([type])')]
+type Box = HTMLInputElement | HTMLTextAreaElement;
+
+/** Editable text boxes, text areas first (they're where tools take their main input). */
+function textBoxes(root: ParentNode): Box[] {
+  const boxes = [...root.querySelectorAll<Box>('textarea, input[type=text], input:not([type])')]
     .filter(el => !el.readOnly && !el.disabled && visible(el));
-  const box = boxes.find(el => el instanceof HTMLTextAreaElement) ?? boxes[0];
-  return box && hydrated(box) ? box : null;
+  const areas = boxes.filter(el => el instanceof HTMLTextAreaElement);
+  return areas.length ? areas : boxes;
 }
 
-/** Put the payload into the element, firing the events React listens for. */
-function inject(el: HTMLInputElement | HTMLTextAreaElement, p: HandoffPayload): void {
-  if (p.kind === 'file' && el instanceof HTMLInputElement) {
+/** The element(s) a payload goes into, once React owns them. */
+function findTargets(root: ParentNode, p: HandoffPayload): Box[] | null {
+  if (p.kind === 'file') {
+    const input = root.querySelector<HTMLInputElement>('input[type=file]');
+    return input && hydrated(input) ? [input] : null;
+  }
+  const boxes = textBoxes(root);
+  if (p.kind === 'texts') {
+    const want = boxes.slice(0, p.texts.length);
+    return want.length === p.texts.length && want.every(hydrated) ? want : null;
+  }
+  const box = boxes[p.field ?? 0] ?? (p.field ? null : boxes[0]);
+  return box && hydrated(box) ? [box] : null;
+}
+
+/** Set a text box's value the way React notices. */
+function setText(el: Box, text: string): void {
+  const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  Object.getOwnPropertyDescriptor(proto, 'value')?.set?.call(el, text);
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+/** Put the payload into the element(s), firing the events React listens for. */
+function inject(els: Box[], p: HandoffPayload): void {
+  if (p.kind === 'file' && els[0] instanceof HTMLInputElement) {
     const dt = new DataTransfer();
     dt.items.add(payloadToFile(p));
-    el.files = dt.files;
-    el.dispatchEvent(new Event('change', { bubbles: true }));
+    els[0].files = dt.files;
+    els[0].dispatchEvent(new Event('change', { bubbles: true }));
     return;
   }
-  if (p.kind === 'text') {
-    const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-    Object.getOwnPropertyDescriptor(proto, 'value')?.set?.call(el, p.text);
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.focus();
-  }
+  if (p.kind === 'texts') { els.forEach((el, i) => setText(el, p.texts[i])); els[0]?.focus(); return; }
+  if (p.kind === 'text') { setText(els[0], p.text); els[0].focus(); }
 }
 
 /** Wait (up to `timeoutMs`) for the tool to hydrate, then load the payload into it. Resolves whether it was delivered. */
@@ -59,8 +75,8 @@ export function deliverHandoff(root: ParentNode, p: HandoffPayload, timeoutMs = 
   return new Promise(resolve => {
     const started = Date.now();
     const tick = () => {
-      const el = findTarget(root, p);
-      if (el) { inject(el, p); resolve(true); return; }
+      const els = findTargets(root, p);
+      if (els) { inject(els, p); resolve(true); return; }
       if (Date.now() - started > timeoutMs) { resolve(false); return; }
       setTimeout(tick, stepMs);
     };

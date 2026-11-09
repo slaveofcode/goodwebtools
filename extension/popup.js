@@ -1,6 +1,6 @@
 // Launcher popup: search every GoodWebTools tool, keep favorites and recents,
 // and run quick actions on the current page.
-import { DEFAULT_BASE, pickLang, toolUrl } from './lib/menus.js';
+import { DEFAULT_BASE, pickLang, toolUrl, PRODUCTIVITY_TOOLS } from './lib/menus.js';
 import { searchTools, pushRecent, toggleFavorite } from './lib/search.js';
 import { formatDuration } from './lib/recording.js';
 
@@ -9,7 +9,7 @@ const T = {
     search: 'Search 200+ tools…', favorites: 'Favorites', recent: 'Recent', quick: 'Quick actions', none: 'No tools match.',
     qrPage: 'QR code of this page', capture: 'Capture screen', hotkey: 'Screenshot:', recKey: 'Record:', unset: 'not set', shortcuts: 'set hotkeys',
     star: 'Add to favorites', unstar: 'Remove from favorites', panel: 'Open side panel', inPanel: 'Open in the side panel',
-    page: 'This page', pgColor: 'Pick a color', pgImages: 'Save images & media', pgShot: 'Full-page screenshot', jsonTabs: 'Open data files (JSON, YAML, TOML, Markdown) in GoodWebTools', dataAuto: 'Open them automatically',
+    page: 'This page', pgColor: 'Pick a color', pgImages: 'Save images & media', pgShot: 'Full-page screenshot', pgRead: 'Read aloud', pgCount: 'Word count', pgLinks: 'All links', pgPalette: 'Color palette of this page', prod: 'Productivity — opens in the side panel', jsonTabs: 'Open data files (JSON, YAML, TOML, Markdown) in GoodWebTools', dataAuto: 'Open them automatically',
     rec: 'Record', recTab: 'Record this tab', recScreen: 'Record screen…', recMic: 'Include my microphone', recStop: (t) => `■ Stop recording · ${t}`,
     access: 'Allow the Companion to read images on websites so right-click image actions work everywhere.', grant: 'Allow images from websites',
   },
@@ -17,7 +17,7 @@ const T = {
     search: 'Cari 200+ tool…', favorites: 'Favorit', recent: 'Terakhir', quick: 'Aksi cepat', none: 'Tidak ada tool yang cocok.',
     qrPage: 'Kode QR halaman ini', capture: 'Tangkap layar', hotkey: 'Tangkap layar:', recKey: 'Rekam:', unset: 'belum diatur', shortcuts: 'atur pintasan',
     star: 'Tambah ke favorit', unstar: 'Hapus dari favorit', panel: 'Buka panel samping', inPanel: 'Buka di panel samping',
-    page: 'Halaman ini', pgColor: 'Ambil warna', pgImages: 'Simpan gambar & media', pgShot: 'Tangkapan layar penuh', jsonTabs: 'Buka berkas data (JSON, YAML, TOML, Markdown) di GoodWebTools', dataAuto: 'Buka otomatis',
+    page: 'Halaman ini', pgColor: 'Ambil warna', pgImages: 'Simpan gambar & media', pgShot: 'Tangkapan layar penuh', pgRead: 'Bacakan', pgCount: 'Jumlah kata', pgLinks: 'Semua tautan', pgPalette: 'Palet warna halaman ini', prod: 'Produktivitas — terbuka di panel samping', jsonTabs: 'Buka berkas data (JSON, YAML, TOML, Markdown) di GoodWebTools', dataAuto: 'Buka otomatis',
     rec: 'Rekam', recTab: 'Rekam tab ini', recScreen: 'Rekam layar…', recMic: 'Sertakan mikrofon saya', recStop: (t) => `■ Hentikan rekaman · ${t}`,
     access: 'Izinkan Companion membaca gambar di situs web agar aksi klik kanan pada gambar berfungsi di mana saja.', grant: 'Izinkan gambar dari situs web',
   },
@@ -120,6 +120,16 @@ function render() {
   $('pgColor').textContent = t.pgColor;
   $('pgImages').textContent = t.pgImages;
   $('pgShot').textContent = t.pgShot;
+  for (const k of ['pgRead', 'pgCount', 'pgLinks', 'pgPalette']) $(k).textContent = t[k];
+  $('prodTitle').textContent = t.prod;
+  $('prod').replaceChildren(...PRODUCTIVITY_TOOLS.map((id) => byId.get(id)).filter(Boolean).map((tool) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.tool = tool.id;
+    b.textContent = state.lang === 'id' ? tool.nameId || tool.name : tool.name;
+    b.addEventListener('click', () => openPanel(tool.id));
+    return b;
+  }));
   $('jsonTabsLabel').textContent = t.jsonTabs;
   $('dataAutoLabel').textContent = t.dataAuto;
   $('recTitle').textContent = t.rec;
@@ -205,6 +215,13 @@ async function init() {
   $('panel').addEventListener('click', () => openPanel());
   // Page helpers work on the current tab (the popup's activeTab grant); the popup
   // closes at once so it isn't in the way of the picker or the screenshot.
+  for (const [btn, kind, tool] of [['pgRead', 'page-text', 'text-to-speech'], ['pgCount', 'page-text', 'word-counter'], ['pgLinks', 'page-links'], ['pgPalette', 'page-shot', 'image-palette']]) {
+    $(btn).addEventListener('click', async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      chrome.runtime.sendMessage({ type: 'page-tool', kind, tool, tabId: tab?.id });
+      setTimeout(() => window.close(), 50);
+    });
+  }
   for (const [btn, type] of [['pgColor', 'page-color'], ['pgImages', 'page-images'], ['pgShot', 'page-shot']]) {
     $(btn).addEventListener('click', async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { MENU_ITEMS, toolUrl, pickLang, findMenuItem, embedUrl, DEFAULT_PANEL_TOOLS } from './menus.js';
+import { MENU_ITEMS, MENU_GROUPS, toolUrl, pickLang, findMenuItem, embedUrl, DEFAULT_PANEL_TOOLS, PRODUCTIVITY_TOOLS, HANDY_PANEL_TOOLS } from './menus.js';
 import { createHandoffStore, isFresh, bytesToBase64, TTL_MS } from './handoff-store.js';
 import { searchTools, pushRecent, toggleFavorite } from './search.js';
 
@@ -7,8 +7,10 @@ describe('menus', () => {
   it('has unique ids and a tool + payload for each item', () => {
     expect(new Set(MENU_ITEMS.map(m => m.id)).size).toBe(MENU_ITEMS.length);
     for (const m of MENU_ITEMS) {
-      expect(m.tool).toMatch(/^[a-z0-9-]+$/);
-      expect(['image', 'selection', 'link', 'page']).toContain(m.payload);
+      expect(['image', 'selection', 'link', 'page', 'compare', 'password', 'page-text', 'page-links', 'page-shot']).toContain(m.payload);
+      // Everything opens a tool except the ones handled in place (password) or on an extension page (links).
+      if (!['password', 'page-links'].includes(m.payload)) expect(m.tool).toMatch(/^[a-z0-9-]+$/);
+      if (m.group) expect(MENU_GROUPS[m.group]).toBeTruthy();
     }
     expect(findMenuItem('img-compress').tool).toBe('image-compress');
     expect(findMenuItem('nope')).toBeNull();
@@ -124,7 +126,7 @@ describe('recording helpers', () => {
   });
 });
 
-import { colorFormats, largestFromSrcset, cleanImageList, imageFileName, uniqueNames, capturePlan, mediaKind, cleanMediaList, isMediaBlockedSite, parseM3u8, mediaExtension } from './page-helpers.js';
+import { colorFormats, largestFromSrcset, cleanImageList, imageFileName, uniqueNames, capturePlan, mediaKind, cleanMediaList, isMediaBlockedSite, parseM3u8, mediaExtension, strongPassword, linksToCsv } from './page-helpers.js';
 
 describe('page helpers', () => {
   it('formats a picked color', () => {
@@ -267,5 +269,50 @@ describe('waiting for the first capture frame', () => {
   it('reads what was picked', () => {
     expect(surfaceOf({ getVideoTracks: () => [{ getSettings: () => ({ displaySurface: 'browser' }) }] })).toBe('browser');
     expect(surfaceOf(null)).toBe('');
+  });
+});
+
+import { panelSections } from './search.js';
+import fs from 'node:fs';
+import path from 'node:path';
+
+describe('more tools', () => {
+  const index = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'tools-index.json'), 'utf8'));
+  const tools = index.tools || index;
+  const ids = new Set(tools.map((t) => t.id));
+  const messages = (lang) => JSON.parse(fs.readFileSync(path.join(__dirname, '..', '_locales', lang, 'messages.json'), 'utf8'));
+
+  it('every menu item, productivity and side-panel pick is a real GoodWebTools tool', () => {
+    for (const m of MENU_ITEMS) if (m.tool) expect(ids.has(m.tool), m.id).toBe(true);
+    for (const id of [...PRODUCTIVITY_TOOLS, ...HANDY_PANEL_TOOLS, ...DEFAULT_PANEL_TOOLS]) expect(ids.has(id), id).toBe(true);
+  });
+  it('every menu label and submenu exists in English and Indonesian', () => {
+    for (const lang of ['en', 'id']) {
+      const msg = messages(lang);
+      for (const k of [...MENU_ITEMS.map((m) => m.message), ...Object.values(MENU_GROUPS), 'menuSelCompareWith']) expect(msg[k]?.message, `${lang}:${k}`).toBeTruthy();
+    }
+  });
+  it('makes strong passwords: right length, every character class, different each time', () => {
+    const a = strongPassword(20);
+    expect(a).toHaveLength(20);
+    expect(a).toMatch(/[a-z]/);
+    expect(a).toMatch(/[A-Z]/);
+    expect(a).toMatch(/[0-9]/);
+    expect(a).toMatch(/[!@#$%^&*\-_=+?]/);
+    expect(strongPassword(20)).not.toBe(a);
+  });
+  it('writes links as CSV', () => {
+    expect(linksToCsv([{ href: 'https://x/a', text: 'Hello, "you"' }, { href: 'https://x/b', text: '' }]))
+      .toBe('url,text\nhttps://x/a,"Hello, ""you"""\nhttps://x/b,');
+  });
+  it('builds the side panel browse list: pinned, productivity, handy, then categories', () => {
+    const s = panelSections(tools, { pinned: ['music-player', 'notepad'], productivity: ['notepad', 'pomodoro-timer'], handy: ['pomodoro-timer', 'uuid-gen'] });
+    expect(s.slice(0, 3).map((x) => [x.key, x.tools.map((t) => t.id)])).toEqual([
+      ['pinned', ['music-player', 'notepad']], ['productivity', ['pomodoro-timer']], ['handy', ['uuid-gen']],
+    ]);
+    const cats = s.filter((x) => x.key === 'category');
+    expect(cats[0].title).toBe('Dev');
+    expect(cats.some((x) => x.title === 'Legacy')).toBe(false);
+    expect(cats.reduce((n, x) => n + x.tools.length, 0)).toBe(tools.filter((t) => t.category !== 'Legacy').length);
   });
 });

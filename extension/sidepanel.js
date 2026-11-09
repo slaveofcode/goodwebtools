@@ -1,12 +1,14 @@
 // Side panel: a GoodWebTools tool next to whatever page you're on. The panel
 // stays open while you switch tabs, so the Music Player keeps playing as you browse.
-import { DEFAULT_BASE, DEFAULT_PANEL_TOOLS, pickLang, embedUrl, toolUrl } from './lib/menus.js';
+import { DEFAULT_BASE, DEFAULT_PANEL_TOOLS, PRODUCTIVITY_TOOLS, HANDY_PANEL_TOOLS, pickLang, embedUrl, toolUrl } from './lib/menus.js';
+import { panelSections } from './lib/search.js';
 import { searchTools, toggleFavorite } from './lib/search.js';
 
 const T = {
-  en: { pin: 'Pin to this list', unpin: 'Unpin from this list', find: 'Find a tool', popout: 'Open in a tab', search: 'Search tools…' },
-  id: { pin: 'Sematkan ke daftar', unpin: 'Lepas dari daftar', find: 'Cari tool', popout: 'Buka di tab', search: 'Cari tool…' },
+  en: { pin: 'Pin to this list', unpin: 'Unpin from this list', find: 'Browse or find a tool', popout: 'Open in a tab', search: 'Search tools…', pinned: 'Pinned', productivity: 'Productivity', handy: 'Handy beside a page', all: (c) => c },
+  id: { pin: 'Sematkan ke daftar', unpin: 'Lepas dari daftar', find: 'Jelajahi atau cari tool', popout: 'Buka di tab', search: 'Cari tool…', pinned: 'Disematkan', productivity: 'Produktivitas', handy: 'Praktis di samping halaman', all: (c) => CAT_ID[c] || c },
 };
+const CAT_ID = { Image: 'Gambar', Media: 'Media', Documents: 'Dokumen', Calculators: 'Kalkulator', Files: 'Berkas', Games: 'Game', Network: 'Jaringan', Maps: 'Peta', Draw: 'Gambar Bebas', Testers: 'Penguji' };
 const $ = (id) => document.getElementById(id);
 const state = { tools: [], base: DEFAULT_BASE, lang: 'en', pinned: DEFAULT_PANEL_TOOLS, current: DEFAULT_PANEL_TOOLS[0], sel: 0, shown: [] };
 
@@ -52,20 +54,36 @@ function show(id) {
 
 function renderResults() {
   const q = $('q').value;
-  state.shown = q.trim() ? searchTools(state.tools, q, 10) : state.pinned.map(byId).filter(Boolean);
+  const t = T[state.lang];
+  // Searching: the best matches. Not searching: browse — pinned, productivity, handy, then every tool by category.
+  const sections = q.trim()
+    ? [{ title: '', tools: searchTools(state.tools, q, 12) }]
+    : panelSections(state.tools, { pinned: state.pinned, productivity: PRODUCTIVITY_TOOLS, handy: HANDY_PANEL_TOOLS })
+      .map((s) => ({ ...s, title: s.key === 'category' ? t.all(s.title) : t[s.key] }));
+  state.shown = sections.flatMap((s) => s.tools);
   state.sel = Math.min(state.sel, Math.max(0, state.shown.length - 1));
-  $('results').replaceChildren(...state.shown.map((t, i) => {
-    const li = document.createElement('li');
-    li.role = 'option';
-    if (i === state.sel) li.setAttribute('aria-selected', 'true');
-    li.textContent = label(t);
-    const sum = document.createElement('span');
-    sum.className = 'sum';
-    sum.textContent = state.lang === 'id' ? t.summaryId || t.summary : t.summary;
-    li.append(sum);
-    li.addEventListener('click', () => pick(t.id));
-    return li;
+  let i = -1;
+  $('results').replaceChildren(...sections.flatMap((s) => {
+    const head = document.createElement('li');
+    head.className = 'head';
+    head.setAttribute('role', 'presentation');
+    head.textContent = s.title;
+    return [...(s.title ? [head] : []), ...s.tools.map((tool) => renderRow(tool, ++i))];
   }));
+  $('results').querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
+}
+
+function renderRow(t, i) {
+  const li = document.createElement('li');
+  li.role = 'option';
+  if (i === state.sel) li.setAttribute('aria-selected', 'true');
+  li.textContent = label(t);
+  const sum = document.createElement('span');
+  sum.className = 'sum';
+  sum.textContent = state.lang === 'id' ? t.summaryId || t.summary : t.summary;
+  li.append(sum);
+  li.addEventListener('click', () => pick(t.id));
+  return li;
 }
 
 function toggleSearch(open = $('search').hidden) {

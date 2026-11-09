@@ -27,11 +27,16 @@ GoodWebTools is a collection of 200+ free tools that run entirely in your browse
 nothing is uploaded. The Companion brings them to every page you visit.
 
 RIGHT-CLICK → THE RIGHT TOOL
-• On any image: compress, convert (WebP, PNG, JPG…), resize, remove the background,
-  extract text (OCR), read a QR code or upscale it.
-• On selected text: format or view JSON as a tree, Base64 encode/decode, hash, count
-  words, read it aloud, or make a QR code.
-• On a link or page: make a QR code.
+• On any image: compress, convert (WebP, PNG, JPG…), resize, crop, annotate, add a
+  watermark, remove the background, extract its color palette or text (OCR), read a
+  QR code, upscale it, or save it as PDF.
+• On selected text: count words, read it aloud, change case, make a QR code, or compare
+  two selections side by side. Developer submenu: format/view JSON, Base64, hash,
+  decode a JWT, URL encode/decode, convert a timestamp, format SQL, test a regex,
+  preview Markdown.
+• In a text or password field: insert a strong password, made on your device.
+• On a page: read it aloud, word count and reading time, list all its links (copy or
+  CSV), its color palette, or a QR code.
 The tool opens with your image or text already loaded.
 
 SEARCH EVERY TOOL
@@ -39,8 +44,10 @@ The toolbar popup searches all GoodWebTools tools in English and Bahasa Indonesi
 Star favorites, reopen recent tools, make a QR code of the current page.
 
 TOOLS BESIDE ANY PAGE
-Pin tools to Chrome's side panel — Music Player, JSON Viewer, Notepad, Unit
-Converter and more. Music keeps playing while you switch tabs.
+Keep any tool in Chrome's side panel — Pomodoro timer, to-do list, notepad,
+calculator, music player, converters and more. Browse by category and pin favorites;
+the popup opens productivity tools there in one click. They keep running while you
+switch tabs.
 
 RECORD A TAB OR YOUR SCREEN
 Record the current tab with its sound (no picker) or a screen/window, optionally with
@@ -78,11 +85,15 @@ GoodWebTools adalah kumpulan 200+ tool gratis yang berjalan sepenuhnya di browse
 — tidak ada yang diunggah. Companion menghadirkannya di setiap halaman yang Anda buka.
 
 KLIK KANAN → TOOL YANG TEPAT
-• Pada gambar apa pun: kompres, konversi (WebP, PNG, JPG…), ubah ukuran, hapus latar
-  belakang, ambil teks (OCR), baca kode QR, atau perbesar.
-• Pada teks yang dipilih: format atau lihat JSON sebagai pohon, encode/decode Base64,
-  hash, hitung kata, bacakan, atau buat kode QR.
-• Pada tautan atau halaman: buat kode QR.
+• Pada gambar apa pun: kompres, konversi (WebP, PNG, JPG…), ubah ukuran, potong,
+  anotasi, beri watermark, hapus latar belakang, ambil palet warna atau teksnya (OCR),
+  baca kode QR, perbesar, atau simpan sebagai PDF.
+• Pada teks yang dipilih: hitung kata, bacakan, ubah huruf, buat kode QR, atau
+  bandingkan dua pilihan. Submenu Developer: format/lihat JSON, Base64, hash, dekode
+  JWT, encode/decode URL, konversi timestamp, format SQL, uji regex, pratinjau Markdown.
+• Di kolom teks atau kata sandi: sisipkan kata sandi kuat, dibuat di perangkat Anda.
+• Pada halaman: bacakan, jumlah kata dan waktu baca, daftar semua tautan (salin atau
+  CSV), palet warnanya, atau kode QR.
 Tool terbuka dengan gambar atau teks Anda sudah dimuat.
 
 CARI SEMUA TOOL
@@ -90,8 +101,10 @@ Popup di toolbar mencari semua tool GoodWebTools dalam Bahasa Indonesia dan Ingg
 Tandai favorit, buka lagi tool terakhir, buat kode QR halaman yang sedang dibuka.
 
 TOOL DI SAMPING HALAMAN APA PUN
-Sematkan tool di panel samping Chrome — Pemutar Musik, Penampil JSON, Notepad,
-Pengonversi Satuan, dan lainnya. Musik tetap diputar saat Anda berpindah tab.
+Simpan tool mana pun di panel samping Chrome — timer Pomodoro, daftar tugas, notepad,
+kalkulator, pemutar musik, konverter, dan lainnya. Jelajahi per kategori dan sematkan
+favorit; popup membuka tool produktivitas di sana dengan sekali klik. Tetap berjalan
+saat Anda berpindah tab.
 
 REKAM TAB ATAU LAYAR
 Rekam tab yang sedang dibuka beserta suaranya (tanpa memilih sumber) atau layar/jendela,
@@ -129,8 +142,8 @@ and side panel.
 
 | Permission | Justification |
 |---|---|
-| `contextMenus` | Adds the GoodWebTools right-click menu on images, selected text, links and pages. |
-| `activeTab` | Reads the selected text or image the user right-clicked, and runs "this page" actions (color picker, save images & media, full-page screenshot, record this tab) on the tab where the user invoked the extension. |
+| `contextMenus` | Adds the GoodWebTools right-click menu on images, selected text, text fields, links and pages. |
+| `activeTab` | Reads the selected text or image the user right-clicked, and runs "this page" actions (color picker, save images & media, full-page screenshot, read aloud, word count, list links, color palette, record this tab, insert a password into the field the user right-clicked) on the tab where the user invoked the extension. |
 | `scripting` | Injects the color-picker panel, collects image and media URLs for "Save images & media", scrolls for the full-page screenshot, and registers the optional data-file detector (JSON, YAML, TOML, Markdown) — only after a user action. |
 | `storage` | Stores settings (language, favorites, recent and pinned tools, microphone choice) and passes a payload to the tool page for up to 5 minutes. |
 | `notifications` | Tells the user when an action couldn't run (e.g. an image that can't be read, a capture that failed). |

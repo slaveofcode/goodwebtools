@@ -4,15 +4,22 @@ The companion extension for [GoodWebTools](https://github.com/slaveofcode/goodwe
 The website does all the work client-side; the extension adds what a web page
 physically **cannot** do:
 
-- **Right-click menus** — send an image (compress, convert, resize, remove
-  background, OCR, read QR, upscale), selected text (format/view JSON, Base64,
-  hash, word count, read aloud, QR) or a link/page URL (QR) straight into the
-  matching tool, already loaded.
+- **Right-click menus** — send an image (compress, convert, resize, crop,
+  annotate, watermark, remove background, color palette, OCR, read QR, upscale,
+  save as PDF), selected text (word count, read aloud, change case, QR, compare two
+  selections → Text Diff; a *Developer* submenu with JSON, Base64, hash, JWT, URL
+  encode, timestamp, SQL, regex — the text goes in the test box — and Markdown) or
+  a link/page URL (QR) straight into the matching tool, already loaded. In a text
+  field: insert a strong password (made with `crypto.getRandomValues`, never
+  stored). On a page: read aloud, word count, list all links (`links.html`: filter,
+  copy, CSV) and the color palette of what's on screen.
 - **Tool launcher** — the toolbar popup searches all tools (English and Bahasa
   Indonesia names and keywords), keeps ★ favorites and recents, and has quick
   actions (QR code of the current page, screen capture).
-- **Side panel** — a GoodWebTools tool next to any page (Music Player, JSON
-  Viewer, Notepad, Unit Converter… pin your own). The panel stays open while you
+- **Side panel** — a GoodWebTools tool next to any page (Music Player, Pomodoro,
+  To-do, Notepad, calculator… pin your own). ⌕ browses pinned, productivity and
+  handy picks and every tool by category, or searches. The popup's *Productivity*
+  row opens Pomodoro, To-do, Notepad, timers, calculator and time zones there. The panel stays open while you
   switch tabs, so music keeps playing as you browse. Tools load in the site's
   compact embed mode (`?embed=1`).
 - **Recording** — record the current tab with its sound (no picker, and you keep
