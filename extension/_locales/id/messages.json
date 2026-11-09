@@ -148,5 +148,77 @@
   },
   "notifyCaptureNoFrame": {
     "message": "Tab atau jendela yang dipilih tidak pernah ditampilkan, jadi tidak ada yang ditangkap. Coba lagi lalu pindah ke sana."
+  },
+  "menuImgCrop": {
+    "message": "Potong"
+  },
+  "menuImgAnnotate": {
+    "message": "Anotasi (panah, teks, blur)"
+  },
+  "menuImgWatermark": {
+    "message": "Tambahkan watermark"
+  },
+  "menuImgPalette": {
+    "message": "Ambil palet warna"
+  },
+  "menuImgPdf": {
+    "message": "Simpan sebagai PDF"
+  },
+  "menuSelCase": {
+    "message": "Ubah huruf (KAPITAL, kecil, Judul…)"
+  },
+  "menuSelCompare": {
+    "message": "Bandingkan… (pilih ini, lalu teks lainnya)"
+  },
+  "menuSelCompareWith": {
+    "message": "Bandingkan dengan pilihan pertama"
+  },
+  "menuGroupDev": {
+    "message": "Developer"
+  },
+  "menuSelJwt": {
+    "message": "Dekode JWT"
+  },
+  "menuSelUrl": {
+    "message": "Encode / decode URL"
+  },
+  "menuSelTime": {
+    "message": "Konversi timestamp"
+  },
+  "menuSelSql": {
+    "message": "Format SQL"
+  },
+  "menuSelRegex": {
+    "message": "Uji regex pada teks ini"
+  },
+  "menuSelMd": {
+    "message": "Pratinjau Markdown"
+  },
+  "menuEditPassword": {
+    "message": "Sisipkan kata sandi kuat"
+  },
+  "menuPageRead": {
+    "message": "Bacakan halaman ini"
+  },
+  "menuPageCount": {
+    "message": "Jumlah kata & waktu baca"
+  },
+  "menuPageLinks": {
+    "message": "Daftar semua tautan di halaman ini"
+  },
+  "menuPagePalette": {
+    "message": "Palet warna halaman ini"
+  },
+  "notifyCompareFirstTitle": {
+    "message": "Teks pertama tersimpan"
+  },
+  "notifyCompareFirst": {
+    "message": "Sekarang pilih teks lainnya, klik kanan, lalu pilih “Bandingkan dengan pilihan pertama”."
+  },
+  "notifyNoText": {
+    "message": "Tidak ada teks yang bisa dibaca di halaman ini."
+  },
+  "notifyNoField": {
+    "message": "Klik ke kolom teks dulu, lalu klik kanan di situ."
   }
 }

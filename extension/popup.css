@@ -31,3 +31,4 @@ li .side { border: 0; background: none; color: var(--muted); font-size: 14px; cu
 .kbd { border: 1px solid var(--fg); border-radius: 4px; padding: 0 5px; font-weight: 700; }
 a { color: var(--accent); }
 .empty { color: var(--muted); padding: 6px 8px; }
+.prod button { background: var(--row); color: var(--fg); font-size: 12px; padding: 6px; }

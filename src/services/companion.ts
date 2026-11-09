@@ -68,7 +68,10 @@ export function companionCapture(timeout = 120000): Promise<CompanionCapture> {
 
 /** Data the extension hands to a tool page (right-click menu / launcher). */
 export type HandoffPayload =
-  | { kind: 'text'; text: string }
+  /** Text for the tool's first text box — or box number `field` (0-based) when the first box is something else. */
+  | { kind: 'text'; text: string; field?: number }
+  /** Several texts, one per text box in order (e.g. both sides of Text Diff). */
+  | { kind: 'texts'; texts: string[] }
   | { kind: 'file'; name: string; type: string; base64: string };
 
 /** Fetch a handoff payload from the extension by id; null if it's gone, expired or there's no extension. */

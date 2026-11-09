@@ -9,7 +9,9 @@ select { flex: 1; min-width: 0; border: 2px solid var(--fg); background: var(--r
 .icon[aria-pressed="true"], .icon[aria-expanded="true"] { background: var(--accent); color: #fff; }
 #search { padding: 8px; border-bottom: 2px solid var(--fg); }
 #q { width: 100%; border: 2px solid var(--fg); padding: 6px 8px; font: inherit; background: var(--row); color: var(--fg); outline: none; }
-ul { list-style: none; margin: 6px 0 0; padding: 0; max-height: 50vh; overflow: auto; }
+ul { list-style: none; margin: 6px 0 0; padding: 0; max-height: 65vh; overflow: auto; }
+li.head { cursor: default; border: 0; padding: 10px 8px 2px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+li.head:hover { background: none; }
 li { padding: 5px 8px; border: 2px solid transparent; cursor: pointer; }
 li:hover, li[aria-selected="true"] { border-color: var(--fg); background: var(--row); }
 li .sum { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
