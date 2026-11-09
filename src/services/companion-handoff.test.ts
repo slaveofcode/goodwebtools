@@ -54,6 +54,25 @@ describe('deliverHandoff', () => {
     expect(onChange).toHaveBeenCalledOnce();
   });
 
+  it('can target a later text box (e.g. Regex Tester\'s test text, after the pattern)', async () => {
+    document.body.innerHTML = '<textarea id="pattern"></textarea><textarea id="subject"></textarea>';
+    const [pattern, subject] = ['pattern', 'subject'].map(id => hydrate(document.getElementById(id) as HTMLTextAreaElement));
+    expect(await deliverHandoff(document, { kind: 'text', text: 'call 555-1234', field: 1 }, 500, 10)).toBe(true);
+    expect(subject.value).toBe('call 555-1234');
+    expect(pattern.value).toBe('');
+  });
+
+  it('fills several text boxes in order (both sides of a diff)', async () => {
+    document.body.innerHTML = '<textarea id="a"></textarea><input type="text" id="search"><textarea id="b"></textarea>';
+    const a = document.getElementById('a') as HTMLTextAreaElement;
+    const b = document.getElementById('b') as HTMLTextAreaElement;
+    const done = deliverHandoff(document, { kind: 'texts', texts: ['old', 'new'] }, 2000, 10);
+    hydrate(a);
+    setTimeout(() => hydrate(b), 30); // waits until both are ready
+    expect(await done).toBe(true);
+    expect([a.value, b.value]).toEqual(['old', 'new']);
+  });
+
   it('gives up when the tool has nowhere to put the data', async () => {
     document.body.innerHTML = '<div>no inputs</div>';
     expect(await deliverHandoff(document, { kind: 'text', text: 'x' }, 50, 10)).toBe(false);

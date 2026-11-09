@@ -201,3 +201,40 @@ export function collectPageMedia() {
   }
   return { media: out, streamed, drm, restricted, title: document.title, url: location.href };
 }
+
+/** The page's readable text: the article or main content when marked up, else the body. */
+export function pageText() {
+  const root = document.querySelector('article') || document.querySelector('main, [role="main"]') || document.body;
+  const text = (root?.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+  return { text: text.slice(0, 200_000), title: document.title, url: location.href };
+}
+
+/** Every link on the page: absolute http(s) URL and its text, once each. */
+export function collectPageLinks() {
+  const seen = new Map();
+  for (const a of document.querySelectorAll('a[href]')) {
+    let href;
+    try { href = new URL(a.getAttribute('href'), location.href).href; } catch { continue; }
+    if (!/^https?:/.test(href)) continue;
+    const text = (a.innerText || a.getAttribute('aria-label') || a.title || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!seen.has(href)) seen.set(href, text);
+    else if (!seen.get(href) && text) seen.set(href, text);
+  }
+  return { links: [...seen].map(([href, text]) => ({ href, text })), title: document.title, url: location.href };
+}
+
+/** Put text into the focused field (where the user right-clicked) the way typing would. */
+export function insertIntoField(text) {
+  const el = document.activeElement;
+  if (!el) return false;
+  el.focus();
+  if (document.execCommand('insertText', false, text)) return true;
+  if ('value' in el) {
+    const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(proto, 'value')?.set?.call(el, text);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+  return false;
+}
