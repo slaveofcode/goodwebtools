@@ -566,6 +566,7 @@ const en: Record<string, ToolSeoContent> = {
       'Copy the breakdown if you need it.',
     ],
     faqs: [
+      { q: 'Can it find someone’s NIK from their name?', a: 'No. It only reads a NIK you type in — there is no population database behind it, and looking people up would be a privacy problem. Your own NIK is printed on your KTP and family card (KK); if you’ve lost them, your local Dukcapil office can help.' },
       { q: 'Is my NIK uploaded anywhere?', a: 'No. A NIK is sensitive personal data, so this tool decodes it entirely in your browser — it is never sent to a server.' },
       { q: 'How is gender encoded in a NIK?', a: 'The birth day is stored in positions 7–8. For women, 40 is added to the day, so a value of 41–71 means female and the real day is that number minus 40.' },
       { q: 'Can it show the full district name?', a: 'It decodes the province name and shows the regency and district code numbers. Mapping those codes to full names needs the official Kemendagri region dataset, which is out of scope here.' },
@@ -4070,6 +4071,7 @@ const id: Record<string, ToolSeoContent> = {
       'Salin rinciannya bila diperlukan.',
     ],
     faqs: [
+      { q: 'Bisakah mencari NIK seseorang dari namanya?', a: 'Tidak. Tool ini hanya membaca NIK yang Anda ketik — tidak ada database kependudukan di baliknya, dan mencari data orang lain akan melanggar privasi. NIK Anda sendiri tertera di KTP dan Kartu Keluarga (KK); jika keduanya hilang, kantor Dukcapil setempat dapat membantu.' },
       { q: 'Apakah NIK saya diunggah?', a: 'Tidak. NIK adalah data pribadi sensitif, jadi tool ini men-decode-nya sepenuhnya di browser Anda — tidak pernah dikirim ke server.' },
       { q: 'Bagaimana jenis kelamin dikodekan di NIK?', a: 'Tanggal lahir ada di posisi 7–8. Untuk perempuan, 40 ditambahkan ke tanggal, jadi nilai 41–71 berarti perempuan dan tanggal sebenarnya adalah angka itu dikurangi 40.' },
       { q: 'Bisakah menampilkan nama kecamatan lengkap?', a: 'Tool men-decode nama provinsi dan menampilkan angka kode kabupaten serta kecamatan. Memetakan kode itu ke nama lengkap butuh dataset wilayah resmi Kemendagri, yang di luar cakupan di sini.' },

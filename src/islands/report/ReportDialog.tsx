@@ -15,6 +15,7 @@ const TR: Record<Lang, Record<string, string>> = {
   en: {
     title: 'Report a problem', desc: 'Send us diagnostics so we can fix this. Runs only when you submit.',
     what: 'What were you doing when it failed? (optional)',
+    noPersonal: 'Describe the problem only — please don’t write personal data such as an ID number (NIK), full name or address. This form only reaches the GoodWebTools team; it can’t look anything up.',
     seeData: 'See exactly what will be sent', consent: 'I agree to send the diagnostics and logs above to help fix this error.',
     attach: 'Also attach my file', attachWarn: 'Your file may contain personal or financial data. Only attach it if you are OK sending it to us.',
     noFile: 'No file is loaded for this tool.', send: 'Send report', sending: 'Sending…', cancel: 'Close',
@@ -25,6 +26,7 @@ const TR: Record<Lang, Record<string, string>> = {
   id: {
     title: 'Laporkan masalah', desc: 'Kirim diagnostik agar kami bisa memperbaikinya. Hanya berjalan saat Anda kirim.',
     what: 'Apa yang sedang Anda lakukan saat gagal? (opsional)',
+    noPersonal: 'Jelaskan masalahnya saja — mohon jangan menulis data pribadi seperti NIK, nama lengkap, atau alamat. Formulir ini hanya sampai ke tim GoodWebTools; tidak bisa mencari data apa pun.',
     seeData: 'Lihat persis apa yang akan dikirim', consent: 'Saya setuju mengirim diagnostik dan log di atas untuk membantu memperbaiki error ini.',
     attach: 'Lampirkan juga file saya', attachWarn: 'File Anda mungkin berisi data pribadi atau finansial. Lampirkan hanya jika Anda bersedia mengirimkannya ke kami.',
     noFile: 'Tidak ada file yang dimuat untuk tool ini.', send: 'Kirim laporan', sending: 'Mengirim…', cancel: 'Tutup',
@@ -79,13 +81,26 @@ export default function ReportDialog({ lang = 'en', toolId }: { lang?: Lang; too
     if (import.meta.env.DEV) return; // DEV path uses the E2E stub; skip Turnstile
     if (widgetHost.current) widgetHost.current.innerHTML = '';
     tokenRef.current = '';
-    const w = window as unknown as { turnstile?: { render: (el: HTMLElement, opts: Record<string, unknown>) => void } };
-    const render = () => { if (widgetHost.current && w.turnstile) w.turnstile.render(widgetHost.current, {
-      sitekey: TURNSTILE_SITE_KEY, callback: (tok: string) => { tokenRef.current = tok; }, size: 'flexible',
-    }); };
-    if (w.turnstile) { render(); return; }
-    const s = document.createElement('script'); s.src = TURNSTILE_SRC; s.async = true; s.onload = render;
-    document.head.appendChild(s);
+    const w = window as unknown as { turnstile?: { render: (el: HTMLElement, opts: Record<string, unknown>) => string | undefined; remove: (id: string) => void } };
+    // Remember the widget so it's removed when the dialog closes or reopens —
+    // otherwise Turnstile keeps polling a widget whose element is gone.
+    let widgetId: string | undefined;
+    let cancelled = false;
+    const render = () => {
+      if (cancelled || !widgetHost.current || !w.turnstile) return;
+      widgetId = w.turnstile.render(widgetHost.current, {
+        sitekey: TURNSTILE_SITE_KEY, callback: (tok: string) => { tokenRef.current = tok; }, size: 'flexible',
+      });
+    };
+    if (w.turnstile) render();
+    else {
+      const s = document.createElement('script'); s.src = TURNSTILE_SRC; s.async = true; s.onload = render;
+      document.head.appendChild(s);
+    }
+    return () => {
+      cancelled = true;
+      if (widgetId) { try { w.turnstile?.remove(widgetId); } catch { /* already gone */ } }
+    };
   }, [open, openSeq]);
 
   if (!open) return null;
@@ -119,8 +134,9 @@ export default function ReportDialog({ lang = 'en', toolId }: { lang?: Lang; too
             <p className="text-sm text-muted-foreground">{t.desc}</p>
 
             <label className="block text-sm font-semibold">{t.what}</label>
-            <textarea value={message} onChange={e => setMessage(e.target.value)} rows={2}
+            <textarea value={message} onChange={e => setMessage(e.target.value)} rows={2} aria-describedby="report-no-personal"
               className="w-full border-2 border-border bg-muted p-2 text-sm" />
+            <p id="report-no-personal" data-testid="report-no-personal" className="text-xs text-muted-foreground">{t.noPersonal}</p>
 
             <button type="button" onClick={() => setShowData(s => !s)} className="text-sm underline">{t.seeData}</button>
             {showData && (
