@@ -20,6 +20,7 @@ const TR: Record<Lang, {
   years: string;
   example: string;
   privacy: string;
+  notLookup: string;
 }> = {
   en: {
     intro: 'Validate an Indonesian NIK (the 16-digit KTP number) and break out the province, birth date, gender and serial. It runs entirely in your browser — the NIK is never uploaded.',
@@ -30,6 +31,7 @@ const TR: Record<Lang, {
     male: 'Male', female: 'Female', years: 'years',
     example: 'Load example',
     privacy: 'A NIK is personal data — this tool decodes it locally and never sends it anywhere.',
+    notLookup: 'This tool reads a NIK you already have. It can’t find a NIK from a name — there is no population database here. Your NIK is printed on your KTP and family card (KK); if you’ve lost it, ask your local Dukcapil office.',
   },
   id: {
     intro: 'Validasi NIK Indonesia (nomor KTP 16 digit) dan uraikan provinsi, tanggal lahir, jenis kelamin, dan serial. Berjalan sepenuhnya di browser Anda — NIK tidak pernah diunggah.',
@@ -40,6 +42,7 @@ const TR: Record<Lang, {
     male: 'Laki-laki', female: 'Perempuan', years: 'tahun',
     example: 'Muat contoh',
     privacy: 'NIK adalah data pribadi — tool ini men-decode secara lokal dan tidak pernah mengirimnya ke mana pun.',
+    notLookup: 'Tool ini membaca NIK yang sudah Anda miliki. Tool ini tidak bisa mencari NIK dari nama — tidak ada database kependudukan di sini. NIK Anda tertera di KTP dan Kartu Keluarga (KK); jika hilang, tanyakan ke kantor Dukcapil setempat.',
   },
 };
 
@@ -80,6 +83,7 @@ export default function NikDecoder({ lang = 'en' }: { lang?: Lang }) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t.intro}</p>
+      <p data-testid="nik-not-lookup" className="border-2 border-border bg-muted px-3 py-2 text-sm">{t.notLookup}</p>
 
       <div className="space-y-1">
         <div className="flex items-center justify-between">
