@@ -9,6 +9,8 @@ test('opens the report dialog, consents, submits, and shows the thank-you', asyn
 
   await page.getByRole('button', { name: 'Report a problem' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
+  // The form asks for a problem description, not personal data.
+  await expect(page.getByTestId('report-no-personal')).toContainText('don’t write personal data');
 
   // Transparency: the diagnostics JSON is viewable and names the tool.
   await page.getByText('See exactly what will be sent').click();
