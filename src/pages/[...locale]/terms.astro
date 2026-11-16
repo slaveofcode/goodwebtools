@@ -1,0 +1,67 @@
+---
+import { ChevronRight } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import { REPO_URL } from '@/config';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+
+export function getStaticPaths() {
+  return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const T = {
+  en: {
+    title: 'Terms of Use', home: 'Home', updated: 'Last updated: 16 November 2026',
+    meta: 'The terms for using GoodWebTools: free in-browser tools, provided as-is, with your files processed on your own device.',
+    sections: [
+      ['Using GoodWebTools', 'GoodWebTools is a free collection of tools that run in your web browser. By using the site, the desktop app or the browser extension, you agree to these terms. If you don’t agree, please don’t use them.'],
+      ['Your files and content', 'Tools process your files and text on your own device; they are not uploaded to us. You keep all rights to your content, and you are responsible for having the right to use, convert or edit it. Keep your own copies of important files — a browser tab can be closed or run out of memory.'],
+      ['Acceptable use', 'Use the tools only for lawful purposes. Don’t use them to infringe other people’s rights (for example copyright or privacy), to deceive or harm others, or to attack, overload or misuse the site and its services — including the peer-to-peer connection service, the report form and any API.'],
+      ['Features that use the network', 'A few features need a connection: peer-to-peer file transfer and video calls connect browsers to each other; Ask Agent, if you add your own API key, sends your requests directly to the AI provider you choose under that provider’s terms; some tools download models or libraries the first time you use them. The “Report a problem” form sends only what you agree to send.'],
+      ['Ads and analytics', 'The site shows ads served by Google AdSense and, only with your consent, uses Google Analytics. How these work and how to opt out is explained in the Privacy page.'],
+      ['No warranty', 'The tools are provided “as is”, without warranties of any kind. We work to make them accurate and reliable, but results can contain errors — check anything important (legal, medical, financial or official documents) before relying on it. Calculators and decoders give information, not professional advice.'],
+      ['Limitation of liability', 'To the extent the law allows, GoodWebTools and its contributors are not liable for any loss or damage arising from using or being unable to use the tools, including lost data or files.'],
+      ['Open source', 'The GoodWebTools source code is available under the MIT License. These terms cover your use of the hosted site and apps; the license covers the code itself.'],
+      ['Changes', 'We may update these terms as the site changes. The date at the top shows the latest version; continuing to use the site means you accept it.'],
+    ],
+    contactPre: 'Questions about these terms?', contactLink: 'Contact us',
+  },
+  id: {
+    title: 'Ketentuan Penggunaan', home: 'Beranda', updated: 'Terakhir diperbarui: 16 November 2026',
+    meta: 'Ketentuan penggunaan GoodWebTools: tool gratis di browser, disediakan apa adanya, dengan berkas Anda diproses di perangkat Anda sendiri.',
+    sections: [
+      ['Menggunakan GoodWebTools', 'GoodWebTools adalah kumpulan tool gratis yang berjalan di browser Anda. Dengan memakai situs, aplikasi desktop, atau ekstensi browser, Anda menyetujui ketentuan ini. Jika tidak setuju, mohon jangan menggunakannya.'],
+      ['Berkas dan konten Anda', 'Tool memproses berkas dan teks Anda di perangkat Anda sendiri; tidak diunggah ke kami. Semua hak atas konten tetap milik Anda, dan Anda bertanggung jawab memastikan berhak memakai, mengonversi, atau menyuntingnya. Simpan salinan berkas penting Anda sendiri — tab browser bisa tertutup atau kehabisan memori.'],
+      ['Penggunaan yang diperbolehkan', 'Gunakan tool hanya untuk tujuan yang sah. Jangan memakainya untuk melanggar hak orang lain (misalnya hak cipta atau privasi), menipu atau merugikan orang lain, atau menyerang, membebani, atau menyalahgunakan situs dan layanannya — termasuk layanan koneksi peer-to-peer, formulir laporan, dan API apa pun.'],
+      ['Fitur yang memakai jaringan', 'Beberapa fitur memerlukan koneksi: transfer berkas peer-to-peer dan panggilan video menghubungkan browser satu sama lain; Ask Agent, jika Anda menambahkan kunci API sendiri, mengirim permintaan langsung ke penyedia AI pilihan Anda sesuai ketentuan penyedia tersebut; sebagian tool mengunduh model atau pustaka saat pertama kali dipakai. Formulir “Laporkan masalah” hanya mengirim yang Anda setujui untuk dikirim.'],
+      ['Iklan dan analitik', 'Situs ini menampilkan iklan dari Google AdSense dan, hanya dengan persetujuan Anda, memakai Google Analytics. Cara kerjanya dan cara menolaknya dijelaskan di halaman Privasi.'],
+      ['Tanpa jaminan', 'Tool disediakan “apa adanya”, tanpa jaminan apa pun. Kami berusaha agar akurat dan andal, tetapi hasilnya bisa mengandung kesalahan — periksa hal penting (dokumen hukum, medis, keuangan, atau resmi) sebelum mengandalkannya. Kalkulator dan decoder memberi informasi, bukan nasihat profesional.'],
+      ['Batasan tanggung jawab', 'Sejauh diizinkan hukum, GoodWebTools dan kontributornya tidak bertanggung jawab atas kerugian atau kerusakan yang timbul dari memakai atau tidak dapat memakai tool, termasuk data atau berkas yang hilang.'],
+      ['Sumber terbuka', 'Kode sumber GoodWebTools tersedia di bawah Lisensi MIT. Ketentuan ini mengatur penggunaan situs dan aplikasi yang kami jalankan; lisensi mengatur kodenya.'],
+      ['Perubahan', 'Kami dapat memperbarui ketentuan ini seiring perubahan situs. Tanggal di atas menunjukkan versi terbaru; terus memakai situs berarti Anda menerimanya.'],
+    ],
+    contactPre: 'Ada pertanyaan tentang ketentuan ini?', contactLink: 'Hubungi kami',
+  },
+}[lang];
+---
+
+<Base title={T.title} description={T.meta} lang={lang} localized>
+  <main class="page-container max-w-3xl py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li><a href={localizePath('/', lang)} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{T.home}</a></li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{T.title}</li>
+      </ol>
+    </nav>
+    <h1 class="mb-2 text-4xl font-bold">{T.title}</h1>
+    <p class="mb-8 text-sm text-muted-foreground">{T.updated}</p>
+    {T.sections.map(([h, p]) => (
+      <section class="mb-6">
+        <h2 class="mb-2 text-xl font-semibold">{h}</h2>
+        <p class="text-muted-foreground">{p}</p>
+      </section>
+    ))}
+    <p class="mt-8">{T.contactPre} <a href={localizePath('/contact', lang)} class="font-bold underline decoration-2 underline-offset-2">{T.contactLink}</a> · <a href={REPO_URL} target="_blank" rel="noopener noreferrer" class="font-bold underline decoration-2 underline-offset-2">GitHub</a></p>
+  </main>
+</Base>

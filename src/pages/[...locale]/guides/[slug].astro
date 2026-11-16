@@ -1,0 +1,105 @@
+---
+import { ChevronRight, ArrowRight } from 'lucide-react';
+import { getCollection } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import { localeParam, localizePath, type Lang } from '@/i18n/config';
+import { splitGuideId, type Guide } from '@/lib/guides';
+import { getToolById } from '@/registry/tools';
+import { localizedTool } from '@/registry/tool-i18n';
+import { SITE_URL, SITE_NAME } from '@/config';
+
+export async function getStaticPaths() {
+  const all = await getCollection('guides');
+  return all.map((guide) => {
+    const { lang, slug } = splitGuideId(guide.id);
+    return { params: { locale: localeParam(lang as Lang), slug }, props: { guide, lang } };
+  });
+}
+
+const { guide, lang } = Astro.props as { guide: Guide; lang: Lang };
+const { Content } = await guide.render();
+const { slug } = splitGuideId(guide.id);
+// Only offer the other language when that translation exists.
+const others = await getCollection('guides', (g) => splitGuideId(g.id).slug === slug);
+const localized = others.length > 1;
+const G = {
+  en: { home: 'Home', guides: 'Guides', open: 'Open', updated: 'Updated', also: 'Related tools', tryIt: 'Do it now' },
+  id: { home: 'Beranda', guides: 'Panduan', open: 'Buka', updated: 'Diperbarui', also: 'Tool terkait', tryIt: 'Kerjakan sekarang' },
+}[lang];
+const tool = getToolById(guide.data.tool);
+const related = guide.data.related.map((id) => getToolById(id)).filter((t): t is NonNullable<typeof t> => !!t);
+const url = new URL(localizePath(`/guides/${slug}`, lang), SITE_URL).href;
+const dateIso = guide.data.updated.toISOString().slice(0, 10);
+const dateText = guide.data.updated.toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const jsonLd = [
+  {
+    '@context': 'https://schema.org', '@type': 'Article', headline: guide.data.title, description: guide.data.description,
+    dateModified: dateIso, inLanguage: lang, mainEntityOfPage: url,
+    author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL }, publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+  },
+  {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: G.home, item: new URL(localizePath('/', lang), SITE_URL).href },
+      { '@type': 'ListItem', position: 2, name: G.guides, item: new URL(localizePath('/guides', lang), SITE_URL).href },
+      { '@type': 'ListItem', position: 3, name: guide.data.title, item: url },
+    ],
+  },
+];
+---
+
+<Base title={guide.data.title} description={guide.data.description} lang={lang} localized={localized} jsonLd={jsonLd}>
+  <main class="page-container max-w-3xl py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex flex-wrap items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li><a href={localizePath('/', lang)} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{G.home}</a></li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li><a href={localizePath('/guides', lang)} class="underline underline-offset-2">{G.guides}</a></li>
+      </ol>
+    </nav>
+    <article>
+      <h1 class="mb-2 text-3xl font-bold sm:text-4xl">{guide.data.title}</h1>
+      <p class="mb-6 text-sm text-muted-foreground">{G.updated} <time datetime={dateIso}>{dateText}</time></p>
+      {tool && (
+        <a href={localizePath(tool.route, lang)} data-testid="guide-tool-cta" class="mb-8 flex items-center justify-between gap-3 border-2 border-border bg-accent p-4 font-bold text-accent-foreground shadow-brutal press-brutal">
+          <span>{G.tryIt}: {localizedTool(tool, lang).name}</span>
+          <ArrowRight className="h-5 w-5 shrink-0" />
+        </a>
+      )}
+      <div class="guide-body">
+        <Content />
+      </div>
+    </article>
+    {related.length > 0 && (
+      <section class="mt-10">
+        <h2 class="mb-3 text-xl font-bold">{G.also}</h2>
+        <ul class="grid gap-3 sm:grid-cols-2">
+          {related.map(t => (
+            <li>
+              <a href={localizePath(t.route, lang)} class="block border-2 border-border bg-muted p-3 shadow-brutal-sm press-brutal">
+                <span class="font-bold">{localizedTool(t, lang).name}</span>
+                <span class="block text-sm text-muted-foreground">{localizedTool(t, lang).summary}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </main>
+</Base>
+
+<style is:global>
+  .guide-body { line-height: 1.7; }
+  .guide-body > * + * { margin-top: 1rem; }
+  .guide-body h2 { margin-top: 2.25rem; font-size: 1.5rem; font-weight: 700; line-height: 1.3; }
+  .guide-body h3 { margin-top: 1.5rem; font-size: 1.125rem; font-weight: 700; }
+  .guide-body ol { list-style: decimal; padding-left: 1.5rem; }
+  .guide-body ul { list-style: disc; padding-left: 1.5rem; }
+  .guide-body li + li { margin-top: 0.35rem; }
+  .guide-body a { font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 2px; }
+  .guide-body code { font-family: ui-monospace, monospace; font-size: 0.9em; background: rgb(var(--muted)); padding: 0 0.25rem; border: 1px solid rgb(var(--border)); }
+  .guide-body pre { overflow-x: auto; border: 2px solid rgb(var(--border)); background: rgb(var(--muted)); padding: 0.75rem; font-size: 0.875rem; }
+  .guide-body pre code { border: 0; padding: 0; background: none; }
+  .guide-body blockquote { border-left: 4px solid rgb(var(--border)); padding-left: 1rem; color: rgb(var(--muted-foreground)); }
+  .guide-body table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .guide-body th, .guide-body td { border: 2px solid rgb(var(--border)); padding: 0.4rem 0.6rem; text-align: left; }
+</style>
