@@ -1,0 +1,54 @@
+---
+// Site-wide footer: where to learn more, get help and read the policies.
+import { localizePath, type Lang } from '@/i18n/config';
+import { REPO_URL } from '@/config';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const F = {
+  en: {
+    tagline: 'Free tools that run in your browser. Your files never leave your device.',
+    learn: 'Learn', help: 'Help', policies: 'Policies',
+    guides: 'Guides', changelog: 'What’s new', extension: 'Chrome extension', about: 'About',
+    contact: 'Contact', support: 'Support the project', source: 'Source code (GitHub)',
+    privacy: 'Privacy', terms: 'Terms of use',
+    made: 'An independent project made in Indonesia.',
+  },
+  id: {
+    tagline: 'Tool gratis yang berjalan di browser Anda. Berkas Anda tidak pernah meninggalkan perangkat.',
+    learn: 'Pelajari', help: 'Bantuan', policies: 'Kebijakan',
+    guides: 'Panduan', changelog: 'Yang baru', extension: 'Ekstensi Chrome', about: 'Tentang',
+    contact: 'Kontak', support: 'Dukung proyek ini', source: 'Kode sumber (GitHub)',
+    privacy: 'Privasi', terms: 'Ketentuan penggunaan',
+    made: 'Proyek independen buatan Indonesia.',
+  },
+}[lang];
+const p = (path: string) => localizePath(path, lang);
+const cols = [
+  { h: F.learn, links: [[F.guides, p('/guides')], [F.changelog, p('/changelog')], [F.extension, p('/extension')], [F.about, p('/about')]] },
+  { h: F.help, links: [[F.contact, p('/contact')], [F.support, p('/support')], [F.source, REPO_URL]] },
+  { h: F.policies, links: [[F.privacy, p('/privacy')], [F.terms, p('/terms')]] },
+];
+---
+
+<footer data-embed-hide data-testid="site-footer" class="mt-16 border-t-4 border-border bg-muted">
+  <div class="page-container grid gap-8 py-10 sm:grid-cols-4">
+    <div>
+      <a href={p('/')} class="text-lg font-black">GoodWebTools</a>
+      <p class="mt-2 text-sm text-muted-foreground">{F.tagline}</p>
+    </div>
+    {cols.map(c => (
+      <nav aria-label={c.h}>
+        <h2 class="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">{c.h}</h2>
+        <ul class="space-y-1.5 text-sm">
+          {c.links.map(([label, href]) => (
+            <li><a href={href} class="font-semibold hover:underline" {...(href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{label}</a></li>
+          ))}
+        </ul>
+      </nav>
+    ))}
+  </div>
+  <div class="page-container border-t-2 border-border py-4 text-xs text-muted-foreground">
+    © {new Date().getFullYear()} GoodWebTools · {F.made}
+  </div>
+</footer>

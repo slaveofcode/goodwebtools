@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Search, Github, Info, ExternalLink, Settings, MoreVertical, Sparkles, Coffee, Puzzle } from 'lucide-react';
+import { Search, Github, Info, ExternalLink, Settings, MoreVertical, Sparkles, Coffee, Puzzle, BookOpen } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LangSwitcher } from './LangSwitcher';
 import { CommandPalette } from './CommandPalette';
@@ -30,13 +30,13 @@ const menuItem =
 const S: Record<Lang, {
   searchAria: string; searchPre: string; searchPost: string; askAgent: string;
   about: string; contribute: string; contribMenu: string; more: string; settings: string;
-  support: string; extension: string;
+  support: string; extension: string; guides: string;
   modalTitle: string; modalBody: ReactNode;
 }> = {
   en: {
     searchAria: 'Search tools', searchPre: 'Press', searchPost: 'to search', askAgent: 'Ask agent',
     about: 'About', contribute: 'Contribute on GitHub', contribMenu: 'Contribute', more: 'More', settings: 'Settings',
-    support: 'Buy me a coffee', extension: 'Chrome extension',
+    support: 'Buy me a coffee', extension: 'Chrome extension', guides: 'Guides',
     modalTitle: 'Contribute',
     modalBody: (
       <>
@@ -48,7 +48,7 @@ const S: Record<Lang, {
   id: {
     searchAria: 'Cari tool', searchPre: 'Tekan', searchPost: 'untuk mencari', askAgent: 'Tanya agen',
     about: 'Tentang', contribute: 'Kontribusi di GitHub', contribMenu: 'Kontribusi', more: 'Lainnya', settings: 'Pengaturan',
-    support: 'Belikan saya kopi', extension: 'Ekstensi Chrome',
+    support: 'Belikan saya kopi', extension: 'Ekstensi Chrome', guides: 'Panduan',
     modalTitle: 'Kontribusi',
     modalBody: (
       <>
@@ -142,6 +142,9 @@ export function ShellIsland() {
                     <Puzzle className="h-4 w-4" />
                   </a>
                 )}
+                <a href={lang === 'id' ? '/id/guides/' : '/guides/'} aria-label={s.guides} title={s.guides} className={iconBtn}>
+                  <BookOpen className="h-4 w-4" />
+                </a>
                 <a href="/about/" aria-label={s.about} title={s.about} className={iconBtn}>
                   <Info className="h-4 w-4" />
                 </a>
@@ -175,6 +178,7 @@ export function ShellIsland() {
                     {!isDesktop && (
                       <a href="/extension/" role="menuitem" className={menuItem}><Puzzle className="h-4 w-4" /> {s.extension}</a>
                     )}
+                    <a href={lang === 'id' ? '/id/guides/' : '/guides/'} role="menuitem" className={menuItem}><BookOpen className="h-4 w-4" /> {s.guides}</a>
                     <a href="/about/" role="menuitem" className={menuItem}><Info className="h-4 w-4" /> {s.about}</a>
                     <a href="/support/" role="menuitem" className={menuItem}><Coffee className="h-4 w-4" /> {s.support}</a>
                     <button role="menuitem" onClick={() => { setMenuOpen(false); setModal('github'); }} className={menuItem}>

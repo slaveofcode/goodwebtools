@@ -11,6 +11,7 @@ import { categoryColors, categorySlug, categoryName } from '@/registry/categorie
 import { SITE_URL, SITE_NAME } from '@/config';
 import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
 import { t } from '@/i18n/ui';
+import { guidesFor, splitGuideId } from '@/lib/guides';
 
 export function getStaticPaths() {
   return LOCALES.flatMap(lang =>
@@ -35,6 +36,9 @@ const metaDescription =
 
 // Localized links.
 const homePath = localizePath('/', lang);
+// A step-by-step guide built around this tool, if there is one.
+const toolGuides = (await guidesFor(lang)).filter(g => g.data.tool === tool.id);
+const guideLabel = lang === 'id' ? 'Panduan lengkap' : 'Full guide';
 const catPath = localizePath(`/category/${categorySlug(tool.category)}`, lang);
 const catName = categoryName(tool.category, lang);
 const catLabel = t(lang, 'category.heading', { category: catName });
@@ -141,6 +145,11 @@ if (seo?.faqs && seo.faqs.length > 0) {
                 </li>
               ))}
             </ol>
+            {toolGuides.map(g => (
+              <a href={localizePath(`/guides/${splitGuideId(g.id).slug}`, lang)} data-testid="tool-guide-link" class="mt-4 inline-flex max-w-3xl items-center gap-2 border-2 border-border bg-muted px-3 py-2 text-sm font-bold shadow-brutal-sm press-brutal">
+                <span class="text-muted-foreground">{guideLabel}:</span> {g.data.title}
+              </a>
+            ))}
           </section>
         )}
 
