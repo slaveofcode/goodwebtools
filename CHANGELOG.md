@@ -2,6 +2,23 @@
 
 All notable changes to GoodWebTools are documented here.
 
+## Website & extension — October–November 2026
+
+### Added
+- **GoodWebTools Companion for Chrome:** right-click an image, selected text or a page to open it in the right tool, a toolbar launcher that searches every tool, tools in the side panel, tab and screen recording (download as video or GIF), full-page screenshots, saving a page's images, video and audio, and opening JSON, YAML, TOML and Markdown files in their viewers. Available on the Chrome Web Store.
+- **JSON, YAML and TOML Viewers** with a collapsible tree, search and copy-path. The JSON Viewer also reads JSON Lines, JSONC and JSON5.
+- **Guides:** step-by-step articles for everyday file tasks, each linked to the tool that does it.
+- **Contact** and **Terms of use** pages, a site footer, and this public changelog.
+
+### Changed
+- Image Compressor handles HEIC, SVG, very large and phone-camera photos more reliably.
+- Internal links now point straight at each page's address (no redirect), and the site always uses HTTPS.
+- The NIK Decoder explains that it reads a NIK you already have and can't look one up by name. The report form asks you not to include personal data.
+
+### Fixed
+- Video Call screen sharing, with a note that it's tested in Chrome.
+- Reopening the report form no longer leaves a stale spam-check widget running.
+
 ## [1.0.0-beta.7] — 2026-10-09
 
 A big batch of new tools and improvements since beta.6.

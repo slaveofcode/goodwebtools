@@ -3,6 +3,7 @@ import { ViewTransitions } from 'astro:transitions';
 import { ShellIsland } from '@/components/shell/ShellIsland';
 import { GlobalHotkeyInit } from '@/components/shell/GlobalHotkeyInit';
 import { ConsentRibbon } from '@/components/shell/ConsentRibbon';
+import SiteFooter from '@/components/shell/SiteFooter.astro';
 import { SITE_NAME, SITE_TAGLINE, SITE_URL, GA_ID, GA_ALLOWED_HOSTS, NOINDEX } from '@/config';
 import { LOCALES, DEFAULT_LOCALE, localizePath, stripLocale, type Lang } from '@/i18n/config';
 import '../styles/global.css';
@@ -17,6 +18,8 @@ export interface Props {
   canonical?: string;
   /** Set for pages that should not be indexed (e.g. 404). */
   noindex?: boolean;
+  /** Show ads (AdSense) on this page. Off for pages with no real content: 404, settings, app screens. */
+  ads?: boolean;
   /** Per-page web manifest (tool pages link their own installable manifest). */
   manifestHref?: string;
   /** Per-page apple-touch icon (tool pages use their own generated icon). */
@@ -38,6 +41,7 @@ const {
   image = '/og.png',
   canonical,
   noindex = false,
+  ads = true,
   fullTitle,
   jsonLd,
   lang = DEFAULT_LOCALE,
@@ -217,9 +221,19 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
       }
     </script>
 
-    <!-- Google AdSense: site verification / ads. -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9203795373601741"
-     crossorigin="anonymous"></script>
+    <!-- Google AdSense — only on content pages, and never inside an embedded tool
+         (?embed=1: the extension's side panel or another site's iframe). -->
+    {ads && !noindex && (
+      <script is:inline>
+        if (!/[?&]embed=1(&|$)/.test(location.search)) {
+          var ad = document.createElement('script');
+          ad.async = true;
+          ad.crossOrigin = 'anonymous';
+          ad.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9203795373601741';
+          document.head.appendChild(ad);
+        }
+      </script>
+    )}
 
     <!-- Google Analytics (GDPR): loads only when configured AND consent granted. -->
     <script is:inline define:vars={{ gaId: GA_ID, gaHosts: GA_ALLOWED_HOSTS }}>
@@ -257,6 +271,7 @@ const jsonLdBlocks = [siteJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? 
     <GlobalHotkeyInit client:load transition:persist />
     <ShellIsland client:load transition:persist />
     <slot />
+    <SiteFooter lang={lang} />
     <ConsentRibbon client:idle transition:persist />
   </body>
 </html>

@@ -1,0 +1,69 @@
+---
+import { ChevronRight, Mail, Bug, Lightbulb, Github } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import { REPO_URL } from '@/config';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+
+export function getStaticPaths() {
+  return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const C = {
+  en: {
+    title: 'Contact', home: 'Home', h1: 'Contact GoodWebTools',
+    meta: 'How to reach GoodWebTools: email, report a problem with a tool, request a new tool, or open an issue on GitHub.',
+    lead: 'GoodWebTools is an independent project. Every message is read by the person who builds the tools.',
+    emailH: 'Email', emailP: 'For questions, feedback, partnership or anything else:',
+    bugH: 'A tool isn’t working', bugP: 'Use the “Report a problem” button under the tool. It sends technical details (browser, device, the error) so the problem can be reproduced — you see exactly what is sent, and you choose whether to include your file. Please don’t include personal data such as ID numbers in the message.',
+    ideaH: 'Request a tool', ideaP: 'Missing a tool you need? Email what you’re trying to do. If it can run fully in a browser, it’s a good candidate to build.',
+    ghH: 'Developers', ghP: 'GoodWebTools is open source. Bugs and ideas are also welcome as GitHub issues or pull requests:',
+    note: 'We can’t look up personal information, recover files, or access anything you processed — tools run on your device and nothing is stored on our side.',
+  },
+  id: {
+    title: 'Kontak', home: 'Beranda', h1: 'Hubungi GoodWebTools',
+    meta: 'Cara menghubungi GoodWebTools: email, laporkan masalah pada tool, minta tool baru, atau buka issue di GitHub.',
+    lead: 'GoodWebTools adalah proyek independen. Setiap pesan dibaca langsung oleh orang yang membuat tool-nya.',
+    emailH: 'Email', emailP: 'Untuk pertanyaan, masukan, kerja sama, atau hal lain:',
+    bugH: 'Tool tidak berfungsi', bugP: 'Gunakan tombol “Laporkan masalah” di bawah tool. Tombol ini mengirim detail teknis (browser, perangkat, error) agar masalahnya bisa direproduksi — Anda bisa melihat persis apa yang dikirim, dan memilih apakah berkas Anda ikut dilampirkan. Mohon jangan menulis data pribadi seperti NIK di pesan.',
+    ideaH: 'Minta tool', ideaP: 'Butuh tool yang belum ada? Kirim email tentang apa yang ingin Anda lakukan. Jika bisa berjalan sepenuhnya di browser, itu kandidat yang bagus untuk dibuat.',
+    ghH: 'Developer', ghP: 'GoodWebTools bersifat sumber terbuka. Bug dan ide juga bisa dikirim sebagai issue atau pull request di GitHub:',
+    note: 'Kami tidak bisa mencari data pribadi, memulihkan berkas, atau mengakses apa pun yang Anda proses — tool berjalan di perangkat Anda dan tidak ada yang disimpan di pihak kami.',
+  },
+}[lang];
+---
+
+<Base title={C.title} description={C.meta} lang={lang} localized>
+  <main class="page-container max-w-3xl py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li><a href={localizePath('/', lang)} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{C.home}</a></li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{C.title}</li>
+      </ol>
+    </nav>
+    <h1 class="mb-3 text-4xl font-bold">{C.h1}</h1>
+    <p class="mb-8 text-muted-foreground">{C.lead}</p>
+    <div class="grid gap-4">
+      <section class="border-2 border-border bg-muted p-5 shadow-brutal">
+        <h2 class="mb-2 flex items-center gap-2 text-xl font-semibold"><Mail className="h-5 w-5" /> {C.emailH}</h2>
+        <p class="text-muted-foreground">{C.emailP}{' '}
+          <a data-email-user="contact" data-email-domain="goodwebtools.com" data-testid="contact-email" href="#" class="font-bold text-foreground underline decoration-2 underline-offset-2">contact [at] goodwebtools.com</a>
+        </p>
+      </section>
+      <section class="border-2 border-border bg-muted p-5">
+        <h2 class="mb-2 flex items-center gap-2 text-xl font-semibold"><Bug className="h-5 w-5" /> {C.bugH}</h2>
+        <p class="text-muted-foreground">{C.bugP}</p>
+      </section>
+      <section class="border-2 border-border bg-muted p-5">
+        <h2 class="mb-2 flex items-center gap-2 text-xl font-semibold"><Lightbulb className="h-5 w-5" /> {C.ideaH}</h2>
+        <p class="text-muted-foreground">{C.ideaP}</p>
+      </section>
+      <section class="border-2 border-border bg-muted p-5">
+        <h2 class="mb-2 flex items-center gap-2 text-xl font-semibold"><Github className="h-5 w-5" /> {C.ghH}</h2>
+        <p class="text-muted-foreground">{C.ghP} <a href={REPO_URL} target="_blank" rel="noopener noreferrer" class="font-bold text-foreground underline decoration-2 underline-offset-2">slaveofcode/goodwebtools</a></p>
+      </section>
+    </div>
+    <p class="mt-6 text-sm text-muted-foreground">{C.note}</p>
+  </main>
+</Base>

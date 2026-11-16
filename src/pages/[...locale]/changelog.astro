@@ -1,0 +1,51 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import { marked } from 'marked';
+import { ChevronRight } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import { REPO_URL } from '@/config';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+
+export function getStaticPaths() {
+  return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const C = {
+  en: { title: 'What’s new', home: 'Home', meta: 'Every release of GoodWebTools: new tools, improvements and fixes, newest first.', lead: 'New tools, improvements and fixes, newest first. The full history is also on GitHub.', note: '' },
+  id: { title: 'Yang baru', home: 'Beranda', meta: 'Setiap rilis GoodWebTools: tool baru, peningkatan, dan perbaikan, dari yang terbaru.', lead: 'Tool baru, peningkatan, dan perbaikan, dari yang terbaru. Riwayat lengkapnya juga ada di GitHub.', note: 'Catatan perubahan ditulis dalam bahasa Inggris.' },
+}[lang];
+// CHANGELOG.md is the single source; drop its own title and intro, keep the releases.
+const md = fs.readFileSync(path.join(process.cwd(), 'CHANGELOG.md'), 'utf8');
+const releases = md.slice(md.indexOf('\n## ') + 1);
+const html = await marked.parse(releases);
+---
+
+<Base title={C.title} description={C.meta} lang={lang} localized>
+  <main class="page-container max-w-3xl py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li><a href={localizePath('/', lang)} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{C.home}</a></li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{C.title}</li>
+      </ol>
+    </nav>
+    <h1 class="mb-3 text-4xl font-bold">{C.title}</h1>
+    <p class="mb-2 text-muted-foreground">{C.lead} <a href={`${REPO_URL}/blob/main/CHANGELOG.md`} target="_blank" rel="noopener noreferrer" class="font-bold underline decoration-2 underline-offset-2">CHANGELOG.md</a></p>
+    {C.note && <p class="mb-2 text-sm text-muted-foreground">{C.note}</p>}
+    <div class="changelog-body mt-6" data-testid="changelog" set:html={html} />
+  </main>
+</Base>
+
+<style is:global>
+  .changelog-body { line-height: 1.65; }
+  .changelog-body h2 { margin-top: 2.5rem; padding-top: 1rem; border-top: 3px solid rgb(var(--border)); font-size: 1.5rem; font-weight: 800; }
+  .changelog-body h2:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
+  .changelog-body h3 { margin-top: 1.25rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: rgb(var(--muted-foreground)); }
+  .changelog-body p { margin-top: 0.5rem; }
+  .changelog-body ul { list-style: disc; padding-left: 1.5rem; margin-top: 0.5rem; }
+  .changelog-body li + li { margin-top: 0.35rem; }
+  .changelog-body code { font-family: ui-monospace, monospace; font-size: 0.9em; background: rgb(var(--muted)); padding: 0 0.25rem; border: 1px solid rgb(var(--border)); }
+  .changelog-body a { text-decoration: underline; }
+</style>

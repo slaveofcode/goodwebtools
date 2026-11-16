@@ -1,0 +1,52 @@
+---
+import { ChevronRight } from 'lucide-react';
+import Base from '@/layouts/Base.astro';
+import { LOCALES, localeParam, localizePath, type Lang } from '@/i18n/config';
+import { guidesFor, splitGuideId } from '@/lib/guides';
+import { getToolById } from '@/registry/tools';
+import { localizedTool } from '@/registry/tool-i18n';
+import { SITE_URL } from '@/config';
+
+export function getStaticPaths() {
+  return LOCALES.map(lang => ({ params: { locale: localeParam(lang) }, props: { lang } }));
+}
+
+const { lang } = Astro.props as { lang: Lang };
+const G = {
+  en: { title: 'Guides', h1: 'Guides', home: 'Home', lead: 'Step-by-step answers to everyday file problems — shrinking a photo for an upload form, merging PDFs, making a passport photo — each with the free tool that does it in your browser.', uses: 'Uses', read: 'Read the guide', meta: 'Practical how-to guides for everyday file tasks: compress photos, reduce PDF size, remove backgrounds, make QR codes and more — free, in your browser.' },
+  id: { title: 'Panduan', h1: 'Panduan', home: 'Beranda', lead: 'Jawaban langkah demi langkah untuk masalah berkas sehari-hari — mengecilkan foto untuk formulir unggah, menggabungkan PDF, membuat pas foto — masing-masing dengan tool gratis yang mengerjakannya di browser Anda.', uses: 'Memakai', read: 'Baca panduan', meta: 'Panduan praktis untuk urusan berkas sehari-hari: kompres foto, kecilkan PDF, hapus latar, buat kode QR, dan lainnya — gratis, di browser Anda.' },
+}[lang];
+const list = await guidesFor(lang);
+const jsonLd = {
+  '@context': 'https://schema.org', '@type': 'ItemList', name: G.title,
+  itemListElement: list.map((g, i) => ({ '@type': 'ListItem', position: i + 1, url: new URL(localizePath(`/guides/${splitGuideId(g.id).slug}`, lang), SITE_URL).href, name: g.data.title })),
+};
+---
+
+<Base title={G.title} description={G.meta} lang={lang} localized jsonLd={jsonLd}>
+  <main class="page-container max-w-4xl py-8">
+    <nav aria-label="Breadcrumb" class="mb-4">
+      <ol class="flex items-center gap-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        <li><a href={localizePath('/', lang)} class="border-2 border-border bg-muted px-2 py-1 text-foreground shadow-brutal-sm press-brutal">{G.home}</a></li>
+        <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5" /></li>
+        <li aria-current="page" class="text-foreground">{G.title}</li>
+      </ol>
+    </nav>
+    <h1 class="mb-3 text-4xl font-bold">{G.h1}</h1>
+    <p class="mb-8 max-w-2xl text-muted-foreground">{G.lead}</p>
+    <ul class="grid gap-4 sm:grid-cols-2" data-testid="guide-list">
+      {list.map(g => {
+        const tool = getToolById(g.data.tool);
+        return (
+          <li>
+            <a href={localizePath(`/guides/${splitGuideId(g.id).slug}`, lang)} class="group flex h-full flex-col gap-2 border-2 border-border bg-muted p-4 shadow-brutal press-brutal">
+              <span class="text-lg font-bold group-hover:underline">{g.data.title}</span>
+              <span class="text-sm text-muted-foreground">{g.data.description}</span>
+              {tool && <span class="mt-auto text-xs font-bold uppercase tracking-wide text-muted-foreground">{G.uses}: {localizedTool(tool, lang).name}</span>}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </main>
+</Base>
