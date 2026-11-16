@@ -52,7 +52,7 @@ test('guides: list, article with its tool, and a link back from the tool page', 
   expect(await cards.count()).toBeGreaterThanOrEqual(10);
 
   await page.goto('/guides/compress-photo-to-200kb/');
-  await expect(page.locator('h1')).not.toBeEmpty();
+  await expect(page.locator('article h1')).not.toBeEmpty();
   await expect(page.getByTestId('guide-tool-cta')).toHaveAttribute('href', '/tools/image-compress/');
   await expect(page.locator('.guide-body h2').first()).toBeVisible();
   await expect(page.locator('link[rel="alternate"][hreflang="id"]')).toHaveAttribute('href', 'https://goodwebtools.com/id/guides/compress-photo-to-200kb/');
