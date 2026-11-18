@@ -41,7 +41,7 @@ async function canvasToBlob(c: HTMLCanvasElement | OffscreenCanvas, fmt: FrameFo
 }
 
 /** Frames at `times` (seconds) via mediabunny; the picture is shown upright (rotation applied). */
-async function framesWithMediabunny(file: Blob, times: number[], fmt: FrameFormat, onFrame: (i: number, blob: Blob) => void, signal?: AbortSignal) {
+async function framesWithMediabunny(file: Blob, times: number[], fmt: FrameFormat, onFrame: (i: number, blob: Blob) => void | Promise<void>, signal?: AbortSignal) {
   const mb = await loadMediabunny();
   const input = new mb.Input({ source: new mb.BlobSource(file), formats: mb.ALL_FORMATS });
   try {
@@ -53,7 +53,7 @@ async function framesWithMediabunny(file: Blob, times: number[], fmt: FrameForma
       if (signal?.aborted) throw abortError();
       const frame = await sink.getCanvas(Math.max(first, times[i]));
       if (!frame) throw new Error('no-frame');
-      onFrame(i, await canvasToBlob(frame.canvas, fmt));
+      await onFrame(i, await canvasToBlob(frame.canvas, fmt));
     }
   } finally {
     input.dispose?.();
@@ -61,7 +61,7 @@ async function framesWithMediabunny(file: Blob, times: number[], fmt: FrameForma
 }
 
 /** Frames at `times` via a hidden <video>: seek, wait for the frame, draw it. */
-async function framesWithVideoElement(file: Blob, times: number[], fmt: FrameFormat, onFrame: (i: number, blob: Blob) => void, signal?: AbortSignal) {
+async function framesWithVideoElement(file: Blob, times: number[], fmt: FrameFormat, onFrame: (i: number, blob: Blob) => void | Promise<void>, signal?: AbortSignal) {
   const video = document.createElement('video');
   video.muted = true;
   video.preload = 'auto';
@@ -86,7 +86,7 @@ async function framesWithVideoElement(file: Blob, times: number[], fmt: FrameFor
         video.currentTime = Math.min(times[i], Math.max(0, video.duration - 0.001));
       });
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      onFrame(i, await canvasToBlob(canvas, fmt));
+      await onFrame(i, await canvasToBlob(canvas, fmt));
     }
   } finally {
     video.removeAttribute('src');
@@ -99,7 +99,7 @@ async function framesWithVideoElement(file: Blob, times: number[], fmt: FrameFor
  * Save frames at `times`. Uses mediabunny when the browser can decode the
  * video, else a <video> element. Returns which way it ran.
  */
-export async function grabFrames(file: File, times: number[], fmt: FrameFormat, onFrame: (i: number, blob: Blob) => void, signal?: AbortSignal): Promise<'mediabunny' | 'video-element'> {
+export async function grabFrames(file: File, times: number[], fmt: FrameFormat, onFrame: (i: number, blob: Blob) => void | Promise<void>, signal?: AbortSignal): Promise<'mediabunny' | 'video-element'> {
   const probe = await probeMedia(file).catch(() => null);
   if (probe?.video && probe.decodable && typeof VideoDecoder !== 'undefined') {
     try {

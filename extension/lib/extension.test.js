@@ -195,16 +195,24 @@ describe('media helpers', () => {
   it('parses an HLS master playlist, best variant first', () => {
     const pl = parseM3u8('#EXTM3U\n#EXT-X-STREAM-INF:AVERAGE-BANDWIDTH=9,BANDWIDTH=800000,RESOLUTION=640x360\nlow/index.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=2400000,RESOLUTION=1280x720\nhttps://cdn/hi.m3u8\n', 'https://x/v/master.m3u8');
     expect(pl).toEqual({ type: 'master', variants: [
-      { url: 'https://cdn/hi.m3u8', bandwidth: 2400000, resolution: '1280x720' },
-      { url: 'https://x/v/low/index.m3u8', bandwidth: 800000, resolution: '640x360' },
+      { url: 'https://cdn/hi.m3u8', bandwidth: 2400000, resolution: '1280x720', separateAudio: false },
+      { url: 'https://x/v/low/index.m3u8', bandwidth: 800000, resolution: '640x360', separateAudio: false },
     ] });
   });
   it('parses an HLS media playlist: segments, init, encryption, live', () => {
     const vod = parseM3u8('#EXTM3U\n#EXT-X-MAP:URI="init.mp4"\n#EXTINF:4,\ns1.m4s\n#EXTINF:4,\ns2.m4s\n#EXT-X-ENDLIST', 'https://x/a/p.m3u8');
-    expect(vod).toEqual({ type: 'media', segments: ['https://x/a/s1.m4s', 'https://x/a/s2.m4s'], init: 'https://x/a/init.mp4', encrypted: false, live: false });
+    expect(vod).toEqual({ type: 'media', segments: ['https://x/a/s1.m4s', 'https://x/a/s2.m4s'], init: 'https://x/a/init.mp4', encrypted: false, live: false, byterange: false });
     expect(parseM3u8('#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="k"\n#EXTINF:4,\na.ts\n#EXT-X-ENDLIST', 'https://x/').encrypted).toBe(true);
     expect(parseM3u8('#EXTM3U\n#EXT-X-KEY:METHOD=NONE\n#EXTINF:4,\na.ts', 'https://x/')).toMatchObject({ encrypted: false, live: true });
     expect(parseM3u8('not a playlist', 'https://x/')).toBeNull();
+  });
+  it('flags streams that can’t simply be joined: separate audio, byte ranges', () => {
+    const master = parseM3u8('#EXTM3U\n#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",NAME="en",URI="aud.m3u8"\n#EXT-X-STREAM-INF:BANDWIDTH=9,AUDIO="a"\nv.m3u8\n', 'https://x/');
+    expect(master.variants[0].separateAudio).toBe(true);
+    // An AUDIO group without a URI means the sound is inside the video segments.
+    const muxed = parseM3u8('#EXTM3U\n#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",NAME="en"\n#EXT-X-STREAM-INF:BANDWIDTH=9,AUDIO="a"\nv.m3u8\n', 'https://x/');
+    expect(muxed.variants[0].separateAudio).toBe(false);
+    expect(parseM3u8('#EXTM3U\n#EXTINF:4,\n#EXT-X-BYTERANGE:10@0\nall.ts\n#EXT-X-ENDLIST', 'https://x/').byterange).toBe(true);
   });
   it('picks a file extension for saved media', () => {
     expect(mediaExtension('https://x/a.ogg', 'audio/ogg', 'audio')).toBe('ogg');

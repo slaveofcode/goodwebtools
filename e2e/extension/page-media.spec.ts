@@ -25,6 +25,7 @@ const FILES: Record<string, [string, string | Buffer]> = {
   '/hls/seg1.ts': ['video/mp2t', 'AAA'],
   '/hls/seg2.ts': ['video/mp2t', 'BBB'],
   '/hls/seg3.ts': ['video/mp2t', 'CCC'],
+  '/split.m3u8': ['application/vnd.apple.mpegurl', '#EXTM3U\n#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",NAME="en",URI="aud.m3u8"\n#EXT-X-STREAM-INF:BANDWIDTH=9,AUDIO="a"\nhls/high.m3u8\n'],
   '/locked.m3u8': ['application/vnd.apple.mpegurl', '#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="key"\n#EXTINF:4,\nx.ts\n#EXT-X-ENDLIST\n'],
   '/page': ['text/html', `<html><head><title>Media page</title>
     <meta property="og:video" content="/og.mp4"><meta property="og:video:type" content="video/mp4"></head><body>
@@ -196,3 +197,11 @@ test('YouTube pages get a note instead of a media list', async ({ ctx, sw, extId
   await expect(page.locator('#rows-video .row')).toHaveCount(0);
   await expect(page.locator('#from')).toHaveText('No images, video or audio found on this page.');
 });
+
+test('a stream with separate audio is explained, not saved silent', async ({ ctx, sw, extId, server }) => {
+  const page = await openPicker(ctx, sw, extId, { url: `${server}/page`, title: 'x', images: [], media: [{ src: `${server}/split.m3u8`, kind: null }] });
+  const row = page.locator('#rows-video .row');
+  await row.getByRole('button', { name: 'Download' }).click();
+  await expect(row.locator('.status')).toHaveText('This stream keeps its sound in a separate track, so it can’t be saved yet.');
+});
+

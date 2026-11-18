@@ -44,3 +44,12 @@ test('still works in a browser without WebCodecs (uses the video player)', async
   const png = fs.readFileSync(await dl.path());
   expect(png.readUInt32BE(16)).toBe(640);
 });
+
+test('a second zip in the same page still has every frame', async ({ page }) => {
+  await open(page);
+  await page.getByLabel('Every (seconds)').fill('1');
+  for (let run = 0; run < 2; run++) {
+    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 60_000 }), page.getByRole('button', { name: 'Save frames as zip' }).click()]);
+    expect(Object.keys(unzipSync(new Uint8Array(fs.readFileSync(await dl.path()))))).toHaveLength(3);
+  }
+});

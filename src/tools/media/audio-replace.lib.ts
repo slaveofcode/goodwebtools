@@ -13,6 +13,34 @@ export function audioPlan(audioSec: number, videoSec: number, loop: boolean): { 
   return { repeats, cutAtSec: videoSec };
 }
 
+/**
+ * Keeps the copied video at most `leadSec` ahead of the encoded audio. The
+ * muxer holds every sample until both tracks reach it, so an unpaced video copy
+ * (fast) would pile up in memory behind the audio encoder (slow).
+ */
+export function createPacer(leadSec: number) {
+  let audioTs = -Infinity;
+  let ended = false;
+  let waiters: { ts: number; resolve: () => void }[] = [];
+  const release = () => {
+    waiters = waiters.filter(w => {
+      if (ended || w.ts - audioTs <= leadSec) { w.resolve(); return false; }
+      return true;
+    });
+  };
+  return {
+    /** Resolves when the video packet at `ts` may be written. */
+    video(ts: number): Promise<void> {
+      if (ended || ts - Math.max(audioTs, 0) <= leadSec) return Promise.resolve();
+      return new Promise(resolve => { waiters.push({ ts, resolve }); });
+    },
+    /** The audio has been written up to `ts`. */
+    audio(ts: number): void { audioTs = Math.max(audioTs, ts); release(); },
+    /** No more audio is coming. */
+    audioDone(): void { ended = true; release(); },
+  };
+}
+
 export type ReplaceExt = 'mp4' | 'mov' | 'webm' | 'mkv';
 
 /** Container and audio codec for a video with new audio: WebM keeps WebM + Opus, others carry AAC. */
@@ -86,11 +114,13 @@ export async function mbReplaceAudio(video: File, audio: File, opts: { loop: boo
     signal?.addEventListener('abort', onAbort, { once: true });
     arm(FIRST_PROGRESS_MS);
 
+    const pacer = createPacer(1);
     const copyVideo = async () => {
       const config = await vTrack.getDecoderConfig();
       let first = true;
       for await (const packet of new mb.EncodedPacketSink(vTrack).packets()) {
         if (signal?.aborted) throw abortError();
+        await pacer.video(packet.timestamp - videoStart);
         await vSource.add(packet, first && config ? { decoderConfig: config } : undefined);
         first = false;
         arm(STALL_MS);
@@ -106,15 +136,21 @@ export async function mbReplaceAudio(video: File, audio: File, opts: { loop: boo
           const at = videoStart + k * audioSec + (sample.timestamp - audioStart);
           if (at >= cut) { sample.close(); break outer; }
           sample.setTimestamp(at);
-          await aSource.add(sample);
-          sample.close();
+          try {
+            await aSource.add(sample);
+          } finally {
+            sample.close();
+          }
+          pacer.audio(at - videoStart);
           arm(STALL_MS);
         }
       }
+      pacer.audioDone();
       aSource.close();
     };
     try {
-      await Promise.race([Promise.all([copyVideo(), encodeAudio()]), watchdog]);
+      const audioJob = encodeAudio().finally(() => pacer.audioDone());
+      await Promise.race([Promise.all([copyVideo(), audioJob]), watchdog]);
       await Promise.race([output.finalize(), watchdog]);
     } catch (e) {
       await output.cancel().catch(() => {});

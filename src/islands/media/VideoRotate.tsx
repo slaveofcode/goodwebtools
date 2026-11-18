@@ -12,13 +12,13 @@ import type { Engine } from '@/tools/media/engine.lib';
 import type { Lang } from '@/i18n/config';
 
 const TR: Record<Lang, {
-  intro: string; drop: string; left: string; half: string; right: string; flip: string; bake: string; bakeHint: string;
+  intro: string; drop: string; none: string; left: string; half: string; right: string; flip: string; bake: string; bakeHint: string;
   rotate: string; working: string; cancel: string; download: string; failed: string; another: string; turn: (d: number) => string;
   fastMode: string; slowMode: string;
 }> = {
   en: {
     intro: 'Turn a sideways or upside-down video the right way up — 90°, 180° or 270°, and mirror it if you like. It’s instant and keeps the original quality: nothing is re-encoded unless you choose to bake the rotation in. Everything happens in your browser.',
-    drop: 'Drop a video, or click to choose', left: 'Left 90°', half: '180°', right: 'Right 90°',
+    drop: 'Drop a video, or click to choose', none: 'No turn', left: 'Left 90°', half: '180°', right: 'Right 90°',
     flip: 'Mirror (flip horizontally)', bake: 'Bake the rotation into the picture',
     bakeHint: 'Re-encodes the video — only needed for old players or editors that ignore rotation.',
     rotate: 'Rotate video', working: 'Rotating…', cancel: 'Cancel', download: 'Download', failed: 'Could not rotate this video.',
@@ -27,7 +27,7 @@ const TR: Record<Lang, {
   },
   id: {
     intro: 'Tegakkan video yang miring atau terbalik — 90°, 180°, atau 270°, dan cerminkan bila perlu. Instan dan kualitasnya tetap: tidak ada encode ulang kecuali Anda memilih menanamkan rotasinya. Semuanya terjadi di browser Anda.',
-    drop: 'Letakkan video, atau klik untuk memilih', left: 'Kiri 90°', half: '180°', right: 'Kanan 90°',
+    drop: 'Letakkan video, atau klik untuk memilih', none: 'Tanpa putar', left: 'Kiri 90°', half: '180°', right: 'Kanan 90°',
     flip: 'Cerminkan (balik horizontal)', bake: 'Tanamkan rotasi ke gambar',
     bakeHint: 'Meng-encode ulang video — hanya perlu untuk pemutar atau editor lama yang mengabaikan rotasi.',
     rotate: 'Putar video', working: 'Memutar…', cancel: 'Batal', download: 'Unduh', failed: 'Video ini tidak bisa diputar.',
@@ -101,7 +101,7 @@ export default function VideoRotate({ lang = 'en' }: { lang?: Lang }) {
   }
 
   const preview = `rotate(${turn}deg)${flip ? ' scaleX(-1)' : ''}`;
-  const choices: [Turn, string, typeof RotateCw | null][] = [[270, t.left, RotateCcw], [180, t.half, null], [90, t.right, RotateCw]];
+  const choices: [Turn, string, typeof RotateCw | null][] = [[0, t.none, null], [270, t.left, RotateCcw], [180, t.half, null], [90, t.right, RotateCw]];
 
   return (
     <div className="space-y-4">
@@ -124,7 +124,7 @@ export default function VideoRotate({ lang = 'en' }: { lang?: Lang }) {
         <span>{t.bake}<span className="block text-xs text-muted-foreground">{t.bakeHint}</span></span>
       </label>
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => void run()} disabled={busy}><RotateCw className="h-4 w-4" />{t.rotate}</Button>
+        <Button onClick={() => void run()} disabled={busy || (turn === 0 && !flip)}><RotateCw className="h-4 w-4" />{t.rotate}</Button>
         {busy && <Button variant="ghost" onClick={() => abortRef.current?.abort()}>{t.cancel}</Button>}
       </div>
       {busy && <ProgressBar percent={percent} label={t.working} />}

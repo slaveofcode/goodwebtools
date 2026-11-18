@@ -44,3 +44,30 @@ describe('ffmpeg fallback arguments', () => {
     expect(ffmpegReplaceArgs(false, 3)).not.toContain('-stream_loop');
   });
 });
+
+import { createPacer } from './audio-replace.lib';
+
+describe('createPacer — the copied video waits for the (slower) new audio', () => {
+  const settled = async (p: Promise<void>) => { let done = false; void p.then(() => { done = true; }); await new Promise(r => setTimeout(r, 0)); return done; };
+
+  it('lets video through while it is within the lead of the audio', async () => {
+    const pacer = createPacer(1);
+    expect(await settled(pacer.video(0.5))).toBe(true);
+  });
+  it('holds video that is too far ahead until the audio catches up', async () => {
+    const pacer = createPacer(1);
+    const wait = pacer.video(5);
+    expect(await settled(wait)).toBe(false);
+    pacer.audio(3.9);
+    expect(await settled(wait)).toBe(false);
+    pacer.audio(4.2);
+    expect(await settled(wait)).toBe(true);
+  });
+  it('lets everything through once the audio has ended', async () => {
+    const pacer = createPacer(1);
+    const wait = pacer.video(60);
+    pacer.audioDone();
+    expect(await settled(wait)).toBe(true);
+    expect(await settled(pacer.video(120))).toBe(true);
+  });
+});

@@ -71,19 +71,23 @@ export default function VideoFrames({ lang = 'en' }: { lang?: Lang }) {
     abortRef.current = ctrl;
     setBusy(true); setError(''); setNote(''); setProgress({ n: 0, total: times.length });
     const base = baseName(file.name);
-    const out: Record<string, Uint8Array> = {};
+    // Frames go into the zip as they're made (stored, not compressed again — they
+    // already are), so each frame is held once, as part of the zip, not twice.
+    const parts: BlobPart[] = [];
+    const fflate = zip ? await import('fflate') : null;
+    const archive = fflate ? new fflate.Zip((err, chunk) => { if (!err) parts.push(chunk as BlobPart); }) : null;
     try {
       await grabFrames(file, times, fmt, async (i, blob) => {
         setProgress({ n: i + 1, total: times.length });
         const name = frameFileName(base, times[i], fmt);
-        if (zip) out[name] = new Uint8Array(await blob.arrayBuffer());
-        else downloadService.download(blob, name);
+        if (!archive || !fflate) { downloadService.download(blob, name); return; }
+        const entry = new fflate.ZipPassThrough(name);
+        archive.add(entry);
+        entry.push(new Uint8Array(await blob.arrayBuffer()), true);
       }, ctrl.signal);
-      if (zip) {
-        const { zipSync } = await import('fflate');
-        // Images are already compressed: store them as they are.
-        const bytes = zipSync(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, [v, { level: 0 }]])));
-        downloadService.download(new Blob([bytes as BlobPart], { type: 'application/zip' }), `${base}-frames.zip`);
+      if (archive) {
+        archive.end();
+        downloadService.download(new Blob(parts, { type: 'application/zip' }), `${base}-frames.zip`);
       }
       setNote(t.done(times.length) + (capped ? ` ${t.capped}` : ''));
     } catch (e) {

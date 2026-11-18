@@ -50,3 +50,17 @@ describe('fetchHls', () => {
     expect(await reason(fetchHls('https://x.test/n.m3u8', () => {}))).toBe('not-hls');
   });
 });
+
+describe('fetchHls — streams it can’t join correctly are refused, not saved broken', () => {
+  it('refuses a stream whose sound is a separate rendition (it would come out silent)', async () => {
+    serve({
+      '/m.m3u8': '#EXTM3U\n#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aud",NAME="English",DEFAULT=YES,URI="audio.m3u8"\n#EXT-X-STREAM-INF:BANDWIDTH=900,AUDIO="aud"\nvideo.m3u8\n',
+      '/video.m3u8': '#EXTM3U\n#EXTINF:1,\nv.ts\n#EXT-X-ENDLIST\n',
+    });
+    expect(await reason(fetchHls('https://x.test/m.m3u8', () => {}))).toBe('separate-audio');
+  });
+  it('refuses a byte-range playlist (one file listed many times)', async () => {
+    serve({ '/b.m3u8': '#EXTM3U\n#EXTINF:1,\n#EXT-X-BYTERANGE:1000@0\nall.ts\n#EXTINF:1,\n#EXT-X-BYTERANGE:1000@1000\nall.ts\n#EXT-X-ENDLIST\n' });
+    expect(await reason(fetchHls('https://x.test/b.m3u8', () => {}))).toBe('byterange');
+  });
+});

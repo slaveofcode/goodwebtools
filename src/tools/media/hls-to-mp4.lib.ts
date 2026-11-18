@@ -7,7 +7,7 @@ import type { EncodeProgress } from './encode.lib';
 import { convertTo } from './mb-media.lib';
 import { MediaInputError } from './run-media.lib';
 
-export type HlsReason = 'encrypted' | 'live' | 'empty' | 'network' | 'not-hls';
+export type HlsReason = 'encrypted' | 'live' | 'empty' | 'network' | 'not-hls' | 'separate-audio' | 'byterange';
 
 export class HlsError extends MediaInputError {
   constructor(readonly reason: HlsReason) { super(`hls-${reason}`); }
@@ -32,7 +32,7 @@ async function get(url: string, signal?: AbortSignal): Promise<Response> {
   return res;
 }
 
-interface Playlist { type: 'master' | 'media'; variants?: { url: string }[]; segments?: string[]; init?: string | null; encrypted?: boolean; live?: boolean }
+interface Playlist { type: 'master' | 'media'; variants?: { url: string; separateAudio?: boolean }[]; segments?: string[]; init?: string | null; encrypted?: boolean; live?: boolean; byterange?: boolean }
 
 /** Download an HLS stream (best quality) and join its parts in order. */
 export async function fetchHls(url: string, onProgress: (done: number, total: number) => void, signal?: AbortSignal): Promise<Blob> {
@@ -41,11 +41,13 @@ export async function fetchHls(url: string, onProgress: (done: number, total: nu
   if (pl?.type === 'master') {
     const best = pl.variants?.[0];
     if (!best) throw new HlsError('empty');
+    if (best.separateAudio) throw new HlsError('separate-audio'); // joined video alone would be silent
     pl = await read(best.url);
   }
   if (!pl || pl.type !== 'media') throw new HlsError('not-hls');
   if (pl.encrypted) throw new HlsError('encrypted');
   if (pl.live) throw new HlsError('live');
+  if (pl.byterange) throw new HlsError('byterange');
   const segments = pl.segments ?? [];
   if (!segments.length) throw new HlsError('empty');
   const parts: Blob[] = [];
