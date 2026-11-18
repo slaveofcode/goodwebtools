@@ -193,6 +193,11 @@ export interface MbConvertVideoOpts {
   trimDuration: number;
 }
 
+/** The Video Converter's CRF slider (18–40) as a mediabunny quality preset. */
+export function qualityFromCrf(crf: number): 'high' | 'medium' | 'low' {
+  return crf <= 20 ? 'high' : crf <= 28 ? 'medium' : 'low';
+}
+
 /** Convert a video between MP4, WebM, MOV and MKV. "High" with no resize copies streams when the target container allows it. */
 export async function mbConvertVideo(file: Blob, opts: MbConvertVideoOpts, onProgress?: EncodeProgress, signal?: AbortSignal): Promise<Blob> {
   const mb = await loadMediabunny();

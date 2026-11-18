@@ -3232,19 +3232,19 @@ const en: Record<string, ToolSeoContent> = {
   },
   'video-convert': {
     title: 'Free Video Converter Tool — Convert & Compress',
-    description: 'A free online video converter tool to convert, compress, trim, or resize video to MP4, WebM, or MOV. Runs in your browser — nothing is uploaded.',
-    intro: 'This free video converter tool changes your clip\'s format, shrinks its size, trims it, or scales it down — all through ffmpeg running in your browser. Drop a video, set your options, and download the result without anything leaving your device.',
+    description: 'A free online video converter tool to convert, compress, trim, or resize video to MP4, WebM, MOV or MKV — fast, using your device’s hardware encoder. Runs in your browser; nothing is uploaded.',
+    intro: 'This free video converter tool changes your clip\'s format, shrinks its size, trims it, or scales it down — all in your browser, using your device’s hardware video encoder when the browser supports it. Drop a video, set your options, and download the result without anything leaving your device.',
     howTo: [
       'Drop a video onto the box or click to browse for one.',
-      'Choose an output format — MP4 (H.264), WebM (VP9), or MOV — and set the CRF quality slider.',
+      'Choose an output format — MP4 (H.264), WebM (VP9), MOV or MKV — and set the CRF quality slider.',
       'Optionally set a target width, a start time and length to trim, or tick Drop audio.',
       'Click Convert, watch the progress bar, then preview and download the result.',
     ],
     faqs: [
-      { q: 'Is my video uploaded to a server?', a: 'No. Transcoding runs entirely in your browser via ffmpeg.wasm, so the video never leaves your device — good for private or large files.' },
+      { q: 'Is my video uploaded to a server?', a: 'No. Transcoding runs entirely in your browser, so the video never leaves your device — good for private or large files.' },
       { q: 'How do I make the file smaller?', a: 'Raise the CRF value for more compression, set a smaller target width, and optionally drop the audio track. The result shows its size as a percentage of the original.' },
       { q: 'Can I trim the video?', a: 'Yes. Enter a Start time in seconds and a Length in seconds to export just that portion; leave them blank to convert the whole clip.' },
-      { q: 'Why is the first run slow?', a: 'The first conversion downloads the video engine (about 31 MB) and transcoding is CPU-bound, so long or high-resolution clips take longer. After the first load the engine is cached.' },
+      { q: 'Why is it fast in one browser and slow in another?', a: 'In browsers with WebCodecs (Chrome, Edge, Samsung Internet and most recent browsers) it uses your device’s hardware video encoder, so even HD clips convert quickly — and at the highest quality setting a plain format change just repackages the video. Other browsers, and old formats like AVI, use a compatibility mode that downloads a video engine (about 31 MB) once and encodes in software, which is much slower.' },
     ],
   },
   'video-to-audio': {
@@ -6737,19 +6737,19 @@ const id: Record<string, ToolSeoContent> = {
   },
   'video-convert': {
     title: 'Tool Konverter Video Gratis — Konversi & Kompres',
-    description: 'Tool konverter video online gratis untuk mengonversi, mengompres, memotong, atau mengubah ukuran video ke MP4, WebM, atau MOV. Berjalan di browser Anda — tidak ada yang diunggah.',
-    intro: 'Tool konverter video gratis ini mengubah format klip Anda, memperkecil ukurannya, memotongnya, atau menskalakannya — semuanya melalui ffmpeg yang berjalan di browser Anda. Jatuhkan video, atur opsi Anda, dan unduh hasilnya tanpa ada yang meninggalkan perangkat Anda.',
+    description: 'Tool konverter video online gratis untuk mengonversi, mengompres, memotong, atau mengubah ukuran video ke MP4, WebM, MOV, atau MKV — cepat, memakai encoder perangkat keras di perangkat Anda. Berjalan di browser Anda; tidak ada yang diunggah.',
+    intro: 'Tool konverter video gratis ini mengubah format klip Anda, memperkecil ukurannya, memotongnya, atau menskalakannya — semuanya di browser Anda, memakai encoder video perangkat keras bila browser mendukung. Jatuhkan video, atur opsi Anda, dan unduh hasilnya tanpa ada yang meninggalkan perangkat Anda.',
     howTo: [
       'Jatuhkan video ke dalam kotak atau klik untuk memilihnya.',
-      'Pilih format keluaran — MP4 (H.264), WebM (VP9), atau MOV — dan atur slider kualitas CRF.',
+      'Pilih format keluaran — MP4 (H.264), WebM (VP9), MOV, atau MKV — dan atur slider kualitas CRF.',
       'Opsional, tentukan target width, waktu mulai dan durasi untuk memotong, atau centang Drop audio.',
       'Klik Convert, amati bilah progres, lalu pratinjau dan unduh hasilnya.',
     ],
     faqs: [
-      { q: 'Apakah video saya diunggah ke server?', a: 'Tidak. Transcoding berjalan sepenuhnya di browser Anda melalui ffmpeg.wasm, jadi video tidak pernah meninggalkan perangkat Anda — cocok untuk file pribadi atau berukuran besar.' },
+      { q: 'Apakah video saya diunggah ke server?', a: 'Tidak. Transcoding berjalan sepenuhnya di browser Anda, jadi video tidak pernah meninggalkan perangkat Anda — cocok untuk file pribadi atau berukuran besar.' },
       { q: 'Bagaimana cara memperkecil ukuran file?', a: 'Naikkan nilai CRF untuk kompresi lebih tinggi, tentukan target width yang lebih kecil, dan opsional hilangkan trek audio. Hasilnya menampilkan ukurannya sebagai persentase dari aslinya.' },
       { q: 'Bisakah saya memotong video?', a: 'Ya. Masukkan Start time dalam detik dan Length dalam detik untuk mengekspor hanya bagian tersebut; biarkan kosong untuk mengonversi seluruh klip.' },
-      { q: 'Mengapa proses pertama lambat?', a: 'Konversi pertama mengunduh engine video (sekitar 31 MB) dan transcoding bergantung pada CPU, jadi klip yang panjang atau beresolusi tinggi memerlukan waktu lebih lama. Setelah pemuatan pertama, engine tersimpan di cache.' },
+      { q: 'Mengapa di satu browser cepat dan di browser lain lambat?', a: 'Di browser yang mendukung WebCodecs (Chrome, Edge, Samsung Internet, dan sebagian besar browser terbaru) tool memakai encoder video perangkat keras di perangkat Anda, sehingga klip HD pun cepat dikonversi — dan di kualitas tertinggi, perubahan format biasa cukup mengemas ulang videonya. Browser lain, dan format lama seperti AVI, memakai mode kompatibilitas yang mengunduh engine video (sekitar 31 MB) sekali dan meng-encode secara software, yang jauh lebih lambat.' },
     ],
   },
   'video-to-audio': {

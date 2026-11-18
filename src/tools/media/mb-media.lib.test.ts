@@ -27,3 +27,11 @@ describe('outputExtFor — trim keeps the input container when it can be written
     expect(outputExtFor(input)).toBe(out);
   });
 });
+
+import { qualityFromCrf } from './mb-media.lib';
+
+describe('qualityFromCrf — the converter quality slider as a hardware quality preset', () => {
+  it.each([[18, 'high'], [20, 'high'], [21, 'medium'], [28, 'medium'], [29, 'low'], [40, 'low']])('CRF %s → %s', (crf, q) => {
+    expect(qualityFromCrf(crf)).toBe(q);
+  });
+});
