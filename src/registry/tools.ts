@@ -2083,6 +2083,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'video-frames',
+    name: "Video Frame Grabber",
+    category: 'Media',
+    route: '/tools/video-frames',
+    keywords: ["video frame", "frame grabber", "screenshot from video", "extract frames", "video to image", "video to png", "video to jpg", "thumbnail", "still", "capture frame"],
+    icon: ImageDown,
+    summary: "Save a still frame from a video as PNG, JPG or WebP \u2014 or one every N seconds",
+    load: () => import('@/islands/media/VideoFrames'),
+    status: 'beta'
+  },
+  {
     id: 'video-compress',
     name: 'Video Compressor',
     category: 'Media',

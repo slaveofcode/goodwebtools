@@ -3230,6 +3230,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: "Does it work offline?", a: "Yes. Once the page has loaded it works without a connection, like the rest of GoodWebTools." },
     ],
   },
+  'video-frames': {
+    title: "Video Frame Grabber — Save a Frame from a Video as PNG or JPG",
+    description: "Free video frame grabber: pick an exact moment and save it as PNG, JPG or WebP, or grab a frame every few seconds into a zip. In your browser — nothing uploaded.",
+    intro: "Video Frame Grabber turns a moment in a video into an image. Scrub to the exact spot (step one frame at a time if you need to), choose PNG, JPG or WebP, and save the frame at full resolution — or save a frame every few seconds as a zip, for thumbnails, storyboards or spotting the sharpest shot. The video is decoded in your browser and never uploaded.",
+    howTo: [
+      "Drop a video onto the box, or click to choose one.",
+      "Play or drag the video to the moment you want; use the arrow buttons to step one frame back or forward.",
+      "Choose PNG, JPG or WebP.",
+      "Press Save this frame — or set Every N seconds and press Save frames as zip.",
+    ],
+    faqs: [
+      { q: "Is my video uploaded?", a: "No. The video is decoded in your browser and the frames are made on your device." },
+      { q: "Are the frames full resolution?", a: "Yes. Each frame is saved at the video's own size, turned upright if the video carries a rotation." },
+      { q: "How many frames can I save at once?", a: "Up to 300 per zip. For a long video, pick a larger gap between frames." },
+      { q: "Which format should I pick?", a: "PNG keeps every detail (larger files), JPG is smallest for photos, and WebP is small with better quality than JPG." },
+    ],
+  },
   'video-compress': {
     title: 'Free Video Compressor — Compress Video to a Target Size',
     description: 'Compress a video to a target file size (e.g. under 25 MB for Discord or 16 MB for WhatsApp) right in your browser. Nothing is uploaded — the video stays on your device.',
@@ -6750,6 +6767,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: "Format apa saja yang bisa dibaca?", a: "MP4, MOV, M4A, WebM, MKV, MP3, WAV, FLAC, Ogg/Opus, AAC, dan MPEG-TS. Container lama seperti AVI atau WMV tidak bisa dibaca di sini." },
       { q: "Kenapa video dari ponsel saya punya rotasi?", a: "Ponsel sering menyimpan gambar menyamping lalu menambahkan catatan rotasi agar pemutar menegakkannya. Info Media menampilkan rotasi itu dan ukuran saat video ditampilkan." },
       { q: "Apakah bekerja offline?", a: "Ya. Setelah halaman dimuat, tool ini bekerja tanpa koneksi, seperti tool GoodWebTools lainnya." },
+    ],
+  },
+  'video-frames': {
+    title: "Ambil Frame Video — Simpan Frame dari Video sebagai PNG atau JPG",
+    description: "Tool ambil frame video gratis: pilih momen yang tepat dan simpan sebagai PNG, JPG, atau WebP, atau ambil frame setiap beberapa detik ke dalam zip. Di browser — tidak ada yang diunggah.",
+    intro: "Ambil Frame Video mengubah satu momen di video menjadi gambar. Geser ke titik yang tepat (maju atau mundur satu frame bila perlu), pilih PNG, JPG, atau WebP, lalu simpan frame dengan resolusi penuh — atau simpan satu frame setiap beberapa detik sebagai zip, untuk thumbnail, storyboard, atau mencari bidikan paling tajam. Video didekode di browser Anda dan tidak pernah diunggah.",
+    howTo: [
+      "Letakkan video di kotak, atau klik untuk memilihnya.",
+      "Putar atau geser video ke momen yang Anda inginkan; pakai tombol panah untuk mundur atau maju satu frame.",
+      "Pilih PNG, JPG, atau WebP.",
+      "Tekan Simpan frame ini — atau atur Setiap N detik lalu tekan Simpan frame sebagai zip.",
+    ],
+    faqs: [
+      { q: "Apakah video saya diunggah?", a: "Tidak. Video didekode di browser Anda dan frame dibuat di perangkat Anda." },
+      { q: "Apakah frame-nya beresolusi penuh?", a: "Ya. Setiap frame disimpan dalam ukuran asli video, ditegakkan bila video punya rotasi." },
+      { q: "Berapa banyak frame yang bisa disimpan sekaligus?", a: "Hingga 300 per zip. Untuk video panjang, pilih jarak antar-frame yang lebih besar." },
+      { q: "Format mana yang sebaiknya dipilih?", a: "PNG menyimpan semua detail (file lebih besar), JPG paling kecil untuk foto, dan WebP kecil dengan kualitas lebih baik daripada JPG." },
     ],
   },
   'video-compress': {
