@@ -7,7 +7,7 @@ const { caps, cancelFFmpeg } = vi.hoisted(() => ({
 vi.mock('@/services/media/mediabunny.service', () => ({ getEncodeCaps: async () => caps }));
 vi.mock('@/services/ffmpeg.service', () => ({ cancelFFmpeg }));
 
-import { runWithFallback } from './run-media.lib';
+import { runWithFallback, MediaInputError } from './run-media.lib';
 import type { MediaJob } from './engine.lib';
 
 const job: MediaJob = { kind: 'compress-video', inputExt: 'mp4', needVideo: 'avc', needAudio: 'aac' };
@@ -31,6 +31,12 @@ describe('runWithFallback', () => {
   it('does not fall back when the user cancelled', async () => {
     const slow = vi.fn(async () => 'slow');
     await expect(runWithFallback(job, async () => { throw abort(); }, slow, new AbortController().signal)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(slow).not.toHaveBeenCalled();
+  });
+
+  it('does not fall back for a problem with the file itself (e.g. no audio track)', async () => {
+    const slow = vi.fn(async () => 'slow');
+    await expect(runWithFallback(job, async () => { throw new MediaInputError('no-audio'); }, slow, new AbortController().signal)).rejects.toMatchObject({ message: 'no-audio' });
     expect(slow).not.toHaveBeenCalled();
   });
 

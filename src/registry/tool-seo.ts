@@ -3250,18 +3250,18 @@ const en: Record<string, ToolSeoContent> = {
   'video-to-audio': {
     title: 'Free Video to Audio Tool — Extract Audio Track',
     description: 'A free video to audio tool that rips the audio out of a video as MP3, M4A, WAV or Opus — in your browser. The file is never uploaded and stays on your device.',
-    intro: 'This free video-to-audio tool extracts the soundtrack from a video and saves it as MP3, M4A, WAV or Opus, with optional start and length trimming. It runs entirely in your browser via ffmpeg.wasm, so the video never leaves your device.',
+    intro: 'This free video-to-audio tool extracts the soundtrack from a video — either exactly as it is (no quality loss, in seconds) or converted to MP3, M4A, WAV or Opus — with optional start and length trimming. It runs entirely in your browser, so the video never leaves your device.',
     howTo: [
       'Drop a video (or audio) file onto the box, or click to browse.',
-      'Choose an output format — MP3, M4A (AAC), WAV or Opus.',
+      'Choose an output — Original audio (no quality loss), MP3, M4A (AAC), WAV or Opus.',
       'Optionally set a Start time and Length in seconds to grab just a clip.',
       'Click Extract audio, then preview the result and Download it.',
     ],
     faqs: [
-      { q: 'Is my video uploaded to extract the audio?', a: 'No. The conversion runs in your browser with ffmpeg.wasm, so the file never leaves your device. Nothing is uploaded to a server.' },
-      { q: 'Which audio formats can I export?', a: 'You can save the audio as MP3, M4A (AAC), WAV (PCM) or Opus. Pick the one you need from the Format dropdown before extracting.' },
+      { q: 'Is my video uploaded to extract the audio?', a: 'No. Everything runs in your browser, so the file never leaves your device. Nothing is uploaded to a server.' },
+      { q: 'Which audio formats can I export?', a: '"Original audio" keeps the soundtrack exactly as recorded — usually AAC (.m4a) from phones and MP4 files, or Opus (.ogg) from WebM — with no quality loss. You can also convert to MP3, M4A (AAC), WAV (PCM) or Opus.' },
       { q: 'Can I extract only part of the video?', a: 'Yes. Enter a Start time and a Length in seconds to trim the output to just that section; leave Length blank to grab everything from the start point on.' },
-      { q: 'Why does the first run download something?', a: 'The audio engine (ffmpeg.wasm, around 31 MB) is fetched once on first use, then reused. After that, extractions start faster.' },
+      { q: 'Why is it instant in one browser and slower in another?', a: 'Browsers with WebCodecs (Chrome, Edge, Samsung Internet and most recent browsers) copy or convert the audio directly, in seconds. Other browsers use a compatibility mode that downloads an audio engine (about 31 MB) once and converts more slowly — there, Original audio is saved as MP3.' },
     ],
   },
   'audio-convert': {
@@ -6755,18 +6755,18 @@ const id: Record<string, ToolSeoContent> = {
   'video-to-audio': {
     title: 'Tool Video ke Audio Gratis — Ekstrak Track Audio',
     description: 'Tool video ke audio gratis yang menarik audio dari sebuah video sebagai MP3, M4A, WAV, atau Opus — di browser Anda. File tidak pernah diunggah dan tetap berada di perangkat Anda.',
-    intro: 'Tool video ke audio gratis ini mengekstrak soundtrack dari sebuah video dan menyimpannya sebagai MP3, M4A, WAV, atau Opus, dengan opsi pemangkasan waktu mulai dan durasi. Semuanya berjalan sepenuhnya di browser Anda melalui ffmpeg.wasm, jadi video tidak pernah meninggalkan perangkat Anda.',
+    intro: 'Tool video ke audio gratis ini mengekstrak soundtrack dari sebuah video — persis seperti aslinya (tanpa penurunan kualitas, dalam hitungan detik) atau dikonversi ke MP3, M4A, WAV, atau Opus — dengan opsi pemangkasan waktu mulai dan durasi. Semuanya berjalan sepenuhnya di browser Anda, jadi video tidak pernah meninggalkan perangkat Anda.',
     howTo: [
       'Letakkan file video (atau audio) ke dalam kotak, atau klik untuk menelusuri.',
-      'Pilih format keluaran — MP3, M4A (AAC), WAV, atau Opus.',
+      'Pilih keluaran — Audio asli (tanpa penurunan kualitas), MP3, M4A (AAC), WAV, atau Opus.',
       'Jika perlu, tentukan Start time dan Length dalam detik untuk mengambil hanya sepotong bagian.',
       'Klik Extract audio, lalu pratinjau hasilnya dan Download.',
     ],
     faqs: [
-      { q: 'Apakah video saya diunggah untuk mengekstrak audionya?', a: 'Tidak. Konversi berjalan di browser Anda dengan ffmpeg.wasm, jadi file tidak pernah meninggalkan perangkat Anda. Tidak ada yang diunggah ke server.' },
-      { q: 'Format audio apa saja yang bisa saya ekspor?', a: 'Anda bisa menyimpan audio sebagai MP3, M4A (AAC), WAV (PCM), atau Opus. Pilih yang Anda butuhkan dari dropdown Format sebelum mengekstrak.' },
+      { q: 'Apakah video saya diunggah untuk mengekstrak audionya?', a: 'Tidak. Semuanya berjalan di browser Anda, jadi file tidak pernah meninggalkan perangkat Anda. Tidak ada yang diunggah ke server.' },
+      { q: 'Format audio apa saja yang bisa saya ekspor?', a: '"Audio asli" menyimpan soundtrack persis seperti rekamannya — biasanya AAC (.m4a) dari HP dan file MP4, atau Opus (.ogg) dari WebM — tanpa penurunan kualitas. Anda juga bisa mengonversi ke MP3, M4A (AAC), WAV (PCM), atau Opus.' },
       { q: 'Bisakah saya mengekstrak hanya sebagian dari video?', a: 'Ya. Masukkan Start time dan Length dalam detik untuk memangkas keluaran hanya pada bagian tersebut; biarkan Length kosong untuk mengambil semuanya mulai dari titik awal.' },
-      { q: 'Mengapa jalannya pertama kali mengunduh sesuatu?', a: 'Mesin audio (ffmpeg.wasm, sekitar 31 MB) diambil sekali saat pertama kali digunakan, lalu dipakai ulang. Setelah itu, ekstraksi dimulai lebih cepat.' },
+      { q: 'Mengapa di satu browser instan dan di browser lain lebih lambat?', a: 'Browser yang mendukung WebCodecs (Chrome, Edge, Samsung Internet, dan sebagian besar browser terbaru) menyalin atau mengonversi audio secara langsung, dalam hitungan detik. Browser lain memakai mode kompatibilitas yang mengunduh mesin audio (sekitar 31 MB) sekali dan mengonversi lebih lambat — di sana, Audio asli disimpan sebagai MP3.' },
     ],
   },
   'audio-convert': {

@@ -5,6 +5,9 @@ import { getEncodeCaps } from '@/services/media/mediabunny.service';
 import { cancelFFmpeg } from '@/services/ffmpeg.service';
 import { chooseEngine, type Engine, type MediaJob } from './engine.lib';
 
+/** A problem with the file itself (e.g. no audio track): shown to the user, never retried on ffmpeg. */
+export class MediaInputError extends Error {}
+
 const isAbort = (e: unknown) => e instanceof DOMException && e.name === 'AbortError';
 const abortError = () => new DOMException('Cancelled', 'AbortError');
 
@@ -34,6 +37,7 @@ export async function runWithFallback<T>(
     return { value: await fast(signal), engine: 'mediabunny', fellBack: false };
   } catch (e) {
     if (isAbort(e) || signal.aborted) throw isAbort(e) ? e : abortError();
+    if (e instanceof MediaInputError) throw e;
     return { value: await runSlow(), engine: 'ffmpeg', fellBack: true };
   }
 }

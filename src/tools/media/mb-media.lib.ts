@@ -4,6 +4,7 @@
 import { loadMediabunny, ensureAudioEncoder, getEncodeCaps } from '@/services/media/mediabunny.service';
 import { computeTargetBitrate, planResolution, sizeRetryKbps } from './video-compress.lib';
 import type { EncodeProgress } from './encode.lib';
+import { MediaInputError } from './run-media.lib';
 
 type Mb = typeof import('mediabunny');
 type OutExt = 'mp4' | 'mov' | 'webm' | 'mkv' | 'mp3' | 'wav' | 'ogg' | 'flac' | 'm4a' | 'opus';
@@ -156,17 +157,29 @@ export async function mbTrim(file: Blob, opts: { startSec: number; endSec: numbe
 }
 
 /** The audio track of a video: kept as is ('original', lossless) or re-encoded to MP3. */
-export async function mbExtractAudio(file: Blob, opts: { as: 'original' | 'mp3' }, onProgress?: EncodeProgress, signal?: AbortSignal): Promise<{ blob: Blob; ext: string }> {
+export async function mbExtractAudio(
+  file: Blob,
+  opts: { as: 'original' | 'mp3'; trimStart?: number; trimDuration?: number },
+  onProgress?: EncodeProgress,
+  signal?: AbortSignal,
+): Promise<{ blob: Blob; ext: string }> {
   const probe = await probeMedia(file);
-  if (!probe.audio) throw new Error('no-audio');
+  if (!probe.audio) throw new MediaInputError('no-audio');
+  const trim = trimOpts(opts.trimStart ?? 0, opts.trimDuration ?? 0);
   const copy = opts.as === 'original' ? audioCopyTarget(probe.audio.codec) : null;
   if (copy) {
-    const blob = await convert(file, copy.format === 'mp4' ? 'm4a' : copy.format, { video: { discard: true } }, onProgress, signal);
+    const blob = await convert(file, copy.format === 'mp4' ? 'm4a' : copy.format, { video: { discard: true }, ...trim }, onProgress, signal);
     return { blob, ext: copy.ext };
   }
   await ensureAudioEncoder('mp3');
-  const blob = await convert(file, 'mp3', { video: { discard: true }, audio: { codec: 'mp3', bitrate: 192_000 } }, onProgress, signal);
+  const blob = await convert(file, 'mp3', { video: { discard: true }, audio: { codec: 'mp3', bitrate: 192_000 }, ...trim }, onProgress, signal);
   return { blob, ext: 'mp3' };
+}
+
+/** `{ trim }` for a start/length pair (0 length = to the end), or nothing when there's no trim. */
+function trimOpts(start: number, length: number): Pick<ConvertOpts, 'trim'> {
+  if (!(start > 0) && !(length > 0)) return {};
+  return { trim: { start, ...(length > 0 ? { end: start + length } : {}) } };
 }
 
 export interface MbConvertVideoOpts {
@@ -194,9 +207,7 @@ export async function mbConvertVideo(file: Blob, opts: MbConvertVideoOpts, onPro
   return convert(file, opts.format, {
     video: { codec: vcodec, quality, ...(opts.maxWidth > 0 ? { width: Math.round(opts.maxWidth / 2) * 2 } : {}), forceTranscode: reencode },
     audio: opts.muted ? { discard: true } : { codec: acodec, quality, forceTranscode: reencode },
-    ...(opts.trimDuration > 0 || opts.trimStart > 0
-      ? { trim: { start: opts.trimStart, ...(opts.trimDuration > 0 ? { end: opts.trimStart + opts.trimDuration } : {}) } }
-      : {}),
+    ...trimOpts(opts.trimStart, opts.trimDuration),
   }, onProgress, signal);
 }
 
@@ -210,8 +221,6 @@ export async function mbConvertAudio(file: Blob, opts: MbConvertAudioOpts, onPro
   return convert(file, opts.format, {
     video: { discard: true },
     audio: { codec, ...(lossy ? { bitrate: opts.kbps * 1000 } : {}), forceTranscode: true },
-    ...(opts.trimDuration > 0 || opts.trimStart > 0
-      ? { trim: { start: opts.trimStart, ...(opts.trimDuration > 0 ? { end: opts.trimStart + opts.trimDuration } : {}) } }
-      : {}),
+    ...trimOpts(opts.trimStart, opts.trimDuration),
   }, onProgress, signal);
 }
