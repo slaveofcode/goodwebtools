@@ -191,6 +191,7 @@ const ID_LABELS: Record<string, { name: string; summary: string }> = {
   "live-captions": { name: "Teks Langsung", summary: "Teks langsung berukuran besar dari ucapan (menggunakan pengenalan suara browser)" },
   "teleprompter": { name: "Teleprompter", summary: "Baca naskah di layar dengan gulir otomatis, pelacakan suara, mode cermin dan pratinjau kamera" },
   "video-convert": { name: "Konverter Video", summary: "Konversi, kompres, potong atau ubah ukuran video (sisi klien)" },
+  "media-info": { name: "Info Media", summary: "Lihat codec, resolusi, frame rate, bitrate, dan tag file video/audio" },
   "video-compress": { name: "Kompres Video", summary: "Kompres video ke ukuran file target (sisi klien)" },
   "media-trim": { name: "Pemotong Audio & Video", summary: "Potong bagian dari audio atau video (sisi klien)" },
   "video-to-audio": { name: "Video → Audio", summary: "Ekstrak trek audio dari video (sisi klien)" },

@@ -3213,6 +3213,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Which formats can I trim?', a: 'Common video (MP4, WebM, MOV, MKV) and audio (MP3, M4A, WAV, Opus, FLAC) files. The trimmed file keeps its original format.' },
     ],
   },
+  'media-info': {
+    title: "Media Info — See a Video or Audio File's Codec, Bitrate & FPS",
+    description: "Free online media info tool: see a video or audio file's container, codecs, resolution, frame rate, bitrate, rotation and tags. Read in your browser — nothing uploaded.",
+    intro: "Media Info shows what's inside a video or audio file: the container, length, overall bitrate and, for each track, the codec, resolution, frame rate, rotation, sample rate, channels and language — plus the title, artist, album and cover art from its tags. It's handy for checking why a file won't play, what a phone recorded, or whether a video is really 60 fps. The file is read in your browser and never uploaded.",
+    howTo: [
+      "Drop a video or audio file onto the box, or click to choose one.",
+      "Read the General section for the container, length, size and overall bitrate.",
+      "Check each video and audio track for its codec, resolution, frame rate, sample rate and channels.",
+      "Press Copy as text or Copy as JSON to paste the details anywhere.",
+    ],
+    faqs: [
+      { q: "Is my file uploaded?", a: "No. The file is read entirely in your browser and never leaves your device." },
+      { q: "Which formats does it read?", a: "MP4, MOV, M4A, WebM, MKV, MP3, WAV, FLAC, Ogg/Opus, AAC and MPEG-TS. Older containers such as AVI or WMV can't be read here." },
+      { q: "Why does my phone video show a rotation?", a: "Phones often store the picture sideways and add a rotation note so players turn it upright. Media Info shows that rotation and the size the video is displayed at." },
+      { q: "Does it work offline?", a: "Yes. Once the page has loaded it works without a connection, like the rest of GoodWebTools." },
+    ],
+  },
   'video-compress': {
     title: 'Free Video Compressor — Compress Video to a Target Size',
     description: 'Compress a video to a target file size (e.g. under 25 MB for Discord or 16 MB for WhatsApp) right in your browser. Nothing is uploaded — the video stays on your device.',
@@ -6716,6 +6733,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Bisakah saya membuat ringtone HP?', a: 'Bisa. Jatuhkan file audio (atau video — audionya diambil), atur bagian yang Anda inginkan, lalu ekspor. Audio disimpan sebagai MP3, yang bisa dipakai sebagai ringtone di sebagian besar HP.' },
       { q: 'Apakah potongannya presisi, dan apakah kualitasnya turun?', a: 'Di browser yang mendukung WebCodecs (Chrome, Edge, Samsung Internet, dan sebagian besar browser terbaru) tool menyalin media apa adanya dan hanya meng-encode ulang beberapa frame yang diperlukan agar potongan presisi — cepat dan lossless. Di browser lain tool memakai mode kompatibilitas: dengan "Cepat (tanpa encode ulang)" dicentang, potongan menempel ke keyframe terdekat; hilangkan centang untuk potongan presisi yang lebih lambat.' },
       { q: 'Format apa saja yang bisa dipotong?', a: 'Video umum (MP4, WebM, MOV, MKV) dan audio (MP3, M4A, WAV, Opus, FLAC). File hasil potongan tetap dalam format aslinya.' },
+    ],
+  },
+  'media-info': {
+    title: "Info Media — Lihat Codec, Bitrate & FPS File Video atau Audio",
+    description: "Tool info media online gratis: lihat container, codec, resolusi, frame rate, bitrate, rotasi, dan tag file video atau audio. Dibaca di browser — tidak ada yang diunggah.",
+    intro: "Info Media menampilkan isi file video atau audio: container, durasi, bitrate total, dan untuk setiap trek — codec, resolusi, frame rate, rotasi, sample rate, channel, dan bahasa — ditambah judul, artis, album, dan sampul dari tag-nya. Berguna untuk mengecek kenapa file tidak bisa diputar, apa yang direkam ponsel, atau apakah video benar-benar 60 fps. File dibaca di browser Anda dan tidak pernah diunggah.",
+    howTo: [
+      "Letakkan file video atau audio di kotak, atau klik untuk memilihnya.",
+      "Lihat bagian Umum untuk container, durasi, ukuran, dan bitrate total.",
+      "Periksa setiap trek video dan audio untuk codec, resolusi, frame rate, sample rate, dan channel.",
+      "Tekan Salin sebagai teks atau Salin sebagai JSON untuk menempelkan detailnya di mana saja.",
+    ],
+    faqs: [
+      { q: "Apakah file saya diunggah?", a: "Tidak. File dibaca sepenuhnya di browser Anda dan tidak pernah keluar dari perangkat." },
+      { q: "Format apa saja yang bisa dibaca?", a: "MP4, MOV, M4A, WebM, MKV, MP3, WAV, FLAC, Ogg/Opus, AAC, dan MPEG-TS. Container lama seperti AVI atau WMV tidak bisa dibaca di sini." },
+      { q: "Kenapa video dari ponsel saya punya rotasi?", a: "Ponsel sering menyimpan gambar menyamping lalu menambahkan catatan rotasi agar pemutar menegakkannya. Info Media menampilkan rotasi itu dan ukuran saat video ditampilkan." },
+      { q: "Apakah bekerja offline?", a: "Ya. Setelah halaman dimuat, tool ini bekerja tanpa koneksi, seperti tool GoodWebTools lainnya." },
     ],
   },
   'video-compress': {
