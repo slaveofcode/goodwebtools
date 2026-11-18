@@ -51,13 +51,13 @@ switch tabs.
 
 RECORD A TAB OR YOUR SCREEN
 Record the current tab with its sound (no picker) or a screen/window, optionally with
-your microphone. Alt+Shift+R starts and stops. Then download the video or an animated
-GIF, or convert it to MP4.
+your microphone. Alt+Shift+R starts and stops. Then download the video (seekable WebM),
+an MP4 made on your device, or an animated GIF.
 
 GRAB WHAT YOU NEED FROM A PAGE
 • Save the page's images — pick, convert to WebP/PNG/JPG, download as one zip.
 • Save the page's video and audio files — preview, download, or open them in the
-  video/audio converter. HLS streams are joined into one file.
+  video/audio converter. HLS streams are joined and saved as MP4.
 • Full-page screenshot — scrolls and stitches the whole page.
 • Color picker — click anywhere on screen, copy HEX/RGB/HSL.
 • Data files (optional) — open JSON (API responses, .json), YAML, TOML and Markdown files
@@ -108,13 +108,13 @@ saat Anda berpindah tab.
 
 REKAM TAB ATAU LAYAR
 Rekam tab yang sedang dibuka beserta suaranya (tanpa memilih sumber) atau layar/jendela,
-bisa dengan mikrofon. Alt+Shift+R untuk mulai dan berhenti. Lalu unduh videonya atau GIF
-animasi, atau ubah ke MP4.
+bisa dengan mikrofon. Alt+Shift+R untuk mulai dan berhenti. Lalu unduh videonya (WebM yang
+bisa digeser), MP4 yang dibuat di perangkat Anda, atau GIF animasi.
 
 AMBIL YANG ANDA PERLUKAN DARI HALAMAN
 • Simpan gambar di halaman — pilih, ubah ke WebP/PNG/JPG, unduh sebagai satu zip.
 • Simpan berkas video dan audio di halaman — pratinjau, unduh, atau buka di konverter
-  video/audio. Stream HLS digabung menjadi satu berkas.
+  video/audio. Stream HLS digabung dan disimpan sebagai MP4.
 • Tangkapan layar satu halaman penuh — menggulir dan menyatukan seluruh halaman.
 • Pengambil warna — klik di mana saja di layar, salin HEX/RGB/HSL.
 • Berkas data (opsional) — buka berkas JSON (respons API, .json), YAML, TOML, dan Markdown

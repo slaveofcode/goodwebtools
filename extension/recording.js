@@ -5,17 +5,19 @@ import { loadRecording } from './lib/recordings-db.js';
 import { formatDuration, formatBytes, recordingFileName, canHandOff, gifPlan } from './lib/recording.js';
 import { GIFEncoder, quantize, applyPalette } from './vendor/gifenc.js';
 import { bytesToBase64 } from './lib/handoff-store.js';
+import { remuxWebm, hasAudio, canEncodeMp4, encodeMp4 } from './lib/transmux.js';
 
 const T = {
-  en: { title: 'Your recording', download: 'Download (.webm)', gif: 'Download GIF', gifWorking: (p) => `Making the GIF… ${p}%`, gifDone: (s) => `GIF saved (${s}).`, gifCut: (n) => ` Only the first ${n} seconds are included.`, gifFailed: 'Couldn’t make a GIF from this recording.', toMp4: 'Convert to MP4', toGif: 'Make a GIF', compress: 'Compress', none: 'No recording found.', big: 'This recording is large — download it, then open it in the tool.', local: 'Saved on this device only; nothing was uploaded.' },
-  id: { title: 'Rekaman Anda', download: 'Unduh (.webm)', gif: 'Unduh GIF', gifWorking: (p) => `Membuat GIF… ${p}%`, gifDone: (s) => `GIF tersimpan (${s}).`, gifCut: (n) => ` Hanya ${n} detik pertama yang disertakan.`, gifFailed: 'GIF tidak bisa dibuat dari rekaman ini.', toMp4: 'Ubah ke MP4', toGif: 'Buat GIF', compress: 'Kompres', none: 'Rekaman tidak ditemukan.', big: 'Rekaman ini besar — unduh dulu, lalu buka di tool-nya.', local: 'Hanya tersimpan di perangkat ini; tidak ada yang diunggah.' },
+  en: { title: 'Your recording', download: 'Download (.webm)', gif: 'Download GIF', gifWorking: (p) => `Making the GIF… ${p}%`, gifDone: (s) => `GIF saved (${s}).`, gifCut: (n) => ` Only the first ${n} seconds are included.`, gifFailed: 'Couldn’t make a GIF from this recording.', mp4: 'Download MP4', mp4Working: (p) => `Making the MP4… ${p}%`, mp4Done: (s) => `MP4 saved (${s}).`, mp4Failed: 'Couldn’t make an MP4 here — use “Convert to MP4” instead.', toMp4: 'Convert to MP4', toGif: 'Make a GIF', compress: 'Compress', none: 'No recording found.', big: 'This recording is large — download it, then open it in the tool.', local: 'Saved on this device only; nothing was uploaded.' },
+  id: { title: 'Rekaman Anda', download: 'Unduh (.webm)', gif: 'Unduh GIF', gifWorking: (p) => `Membuat GIF… ${p}%`, gifDone: (s) => `GIF tersimpan (${s}).`, gifCut: (n) => ` Hanya ${n} detik pertama yang disertakan.`, gifFailed: 'GIF tidak bisa dibuat dari rekaman ini.', mp4: 'Unduh MP4', mp4Working: (p) => `Membuat MP4… ${p}%`, mp4Done: (s) => `MP4 tersimpan (${s}).`, mp4Failed: 'MP4 tidak bisa dibuat di sini — pakai “Ubah ke MP4”.', toMp4: 'Ubah ke MP4', toGif: 'Buat GIF', compress: 'Kompres', none: 'Rekaman tidak ditemukan.', big: 'Rekaman ini besar — unduh dulu, lalu buka di tool-nya.', local: 'Hanya tersimpan di perangkat ini; tidak ada yang diunggah.' },
 };
 const $ = (id) => document.getElementById(id);
 const { gwtLang } = await chrome.storage.local.get('gwtLang');
 const t = T[pickLang(gwtLang, chrome.i18n.getUILanguage())];
-for (const k of ['title', 'download', 'gif', 'toMp4', 'toGif', 'compress']) $(k).textContent = t[k];
+for (const k of ['title', 'download', 'gif', 'mp4', 'toMp4', 'toGif', 'compress']) $(k).textContent = t[k];
 
 const rec = await loadRecording().catch(() => null);
+let fixed = Promise.resolve();
 if (!rec?.blob?.size) {
   $('meta').textContent = t.none;
   document.querySelectorAll('.actions > *').forEach((el) => { el.hidden = true; });
@@ -25,12 +27,24 @@ if (!rec?.blob?.size) {
   $('video').src = url;
   $('download').href = url;
   $('download').download = name;
+  // MediaRecorder writes the WebM in slices, without a duration or seek index:
+  // re-pack it (a copy, instant) so players show its length and can seek.
+  // If that isn't possible the original stays.
+  fixed = remuxWebm(rec.blob).then((better) => {
+    if (!better) return;
+    rec.blob = better;
+    const u = URL.createObjectURL(better);
+    $('download').href = u;
+    $('video').src = u;
+    URL.revokeObjectURL(url);
+  }).finally(() => { $('download').dataset.ready = '1'; });
   $('meta').textContent = `${name} · ${formatDuration(rec.durationMs)} · ${formatBytes(rec.blob.size)} · ${t.local}`;
   const small = canHandOff(rec.blob.size);
   if (!small) $('note').textContent = t.big;
   document.querySelectorAll('button[data-tool]').forEach((b) => {
     b.disabled = !small;
     b.addEventListener('click', async () => {
+      await fixed; // hand over the re-packed file once it's ready
       const base64 = bytesToBase64(new Uint8Array(await rec.blob.arrayBuffer()));
       await chrome.runtime.sendMessage({ type: 'open-tool', tool: b.dataset.tool, payload: { kind: 'file', name, type: rec.blob.type || 'video/webm', base64 } });
     });
@@ -101,3 +115,28 @@ if (rec?.blob?.size) {
     }
   });
 }
+
+// "Download MP4": made right here when the browser has the encoders built in
+// (H.264, and AAC if the recording has sound). Otherwise "Convert to MP4" hands
+// the file to the site's Video Converter, which has its own encoders.
+if (rec?.blob?.size) {
+  (async () => {
+    await fixed;
+    const sound = await hasAudio(rec.blob);
+    if (sound === null || !(await canEncodeMp4(sound))) return;
+    $('mp4').hidden = false;
+    $('toMp4').hidden = true;
+    $('mp4').addEventListener('click', async () => {
+      $('mp4').disabled = true;
+      $('gifStatus').textContent = t.mp4Working(0);
+      const mp4 = await encodeMp4(rec.blob, sound, (p) => { $('gifStatus').textContent = t.mp4Working(Math.round(p * 100)); });
+      $('mp4').disabled = false;
+      if (!mp4) { $('gifStatus').textContent = t.mp4Failed; $('toMp4').hidden = false; return; }
+      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(mp4), download: recordingFileName(new Date(rec.at), 'mp4') });
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+      $('gifStatus').textContent = t.mp4Done(formatBytes(mp4.size));
+    });
+  })();
+}
+

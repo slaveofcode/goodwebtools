@@ -25,7 +25,9 @@ physically **cannot** do:
 - **Recording** — record the current tab with its sound (no picker, and you keep
   hearing it), or a screen/window; optionally include your microphone. Start/stop
   from the popup or with <kbd>Alt + Shift + R</kbd>; a red REC badge shows while it
-  runs. The result page previews the video, downloads it (.webm) or as an animated
+  runs. The result page previews the video, downloads it (.webm, re-packed so it has a
+  length and seeks), as an MP4 made right there when the browser has built-in H.264
+  (and AAC for sound) encoders, or as an animated
   GIF made right there (first 30 s, 10 fps, up to 480 px wide; `vendor/gifenc.js`),
   and hands it to the site's Video Converter (MP4), Video → GIF or Video Compressor.
   The full-page screenshot page can also copy the image to the clipboard.
