@@ -255,3 +255,11 @@ export async function mbConvertAudio(file: Blob, opts: MbConvertAudioOpts, onPro
     ...trimOpts(opts.trimStart, opts.trimDuration),
   }, onProgress, signal);
 }
+
+/**
+ * Re-pack a file into the same container without re-encoding — writes the
+ * duration and seek index a MediaRecorder file is missing.
+ */
+export async function mbRemux(file: Blob, ext: 'webm' | 'ogg' | 'mp4', onProgress?: EncodeProgress, signal?: AbortSignal): Promise<Blob> {
+  return convert(file, ext, {}, onProgress, signal);
+}
