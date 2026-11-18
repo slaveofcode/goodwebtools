@@ -3267,7 +3267,7 @@ const en: Record<string, ToolSeoContent> = {
   'audio-convert': {
     title: 'Free Audio Converter Tool — Convert & Trim',
     description: 'A free online audio converter tool to convert, re-encode and trim audio between MP3, M4A, Opus, WAV and FLAC. Runs in your browser — nothing is uploaded.',
-    intro: 'This free audio converter tool converts audio between MP3, M4A, Opus, WAV and FLAC, lets you set the bitrate, and can trim to a start and length — all powered by ffmpeg running in your browser. Drop a file, choose your options, and download the result without anything ever being uploaded.',
+    intro: 'This free audio converter tool converts audio between MP3, M4A, Opus, WAV and FLAC, lets you set the bitrate, and can trim to a start and length — all in your browser, using its built-in audio encoders where available. Drop a file, choose your options, and download the result without anything ever being uploaded.',
     howTo: [
       'Drop an audio (or video) file onto the box or click to browse.',
       'Pick an output format — MP3, M4A, Opus, WAV or FLAC — and choose a bitrate for the lossy formats.',
@@ -3275,10 +3275,10 @@ const en: Record<string, ToolSeoContent> = {
       'Click Convert (the first run downloads the audio engine once), then preview and download the result.',
     ],
     faqs: [
-      { q: 'Is my audio uploaded to a server?', a: 'No. Conversion runs entirely in your browser via ffmpeg.wasm, so your file never leaves your device — safe for private recordings.' },
+      { q: 'Is my audio uploaded to a server?', a: 'No. Conversion runs entirely in your browser, so your file never leaves your device — safe for private recordings.' },
       { q: 'Which formats can I convert to?', a: 'You can export to MP3, M4A (AAC), Opus, WAV or FLAC. WAV and FLAC are lossless, while the others let you choose a bitrate from 96 up to 320 kbps.' },
       { q: 'Can I trim the audio while converting?', a: 'Yes. Enter a Start time in seconds and a Length in seconds to keep only that section; leave Length blank to convert through to the end.' },
-      { q: 'Why does the first conversion take longer?', a: 'The first run downloads the roughly 31 MB audio engine once. After that it\'s cached, so subsequent conversions start much faster.' },
+      { q: 'Why does the first conversion sometimes take longer?', a: 'In most browsers conversion starts straight away; MP3 and AAC may first fetch a small encoder (about 1 MB) when the browser has none built in. Browsers without WebCodecs use a compatibility mode that downloads a roughly 31 MB audio engine once. Either way it is cached for next time.' },
     ],
   },
   'video-recorder': {
@@ -6772,7 +6772,7 @@ const id: Record<string, ToolSeoContent> = {
   'audio-convert': {
     title: 'Tool Konverter Audio Gratis — Konversi & Potong',
     description: 'Tool konverter audio online gratis untuk mengonversi, meng-encode ulang, dan memotong audio antara MP3, M4A, Opus, WAV, dan FLAC. Berjalan di browser Anda — tidak ada yang diunggah.',
-    intro: 'Tool konverter audio gratis ini mengonversi audio antara MP3, M4A, Opus, WAV, dan FLAC, memungkinkan Anda mengatur bitrate, dan dapat memotong berdasarkan waktu mulai dan durasi — semuanya ditenagai oleh ffmpeg yang berjalan di browser Anda. Letakkan sebuah berkas, pilih opsi Anda, dan unduh hasilnya tanpa apa pun pernah diunggah.',
+    intro: 'Tool konverter audio gratis ini mengonversi audio antara MP3, M4A, Opus, WAV, dan FLAC, memungkinkan Anda mengatur bitrate, dan dapat memotong berdasarkan waktu mulai dan durasi — semuanya di browser Anda, memakai encoder audio bawaan browser bila tersedia. Letakkan sebuah berkas, pilih opsi Anda, dan unduh hasilnya tanpa apa pun pernah diunggah.',
     howTo: [
       'Letakkan berkas audio (atau video) ke dalam kotak atau klik untuk menelusuri.',
       'Pilih format keluaran — MP3, M4A, Opus, WAV, atau FLAC — dan pilih bitrate untuk format lossy.',
@@ -6780,10 +6780,10 @@ const id: Record<string, ToolSeoContent> = {
       'Klik Convert (proses pertama mengunduh mesin audio sekali), lalu pratinjau dan unduh hasilnya.',
     ],
     faqs: [
-      { q: 'Apakah audio saya diunggah ke server?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda melalui ffmpeg.wasm, sehingga berkas Anda tidak pernah meninggalkan perangkat Anda — aman untuk rekaman pribadi.' },
+      { q: 'Apakah audio saya diunggah ke server?', a: 'Tidak. Konversi berjalan sepenuhnya di browser Anda, sehingga berkas Anda tidak pernah meninggalkan perangkat Anda — aman untuk rekaman pribadi.' },
       { q: 'Ke format apa saja saya dapat mengonversi?', a: 'Anda dapat mengekspor ke MP3, M4A (AAC), Opus, WAV, atau FLAC. WAV dan FLAC bersifat lossless, sedangkan format lainnya memungkinkan Anda memilih bitrate dari 96 hingga 320 kbps.' },
       { q: 'Bisakah saya memotong audio saat mengonversi?', a: 'Ya. Masukkan Start time dalam detik dan Length dalam detik untuk menyimpan hanya bagian itu; kosongkan Length untuk mengonversi hingga akhir.' },
-      { q: 'Mengapa konversi pertama memerlukan waktu lebih lama?', a: 'Proses pertama mengunduh mesin audio berukuran sekitar 31 MB sekali. Setelah itu ia di-cache, sehingga konversi berikutnya dimulai jauh lebih cepat.' },
+      { q: 'Mengapa konversi pertama terkadang lebih lama?', a: 'Di sebagian besar browser konversi langsung dimulai; MP3 dan AAC mungkin lebih dulu mengambil encoder kecil (sekitar 1 MB) bila browser tidak memilikinya. Browser tanpa WebCodecs memakai mode kompatibilitas yang mengunduh mesin audio sekitar 31 MB sekali. Keduanya tersimpan di cache untuk berikutnya.' },
     ],
   },
   'video-recorder': {

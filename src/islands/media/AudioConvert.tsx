@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
@@ -7,6 +7,9 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { loadFFmpeg, fileToU8 } from '@/services/ffmpeg.service';
+import { mbConvertAudio } from '@/tools/media/mb-media.lib';
+import { runWithFallback } from '@/tools/media/run-media.lib';
+import type { Engine, MediaJob } from '@/tools/media/engine.lib';
 import type { Lang } from '@/i18n/config';
 
 type Fmt = 'mp3' | 'm4a' | 'wav' | 'opus' | 'flac';
@@ -36,6 +39,7 @@ const TR: Record<Lang, {
   working: string;
   result: string;
   download: (fmt: string) => string;
+  cancel: string; fastMode: string; slowMode: string;
 }> = {
   en: {
     loadEngine: 'Loading audio engine (first run downloads ~31 MB)…',
@@ -47,13 +51,14 @@ const TR: Record<Lang, {
     bitrate: 'Bitrate',
     start: 'Start (s)',
     length: 'Length (s)',
-    privacy: 'Runs entirely in your browser via ffmpeg.wasm — the file never leaves your device.',
+    privacy: 'Runs entirely in your browser — the file never leaves your device.',
     convertingBtn: 'Converting…',
     convert: 'Convert',
     clear: 'Clear',
     working: 'Working…',
     result: 'Result',
     download: (fmt) => `Download ${fmt}`,
+    cancel: 'Cancel', fastMode: 'Fast mode (hardware)', slowMode: 'Compatibility mode — slower in this browser',
   },
   id: {
     loadEngine: 'Memuat mesin audio (unduhan pertama ~31 MB)…',
@@ -65,15 +70,18 @@ const TR: Record<Lang, {
     bitrate: 'Bitrate',
     start: 'Mulai (dtk)',
     length: 'Durasi (dtk)',
-    privacy: 'Berjalan sepenuhnya di browser Anda via ffmpeg.wasm — file tidak pernah keluar dari perangkat Anda.',
+    privacy: 'Berjalan sepenuhnya di browser Anda — file tidak pernah keluar dari perangkat Anda.',
     convertingBtn: 'Mengonversi…',
     convert: 'Konversi',
     clear: 'Bersihkan',
     working: 'Memproses…',
     result: 'Hasil',
     download: (fmt) => `Unduh ${fmt}`,
+    cancel: 'Batal', fastMode: 'Mode cepat (perangkat keras)', slowMode: 'Mode kompatibilitas — lebih lambat di browser ini',
   },
 };
+
+const ENC_FOR: Record<Fmt, MediaJob['needAudio']> = { mp3: 'mp3', m4a: 'aac', opus: 'opus', wav: 'pcm', flac: 'flac' };
 
 export default function AudioConvert({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
@@ -88,6 +96,8 @@ export default function AudioConvert({ lang = 'en' }: { lang?: Lang }) {
   const [stage, setStage] = useState('');
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
+  const [engine, setEngine] = useState<Engine | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
@@ -101,44 +111,59 @@ export default function AudioConvert({ lang = 'en' }: { lang?: Lang }) {
     setError('');
   };
 
+  /** The ffmpeg.wasm path (compatibility mode). */
+  const runSlow = async (trimStart: number, trimLen: number) => {
+    setStage(t.loadEngine);
+    const ffmpeg = await loadFFmpeg();
+    const onProgress = ({ progress }: { progress: number }) => setPercent(Math.min(100, Math.round(progress * 100)));
+    ffmpeg.on('progress', onProgress);
+    try {
+      await ffmpeg.writeFile('in', await fileToU8(file!));
+      const trim: string[] = [];
+      if (trimStart > 0) trim.push('-ss', String(trimStart));
+      if (trimLen > 0) trim.push('-t', String(trimLen));
+      const args = [...trim, '-i', 'in', '-vn', ...spec.codec];
+      if (!spec.lossless) args.push('-b:a', `${bitrate}k`);
+      const out = `out.${spec.ext}`;
+      args.push(out);
+      setStage(t.converting);
+      await ffmpeg.exec(args);
+      return new Blob([await ffmpeg.readFile(out)], { type: spec.mime });
+    } finally {
+      ffmpeg.off('progress', onProgress);
+    }
+  };
+
   const run = async () => {
     if (!file) return;
     setBusy(true);
     setError('');
     setResult(null);
     setPercent(0);
+    setEngine(null);
+    const trimStart = Number(start) > 0 ? Number(start) : 0;
+    const trimLen = Number(duration) > 0 ? Number(duration) : 0;
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    const onProgress = (p: number) => setPercent(Math.min(100, Math.round(p * 100)));
     try {
-      setStage(t.loadEngine);
-      const ffmpeg = await loadFFmpeg();
-      const onProgress = ({ progress }: { progress: number }) =>
-        setPercent(Math.min(100, Math.round(progress * 100)));
-      ffmpeg.on('progress', onProgress);
-
-      await ffmpeg.writeFile('in', await fileToU8(file));
-
-      const trim: string[] = [];
-      if (start && Number(start) > 0) trim.push('-ss', String(Number(start)));
-      if (duration && Number(duration) > 0) trim.push('-t', String(Number(duration)));
-
-      const args = [...trim, '-i', 'in', '-vn', ...spec.codec];
-      if (!spec.lossless) args.push('-b:a', `${bitrate}k`);
-      const out = `out.${spec.ext}`;
-      args.push(out);
-
       setStage(t.converting);
-      await ffmpeg.exec(args);
-
-      const data = await ffmpeg.readFile(out);
-      ffmpeg.off('progress', onProgress);
-      const blob = new Blob([data], { type: spec.mime });
-      setResult(blob);
+      const r = await runWithFallback(
+        { kind: 'convert-audio', inputExt: file.name.split('.').pop() || '', needAudio: ENC_FOR[fmt] },
+        signal => mbConvertAudio(file, { format: fmt, kbps: bitrate, trimStart, trimDuration: trimLen }, onProgress, signal),
+        () => runSlow(trimStart, trimLen),
+        ctrl.signal,
+      );
+      setEngine(r.engine);
+      setResult(r.value);
       setResultUrl(prev => {
         if (prev) URL.revokeObjectURL(prev);
-        return URL.createObjectURL(blob);
+        return URL.createObjectURL(r.value);
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : t.convertError);
+      if (!(e instanceof DOMException && e.name === 'AbortError')) setError(e instanceof Error ? e.message : t.convertError);
     } finally {
+      abortRef.current = null;
       setBusy(false);
       setStage('');
     }
@@ -195,6 +220,7 @@ export default function AudioConvert({ lang = 'en' }: { lang?: Lang }) {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || busy}>{busy ? t.convertingBtn : t.convert}</Button>
+        {busy && <Button variant="ghost" onClick={() => abortRef.current?.abort()}>{t.cancel}</Button>}
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>{t.clear}</Button>
       </div>
 
@@ -207,6 +233,7 @@ export default function AudioConvert({ lang = 'en' }: { lang?: Lang }) {
             <span className="font-bold uppercase tracking-wide text-muted-foreground">{t.result}</span>
             <span className="font-mono text-muted-foreground">{formatBytes(result.size)}</span>
           </div>
+          {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
           <audio src={resultUrl} controls className="block w-full max-w-md" />
           <Button onClick={download}>
             <Download className="h-4 w-4" />
