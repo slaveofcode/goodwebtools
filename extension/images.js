@@ -7,6 +7,7 @@ import { cleanImageList, imageFileName, uniqueNames, cleanMediaList, isMediaBloc
 import { canHandOff, formatBytes } from './lib/recording.js';
 import { bytesToBase64 } from './lib/handoff-store.js';
 import { zipSync } from './vendor/fflate.js';
+import { toMp4 } from './lib/transmux.js';
 
 const T = {
   en: {
@@ -19,7 +20,7 @@ const T = {
     empty: 'No images, video or audio found on this page.', denied: 'Site access is needed to read these files.',
     download: 'Download', convert: 'Convert', stream: 'Stream (HLS)',
     fetching: (got, total) => `Downloading ${got}${total ? ` of ${total}` : ''}…`, segments: (i, n) => `Downloading part ${i} of ${n}…`,
-    saved: (name, size) => `Saved ${name} (${size}).`, savedTs: 'Saved as .ts — the Video Converter can turn it into MP4.',
+    saved: (name, size) => `Saved ${name} (${size}).`, savedTs: 'Saved as .ts — the Video Converter can turn it into MP4.', packing: 'Saving as MP4…',
     failed: 'Could not download this file (the site may block it).', encrypted: 'This stream is encrypted, so it can’t be saved.',
     live: 'This is a live stream, so there is no complete file to save.', tooBig: 'Too large to hand over — download it, then open it in the converter.',
     blocked: 'Saving video and audio isn’t available on YouTube or SoundCloud.',
@@ -36,7 +37,7 @@ const T = {
     empty: 'Tidak ada gambar, video, atau audio di halaman ini.', denied: 'Akses situs diperlukan untuk membaca berkas ini.',
     download: 'Unduh', convert: 'Konversi', stream: 'Stream (HLS)',
     fetching: (got, total) => `Mengunduh ${got}${total ? ` dari ${total}` : ''}…`, segments: (i, n) => `Mengunduh bagian ${i} dari ${n}…`,
-    saved: (name, size) => `${name} tersimpan (${size}).`, savedTs: 'Tersimpan sebagai .ts — Video Converter bisa mengubahnya ke MP4.',
+    saved: (name, size) => `${name} tersimpan (${size}).`, savedTs: 'Tersimpan sebagai .ts — Video Converter bisa mengubahnya ke MP4.', packing: 'Menyimpan sebagai MP4…',
     failed: 'Berkas ini tidak bisa diunduh (situsnya mungkin memblokir).', encrypted: 'Stream ini terenkripsi, jadi tidak bisa disimpan.',
     live: 'Ini siaran langsung, jadi tidak ada berkas utuh untuk disimpan.', tooBig: 'Terlalu besar untuk dikirim — unduh dulu, lalu buka di konverter.',
     blocked: 'Menyimpan video dan audio tidak tersedia di YouTube atau SoundCloud.',
@@ -206,7 +207,14 @@ async function fetchHls(src, onProgress) {
   const segExt = urlExtension(pl.segments[0]);
   const ext = pl.init ? 'mp4' : ['aac', 'mp3'].includes(segExt) ? segExt : 'ts';
   const type = { mp4: 'video/mp4', aac: 'audio/aac', mp3: 'audio/mpeg', ts: 'video/mp2t' }[ext];
-  return { blob: new Blob(parts, { type }), ext };
+  const joined = new Blob(parts, { type });
+  if (ext === 'ts') {
+    // Re-pack the MPEG-TS into MP4 (a copy — no quality loss); keep the .ts if that isn't possible.
+    onProgress(t.packing);
+    const mp4 = await toMp4(joined);
+    if (mp4) return { blob: mp4, ext: 'mp4' };
+  }
+  return { blob: joined, ext };
 }
 
 const cache = new Map();

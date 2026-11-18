@@ -32,7 +32,8 @@ physically **cannot** do:
 - **This page** — a color picker (click anywhere on screen; copy HEX/RGB/HSL),
   save the page's images (pick, optionally convert to WebP/PNG/JPG, download as a
   zip) and its video and audio (`<video>`/`<audio>`, media links, og:video/audio and
-  media the page fetched; HLS `.m3u8` streams are joined into one file; encrypted or
+  media the page fetched; HLS `.m3u8` streams are joined and saved as MP4 — a copy,
+  no re-encoding, with `vendor/mediabunny.js` (MPL-2.0) — or as `.ts` when that isn't possible; encrypted or
   live streams, and YouTube/SoundCloud, are not supported), and a full-page scrolling screenshot (download, or open in the Image
   Annotator / Compressor / Images → PDF). Fixed headers are shown once, not on
   every screen.

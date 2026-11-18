@@ -23,3 +23,7 @@ TAGS=(-metadata title="Test Tone" -metadata artist="GoodWebTools" -metadata albu
 ffmpeg -y -loglevel error -i "$OUT/tone.wav" -i "$OUT/cover.png" -map 0:a -map 1 -t 2 -c:a aac -b:a 96k -c:v png -disposition:v attached_pic "${TAGS[@]}" "$OUT/tagged.m4a"
 ffmpeg -y -loglevel error -i "$OUT/tone.wav" -i "$OUT/cover.png" -map 0:a -map 1 -t 2 -c:a flac -c:v png -disposition:v attached_pic "${TAGS[@]}" "$OUT/tagged.flac"
 rm "$OUT/cover.png"
+
+# A real H.264/AAC HLS stream (VOD playlist + MPEG-TS segments) for the extension.
+rm -rf "$OUT/hls"; mkdir -p "$OUT/hls"
+ffmpeg -y -loglevel error -i "$OUT/clip-h264-aac.mp4" -c:v libx264 -preset veryfast -b:v 300k -force_key_frames "expr:gte(t,n_forced*1)" -c:a copy -f hls -hls_time 1 -hls_list_size 0 -hls_playlist_type vod -hls_segment_filename "$OUT/hls/seg%d.ts" "$OUT/hls/index.m3u8"
