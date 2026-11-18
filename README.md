@@ -14,7 +14,7 @@
 
 <table>
   <tr>
-    <td width="58%"><img src="docs/images/hero.png" alt="GoodWebTools on desktop — searchable grid of 193 privacy-first browser tools across Image, PDF, Dev, Media and more"></td>
+    <td width="58%"><img src="docs/images/hero.png" alt="GoodWebTools on desktop — searchable grid of 207 privacy-first browser tools across Image, PDF, Dev, Media and more"></td>
     <td width="21%"><img src="docs/images/mobile-hero.png" alt="GoodWebTools on mobile — responsive tool grid that works in any phone browser"></td>
     <td width="21%"><img src="docs/images/mobile-menu.png" alt="GoodWebTools mobile floating category menu for quick navigation between tool categories"></td>
   </tr>
@@ -41,13 +41,13 @@ Most "online tools" quietly **upload your files to a server**. GoodWebTools does
 
 ## Tools
 
-**193 tools across 13 categories.** Here's a taste — [**browse them all at goodwebtools.com**](https://goodwebtools.com).
+**207 tools across 13 categories.** Here's a taste — [**browse them all at goodwebtools.com**](https://goodwebtools.com).
 
 | Category | Preview | Popular tools |
 |---|---|---|
 | **🖼️ Image** (30) | <a href="https://goodwebtools.com/tools/image-bg-remove"><img src="docs/images/image-bg-remove.png" alt="Background remover tool" width="220"></a> | [Background Remover](https://goodwebtools.com/tools/image-bg-remove) · [Image Compressor](https://goodwebtools.com/tools/image-compress) · [Image Converter](https://goodwebtools.com/tools/image-convert) · [HEIC to JPG](https://goodwebtools.com/tools/image-heic-to-jpg) · [Favicon Generator](https://goodwebtools.com/tools/favicon-generator) |
 | **📄 PDF** (20) | <a href="https://goodwebtools.com/tools/pdf-merge"><img src="docs/images/pdf-merge.png" alt="Merge PDF tool" width="220"></a> | [Merge PDF](https://goodwebtools.com/tools/pdf-merge) · [Organize PDF](https://goodwebtools.com/tools/pdf-organize) · [Fill & Sign PDF](https://goodwebtools.com/tools/pdf-fill) · [Extract Images](https://goodwebtools.com/tools/pdf-extract-images) · [Add Page Numbers](https://goodwebtools.com/tools/pdf-page-numbers) |
-| **🎬 Media** (21) | <a href="https://goodwebtools.com/tools/video-compress"><img src="docs/images/video-compress.png" alt="Video compressor tool" width="220"></a> | [Video Compressor](https://goodwebtools.com/tools/video-compress) · [Subtitle Editor](https://goodwebtools.com/tools/subtitle-editor) · [Voice Recorder](https://goodwebtools.com/tools/voice-recorder) · [White Noise](https://goodwebtools.com/tools/white-noise) |
+| **🎬 Media** (27) | <a href="https://goodwebtools.com/tools/video-compress"><img src="docs/images/video-compress.png" alt="Video compressor tool" width="220"></a> | [Video Compressor](https://goodwebtools.com/tools/video-compress) · [Subtitle Editor](https://goodwebtools.com/tools/subtitle-editor) · [Voice Recorder](https://goodwebtools.com/tools/voice-recorder) · [White Noise](https://goodwebtools.com/tools/white-noise) |
 | **🎨 Draw** (3) | <a href="https://goodwebtools.com/tools/db-diagram"><img src="docs/images/db-diagram.png" alt="DB Diagram DBML editor with live ER diagram" width="220"></a> | [DB Diagram (DBML)](https://goodwebtools.com/tools/db-diagram) · [Whiteboard](https://goodwebtools.com/tools/whiteboard) · [Signature Pad](https://goodwebtools.com/tools/signature) |
 | **💻 Dev** (57) | — | [JSON Formatter](https://goodwebtools.com/tools/json-format) · [Base64](https://goodwebtools.com/tools/base64) · [JWT Decoder](https://goodwebtools.com/tools/jwt-decode) · [URL Encode/Decode](https://goodwebtools.com/tools/url-encode) · [UUID Generator](https://goodwebtools.com/tools/uuid-gen) |
 | **📇 Documents** (14) | — | [3D Model Viewer](https://goodwebtools.com/tools/3d-viewer) · [PPTX Viewer](https://goodwebtools.com/tools/pptx-viewer) · [PPTX to PDF](https://goodwebtools.com/tools/pptx-to-pdf) · [EML Email Viewer](https://goodwebtools.com/tools/eml-viewer) · [GEDCOM Viewer](https://goodwebtools.com/tools/gedcom-viewer) |

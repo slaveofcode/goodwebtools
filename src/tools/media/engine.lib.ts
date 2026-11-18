@@ -6,7 +6,7 @@ export type Engine = 'mediabunny' | 'ffmpeg';
 export type EngineReason = 'ok' | 'container' | 'video-codec' | 'audio-codec' | 'no-webcodecs' | 'cannot-decode';
 
 export interface MediaJob {
-  kind: 'compress-video' | 'convert-video' | 'trim' | 'extract-audio' | 'convert-audio';
+  kind: 'compress-video' | 'convert-video' | 'trim' | 'extract-audio' | 'convert-audio' | 'rotate' | 'mute' | 'replace-audio' | 'transmux';
   /** Input file extension, e.g. 'mp4'. */
   inputExt: string;
   /** Video codec to encode; omitted when video is copied or dropped. */

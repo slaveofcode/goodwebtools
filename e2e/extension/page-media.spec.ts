@@ -25,6 +25,7 @@ const FILES: Record<string, [string, string | Buffer]> = {
   '/hls/seg1.ts': ['video/mp2t', 'AAA'],
   '/hls/seg2.ts': ['video/mp2t', 'BBB'],
   '/hls/seg3.ts': ['video/mp2t', 'CCC'],
+  '/split.m3u8': ['application/vnd.apple.mpegurl', '#EXTM3U\n#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",NAME="en",URI="aud.m3u8"\n#EXT-X-STREAM-INF:BANDWIDTH=9,AUDIO="a"\nhls/high.m3u8\n'],
   '/locked.m3u8': ['application/vnd.apple.mpegurl', '#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="key"\n#EXTINF:4,\nx.ts\n#EXT-X-ENDLIST\n'],
   '/page': ['text/html', `<html><head><title>Media page</title>
     <meta property="og:video" content="/og.mp4"><meta property="og:video:type" content="video/mp4"></head><body>
@@ -149,7 +150,11 @@ test('the picker lists video and audio, downloads a file and joins an HLS stream
   const [dl2] = await Promise.all([page.waitForEvent('download'), hls.getByRole('button', { name: 'Download' }).click()]);
   expect(dl2.suggestedFilename()).toBe('Media-page-2.ts');
   expect(fs.readFileSync(await dl2.path(), 'utf8')).toBe('AAABBBCCC');
-  await expect(hls.locator('.status')).toContainText('Video Converter');
+  await expect(hls.locator('.status')).toContainText('HLS / TS to MP4');
+  // A stream kept as .ts is handed to the HLS / TS to MP4 tool.
+  const [tool] = await Promise.all([ctx.waitForEvent('page', p => p.url().includes('/tools/hls-to-mp4/')), hls.getByRole('button', { name: 'Convert' }).click()]);
+  expect(tool.url()).toContain('#gwt-handoff=');
+  await tool.close();
 
   await page.getByRole('tab', { name: 'Audio (1)' }).click();
   const [dl3] = await Promise.all([page.waitForEvent('download'), page.locator('#rows-audio .row').getByRole('button', { name: 'Download' }).click()]);
@@ -165,7 +170,7 @@ test('a real HLS stream is saved as MP4', async ({ ctx, sw, extId, server }) => 
   expect(file.subarray(4, 8).toString('latin1')).toBe('ftyp');
   expect(file.includes(Buffer.from('avc1'))).toBe(true);
   expect(file.includes(Buffer.from('mp4a'))).toBe(true);
-  await expect(row.locator('.status')).not.toContainText('Video Converter');
+  await expect(row.locator('.status')).not.toContainText('HLS / TS to MP4');
 });
 
 test('an encrypted stream is explained, not downloaded', async ({ ctx, sw, extId, server }) => {
@@ -192,3 +197,11 @@ test('YouTube pages get a note instead of a media list', async ({ ctx, sw, extId
   await expect(page.locator('#rows-video .row')).toHaveCount(0);
   await expect(page.locator('#from')).toHaveText('No images, video or audio found on this page.');
 });
+
+test('a stream with separate audio is explained, not saved silent', async ({ ctx, sw, extId, server }) => {
+  const page = await openPicker(ctx, sw, extId, { url: `${server}/page`, title: 'x', images: [], media: [{ src: `${server}/split.m3u8`, kind: null }] });
+  const row = page.locator('#rows-video .row');
+  await row.getByRole('button', { name: 'Download' }).click();
+  await expect(row.locator('.status')).toHaveText('This stream keeps its sound in a separate track, so it can’t be saved yet.');
+});
+

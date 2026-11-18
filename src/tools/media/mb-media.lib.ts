@@ -8,7 +8,7 @@ import { MediaInputError } from './run-media.lib';
 import { SparseFileWriter } from './sparse-writer.lib';
 
 type Mb = typeof import('mediabunny');
-type OutExt = 'mp4' | 'mov' | 'webm' | 'mkv' | 'mp3' | 'wav' | 'ogg' | 'flac' | 'm4a' | 'opus';
+export type OutExt = 'mp4' | 'mov' | 'webm' | 'mkv' | 'mp3' | 'wav' | 'ogg' | 'flac' | 'm4a' | 'opus';
 
 export interface MediaProbe {
   container: string;
@@ -156,6 +156,11 @@ async function convert(file: Blob, ext: OutExt, opts: ConvertOpts, onProgress?: 
   } finally {
     input.dispose?.();
   }
+}
+
+/** One mediabunny conversion into `ext` with the given options (lost-track check and stall watchdog included). */
+export function convertTo(file: Blob, ext: OutExt, opts: ConvertOpts, onProgress?: EncodeProgress, signal?: AbortSignal): Promise<Blob> {
+  return convert(file, ext, opts, onProgress, signal);
 }
 
 /** Container, duration and tracks of a media file — and whether the browser can decode it. */

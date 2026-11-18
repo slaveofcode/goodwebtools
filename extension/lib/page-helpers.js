@@ -152,12 +152,18 @@ export function parseM3u8(text, baseUrl) {
     return m ? (m[2] ?? m[1]) : null;
   };
   if (lines.some((l) => l.startsWith('#EXT-X-STREAM-INF'))) {
+    // Audio groups whose sound is a separate playlist (a URI): joining the video
+    // segments alone would give a silent file.
+    const separateGroups = new Set(lines
+      .filter((l) => l.startsWith('#EXT-X-MEDIA') && attr(l, 'TYPE') === 'AUDIO' && attr(l, 'URI'))
+      .map((l) => attr(l, 'GROUP-ID')));
     const variants = [];
     for (let i = 0; i < lines.length; i++) {
       if (!lines[i].startsWith('#EXT-X-STREAM-INF')) continue;
       const uri = lines.slice(i + 1).find((l) => !l.startsWith('#'));
       if (!uri) continue;
-      variants.push({ url: abs(uri), bandwidth: Number(attr(lines[i], 'BANDWIDTH')) || 0, resolution: attr(lines[i], 'RESOLUTION') || '' });
+      const group = attr(lines[i], 'AUDIO');
+      variants.push({ url: abs(uri), bandwidth: Number(attr(lines[i], 'BANDWIDTH')) || 0, resolution: attr(lines[i], 'RESOLUTION') || '', separateAudio: !!group && separateGroups.has(group) });
     }
     variants.sort((a, b) => b.bandwidth - a.bandwidth);
     return { type: 'master', variants };
@@ -165,12 +171,15 @@ export function parseM3u8(text, baseUrl) {
   const segments = [];
   let init = null;
   let encrypted = false;
+  let byterange = false;
   for (const l of lines) {
+    // Byte ranges list one file many times; it can't simply be joined.
+    if (l.startsWith('#EXT-X-BYTERANGE') || (l.startsWith('#EXT-X-MAP') && attr(l, 'BYTERANGE'))) byterange = true;
     if (l.startsWith('#EXT-X-KEY') && (attr(l, 'METHOD') || 'NONE').toUpperCase() !== 'NONE') encrypted = true;
     else if (l.startsWith('#EXT-X-MAP')) { const u = attr(l, 'URI'); if (u) init = abs(u); }
     else if (!l.startsWith('#')) segments.push(abs(l));
   }
-  return { type: 'media', segments, init, encrypted, live: !lines.includes('#EXT-X-ENDLIST') };
+  return { type: 'media', segments, init, encrypted, live: !lines.includes('#EXT-X-ENDLIST'), byterange };
 }
 
 /** File extension to save a media file under, from its type or URL. */
