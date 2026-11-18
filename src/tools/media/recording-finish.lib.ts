@@ -2,9 +2,9 @@
 // WebM/Ogg without a duration or seek index, so players show no length and
 // can't jump around; re-packing (a copy — nothing is re-encoded) fixes that.
 // A recording is never lost: if re-packing goes wrong, the original is kept.
-import { runWithFallback } from './run-media.lib';
 import type { Engine } from './engine.lib';
 import type { EncodeProgress } from './encode.lib';
+// Everything heavy is imported on first use, so recorder pages stay light.
 
 /**
  * `remux(blob)` when it gives a usable file, else `blob`. Never throws.
@@ -41,7 +41,7 @@ export async function finishRecording(blob: Blob): Promise<Blob> {
 
 /** A recording as MP4 (H.264 + AAC): hardware encoder where the browser has one, else ffmpeg.wasm. */
 export async function recordingToMp4(blob: Blob, hasAudio: boolean, onProgress: EncodeProgress, signal: AbortSignal): Promise<{ value: Blob; engine: Engine }> {
-  const [{ mbConvertVideo }, { convertVideo }] = await Promise.all([import('./mb-media.lib'), import('./encode.lib')]);
+  const [{ runWithFallback }, { mbConvertVideo }, { convertVideo }] = await Promise.all([import('./run-media.lib'), import('./mb-media.lib'), import('./encode.lib')]);
   const r = await runWithFallback(
     { kind: 'convert-video', inputExt: recordingExt(blob) ?? 'webm', needVideo: 'avc', needAudio: hasAudio ? 'aac' : null },
     s => mbConvertVideo(blob, { format: 'mp4', quality: 'high', maxWidth: 0, muted: !hasAudio, trimStart: 0, trimDuration: 0 }, onProgress, s),

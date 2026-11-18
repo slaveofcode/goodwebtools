@@ -186,7 +186,10 @@ export async function stopManaged(): Promise<Blob | null> {
   busy = true;
   const handle = activeHandle;
   try {
-    const blob = await captureService.stopRecording(handle);
+    const raw = await captureService.stopRecording(handle);
+    // Re-pack the browser's WebM so it has a duration and seeks (copy, no
+    // re-encode); the original is kept if that fails.
+    const blob = raw ? await (await import('@/tools/media/recording-finish.lib')).finishRecording(raw).catch(() => raw) : raw;
     activeHandle = null;
     startedAt = null;
     await showMainWindow(); // always reveal the app when recording ends

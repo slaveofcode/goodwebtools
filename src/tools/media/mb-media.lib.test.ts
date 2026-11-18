@@ -51,3 +51,22 @@ describe('lostTracks — a real audio/video track mediabunny would silently drop
     ])).toEqual([]);
   });
 });
+
+import { aacBitrate, AAC_QUALITY_BPS } from './mb-media.lib';
+
+describe('aacBitrate — keep the AAC encoder within what it can do', () => {
+  it('caps mono at 128 kbps (the WASM encoder stalls on some mono audio at 192 kbps)', () => {
+    expect(aacBitrate(192_000, 1)).toBe(128_000);
+    expect(aacBitrate(96_000, 1)).toBe(96_000);
+  });
+  it('allows up to 128 kbps per channel', () => {
+    expect(aacBitrate(192_000, 2)).toBe(192_000);
+    expect(aacBitrate(320_000, 2)).toBe(256_000);
+  });
+  it('treats an unknown channel count as mono', () => {
+    expect(aacBitrate(192_000, 0)).toBe(128_000);
+  });
+  it('has a fixed bitrate for each quality preset', () => {
+    expect(AAC_QUALITY_BPS).toEqual({ high: 192_000, medium: 128_000, low: 96_000 });
+  });
+});

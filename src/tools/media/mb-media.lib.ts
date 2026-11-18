@@ -80,7 +80,32 @@ export function lostTracks(discarded: { reason: string; track: { type: string } 
     .map(d => `${d.track.type}: ${d.reason}`);
 }
 
-/** Run one mediabunny conversion into memory; progress 0–1; abort → AbortError. */
+/** AAC bitrates for the quality presets (a Quality object can pick 192 kbps for mono — see aacBitrate). */
+export const AAC_QUALITY_BPS = { high: 192_000, medium: 128_000, low: 96_000 } as const;
+
+/**
+ * AAC bitrate the encoder can handle: at most 128 kbps per channel. The WASM
+ * AAC encoder stalls (never finishes, never errors) on some mono audio at 192 kbps.
+ */
+export function aacBitrate(requestedBps: number, channels: number): number {
+  return Math.min(requestedBps, 128_000 * Math.max(1, channels || 1));
+}
+
+type AudioOpts = Extract<NonNullable<ConvertOpts['audio']>, { codec?: unknown }>;
+
+/** Apply aacBitrate per track (the channel count is only known once the track is open). */
+function capAac(audio: ConvertOpts['audio']): ConvertOpts['audio'] {
+  if (!audio || typeof audio === 'function' || Array.isArray(audio)) return audio;
+  const a = audio as AudioOpts;
+  if (a.codec !== 'aac' || typeof a.bitrate !== 'number') return audio;
+  const requested = a.bitrate;
+  return async track => ({ ...a, bitrate: aacBitrate(requested, await track.getNumberOfChannels()) });
+}
+
+/** A fast-engine job that reports no progress for this long is stopped and handed to ffmpeg. */
+export const STALL_MS = 30_000;
+
+/** Run one mediabunny conversion into memory; progress 0–1; abort → AbortError; stall → Error('mb-stalled'). */
 async function convert(file: Blob, ext: OutExt, opts: ConvertOpts, onProgress?: EncodeProgress, signal?: AbortSignal): Promise<Blob> {
   if (signal?.aborted) throw abortError();
   const mb = await loadMediabunny();
@@ -90,23 +115,34 @@ async function convert(file: Blob, ext: OutExt, opts: ConvertOpts, onProgress?: 
   const target = new mb.StreamTarget(new WritableStream({ write(chunk) { out.write(chunk.data, chunk.position); } }));
   const output = new mb.Output({ format: outputFormat(mb, ext), target });
   try {
-    const conversion = await mb.Conversion.init({ input, output, showWarnings: false, ...opts });
+    const conversion = await mb.Conversion.init({ input, output, showWarnings: false, ...opts, audio: capAac(opts.audio) });
     if (!conversion.isValid) {
       throw new Error(`mb-invalid: ${conversion.discardedTracks.map(d => d.reason).join(', ') || 'no usable tracks'}`);
     }
     const lost = lostTracks(conversion.discardedTracks);
     if (lost.length) throw new Error(`mb-dropped: ${lost.join(', ')}`); // → ffmpeg fallback
-    conversion.onProgress = (p: number) => onProgress?.(Math.min(1, Math.max(0, p)));
+    // Watchdog: an encoder that stops making progress would leave the page stuck forever.
+    let stalled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const arm = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { stalled = true; void conversion.cancel(); }, STALL_MS);
+    };
+    conversion.onProgress = (p: number) => { arm(); onProgress?.(Math.min(1, Math.max(0, p))); };
     const onAbort = () => { void conversion.cancel(); };
     signal?.addEventListener('abort', onAbort, { once: true });
+    arm();
     try {
       await conversion.execute();
     } catch (e) {
       if (signal?.aborted) throw abortError();
+      if (stalled) throw new Error('mb-stalled'); // → ffmpeg fallback
       throw e;
     } finally {
+      clearTimeout(timer);
       signal?.removeEventListener('abort', onAbort);
     }
+    if (stalled) throw new Error('mb-stalled');
     if (signal?.aborted) throw abortError();
     if (out.size === 0) throw new Error('mb-empty');
     return out.toBlob(MIME[ext]);
@@ -235,7 +271,9 @@ export async function mbConvertVideo(file: Blob, opts: MbConvertVideoOpts, onPro
   const reencode = opts.quality !== 'high' || opts.maxWidth > 0;
   return convert(file, opts.format, {
     video: { codec: vcodec, quality, ...(opts.maxWidth > 0 ? { width: Math.round(opts.maxWidth / 2) * 2 } : {}), forceTranscode: reencode },
-    audio: opts.muted ? { discard: true } : { codec: acodec, quality, forceTranscode: reencode },
+    audio: opts.muted ? { discard: true } : acodec === 'aac'
+      ? { codec: 'aac', bitrate: AAC_QUALITY_BPS[opts.quality], forceTranscode: reencode }
+      : { codec: acodec, quality, forceTranscode: reencode },
     ...trimOpts(opts.trimStart, opts.trimDuration),
   }, onProgress, signal);
 }

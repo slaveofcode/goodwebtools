@@ -3,6 +3,7 @@ import { Download, Circle, Square, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
+import { SaveAsMp4 } from '@/components/media/SaveAsMp4';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { captureService } from '@/services/capture';
 import type { DisplayInfo } from '@/services/capture';
@@ -498,6 +499,7 @@ export default function ScreenRecorder({ lang = 'en' }: { lang?: Lang }) {
             <Download className="h-4 w-4" />
             {t.download} {extRef.current.toUpperCase()}
           </Button>
+          {extRef.current !== 'mp4' && <SaveAsMp4 blob={result} hasAudio baseName="screen-recording" lang={lang} />}
         </div>
       )}
     </div>
