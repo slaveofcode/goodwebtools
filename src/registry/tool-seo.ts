@@ -3199,7 +3199,7 @@ const en: Record<string, ToolSeoContent> = {
   'media-trim': {
     title: 'Free Audio & Video Trimmer — Cut Clips & Make MP3 Ringtones',
     description: 'Trim or cut a section from a video or audio file — a fast MP3 cutter and video trimmer that runs in your browser. Nothing is uploaded; the file stays on your device.',
-    intro: 'This free trimmer cuts a section out of any audio or video file. Set the start and end (or grab them from the player), and it exports just that part with ffmpeg running in your browser — great for making an MP3 ringtone or trimming a clip before sharing. Your file is never uploaded.',
+    intro: 'This free trimmer cuts a section out of any audio or video file. Set the start and end (or grab them from the player), and it exports just that part right in your browser — great for making an MP3 ringtone or trimming a clip before sharing. Your file is never uploaded.',
     howTo: [
       'Drop an audio or video file onto the box, or click to browse.',
       'Play it, then set Start and End — type the times or click "Use current" at the playhead.',
@@ -3207,10 +3207,10 @@ const en: Record<string, ToolSeoContent> = {
       'Click Trim, then preview and download the trimmed file.',
     ],
     faqs: [
-      { q: 'Is my file uploaded to a server?', a: 'No. Trimming runs entirely in your browser via ffmpeg.wasm, so the audio or video never leaves your device.' },
+      { q: 'Is my file uploaded to a server?', a: 'No. Trimming runs entirely in your browser, so the audio or video never leaves your device.' },
       { q: 'Can I make a phone ringtone?', a: 'Yes. Drop an audio file (or a video — the audio is kept), set the section you want, and export it. Audio is saved as MP3, which works as a ringtone on most phones.' },
-      { q: 'What does "Fast (no re-encode)" do?', a: 'It copies the media streams instead of re-encoding, so the cut is instant and lossless — but it snaps to the nearest keyframe, so the start can be off by a fraction of a second. Untick it for an exact cut (slower, re-encodes).' },
-      { q: 'Which formats can I trim?', a: 'Common video (MP4, WebM, MOV) and audio (MP3, M4A, WAV, Opus) files. The first run downloads the ~31 MB engine, then it is cached.' },
+      { q: 'Is the cut exact, and does it lose quality?', a: 'In browsers with WebCodecs (Chrome, Edge, Samsung Internet and most recent browsers) the trimmer copies the media as is and re-encodes only the few frames needed for an exact cut — fast and lossless. In other browsers it uses a compatibility mode: with "Fast (no re-encode)" ticked the cut snaps to the nearest keyframe; untick it for an exact, slower cut.' },
+      { q: 'Which formats can I trim?', a: 'Common video (MP4, WebM, MOV, MKV) and audio (MP3, M4A, WAV, Opus, FLAC) files. The trimmed file keeps its original format.' },
     ],
   },
   'video-compress': {
@@ -6704,7 +6704,7 @@ const id: Record<string, ToolSeoContent> = {
   'media-trim': {
     title: 'Pemotong Audio & Video Gratis — Potong Klip & Buat Ringtone MP3',
     description: 'Potong satu bagian dari file video atau audio — pemotong MP3 dan pemangkas video cepat yang berjalan di browser Anda. Tidak ada yang diunggah; file tetap di perangkat Anda.',
-    intro: 'Tool pemotong gratis ini mengambil satu bagian dari file audio atau video mana pun. Atur waktu mulai dan akhir (atau ambil dari pemutar), lalu tool mengekspor bagian itu saja dengan ffmpeg yang berjalan di browser Anda — cocok untuk membuat ringtone MP3 atau memangkas klip sebelum dibagikan. File Anda tidak pernah diunggah.',
+    intro: 'Tool pemotong gratis ini mengambil satu bagian dari file audio atau video mana pun. Atur waktu mulai dan akhir (atau ambil dari pemutar), lalu tool mengekspor bagian itu saja langsung di browser Anda — cocok untuk membuat ringtone MP3 atau memangkas klip sebelum dibagikan. File Anda tidak pernah diunggah.',
     howTo: [
       'Jatuhkan file audio atau video ke dalam kotak, atau klik untuk memilih.',
       'Putar, lalu atur Mulai dan Akhir — ketik waktunya atau klik "Pakai posisi" di posisi pemutar.',
@@ -6712,10 +6712,10 @@ const id: Record<string, ToolSeoContent> = {
       'Klik Potong, lalu pratinjau dan unduh file hasil pemotongan.',
     ],
     faqs: [
-      { q: 'Apakah file saya diunggah ke server?', a: 'Tidak. Pemotongan berjalan sepenuhnya di browser Anda melalui ffmpeg.wasm, jadi audio atau video tidak pernah keluar dari perangkat Anda.' },
+      { q: 'Apakah file saya diunggah ke server?', a: 'Tidak. Pemotongan berjalan sepenuhnya di browser Anda, jadi audio atau video tidak pernah keluar dari perangkat Anda.' },
       { q: 'Bisakah saya membuat ringtone HP?', a: 'Bisa. Jatuhkan file audio (atau video — audionya diambil), atur bagian yang Anda inginkan, lalu ekspor. Audio disimpan sebagai MP3, yang bisa dipakai sebagai ringtone di sebagian besar HP.' },
-      { q: 'Apa fungsi "Cepat (tanpa encode ulang)"?', a: 'Ini menyalin stream media alih-alih meng-encode ulang, jadi potongan instan dan lossless — tetapi menempel ke keyframe terdekat, sehingga awalnya bisa meleset sepersekian detik. Hilangkan centang untuk potongan presisi (lebih lambat, encode ulang).' },
-      { q: 'Format apa saja yang bisa dipotong?', a: 'Video umum (MP4, WebM, MOV) dan audio (MP3, M4A, WAV, Opus). Proses pertama mengunduh engine ~31 MB, lalu tersimpan di cache.' },
+      { q: 'Apakah potongannya presisi, dan apakah kualitasnya turun?', a: 'Di browser yang mendukung WebCodecs (Chrome, Edge, Samsung Internet, dan sebagian besar browser terbaru) tool menyalin media apa adanya dan hanya meng-encode ulang beberapa frame yang diperlukan agar potongan presisi — cepat dan lossless. Di browser lain tool memakai mode kompatibilitas: dengan "Cepat (tanpa encode ulang)" dicentang, potongan menempel ke keyframe terdekat; hilangkan centang untuk potongan presisi yang lebih lambat.' },
+      { q: 'Format apa saja yang bisa dipotong?', a: 'Video umum (MP4, WebM, MOV, MKV) dan audio (MP3, M4A, WAV, Opus, FLAC). File hasil potongan tetap dalam format aslinya.' },
     ],
   },
   'video-compress': {
