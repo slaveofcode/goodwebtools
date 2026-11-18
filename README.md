@@ -74,7 +74,7 @@ Tell it what you want in plain language — *"compress this image to 100 KB"*, *
 ## Tech
 
 - [**Astro**](https://astro.build) static site + **React islands** (each tool is its own lazy-loaded chunk)
-- **100% client-side processing**: WebAssembly, Canvas, `onnxruntime-web`, `@imgly/background-removal`, `mupdf`, `ffmpeg.wasm`, `transformers.js` / WebGPU
+- **100% client-side processing**: WebAssembly, Canvas, `onnxruntime-web`, `@imgly/background-removal`, `mupdf`, `mediabunny` (WebCodecs) with `ffmpeg.wasm` fallback, `transformers.js` / WebGPU
 - Installable **PWA** with offline support
 - Native **desktop app** via [Tauri 2](https://tauri.app)
 - Deployed on **Cloudflare Workers** (static assets + R2 for on-demand ML models)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
@@ -7,13 +7,18 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { convertVideo } from '@/tools/media/encode.lib';
+import { mbConvertVideo, probeMedia, qualityFromCrf } from '@/tools/media/mb-media.lib';
+import { runWithFallback } from '@/tools/media/run-media.lib';
+import { getEncodeCaps } from '@/services/media/mediabunny.service';
+import type { Engine } from '@/tools/media/engine.lib';
 import type { Lang } from '@/i18n/config';
 
-type Fmt = 'mp4' | 'webm' | 'mov';
-const FORMATS: { id: Fmt; label: string; mime: string; vcodec: string; acodec: string }[] = [
+type Fmt = 'mp4' | 'webm' | 'mov' | 'mkv';
+const FORMATS: { id: Fmt; label: string; mime: string; vcodec: string; acodec: string; fastOnly?: boolean }[] = [
   { id: 'mp4', label: 'MP4 (H.264)', mime: 'video/mp4', vcodec: 'libx264', acodec: 'aac' },
   { id: 'webm', label: 'WebM (VP9)', mime: 'video/webm', vcodec: 'libvpx-vp9', acodec: 'libopus' },
   { id: 'mov', label: 'MOV (H.264)', mime: 'video/quicktime', vcodec: 'libx264', acodec: 'aac' },
+  { id: 'mkv', label: 'MKV (H.264)', mime: 'video/x-matroska', vcodec: 'libx264', acodec: 'aac', fastOnly: true },
 ];
 
 const TR: Record<Lang, {
@@ -40,6 +45,7 @@ const TR: Record<Lang, {
   result: string;
   ofOriginal: (pct: number) => string;
   download: (fmt: string) => string;
+  cancel: string; fastMode: string; slowMode: string;
 }> = {
   en: {
     loadEngine: 'Loading video engine (first run downloads ~31 MB)…',
@@ -57,7 +63,7 @@ const TR: Record<Lang, {
     length: 'Length (s)',
     audio: 'Audio',
     dropAudio: 'Drop audio',
-    privacy: 'Runs entirely in your browser via ffmpeg.wasm — the video never leaves your device. Transcoding is CPU-bound; long or high-resolution clips can take a while.',
+    privacy: 'Runs entirely in your browser — the video never leaves your device. It uses your device’s hardware video encoder when the browser supports it, and a slower compatibility mode otherwise.',
     converting: 'Converting…',
     convert: 'Convert',
     clear: 'Clear',
@@ -65,6 +71,7 @@ const TR: Record<Lang, {
     result: 'Result',
     ofOriginal: (pct) => `(${pct}% of original)`,
     download: (fmt) => `Download ${fmt}`,
+    cancel: 'Cancel', fastMode: 'Fast mode (hardware)', slowMode: 'Compatibility mode — slower in this browser',
   },
   id: {
     loadEngine: 'Memuat mesin video (unduhan pertama ~31 MB)…',
@@ -82,7 +89,7 @@ const TR: Record<Lang, {
     length: 'Durasi (dtk)',
     audio: 'Audio',
     dropAudio: 'Hapus audio',
-    privacy: 'Berjalan sepenuhnya di browser Anda via ffmpeg.wasm — video tidak pernah keluar dari perangkat Anda. Transcoding bergantung pada CPU; klip yang panjang atau beresolusi tinggi bisa memakan waktu.',
+    privacy: 'Berjalan sepenuhnya di browser Anda — video tidak pernah keluar dari perangkat Anda. Memakai encoder video perangkat keras di perangkat Anda bila browser mendukung, dan mode kompatibilitas yang lebih lambat bila tidak.',
     converting: 'Mengonversi…',
     convert: 'Konversi',
     clear: 'Bersihkan',
@@ -90,6 +97,7 @@ const TR: Record<Lang, {
     result: 'Hasil',
     ofOriginal: (pct) => `(${pct}% dari asli)`,
     download: (fmt) => `Unduh ${fmt}`,
+    cancel: 'Batal', fastMode: 'Mode cepat (perangkat keras)', slowMode: 'Mode kompatibilitas — lebih lambat di browser ini',
   },
 };
 
@@ -108,6 +116,13 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
   const [stage, setStage] = useState('');
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
+  const [engine, setEngine] = useState<Engine | null>(null);
+  const [meta, setMeta] = useState('');
+  const [fastAvailable, setFastAvailable] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // MKV output exists only on the fast engine; offer it when this browser has it.
+  useEffect(() => { getEncodeCaps().then(c => setFastAvailable(!!c?.video.has('avc'))).catch(() => {}); }, []);
 
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
@@ -125,21 +140,37 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
     setError('');
     setResult(null);
     setPercent(0);
+    setEngine(null);
+    setMeta('');
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    const onProgress = (p: number) => setPercent(Math.min(100, Math.round(p * 100)));
+    const trimStart = Number(start) || 0;
+    const trimDuration = Number(duration) || 0;
     try {
       setStage(t.transcoding);
-      const blob = await convertVideo(
-        file,
-        { format: fmt, crf, scale, muted, trimStart: Number(start) || 0, trimDuration: Number(duration) || 0 },
-        p => setPercent(Math.min(100, Math.round(p * 100))),
+      const webm = fmt === 'webm';
+      const r = await runWithFallback(
+        { kind: 'convert-video', inputExt: file.name.split('.').pop() || '', needVideo: webm ? 'vp9' : 'avc', needAudio: muted ? null : webm ? 'opus' : 'aac' },
+        signal => mbConvertVideo(file, { format: fmt, quality: qualityFromCrf(crf), maxWidth: scale, muted, trimStart, trimDuration }, onProgress, signal),
+        () => {
+          if (fmt === 'mkv') throw new Error(t.convertError);
+          return convertVideo(file, { format: fmt, crf, scale, muted, trimStart, trimDuration }, onProgress);
+        },
+        ctrl.signal,
       );
+      const blob = r.value;
+      setEngine(r.engine);
+      probeMedia(blob).then(m => setMeta([m.video?.codec, m.audio?.codec].filter(Boolean).join(' · '))).catch(() => {});
       setResult(blob);
       setResultUrl(prev => {
         if (prev) URL.revokeObjectURL(prev);
         return URL.createObjectURL(blob);
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : t.convertError);
+      if (!(e instanceof DOMException && e.name === 'AbortError')) setError(e instanceof Error ? e.message : t.convertError);
     } finally {
+      abortRef.current = null;
       setBusy(false);
       setStage('');
     }
@@ -171,7 +202,7 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
         <label className="flex flex-col gap-1">
           <span className="flex h-4 items-center font-bold uppercase tracking-wide text-muted-foreground">{t.format}</span>
           <select value={fmt} onChange={e => setFmt(e.target.value as Fmt)} className="h-9 border-2 border-border bg-muted px-2 outline-none focus:shadow-brutal-sm">
-            {FORMATS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
+            {FORMATS.filter(f => !f.fastOnly || fastAvailable).map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
           <span className="h-4" />
         </label>
@@ -211,6 +242,7 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || busy}>{busy ? t.converting : t.convert}</Button>
+        {busy && <Button variant="ghost" onClick={() => abortRef.current?.abort()}>{t.cancel}</Button>}
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>{t.clear}</Button>
       </div>
 
@@ -224,6 +256,8 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
             <span className="font-mono text-muted-foreground">{formatBytes(result.size)}</span>
             {file && <span className="font-mono text-muted-foreground">{t.ofOriginal(Math.round((result.size / file.size) * 100))}</span>}
           </div>
+          {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
+          {meta && <p data-testid="result-meta" className="font-mono text-xs text-muted-foreground">{meta}</p>}
           <video src={resultUrl} controls className="block max-h-[70vh] w-auto max-w-full border-2 border-border" />
           <Button onClick={download}>
             <Download className="h-4 w-4" />

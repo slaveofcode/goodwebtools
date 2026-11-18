@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
 import { Dropzone } from '@/components/ui/Dropzone';
 import { Button } from '@/components/ui/Button';
@@ -7,10 +7,14 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { loadFFmpeg, fileToU8 } from '@/services/ffmpeg.service';
+import { mbExtractAudio, mbConvertAudio } from '@/tools/media/mb-media.lib';
+import { runWithFallback } from '@/tools/media/run-media.lib';
+import type { Engine, MediaJob } from '@/tools/media/engine.lib';
 import type { Lang } from '@/i18n/config';
 
-type Fmt = 'mp3' | 'm4a' | 'wav' | 'opus';
-const FORMATS: { id: Fmt; label: string; mime: string; args: string[]; ext: string }[] = [
+type Fmt = 'original' | 'mp3' | 'm4a' | 'wav' | 'opus';
+type EncFmt = Exclude<Fmt, 'original'>;
+const FORMATS: { id: EncFmt; label: string; mime: string; args: string[]; ext: string }[] = [
   { id: 'mp3', label: 'MP3', mime: 'audio/mpeg', args: ['-c:a', 'libmp3lame', '-q:a', '2'], ext: 'mp3' },
   { id: 'm4a', label: 'M4A (AAC)', mime: 'audio/mp4', args: ['-c:a', 'aac', '-b:a', '192k'], ext: 'm4a' },
   { id: 'wav', label: 'WAV (PCM)', mime: 'audio/wav', args: ['-c:a', 'pcm_s16le'], ext: 'wav' },
@@ -33,6 +37,7 @@ const TR: Record<Lang, {
   working: string;
   result: string;
   download: (fmt: string) => string;
+  original: string; noAudio: string; cancel: string; fastMode: string; slowMode: string;
 }> = {
   en: {
     loadEngine: 'Loading audio engine (first run downloads ~31 MB)…',
@@ -43,13 +48,16 @@ const TR: Record<Lang, {
     format: 'Format',
     start: 'Start (s)',
     length: 'Length (s)',
-    privacy: 'Runs entirely in your browser via ffmpeg.wasm — the file never leaves your device.',
+    privacy: 'Runs entirely in your browser — the file never leaves your device.',
     extractingBtn: 'Extracting…',
     extractAudio: 'Extract audio',
     clear: 'Clear',
     working: 'Working…',
     result: 'Result',
     download: (fmt) => `Download ${fmt}`,
+    original: 'Original audio (no quality loss)',
+    noAudio: 'This video has no audio track.',
+    cancel: 'Cancel', fastMode: 'Fast mode (hardware)', slowMode: 'Compatibility mode — slower in this browser',
   },
   id: {
     loadEngine: 'Memuat mesin audio (unduhan pertama ~31 MB)…',
@@ -60,20 +68,25 @@ const TR: Record<Lang, {
     format: 'Format',
     start: 'Mulai (dtk)',
     length: 'Durasi (dtk)',
-    privacy: 'Berjalan sepenuhnya di browser Anda via ffmpeg.wasm — file tidak pernah keluar dari perangkat Anda.',
+    privacy: 'Berjalan sepenuhnya di browser Anda — file tidak pernah keluar dari perangkat Anda.',
     extractingBtn: 'Mengekstrak…',
     extractAudio: 'Ekstrak audio',
     clear: 'Bersihkan',
     working: 'Memproses…',
     result: 'Hasil',
     download: (fmt) => `Unduh ${fmt}`,
+    original: 'Audio asli (tanpa penurunan kualitas)',
+    noAudio: 'Video ini tidak memiliki trek audio.',
+    cancel: 'Batal', fastMode: 'Mode cepat (perangkat keras)', slowMode: 'Mode kompatibilitas — lebih lambat di browser ini',
   },
 };
+
+const ENC_FOR: Record<Fmt, MediaJob['needAudio']> = { original: 'copy', mp3: 'mp3', m4a: 'aac', wav: 'pcm', opus: 'opus' };
 
 export default function VideoToAudio({ lang = 'en' }: { lang?: Lang }) {
   const t = TR[lang] ?? TR.en;
   const [file, setFile] = useState<File | null>(null);
-  const [fmt, setFmt] = useState<Fmt>('mp3');
+  const [fmt, setFmt] = useState<Fmt>('original');
   const [start, setStart] = useState('');
   const [duration, setDuration] = useState('');
   const [result, setResult] = useState<Blob | null>(null);
@@ -82,6 +95,9 @@ export default function VideoToAudio({ lang = 'en' }: { lang?: Lang }) {
   const [stage, setStage] = useState('');
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
+  const [engine, setEngine] = useState<Engine | null>(null);
+  const [outExt, setOutExt] = useState('');
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
 
@@ -93,41 +109,61 @@ export default function VideoToAudio({ lang = 'en' }: { lang?: Lang }) {
     setError('');
   };
 
+  /** The ffmpeg.wasm path (compatibility mode). "Original" re-encodes to MP3 here. */
+  const runSlow = async (want: EncFmt, trimStart: number, trimLen: number) => {
+    const spec = FORMATS.find(f => f.id === want)!;
+    setStage(t.loadEngine);
+    const ffmpeg = await loadFFmpeg();
+    const onProgress = ({ progress }: { progress: number }) => setPercent(Math.min(100, Math.round(progress * 100)));
+    ffmpeg.on('progress', onProgress);
+    try {
+      await ffmpeg.writeFile('in', await fileToU8(file!));
+      const trim: string[] = [];
+      if (trimStart > 0) trim.push('-ss', String(trimStart));
+      if (trimLen > 0) trim.push('-t', String(trimLen));
+      const out = `out.${spec.ext}`;
+      setStage(t.extracting);
+      await ffmpeg.exec([...trim, '-i', 'in', '-vn', ...spec.args, out]);
+      return { blob: new Blob([await ffmpeg.readFile(out)], { type: spec.mime }), ext: spec.ext };
+    } finally {
+      ffmpeg.off('progress', onProgress);
+    }
+  };
+
   const run = async () => {
     if (!file) return;
     setBusy(true);
     setError('');
     setResult(null);
     setPercent(0);
-    const spec = FORMATS.find(f => f.id === fmt)!;
+    setEngine(null);
+    const trimStart = Number(start) > 0 ? Number(start) : 0;
+    const trimLen = Number(duration) > 0 ? Number(duration) : 0;
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    const onProgress = (p: number) => setPercent(Math.min(100, Math.round(p * 100)));
     try {
-      setStage(t.loadEngine);
-      const ffmpeg = await loadFFmpeg();
-      const onProgress = ({ progress }: { progress: number }) =>
-        setPercent(Math.min(100, Math.round(progress * 100)));
-      ffmpeg.on('progress', onProgress);
-
-      await ffmpeg.writeFile('in', await fileToU8(file));
-
-      const trim: string[] = [];
-      if (start && Number(start) > 0) trim.push('-ss', String(Number(start)));
-      if (duration && Number(duration) > 0) trim.push('-t', String(Number(duration)));
-
-      const out = `out.${spec.ext}`;
       setStage(t.extracting);
-      await ffmpeg.exec([...trim, '-i', 'in', '-vn', ...spec.args, out]);
-
-      const data = await ffmpeg.readFile(out);
-      ffmpeg.off('progress', onProgress);
-      const blob = new Blob([data], { type: spec.mime });
-      setResult(blob);
+      const r = await runWithFallback(
+        { kind: 'extract-audio', inputExt: file.name.split('.').pop() || '', needAudio: ENC_FOR[fmt] },
+        async signal => fmt === 'original'
+          ? mbExtractAudio(file, { as: 'original', trimStart, trimDuration: trimLen }, onProgress, signal)
+          : { blob: await mbConvertAudio(file, { format: fmt, kbps: fmt === 'opus' ? 128 : 192, trimStart, trimDuration: trimLen }, onProgress, signal), ext: fmt },
+        () => runSlow(fmt === 'original' ? 'mp3' : fmt, trimStart, trimLen),
+        ctrl.signal,
+      );
+      setEngine(r.engine);
+      setOutExt(r.value.ext);
+      setResult(r.value.blob);
       setResultUrl(prev => {
         if (prev) URL.revokeObjectURL(prev);
-        return URL.createObjectURL(blob);
+        return URL.createObjectURL(r.value.blob);
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : t.extractError);
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      setError(e instanceof Error && e.message === 'no-audio' ? t.noAudio : e instanceof Error && e.message ? e.message : t.extractError);
     } finally {
+      abortRef.current = null;
       setBusy(false);
       setStage('');
     }
@@ -135,7 +171,7 @@ export default function VideoToAudio({ lang = 'en' }: { lang?: Lang }) {
 
   const download = () => {
     if (!result || !file) return;
-    downloadService.download(result, file.name.replace(/\.[^.]+$/, '') + '.' + fmt);
+    downloadService.download(result, file.name.replace(/\.[^.]+$/, '') + '.' + (outExt || fmt));
   };
 
   return (
@@ -157,6 +193,7 @@ export default function VideoToAudio({ lang = 'en' }: { lang?: Lang }) {
         <label className="space-y-1 text-sm">
           <span className="block font-bold uppercase tracking-wide text-muted-foreground">{t.format}</span>
           <select value={fmt} onChange={e => setFmt(e.target.value as Fmt)} className="border-2 border-border bg-muted px-2 py-1.5 text-sm outline-none focus:shadow-brutal-sm">
+            <option value="original">{t.original}</option>
             {FORMATS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
         </label>
@@ -176,6 +213,7 @@ export default function VideoToAudio({ lang = 'en' }: { lang?: Lang }) {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || busy}>{busy ? t.extractingBtn : t.extractAudio}</Button>
+        {busy && <Button variant="ghost" onClick={() => abortRef.current?.abort()}>{t.cancel}</Button>}
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); }}>{t.clear}</Button>
       </div>
 
@@ -188,10 +226,11 @@ export default function VideoToAudio({ lang = 'en' }: { lang?: Lang }) {
             <span className="font-bold uppercase tracking-wide text-muted-foreground">{t.result}</span>
             <span className="font-mono text-muted-foreground">{formatBytes(result.size)}</span>
           </div>
+          {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
           <audio src={resultUrl} controls className="block w-full max-w-md" />
           <Button onClick={download}>
             <Download className="h-4 w-4" />
-            {t.download(fmt.toUpperCase())}
+            {t.download((outExt || fmt).toUpperCase())}
           </Button>
         </div>
       )}
