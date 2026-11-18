@@ -3,11 +3,13 @@ import { Video, Circle, Pause, Play, Square, Camera, Download, RotateCcw, Upload
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { downloadService } from '@/services/download';
+import { SaveAsMp4 } from '@/components/media/SaveAsMp4';
+import { finishRecording } from '@/tools/media/recording-finish.lib';
 import { pickRecordingType, formatDuration, resolutionConstraint, type Resolution } from '@/tools/media/video-recorder.lib';
 import { filterCss, hexToRgb, applyChromaKey, type EffectKind, type FilterPreset } from '@/tools/media/video-effects.lib';
 import type { Lang } from '@/i18n/config';
 
-type Status = 'idle' | 'live' | 'countdown' | 'recording' | 'paused' | 'review';
+type Status = 'idle' | 'live' | 'countdown' | 'recording' | 'paused' | 'finishing' | 'review';
 
 const TR: Record<Lang, {
   intro: string; start: string; camera: string; mic: string; resolution: string;
@@ -84,6 +86,8 @@ export default function VideoRecorder({ lang = 'en' }: { lang?: Lang }) {
   const chunksRef = useRef<Blob[]>([]);
   const resultBlobRef = useRef<Blob | null>(null);
   const extRef = useRef('webm');
+  const hasAudioRef = useRef(true);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
   const timerRef = useRef<number | null>(null);
   const startRef = useRef(0);
   const accumRef = useRef(0);
@@ -278,9 +282,16 @@ export default function VideoRecorder({ lang = 'en' }: { lang?: Lang }) {
     srcStream.getAudioTracks().forEach(tk => canvasStream.addTrack(tk));
     const rec = new MediaRecorder(canvasStream, mime ? { mimeType: mime } : undefined);
     rec.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    rec.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'video/webm' });
+    hasAudioRef.current = canvasStream.getAudioTracks().length > 0;
+    rec.onstop = async () => {
+      // Recording is over: stop the timer and the REC badge before the re-pack.
+      clearTimer();
+      setStatus('finishing');
+      const raw = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'video/webm' });
+      // Re-pack so the file has a duration and seeks (copy, no re-encode; the original is kept if that fails).
+      const blob = await finishRecording(raw);
       resultBlobRef.current = blob;
+      setResultBlob(blob);
       const url = URL.createObjectURL(blob);
       setResultUrl(url);
       setStatus('review');
@@ -330,7 +341,7 @@ export default function VideoRecorder({ lang = 'en' }: { lang?: Lang }) {
 
   const recordAgain = () => {
     if (resultUrl) URL.revokeObjectURL(resultUrl);
-    setResultUrl(''); resultBlobRef.current = null; setElapsed(0); setStatus('live');
+    setResultUrl(''); resultBlobRef.current = null; setResultBlob(null); setElapsed(0); setStatus('live');
   };
 
   useEffect(() => {
@@ -345,7 +356,7 @@ export default function VideoRecorder({ lang = 'en' }: { lang?: Lang }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const busy = status === 'recording' || status === 'paused' || status === 'countdown';
+  const busy = status === 'recording' || status === 'paused' || status === 'countdown' || status === 'finishing';
   const showBgControls = effect === 'replace-bg' || effect === 'greenscreen';
 
   return (
@@ -385,6 +396,7 @@ export default function VideoRecorder({ lang = 'en' }: { lang?: Lang }) {
         <div className="flex flex-wrap gap-2">
           <Button onClick={onDownload}><Download className="h-4 w-4" />{t.download}</Button>
           <Button variant="secondary" onClick={recordAgain}><RotateCcw className="h-4 w-4" />{t.again}</Button>
+          {resultBlob && extRef.current !== 'mp4' && <SaveAsMp4 blob={resultBlob} hasAudio={hasAudioRef.current} baseName="video-recording" lang={lang} />}
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">

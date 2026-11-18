@@ -58,8 +58,9 @@ export default function VoiceRecorder({ lang = 'en' }: { lang?: Lang }) {
 
   useEffect(() => () => { if (urlRef.current) URL.revokeObjectURL(urlRef.current); }, []);
 
-  // MediaRecorder blobs report duration=Infinity, which freezes the seek bar;
-  // seeking once to a huge time forces the browser to compute a real duration.
+  // Recordings are re-packed with a real duration; if that ever fails the blob
+  // reports duration=Infinity, which freezes the seek bar — seeking once to a
+  // huge time forces the browser to compute it (safety net).
   const fixDuration = () => {
     const el = audioRef.current;
     if (el && el.duration === Infinity) {

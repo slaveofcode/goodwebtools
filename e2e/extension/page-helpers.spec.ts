@@ -279,3 +279,68 @@ test('full-page screenshot, end to end through the service worker', async () => 
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+/** Save a 2 s recording made the way the extension's recorder does (MediaRecorder, 1 s slices → webm). */
+async function saveTestRecording(page: import('@playwright/test').Page, withAudio: boolean) {
+  await page.evaluate(async (withAudio) => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 180;
+    const g = c.getContext('2d')!;
+    const stream = c.captureStream(30);
+    if (withAudio) {
+      const ac = new AudioContext();
+      const osc = ac.createOscillator(); const dest = ac.createMediaStreamDestination();
+      osc.connect(dest); osc.start();
+      dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+    }
+    const rec = new MediaRecorder(stream, { mimeType: withAudio ? 'video/webm;codecs=vp9,opus' : 'video/webm' });
+    const chunks: Blob[] = [];
+    rec.ondataavailable = (e) => chunks.push(e.data);
+    const started = performance.now();
+    let x = 0;
+    const timer = setInterval(() => { g.fillStyle = '#fff'; g.fillRect(0, 0, 320, 180); g.fillStyle = '#7c3aed'; g.fillRect(x % 300, 60, 40, 40); x += 8; }, 33);
+    rec.start(1000);
+    await new Promise(r => setTimeout(r, 2000));
+    rec.stop();
+    clearInterval(timer);
+    await new Promise(r => { rec.onstop = r; });
+    const { saveRecording } = await import('/lib/recordings-db.js');
+    await saveRecording({ blob: new Blob(chunks, { type: 'video/webm' }), type: 'video/webm', durationMs: performance.now() - started, at: Date.now() });
+  }, withAudio);
+  await page.reload();
+}
+
+test('the recording page saves a seekable WebM and an MP4 made on the device', async ({ ctx, extId }) => {
+  test.setTimeout(90_000);
+  const page = await ctx.newPage();
+  await page.goto(`chrome-extension://${extId}/recording.html`);
+  await saveTestRecording(page, false);
+
+  // The .webm download is re-packed with a Duration and seek index (Cues).
+  await expect(page.locator('#download')).toHaveAttribute('data-ready', '1', { timeout: 30_000 });
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('#download').click()]);
+  const webm = fs.readFileSync(await dl.path());
+  expect(webm.includes(Buffer.from([0x1c, 0x53, 0xbb, 0x6b]))).toBe(true);
+
+  // No audio to encode, and Chromium encodes H.264 → "Download MP4" is offered.
+  const mp4Btn = page.getByRole('button', { name: 'Download MP4' });
+  await expect(mp4Btn).toBeVisible();
+  const [dl2] = await Promise.all([page.waitForEvent('download', { timeout: 60_000 }), mp4Btn.click()]);
+  expect(dl2.suggestedFilename()).toMatch(/^gwt-recording-.*\.mp4$/);
+  const mp4 = fs.readFileSync(await dl2.path());
+  expect(mp4.subarray(4, 8).toString('latin1')).toBe('ftyp');
+  expect(mp4.includes(Buffer.from('avc1'))).toBe(true);
+  await expect(page.locator('#gifStatus')).toContainText('MP4 saved');
+});
+
+test('without a built-in AAC encoder, a recording with sound is handed to the site for MP4', async ({ ctx, extId }) => {
+  test.setTimeout(90_000);
+  const page = await ctx.newPage();
+  await page.goto(`chrome-extension://${extId}/recording.html`);
+  const nativeAac = await page.evaluate(async () => !!(await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: 48000, numberOfChannels: 2, bitrate: 128000 })).supported);
+  test.skip(nativeAac, 'this browser has a built-in AAC encoder');
+  await saveTestRecording(page, true);
+  await expect(page.locator('#download')).toHaveAttribute('data-ready', '1', { timeout: 30_000 });
+  await expect(page.getByRole('button', { name: 'Download MP4' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Convert to MP4' })).toBeVisible();
+});
+

@@ -30,7 +30,7 @@
     "sync:r2:prod": "node scripts/sync-r2.mjs production",
     "sync:r2:staging": "node scripts/sync-r2.mjs staging",
     "deploy:staging": "npm run build && wrangler deploy --env staging",
-    "postbuild": "node scripts/prune-dist.mjs",
+    "postbuild": "node scripts/prune-dist.mjs && node scripts/check-chunks.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",

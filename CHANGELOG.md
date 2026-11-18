@@ -12,6 +12,9 @@ All notable changes to GoodWebTools are documented here.
 
 ### Changed
 - **Much faster video and audio tools, especially on phones:** Video Compressor, Video Converter, Trimmer, Video → Audio and Audio Converter now use your device's hardware video and audio encoders (WebCodecs, via mediabunny) when the browser supports them, with the previous engine (ffmpeg.wasm) as an automatic fallback. Each tool shows which mode ran and can be cancelled. Video → Audio can keep the original soundtrack with no quality loss, the Trimmer cuts losslessly and exactly, the Compressor lowers the resolution when the size budget is small, and the Converter adds MKV.
+- **Recordings you can seek through, and MP4 in one click:** Screen Recorder, Video Recorder and Voice Recorder recordings now have a proper length, so players can jump around in them, and the Screen and Video Recorders add **Save as MP4** using the hardware encoder.
+- **Music Player** shows the title, artist, album and cover art from M4A, FLAC, Ogg and WAV files, not just MP3.
+- **Chrome extension 2.6:** HLS streams are saved as MP4 instead of `.ts`, recordings download as a seekable WebM, and the recording page offers **Download MP4** when the browser has built-in encoders.
 - Image Compressor handles HEIC, SVG, very large and phone-camera photos more reliably.
 - Internal links now point straight at each page's address (no redirect), and the site always uses HTTPS.
 - The NIK Decoder explains that it reads a NIK you already have and can't look one up by name. The report form asks you not to include personal data.
@@ -19,6 +22,8 @@ All notable changes to GoodWebTools are documented here.
 ### Fixed
 - Video Call screen sharing, with a note that it's tested in Chrome.
 - Reopening the report form no longer leaves a stale spam-check widget running.
+- Pages no longer download the media engine (over 1 MB) up front; it loads only when a media tool runs.
+- The Video and Audio Converters no longer stall on some mono recordings when making M4A/MP4 at high quality, and a fast-mode job that stops making progress now switches to compatibility mode on its own.
 
 ## [1.0.0-beta.7] — 2026-10-09
 

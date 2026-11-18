@@ -186,11 +186,16 @@ export async function stopManaged(): Promise<Blob | null> {
   busy = true;
   const handle = activeHandle;
   try {
-    const blob = await captureService.stopRecording(handle);
+    const raw = await captureService.stopRecording(handle);
     activeHandle = null;
     startedAt = null;
     await showMainWindow(); // always reveal the app when recording ends
     emitState();
+    // Then re-pack the browser's WebM so it has a duration and seeks (copy, no
+    // re-encode); the original is kept if that fails.
+    const blob = raw
+      ? await import('@/tools/media/recording-finish.lib').then(m => m.finishRecording(raw)).catch(() => raw)
+      : raw;
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('gwt:recording-result', { detail: { blob } }));
     }

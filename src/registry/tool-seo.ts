@@ -335,7 +335,7 @@ const en: Record<string, ToolSeoContent> = {
   },
   'music-player': {
     title: 'Free Online Music Player — Play Your Own MP3, WAV & FLAC',
-    description: 'Play music files from your device in the browser: playlist, album art from ID3 tags, visualizer, A–B loop and speed control. Nothing is uploaded.',
+    description: 'Play music files from your device in the browser: playlist, album art from the file’s tags (MP3, M4A, FLAC, OGG), visualizer, A–B loop and speed control. Nothing is uploaded.',
     intro: 'A free music player for the files already on your device. Drop in MP3, WAV, M4A, AAC, FLAC or OGG and it builds a playlist, reads the title, artist, album and cover art straight from the file’s tags, and shows a live visualizer. Shuffle, repeat, change speed, loop a section, and pick up where you left off. Your music never leaves your browser — nothing is uploaded.',
     howTo: [
       'Drop your music files in, or click to choose them.',
@@ -346,7 +346,7 @@ const en: Record<string, ToolSeoContent> = {
     faqs: [
       { q: 'Are my music files uploaded?', a: 'No. Files are played directly from your device using an in-memory reference — nothing is uploaded or stored on a server.' },
       { q: 'Which formats can it play?', a: 'Whatever your browser can decode — typically MP3, WAV, M4A/AAC, OGG, Opus and FLAC. Unsupported files are listed and can be converted with the Audio Converter.' },
-      { q: 'Where does the album art come from?', a: 'It is read from the file’s own ID3 tags (title, artist, album, cover) entirely in your browser.' },
+      { q: 'Where does the album art come from?', a: 'It is read from the file’s own tags — ID3 in MP3, and the built-in tags of M4A, FLAC and OGG files (title, artist, album, year, cover) — entirely in your browser.' },
       { q: 'Does it remember where I stopped?', a: 'Yes — playback position is saved per file on this device, so you can resume a long track or podcast later.' },
       { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps working with no connection once loaded.' },
     ],
@@ -3296,7 +3296,7 @@ const en: Record<string, ToolSeoContent> = {
       { q: 'Is my video uploaded anywhere?', a: 'No. Recording uses your browser’s camera and MediaRecorder APIs; the video is encoded and saved entirely on your device and never leaves it.' },
       { q: 'Can I choose which microphone is used?', a: 'Yes. Once you allow access, both a camera and a microphone picker appear, so you can select exactly which devices record. You can also record video without audio.' },
       { q: 'Can I blur or replace my background?', a: 'Yes. Choose “Blur background” or “Replace background” and an on-device selfie-segmentation model separates you from the scene — no green screen needed. There is also a real green-screen (chroma-key) mode. It all runs in your browser.' },
-      { q: 'What format is the download?', a: 'Recordings download as WebM (VP9/VP8 with Opus audio), the format browsers record natively. To convert to MP4 you can use the Video Converter tool.' },
+      { q: 'What format is the download?', a: 'Recordings download as WebM (VP9/VP8 with Opus audio), the format browsers record natively, with a proper length so you can seek through them. Press “Save as MP4” for an H.264/AAC MP4 instead — it uses your device’s hardware encoder where the browser has one.' },
       { q: 'Does it work on my phone?', a: 'Yes, in a supported mobile browser — allow camera/mic access and it records from the phone camera. Add it to your home screen to use it like an app.' },
       { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps working with no connection once loaded; recording never needs the network.' },
     ],
@@ -3309,12 +3309,12 @@ const en: Record<string, ToolSeoContent> = {
       'Click Start recording and choose the screen, window or tab to share.',
       'Tick \'Also record microphone\' first if you want your voice included.',
       'Watch the running timer while you record.',
-      'Click Stop, then preview the clip and Download it as WebM.',
+      'Click Stop, then preview the clip and Download it as WebM — or press Save as MP4.',
     ],
     faqs: [
       { q: 'Is my recording uploaded to a server?', a: 'No. The screen is captured and encoded locally in your browser, and the finished video stays on your device until you download it. Nothing is uploaded.' },
       { q: 'Can I record system or tab audio too?', a: 'System and tab audio are included when your browser allows it during the share prompt, and you can also tick \'Also record microphone\' to add your voice.' },
-      { q: 'What format is the video saved in?', a: 'Recordings are saved as WebM (VP9 or VP8 where supported), which you download with one click after stopping.' },
+      { q: 'What format is the video saved in?', a: 'Recordings are saved as WebM (VP9 or VP8 where supported), with a proper length so you can seek through them, and download with one click after stopping. Press “Save as MP4” for an H.264/AAC MP4 instead — it uses your device’s hardware encoder where the browser has one.' },
       { q: 'Why does it say screen recording isn\'t supported?', a: 'The tool needs a browser with the getDisplayMedia and MediaRecorder APIs. Update to a current desktop browser, since some mobile browsers don\'t offer screen capture.' },
     ],
   },
@@ -3840,7 +3840,7 @@ const id: Record<string, ToolSeoContent> = {
   },
   'music-player': {
     title: 'Pemutar Musik Online Gratis — Putar MP3, WAV & FLAC Anda',
-    description: 'Putar file musik dari perangkat Anda di browser: playlist, sampul album dari tag ID3, visualizer, loop A–B, dan kontrol kecepatan. Tidak ada yang diunggah.',
+    description: 'Putar file musik dari perangkat Anda di browser: playlist, sampul album dari tag file (MP3, M4A, FLAC, OGG), visualizer, loop A–B, dan kontrol kecepatan. Tidak ada yang diunggah.',
     intro: 'Pemutar musik gratis untuk file yang sudah ada di perangkat Anda. Letakkan MP3, WAV, M4A, AAC, FLAC, atau OGG dan playlist langsung terbentuk, judul, artis, album, serta sampul dibaca langsung dari tag file, plus visualizer langsung. Acak, ulangi, ubah kecepatan, loop satu bagian, dan lanjutkan dari posisi terakhir. Musik Anda tidak pernah meninggalkan browser — tidak ada yang diunggah.',
     howTo: [
       'Letakkan file musik Anda, atau klik untuk memilih.',
@@ -3851,7 +3851,7 @@ const id: Record<string, ToolSeoContent> = {
     faqs: [
       { q: 'Apakah file musik saya diunggah?', a: 'Tidak. File diputar langsung dari perangkat Anda memakai referensi di memori — tidak ada yang diunggah atau disimpan di server.' },
       { q: 'Format apa yang bisa diputar?', a: 'Apa pun yang bisa didekode browser Anda — umumnya MP3, WAV, M4A/AAC, OGG, Opus, dan FLAC. File yang tidak didukung akan didaftar dan bisa dikonversi dengan Audio Converter.' },
-      { q: 'Dari mana sampul albumnya?', a: 'Dibaca dari tag ID3 file itu sendiri (judul, artis, album, sampul) sepenuhnya di browser Anda.' },
+      { q: 'Dari mana sampul albumnya?', a: 'Dibaca dari tag file itu sendiri — ID3 pada MP3, serta tag bawaan file M4A, FLAC, dan OGG (judul, artis, album, tahun, sampul) — sepenuhnya di browser Anda.' },
       { q: 'Apakah mengingat posisi berhenti?', a: 'Ya — posisi putar disimpan per file di perangkat ini, jadi Anda bisa melanjutkan lagu panjang atau podcast nanti.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat.' },
     ],
@@ -6801,7 +6801,7 @@ const id: Record<string, ToolSeoContent> = {
       { q: 'Apakah video saya diunggah ke suatu tempat?', a: 'Tidak. Perekaman memakai API kamera dan MediaRecorder browser Anda; video dikodekan dan disimpan sepenuhnya di perangkat Anda dan tidak pernah keluar.' },
       { q: 'Bisakah memilih mikrofon yang digunakan?', a: 'Bisa. Setelah Anda mengizinkan akses, picker kamera dan mikrofon muncul, jadi Anda bisa memilih perangkat mana yang merekam. Anda juga bisa merekam video tanpa audio.' },
       { q: 'Bisakah memburamkan atau mengganti latar?', a: 'Bisa. Pilih “Buramkan latar” atau “Ganti latar” dan model segmentasi selfie di perangkat memisahkan Anda dari latar — tanpa green screen. Ada juga mode green-screen (chroma key) sungguhan. Semuanya berjalan di browser Anda.' },
-      { q: 'Format unduhannya apa?', a: 'Rekaman diunduh sebagai WebM (VP9/VP8 dengan audio Opus), format yang direkam browser secara native. Untuk konversi ke MP4 gunakan tool Video Converter.' },
+      { q: 'Format unduhannya apa?', a: 'Rekaman diunduh sebagai WebM (VP9/VP8 dengan audio Opus), format yang direkam browser secara native, lengkap dengan durasi sehingga bisa digeser (seek). Tekan “Simpan sebagai MP4” untuk mendapatkan MP4 H.264/AAC — memakai encoder perangkat keras perangkat Anda bila browser menyediakannya.' },
       { q: 'Apakah bekerja di ponsel saya?', a: 'Ya, di browser seluler yang didukung — izinkan akses kamera/mikrofon dan ia merekam dari kamera ponsel. Tambahkan ke layar utama untuk memakainya seperti aplikasi.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat; perekaman tidak pernah butuh jaringan.' },
     ],
@@ -6814,12 +6814,12 @@ const id: Record<string, ToolSeoContent> = {
       'Klik Start recording dan pilih layar, jendela, atau tab yang akan dibagikan.',
       'Centang \'Also record microphone\' terlebih dahulu jika Anda ingin menyertakan suara Anda.',
       'Perhatikan penghitung waktu yang berjalan saat Anda merekam.',
-      'Klik Stop, lalu pratinjau klip dan Download sebagai WebM.',
+      'Klik Stop, lalu pratinjau klip dan Download sebagai WebM — atau tekan Simpan sebagai MP4.',
     ],
     faqs: [
       { q: 'Apakah rekaman saya diunggah ke server?', a: 'Tidak. Layar direkam dan dikodekan secara lokal di browser Anda, dan video yang selesai tetap di perangkat Anda sampai Anda mengunduhnya. Tidak ada yang diunggah.' },
       { q: 'Bisakah saya merekam audio sistem atau tab juga?', a: 'Audio sistem dan tab disertakan ketika browser Anda mengizinkannya selama prompt berbagi, dan Anda juga dapat mencentang \'Also record microphone\' untuk menambahkan suara Anda.' },
-      { q: 'Dalam format apa video disimpan?', a: 'Rekaman disimpan sebagai WebM (VP9 atau VP8 jika didukung), yang Anda unduh dengan satu klik setelah berhenti.' },
+      { q: 'Dalam format apa video disimpan?', a: 'Rekaman disimpan sebagai WebM (VP9 atau VP8 jika didukung), lengkap dengan durasi sehingga bisa digeser (seek), dan diunduh dengan satu klik setelah berhenti. Tekan “Simpan sebagai MP4” untuk mendapatkan MP4 H.264/AAC — memakai encoder perangkat keras perangkat Anda bila browser menyediakannya.' },
       { q: 'Mengapa dinyatakan perekaman layar tidak didukung?', a: 'Tool ini memerlukan browser dengan API getDisplayMedia dan MediaRecorder. Perbarui ke browser desktop terkini, karena beberapa browser seluler tidak menawarkan perekaman layar.' },
     ],
   },
