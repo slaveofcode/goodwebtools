@@ -9,7 +9,7 @@ import { pickRecordingType, formatDuration, resolutionConstraint, type Resolutio
 import { filterCss, hexToRgb, applyChromaKey, type EffectKind, type FilterPreset } from '@/tools/media/video-effects.lib';
 import type { Lang } from '@/i18n/config';
 
-type Status = 'idle' | 'live' | 'countdown' | 'recording' | 'paused' | 'review';
+type Status = 'idle' | 'live' | 'countdown' | 'recording' | 'paused' | 'finishing' | 'review';
 
 const TR: Record<Lang, {
   intro: string; start: string; camera: string; mic: string; resolution: string;
@@ -284,6 +284,9 @@ export default function VideoRecorder({ lang = 'en' }: { lang?: Lang }) {
     rec.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
     hasAudioRef.current = canvasStream.getAudioTracks().length > 0;
     rec.onstop = async () => {
+      // Recording is over: stop the timer and the REC badge before the re-pack.
+      clearTimer();
+      setStatus('finishing');
       const raw = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'video/webm' });
       // Re-pack so the file has a duration and seeks (copy, no re-encode; the original is kept if that fails).
       const blob = await finishRecording(raw);
@@ -353,7 +356,7 @@ export default function VideoRecorder({ lang = 'en' }: { lang?: Lang }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const busy = status === 'recording' || status === 'paused' || status === 'countdown';
+  const busy = status === 'recording' || status === 'paused' || status === 'countdown' || status === 'finishing';
   const showBgControls = effect === 'replace-bg' || effect === 'greenscreen';
 
   return (

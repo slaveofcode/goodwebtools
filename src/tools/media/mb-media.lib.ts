@@ -104,6 +104,8 @@ function capAac(audio: ConvertOpts['audio']): ConvertOpts['audio'] {
 
 /** A fast-engine job that reports no progress for this long is stopped and handed to ffmpeg. */
 export const STALL_MS = 30_000;
+/** Longer allowance before the first progress report (a file without a duration is scanned first). */
+export const FIRST_PROGRESS_MS = 120_000;
 
 /** Run one mediabunny conversion into memory; progress 0–1; abort → AbortError; stall → Error('mb-stalled'). */
 async function convert(file: Blob, ext: OutExt, opts: ConvertOpts, onProgress?: EncodeProgress, signal?: AbortSignal): Promise<Blob> {
@@ -122,18 +124,23 @@ async function convert(file: Blob, ext: OutExt, opts: ConvertOpts, onProgress?: 
     const lost = lostTracks(conversion.discardedTracks);
     if (lost.length) throw new Error(`mb-dropped: ${lost.join(', ')}`); // → ffmpeg fallback
     // Watchdog: an encoder that stops making progress would leave the page stuck forever.
+    // It rejects on its own: cancel() alone may never settle a hung encoder.
     let stalled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const arm = () => {
+    let giveUp: (e: Error) => void = () => {};
+    const watchdog = new Promise<never>((_, reject) => { giveUp = reject; });
+    const arm = (ms: number) => {
       clearTimeout(timer);
-      timer = setTimeout(() => { stalled = true; void conversion.cancel(); }, STALL_MS);
+      timer = setTimeout(() => { stalled = true; void conversion.cancel().catch(() => {}); giveUp(new Error('mb-stalled')); }, ms);
     };
-    conversion.onProgress = (p: number) => { arm(); onProgress?.(Math.min(1, Math.max(0, p))); };
+    conversion.onProgress = (p: number) => { arm(STALL_MS); onProgress?.(Math.min(1, Math.max(0, p))); };
     const onAbort = () => { void conversion.cancel(); };
     signal?.addEventListener('abort', onAbort, { once: true });
-    arm();
+    arm(FIRST_PROGRESS_MS);
     try {
-      await conversion.execute();
+      const work = conversion.execute();
+      work.catch(() => {}); // may settle after we've given up
+      await Promise.race([work, watchdog]);
     } catch (e) {
       if (signal?.aborted) throw abortError();
       if (stalled) throw new Error('mb-stalled'); // → ffmpeg fallback
@@ -330,5 +337,16 @@ export async function readMediaTags(file: Blob): Promise<MediaTags> {
     }
   } catch {
     return {};
+  }
+}
+
+/** Whether the file's header already states its duration (current Chrome writes it; Firefox and older Chromium don't). */
+export async function mbHasDuration(file: Blob): Promise<boolean> {
+  const mb = await loadMediabunny();
+  const input = openInput(mb, file);
+  try {
+    return (await input.getDurationFromMetadata()) !== null;
+  } finally {
+    input.dispose?.();
   }
 }

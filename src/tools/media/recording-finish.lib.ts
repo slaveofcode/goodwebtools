@@ -29,12 +29,19 @@ export function recordingExt(blob: Blob): 'webm' | 'ogg' | 'mp4' | null {
   return null;
 }
 
-/** Re-pack a WebM/Ogg recording so it has a duration and seeks; other files pass through. */
+/** Above this, re-packing (which holds a second copy in memory) could crash a phone tab — keep the original. */
+export const MAX_REPACK_BYTES = 512 * 1024 * 1024;
+
+/**
+ * Re-pack a WebM/Ogg recording so it has a duration and seeks. Files that
+ * already state their duration, very large files, and other formats pass through.
+ */
 export async function finishRecording(blob: Blob): Promise<Blob> {
   const ext = recordingExt(blob);
-  if (ext !== 'webm' && ext !== 'ogg') return blob;
+  if ((ext !== 'webm' && ext !== 'ogg') || blob.size > MAX_REPACK_BYTES) return blob;
   return fixRecording(blob, async b => {
-    const { mbRemux } = await import('./mb-media.lib');
+    const { mbRemux, mbHasDuration } = await import('./mb-media.lib');
+    if (await mbHasDuration(b)) return b;
     return mbRemux(b, ext);
   });
 }

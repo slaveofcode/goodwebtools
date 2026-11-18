@@ -5,6 +5,9 @@
 
 const load = () => import('../vendor/mediabunny.js');
 
+/** Above this, re-packing in the page (which holds the output in memory too) could crash it — keep the original. */
+export const MAX_REPACK_BYTES = 512 * 1024 * 1024;
+
 async function run(blob, makeFormat, makeOpts = () => ({}), onProgress) {
   const mb = await load();
   const input = new mb.Input({ source: new mb.BlobSource(blob), formats: mb.ALL_FORMATS });
@@ -25,8 +28,10 @@ async function run(blob, makeFormat, makeOpts = () => ({}), onProgress) {
 
 /** MPEG-TS (e.g. joined HLS segments) → MP4, copying the streams. */
 export async function toMp4(blob) {
+  if (blob.size > MAX_REPACK_BYTES) return null;
   try {
-    const buf = await run(blob, (mb) => new mb.Mp4OutputFormat({ fastStart: 'in-memory' }));
+    // fastStart: false writes as it goes instead of holding every sample until the end (memory).
+    const buf = await run(blob, (mb) => new mb.Mp4OutputFormat({ fastStart: false }));
     return buf ? new Blob([buf], { type: 'video/mp4' }) : null;
   } catch {
     return null;
@@ -35,7 +40,12 @@ export async function toMp4(blob) {
 
 /** A MediaRecorder WebM re-packed (copy) so it has a duration and a seek index. */
 export async function remuxWebm(blob) {
+  if (blob.size > MAX_REPACK_BYTES) return null;
   try {
+    // Already states its duration (current Chrome when not recording in slices): nothing to fix.
+    const mb = await load();
+    const probe = new mb.Input({ source: new mb.BlobSource(blob), formats: mb.ALL_FORMATS });
+    try { if ((await probe.getDurationFromMetadata()) !== null) return null; } finally { probe.dispose?.(); }
     const buf = await run(blob, (mb) => new mb.WebMOutputFormat());
     // Much smaller than the original means something was dropped: keep the original.
     return buf && buf.byteLength >= blob.size / 2 ? new Blob([buf], { type: 'video/webm' }) : null;

@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { mbRemux } from './mb-media.lib';
+import { mbRemux, mbHasDuration } from './mb-media.lib';
 
 const FIX = join(__dirname, '..', '..', '..', 'e2e', 'fixtures', 'media');
 const has = (b: Uint8Array, id: number[]) => Buffer.from(b).includes(Buffer.from(id));
@@ -26,5 +26,10 @@ describe('mbRemux', () => {
     const out = new Uint8Array(await (await mbRemux(new Blob([raw], { type: 'audio/webm' }), 'webm')).arrayBuffer());
     expect(has(out, DURATION)).toBe(true);
     expect(has(out, CUES)).toBe(true);
+  });
+
+  it('tells a file that already has a duration from one that does not', async () => {
+    expect(await mbHasDuration(new Blob([readFileSync(join(FIX, 'clip-live.webm'))]))).toBe(false);
+    expect(await mbHasDuration(new Blob([readFileSync(join(FIX, 'clip-vp9-opus.webm'))]))).toBe(true);
   });
 });
