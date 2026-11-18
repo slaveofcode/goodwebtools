@@ -28,8 +28,11 @@ export function getMediaDuration(file: Blob): Promise<number> {
   });
 }
 
+// The ffmpeg.wasm instance (the service doesn't type it).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function withFFmpegInputs<T>(inputs: Record<string, Blob>, onProgress: EncodeProgress | undefined, work: (ffmpeg: any) => Promise<T>): Promise<T> {
+type FFmpeg = any;
+
+async function withFFmpegInputs<T>(inputs: Record<string, Blob>, onProgress: EncodeProgress | undefined, work: (ffmpeg: FFmpeg) => Promise<T>): Promise<T> {
   const { loadFFmpeg, fileToU8 } = await import('@/services/ffmpeg.service');
   const ffmpeg = await loadFFmpeg();
   const cb = ({ progress }: { progress: number }) => onProgress?.(Math.min(1, progress));
@@ -49,7 +52,7 @@ async function withFFmpegInputs<T>(inputs: Record<string, Blob>, onProgress: Enc
   }
 }
 
-function withFFmpeg<T>(file: Blob, onProgress: EncodeProgress | undefined, work: (ffmpeg: any) => Promise<T>): Promise<T> {
+function withFFmpeg<T>(file: Blob, onProgress: EncodeProgress | undefined, work: (ffmpeg: FFmpeg) => Promise<T>): Promise<T> {
   return withFFmpegInputs({ in: file }, onProgress, work);
 }
 

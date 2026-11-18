@@ -149,7 +149,11 @@ test('the picker lists video and audio, downloads a file and joins an HLS stream
   const [dl2] = await Promise.all([page.waitForEvent('download'), hls.getByRole('button', { name: 'Download' }).click()]);
   expect(dl2.suggestedFilename()).toBe('Media-page-2.ts');
   expect(fs.readFileSync(await dl2.path(), 'utf8')).toBe('AAABBBCCC');
-  await expect(hls.locator('.status')).toContainText('Video Converter');
+  await expect(hls.locator('.status')).toContainText('HLS / TS to MP4');
+  // A stream kept as .ts is handed to the HLS / TS to MP4 tool.
+  const [tool] = await Promise.all([ctx.waitForEvent('page', p => p.url().includes('/tools/hls-to-mp4/')), hls.getByRole('button', { name: 'Convert' }).click()]);
+  expect(tool.url()).toContain('#gwt-handoff=');
+  await tool.close();
 
   await page.getByRole('tab', { name: 'Audio (1)' }).click();
   const [dl3] = await Promise.all([page.waitForEvent('download'), page.locator('#rows-audio .row').getByRole('button', { name: 'Download' }).click()]);
@@ -165,7 +169,7 @@ test('a real HLS stream is saved as MP4', async ({ ctx, sw, extId, server }) => 
   expect(file.subarray(4, 8).toString('latin1')).toBe('ftyp');
   expect(file.includes(Buffer.from('avc1'))).toBe(true);
   expect(file.includes(Buffer.from('mp4a'))).toBe(true);
-  await expect(row.locator('.status')).not.toContainText('Video Converter');
+  await expect(row.locator('.status')).not.toContainText('HLS / TS to MP4');
 });
 
 test('an encrypted stream is explained, not downloaded', async ({ ctx, sw, extId, server }) => {
