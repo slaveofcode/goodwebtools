@@ -7,6 +7,9 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { downloadService } from '@/services/download';
 import { formatBytes } from '@/tools/image/canvas.lib';
 import { trimMedia } from '@/tools/media/encode.lib';
+import { mbTrim, probeMedia } from '@/tools/media/mb-media.lib';
+import { runWithFallback } from '@/tools/media/run-media.lib';
+import type { Engine } from '@/tools/media/engine.lib';
 import { parseTime, formatTime, validateTrim } from '@/tools/media/trim.lib';
 import type { Lang } from '@/i18n/config';
 
@@ -15,14 +18,16 @@ const TR: Record<Lang, {
   selection: string; badRange: string; badBounds: string; tooShort: string;
   fast: string; fastHelp: string; privacy: string; trim: string; trimming: string; clear: string;
   working: string; loadEngine: string; cutting: string; result: string; download: string; error: string;
+  cancel: string; fastMode: string; slowMode: string;
 }> = {
   en: {
     dropTitle: 'Drop an audio or video file, or click to browse',
     dropSubtitle: 'Cut out a section — trim a video or make an MP3 ringtone, in your browser',
     start: 'Start', end: 'End', grabTime: 'Use current',
     selection: 'Selection', badRange: 'End must be after start.', badBounds: 'Times must be within the clip.', tooShort: 'Selection is too short.',
-    fast: 'Fast (no re-encode)', fastHelp: 'lossless, cuts at nearest keyframe',
-    privacy: 'Runs entirely in your browser via ffmpeg.wasm — the file never leaves your device.',
+    fast: 'Fast (no re-encode)', fastHelp: 'lossless; in fast mode the cut is also exact',
+    privacy: 'Runs entirely in your browser — the file never leaves your device.',
+    cancel: 'Cancel', fastMode: 'Fast mode (hardware)', slowMode: 'Compatibility mode — slower in this browser',
     trim: 'Trim', trimming: 'Trimming…', clear: 'Clear',
     working: 'Working…', loadEngine: 'Loading media engine (first run downloads ~31 MB)…', cutting: 'Cutting…',
     result: 'Result', download: 'Download', error: 'Could not trim this file.',
@@ -32,8 +37,9 @@ const TR: Record<Lang, {
     dropSubtitle: 'Potong satu bagian — pangkas video atau buat ringtone MP3, di browser Anda',
     start: 'Mulai', end: 'Akhir', grabTime: 'Pakai posisi',
     selection: 'Seleksi', badRange: 'Akhir harus setelah mulai.', badBounds: 'Waktu harus dalam durasi klip.', tooShort: 'Seleksi terlalu pendek.',
-    fast: 'Cepat (tanpa encode ulang)', fastHelp: 'lossless, memotong di keyframe terdekat',
-    privacy: 'Berjalan sepenuhnya di browser Anda via ffmpeg.wasm — file tidak pernah keluar dari perangkat Anda.',
+    fast: 'Cepat (tanpa encode ulang)', fastHelp: 'lossless; di mode cepat potongannya juga presisi',
+    privacy: 'Berjalan sepenuhnya di browser Anda — file tidak pernah keluar dari perangkat Anda.',
+    cancel: 'Batal', fastMode: 'Mode cepat (perangkat keras)', slowMode: 'Mode kompatibilitas — lebih lambat di browser ini',
     trim: 'Potong', trimming: 'Memotong…', clear: 'Bersihkan',
     working: 'Memproses…', loadEngine: 'Memuat mesin media (unduhan pertama ~31 MB)…', cutting: 'Memotong…',
     result: 'Hasil', download: 'Unduh', error: 'Tidak dapat memotong file ini.',
@@ -55,6 +61,10 @@ export default function MediaTrim({ lang = 'en' }: { lang?: Lang }) {
   const [stage, setStage] = useState('');
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
+  const [engine, setEngine] = useState<Engine | null>(null);
+  const [outExt, setOutExt] = useState('');
+  const [meta, setMeta] = useState('');
+  const abortRef = useRef<AbortController | null>(null);
   const playerRef = useRef<HTMLVideoElement & HTMLAudioElement>(null);
 
   useEffect(() => () => { if (srcUrl) URL.revokeObjectURL(srcUrl); }, [srcUrl]);
@@ -97,19 +107,30 @@ export default function MediaTrim({ lang = 'en' }: { lang?: Lang }) {
     setError('');
     setResult(null);
     setPercent(0);
+    setEngine(null);
+    setMeta('');
     const ext = (file.name.match(/\.([^.]+)$/)?.[1] || (isVideo ? 'mp4' : 'mp3')).toLowerCase();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    const onProgress = (p: number) => setPercent(Math.min(100, Math.round(p * 100)));
     try {
       setStage(t.cutting);
-      const { blob } = await trimMedia(
-        file,
-        { startSec: start, endSec: end, durationSec: duration, isVideo, fast, ext },
-        p => setPercent(Math.min(100, Math.round(p * 100))),
+      const run = await runWithFallback(
+        { kind: 'trim', inputExt: ext, needAudio: 'copy' },
+        signal => mbTrim(file, { startSec: start, endSec: end }, onProgress, signal),
+        () => trimMedia(file, { startSec: start, endSec: end, durationSec: duration, isVideo, fast, ext }, onProgress),
+        ctrl.signal,
       );
+      const blob = run.value.blob;
+      setEngine(run.engine);
+      setOutExt(run.value.ext);
+      probeMedia(blob).then(m => setMeta(`${m.durationSec.toFixed(2)} s`)).catch(() => {});
       setResult(blob);
       setResultUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(blob); });
     } catch (err) {
-      setError(err instanceof Error && err.message ? err.message : t.error);
+      if (!(err instanceof DOMException && err.name === 'AbortError')) setError(err instanceof Error && err.message ? err.message : t.error);
     } finally {
+      abortRef.current = null;
       setBusy(false);
       setStage('');
     }
@@ -117,7 +138,7 @@ export default function MediaTrim({ lang = 'en' }: { lang?: Lang }) {
 
   const download = () => {
     if (!result || !file) return;
-    const ext = result.type.startsWith('audio/') ? (result.type === 'audio/mpeg' ? 'mp3' : result.type.split('/')[1]) : (file.name.match(/\.([^.]+)$/)?.[1] || 'mp4');
+    const ext = outExt || (result.type.startsWith('audio/') ? (result.type === 'audio/mpeg' ? 'mp3' : result.type.split('/')[1]) : (file.name.match(/\.([^.]+)$/)?.[1] || 'mp4'));
     downloadService.download(result, file.name.replace(/\.[^.]+$/, '') + '-trimmed.' + ext);
   };
 
@@ -176,6 +197,7 @@ export default function MediaTrim({ lang = 'en' }: { lang?: Lang }) {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={run} disabled={!file || !valid.ok || busy}>{busy ? t.trimming : t.trim}</Button>
+        {busy && <Button variant="ghost" onClick={() => abortRef.current?.abort()}>{t.cancel}</Button>}
         <Button variant="ghost" onClick={() => { setFile(null); setResult(null); setError(''); setDuration(0); }}>{t.clear}</Button>
       </div>
 
@@ -189,6 +211,8 @@ export default function MediaTrim({ lang = 'en' }: { lang?: Lang }) {
             <span className="font-bold uppercase tracking-wide text-muted-foreground">{t.result}</span>
             <span className="font-mono text-muted-foreground">{formatBytes(result.size)}</span>
           </div>
+          {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
+          {meta && <p data-testid="result-meta" className="font-mono text-xs text-muted-foreground">{meta}</p>}
           {isVideo
             ? <video src={resultUrl} controls className="block max-h-[60vh] w-auto max-w-full border-2 border-border" />
             : <audio src={resultUrl} controls className="w-full" />}

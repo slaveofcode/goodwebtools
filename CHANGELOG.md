@@ -11,6 +11,7 @@ All notable changes to GoodWebTools are documented here.
 - **Contact** and **Terms of use** pages, a site footer, and this public changelog.
 
 ### Changed
+- **Much faster video and audio tools, especially on phones:** Video Compressor, Video Converter, Trimmer, Video → Audio and Audio Converter now use your device's hardware video and audio encoders (WebCodecs, via mediabunny) when the browser supports them, with the previous engine (ffmpeg.wasm) as an automatic fallback. Each tool shows which mode ran and can be cancelled. Video → Audio can keep the original soundtrack with no quality loss, the Trimmer cuts losslessly and exactly, the Compressor lowers the resolution when the size budget is small, and the Converter adds MKV.
 - Image Compressor handles HEIC, SVG, very large and phone-camera photos more reliably.
 - Internal links now point straight at each page's address (no redirect), and the site always uses HTTPS.
 - The NIK Decoder explains that it reads a NIK you already have and can't look one up by name. The report form asks you not to include personal data.

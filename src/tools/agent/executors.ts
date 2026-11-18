@@ -36,6 +36,18 @@ export interface AgentExecutor {
 const re = (r: RegExp) => (q: string) => r.test(q);
 
 /** Human-friendly byte size: KB under 1 MB (so a small output never reads "0 MB"), MB above. */
+/** The media engine that ran, appended to an action's result text. */
+function withMode(text: string, engine: 'mediabunny' | 'ffmpeg'): string {
+  return `${text} (${engine === 'mediabunny' ? 'fast mode' : 'compatibility mode'})`;
+}
+
+/** Media actions run like their tool pages: fast engine first, ffmpeg.wasm as fallback. */
+async function mediaRunner() {
+  const [{ runWithFallback }, mb] = await Promise.all([import('@/tools/media/run-media.lib'), import('@/tools/media/mb-media.lib')]);
+  return { runWithFallback, mb, signal: new AbortController().signal };
+}
+const extOf = (f: File) => (f.name.match(/\.([^.]+)$/)?.[1] || '').toLowerCase();
+
 export function humanSize(bytes: number): string {
   const kb = bytes / 1024;
   return kb >= 1024 ? `${Math.round((kb / 1024) * 10) / 10} MB` : `${Math.max(1, Math.round(kb))} KB`;
@@ -574,17 +586,25 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     ],
     execute: async ({ files, params }, onProgress) => {
       const { getMediaDuration, compressVideo } = await import('@/tools/media/encode.lib');
+      const { runWithFallback, mb, signal } = await mediaRunner();
       const durationSec = await getMediaDuration(files.file);
       if (!(durationSec > 0)) throw new Error("couldn't read the video's duration");
       const keepAudio = String(params.keepAudio ?? 'yes').toLowerCase() !== 'no';
-      const blob = await compressVideo(files.file, {
+      const opts = {
         targetBytes: (Number(params.targetMb) || 25) * 1024 * 1024,
         durationSec,
         maxWidth: Number(params.maxWidth) || 0,
         audioKbps: keepAudio ? 128 : 0,
-      }, p => onProgress?.(p));
+      };
+      const r = await runWithFallback(
+        { kind: 'compress-video', inputExt: extOf(files.file), needVideo: 'avc', needAudio: keepAudio ? 'aac' : null },
+        s => mb.mbCompressVideo(files.file, opts, p => onProgress?.(p), s).then(x => x.blob),
+        () => compressVideo(files.file, opts, p => onProgress?.(p)),
+        signal,
+      );
+      const blob = r.value;
       if (blob.size === 0) throw new Error('compression produced an empty file — try a larger target size');
-      return { blob, filename: 'compressed.mp4', text: `compressed to ${humanSize(blob.size)}` };
+      return { blob, filename: 'compressed.mp4', text: withMode(`compressed to ${humanSize(blob.size)}`, r.engine) };
     },
   },
   {
@@ -597,8 +617,16 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
       const fmt = String(params.format ?? 'mp4').toLowerCase();
       const spec = VIDEO_FORMATS.find(f => f.id === fmt);
       if (!spec) throw new Error(`unsupported format "${fmt}" — use mp4, webm or mov`);
-      const blob = await convertVideo(files.file, { format: spec.id }, p => onProgress?.(p));
-      return { blob, filename: `converted.${spec.id}`, text: `converted to ${spec.id.toUpperCase()} — ${Math.round(blob.size / 1024 / 1024 * 10) / 10} MB` };
+      const { runWithFallback, mb, signal } = await mediaRunner();
+      const webm = spec.id === 'webm';
+      const r = await runWithFallback(
+        { kind: 'convert-video', inputExt: extOf(files.file), needVideo: webm ? 'vp9' : 'avc', needAudio: webm ? 'opus' : 'aac' },
+        s => mb.mbConvertVideo(files.file, { format: spec.id, quality: 'medium', maxWidth: 0, muted: false, trimStart: 0, trimDuration: 0 }, p => onProgress?.(p), s),
+        () => convertVideo(files.file, { format: spec.id }, p => onProgress?.(p)),
+        signal,
+      );
+      const blob = r.value;
+      return { blob, filename: `converted.${spec.id}`, text: withMode(`converted to ${spec.id.toUpperCase()} — ${Math.round(blob.size / 1024 / 1024 * 10) / 10} MB`, r.engine) };
     },
   },
   {
@@ -623,11 +651,19 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     files: [{ key: 'file', accept: 'audio/*', label: 'Audio' }],
     params: [{ key: 'targetMb', type: 'number', label: 'Target MB', default: 5 }],
     execute: async ({ files, params }, onProgress) => {
-      const { getMediaDuration, compressAudio } = await import('@/tools/media/encode.lib');
+      const { getMediaDuration, compressAudio, computeAudioKbps } = await import('@/tools/media/encode.lib');
+      const { runWithFallback, mb, signal } = await mediaRunner();
       const durationSec = await getMediaDuration(files.file);
       if (!(durationSec > 0)) throw new Error("couldn't read the audio's duration");
-      const blob = await compressAudio(files.file, { targetBytes: (Number(params.targetMb) || 5) * 1024 * 1024, durationSec }, p => onProgress?.(p));
-      return { blob, filename: 'compressed.mp3', text: `compressed to ${Math.round(blob.size / 1024)} KB` };
+      const targetBytes = (Number(params.targetMb) || 5) * 1024 * 1024;
+      const r = await runWithFallback(
+        { kind: 'convert-audio', inputExt: extOf(files.file), needAudio: 'mp3' },
+        s => mb.mbConvertAudio(files.file, { format: 'mp3', kbps: computeAudioKbps(targetBytes, durationSec), trimStart: 0, trimDuration: 0 }, p => onProgress?.(p), s),
+        () => compressAudio(files.file, { targetBytes, durationSec }, p => onProgress?.(p)),
+        signal,
+      );
+      const blob = r.value;
+      return { blob, filename: 'compressed.mp3', text: withMode(`compressed to ${Math.round(blob.size / 1024)} KB`, r.engine) };
     },
   },
   {
@@ -637,8 +673,16 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
     params: [],
     execute: async ({ files }, onProgress) => {
       const { extractAudio } = await import('@/tools/media/encode.lib');
-      const blob = await extractAudio(files.file, p => onProgress?.(p));
-      return { blob, filename: 'audio.mp3', text: `extracted ${Math.round(blob.size / 1024)} KB of audio` };
+      const { runWithFallback, mb, signal } = await mediaRunner();
+      // The request is phrased as "to MP3", so the assistant keeps MP3 output.
+      const r = await runWithFallback(
+        { kind: 'extract-audio', inputExt: extOf(files.file), needAudio: 'mp3' },
+        s => mb.mbExtractAudio(files.file, { as: 'mp3' }, p => onProgress?.(p), s).then(x => x.blob),
+        () => extractAudio(files.file, p => onProgress?.(p)),
+        signal,
+      );
+      const blob = r.value;
+      return { blob, filename: 'audio.mp3', text: withMode(`extracted ${Math.round(blob.size / 1024)} KB of audio`, r.engine) };
     },
   },
   {
@@ -660,8 +704,15 @@ export const AGENT_EXECUTORS: AgentExecutor[] = [
       const endSec = parseTime(String(params.end ?? '')) ?? durationSec;
       const isVideo = files.file.type.startsWith('video');
       const ext = (files.file.name.match(/\.([^.]+)$/)?.[1] || (isVideo ? 'mp4' : 'mp3')).toLowerCase();
-      const r = await trimMedia(files.file, { startSec, endSec, durationSec, isVideo, ext }, p => onProgress?.(p));
-      return { blob: r.blob, filename: `trimmed.${r.ext}`, text: `trimmed to ${Math.round((endSec - startSec) * 10) / 10}s` };
+      const { runWithFallback, mb, signal } = await mediaRunner();
+      const run = await runWithFallback(
+        { kind: 'trim', inputExt: ext, needAudio: 'copy' },
+        s => mb.mbTrim(files.file, { startSec, endSec }, p => onProgress?.(p), s),
+        () => trimMedia(files.file, { startSec, endSec, durationSec, isVideo, ext }, p => onProgress?.(p)),
+        signal,
+      );
+      const r = run.value;
+      return { blob: r.blob, filename: `trimmed.${r.ext}`, text: withMode(`trimmed to ${Math.round((endSec - startSec) * 10) / 10}s`, run.engine) };
     },
   },
 ];

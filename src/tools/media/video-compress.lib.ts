@@ -85,3 +85,36 @@ export function computeTargetBitrate(input: BitrateInput): BitratePlan {
     overBudget: true,
   };
 }
+
+const even = (n: number) => Math.max(2, Math.round(n / 2) * 2);
+
+/**
+ * Output size for a compress job, in display orientation (a portrait phone clip
+ * stored as 1920×1080 + 90° rotation comes out 720×1280, not sideways). When the
+ * bitrate budget is too small for the source, the shorter side is capped — a
+ * sharp 720p looks better than a blocky 1080p: under 1500 kbps → 720, under
+ * 600 kbps → 480. `userMaxWidth` (> 0) then caps the displayed width. Never upscales.
+ */
+export function planResolution(
+  src: { width: number; height: number; rotation: 0 | 90 | 180 | 270 },
+  videoKbps: number,
+  userMaxWidth: number,
+): { width: number; height: number } {
+  const sideways = src.rotation === 90 || src.rotation === 270;
+  const w = sideways ? src.height : src.width;
+  const h = sideways ? src.width : src.height;
+  const cap = videoKbps < 600 ? 480 : videoKbps < 1500 ? 720 : Infinity;
+  let scale = Math.min(1, cap / Math.min(w, h));
+  if (userMaxWidth > 0) scale = Math.min(scale, userMaxWidth / w);
+  return { width: even(w * scale), height: even(h * scale) };
+}
+
+/**
+ * Hardware encoders hit a bitrate less exactly than x264. If the result is more
+ * than 2% over the target, return a lower video bitrate for one retry (scaled by
+ * the overshoot, with a 3% margin, never below MIN_VIDEO_KBPS); otherwise null.
+ */
+export function sizeRetryKbps(targetBytes: number, actualBytes: number, videoKbps: number): number | null {
+  if (actualBytes <= targetBytes * 1.02) return null;
+  return Math.max(MIN_VIDEO_KBPS, Math.floor(videoKbps * (targetBytes / actualBytes) * 0.97));
+}
