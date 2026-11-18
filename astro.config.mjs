@@ -119,6 +119,13 @@ export default defineConfig({
           // jszip is shared with docx-preview, so it gets its own chunk rather than
           // being merged into epubjs.
           manualChunks(id) {
+            // Vite's tiny dynamic-import helper is shared by every lazy import.
+            // Give it its own chunk: otherwise Rollup folds it into whichever
+            // manual chunk reaches it first (it ended up inside the 1.1 MB
+            // mediabunny-aac chunk, which every page then downloaded).
+            if (id.includes('vite/preload-helper') || id.includes('vite/modulepreload-polyfill')) return 'preload-helper';
+            // Same for the small shared stubs (Node built-ins, CommonJS interop).
+            if (id.includes('__vite-browser-external') || id.includes('commonjsHelpers')) return 'vite-helpers';
             // Mediabunny (media engine) and its WASM audio-encoder add-ons load
             // only when a media tool runs — stable names keep them out of the
             // PWA precache via globIgnores.
