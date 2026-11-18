@@ -52,10 +52,15 @@ export function useAudioRecorder() {
       const recorder = new MediaRecorder(stream);
       recorderRef.current = recorder;
       recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data); };
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         const type = chunksRef.current[0]?.type || 'audio/webm';
-        setBlob(new Blob(chunksRef.current, { type }));
         releaseStream();
+        // Re-pack so the file has a duration and seeks (copy, no re-encode; the original is kept if that fails).
+        const raw = new Blob(chunksRef.current, { type });
+        const fixed = await import('@/tools/media/recording-finish.lib')
+          .then(m => m.finishRecording(raw))
+          .catch(() => raw); // e.g. offline before the module was cached
+        setBlob(fixed);
       };
       recorder.start();
       setSeconds(0);
