@@ -29,17 +29,17 @@ export function getMediaDuration(file: Blob): Promise<number> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function withFFmpeg<T>(file: Blob, onProgress: EncodeProgress | undefined, work: (ffmpeg: any) => Promise<T>): Promise<T> {
+async function withFFmpegInputs<T>(inputs: Record<string, Blob>, onProgress: EncodeProgress | undefined, work: (ffmpeg: any) => Promise<T>): Promise<T> {
   const { loadFFmpeg, fileToU8 } = await import('@/services/ffmpeg.service');
   const ffmpeg = await loadFFmpeg();
   const cb = ({ progress }: { progress: number }) => onProgress?.(Math.min(1, progress));
   ffmpeg.on('progress', cb);
   try {
     try {
-      // Reads the whole file into memory then copies it into the WASM heap
+      // Reads each file into memory then copies it into the WASM heap
       // (~2× the file size). On phones this overruns the tab's memory budget for
       // large videos and throws a cryptic NotReadableError — surface a clear one.
-      await ffmpeg.writeFile('in', await fileToU8(file));
+      for (const [name, file] of Object.entries(inputs)) await ffmpeg.writeFile(name, await fileToU8(file));
     } catch {
       throw new Error('This file is too large to load in your browser — it ran out of memory. Try a shorter/smaller clip, or use the desktop app.');
     }
@@ -47,6 +47,19 @@ async function withFFmpeg<T>(file: Blob, onProgress: EncodeProgress | undefined,
   } finally {
     ffmpeg.off('progress', cb);
   }
+}
+
+function withFFmpeg<T>(file: Blob, onProgress: EncodeProgress | undefined, work: (ffmpeg: any) => Promise<T>): Promise<T> {
+  return withFFmpegInputs({ in: file }, onProgress, work);
+}
+
+/** Run one ffmpeg command: write each input under its name, exec `args`, return `out.name` as a Blob. */
+export function runFFmpeg(inputs: Record<string, Blob>, args: string[], out: { name: string; mime: string }, onProgress?: EncodeProgress): Promise<Blob> {
+  return withFFmpegInputs(inputs, onProgress, async ffmpeg => {
+    await ffmpeg.exec(args);
+    const data = await ffmpeg.readFile(out.name);
+    return new Blob([data], { type: out.mime });
+  });
 }
 
 export interface CompressVideoOpts {

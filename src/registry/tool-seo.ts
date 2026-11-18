@@ -3247,6 +3247,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: "Which format should I pick?", a: "PNG keeps every detail (larger files), JPG is smallest for photos, and WebP is small with better quality than JPG." },
     ],
   },
+  'video-rotate': {
+    title: "Rotate Video Online — Turn a Video 90° Without Losing Quality",
+    description: "Free online tool to rotate a video 90°, 180° or 270°, or mirror it, without re-encoding — instant and full quality. In your browser, nothing uploaded.",
+    intro: "Rotate Video fixes a sideways or upside-down clip in seconds. Choose left 90°, 180° or right 90° and, if you like, mirror the picture. By default nothing is re-encoded: the rotation is written into the file, which phones, browsers and most players follow, so it's instant and the quality is exactly the original. For the rare player or editor that ignores rotation, tick “Bake the rotation into the picture” to re-encode it upright. Everything happens in your browser.",
+    howTo: [
+      "Drop a video onto the box, or click to choose one.",
+      "Pick Left 90°, 180° or Right 90° — the preview shows the result.",
+      "Tick Mirror if the picture is flipped, and Bake the rotation in only if a player ignores rotation.",
+      "Press Rotate video, then Download.",
+    ],
+    faqs: [
+      { q: "Is my video uploaded?", a: "No. The video is processed in your browser and never leaves your device." },
+      { q: "Does rotating lose quality?", a: "No. By default the video isn't re-encoded at all — only the rotation in the file changes, so it's instant and identical in quality. Baking the rotation in re-encodes at high quality." },
+      { q: "Why is the result an MP4?", a: "WebM and some other formats can't store a rotation, so the rotated video is saved as MP4 (or MOV for a MOV file). The picture and sound are copied as they are." },
+      { q: "My editor still shows it sideways — what now?", a: "Some older players and editors ignore rotation information. Tick “Bake the rotation into the picture” and rotate again." },
+    ],
+  },
   'video-compress': {
     title: 'Free Video Compressor — Compress Video to a Target Size',
     description: 'Compress a video to a target file size (e.g. under 25 MB for Discord or 16 MB for WhatsApp) right in your browser. Nothing is uploaded — the video stays on your device.',
@@ -6784,6 +6801,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: "Apakah frame-nya beresolusi penuh?", a: "Ya. Setiap frame disimpan dalam ukuran asli video, ditegakkan bila video punya rotasi." },
       { q: "Berapa banyak frame yang bisa disimpan sekaligus?", a: "Hingga 300 per zip. Untuk video panjang, pilih jarak antar-frame yang lebih besar." },
       { q: "Format mana yang sebaiknya dipilih?", a: "PNG menyimpan semua detail (file lebih besar), JPG paling kecil untuk foto, dan WebP kecil dengan kualitas lebih baik daripada JPG." },
+    ],
+  },
+  'video-rotate': {
+    title: "Putar Video Online — Putar Video 90° Tanpa Turun Kualitas",
+    description: "Tool online gratis untuk memutar video 90°, 180°, atau 270°, atau mencerminkannya, tanpa encode ulang — instan dan kualitas penuh. Di browser, tidak ada yang diunggah.",
+    intro: "Putar Video memperbaiki klip yang miring atau terbalik dalam hitungan detik. Pilih kiri 90°, 180°, atau kanan 90° dan, bila perlu, cerminkan gambarnya. Secara bawaan tidak ada encode ulang: rotasi ditulis ke dalam file, yang diikuti ponsel, browser, dan sebagian besar pemutar, jadi prosesnya instan dan kualitasnya persis seperti aslinya. Untuk pemutar atau editor yang mengabaikan rotasi, centang “Tanamkan rotasi ke gambar” agar video di-encode ulang dalam posisi tegak. Semuanya terjadi di browser Anda.",
+    howTo: [
+      "Letakkan video di kotak, atau klik untuk memilihnya.",
+      "Pilih Kiri 90°, 180°, atau Kanan 90° — pratinjau menampilkan hasilnya.",
+      "Centang Cerminkan bila gambarnya terbalik, dan Tanamkan rotasi hanya bila ada pemutar yang mengabaikan rotasi.",
+      "Tekan Putar video, lalu Unduh.",
+    ],
+    faqs: [
+      { q: "Apakah video saya diunggah?", a: "Tidak. Video diproses di browser Anda dan tidak pernah keluar dari perangkat." },
+      { q: "Apakah memutar video menurunkan kualitas?", a: "Tidak. Secara bawaan video tidak di-encode ulang sama sekali — hanya rotasi di dalam file yang berubah, jadi instan dan kualitasnya identik. Menanamkan rotasi meng-encode ulang dengan kualitas tinggi." },
+      { q: "Kenapa hasilnya MP4?", a: "WebM dan beberapa format lain tidak bisa menyimpan rotasi, jadi video yang diputar disimpan sebagai MP4 (atau MOV untuk file MOV). Gambar dan suaranya disalin apa adanya." },
+      { q: "Editor saya masih menampilkannya miring — lalu bagaimana?", a: "Beberapa pemutar dan editor lama mengabaikan informasi rotasi. Centang “Tanamkan rotasi ke gambar” lalu putar lagi." },
     ],
   },
   'video-compress': {

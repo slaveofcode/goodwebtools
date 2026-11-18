@@ -193,6 +193,7 @@ const ID_LABELS: Record<string, { name: string; summary: string }> = {
   "video-convert": { name: "Konverter Video", summary: "Konversi, kompres, potong atau ubah ukuran video (sisi klien)" },
   "media-info": { name: "Info Media", summary: "Lihat codec, resolusi, frame rate, bitrate, dan tag file video/audio" },
   "video-frames": { name: "Ambil Frame Video", summary: "Simpan frame video sebagai PNG/JPG/WebP \u2014 satu frame atau setiap N detik" },
+  "video-rotate": { name: "Putar Video", summary: "Putar video 90/180/270\u00b0 tanpa encode ulang" },
   "video-compress": { name: "Kompres Video", summary: "Kompres video ke ukuran file target (sisi klien)" },
   "media-trim": { name: "Pemotong Audio & Video", summary: "Potong bagian dari audio atau video (sisi klien)" },
   "video-to-audio": { name: "Video → Audio", summary: "Ekstrak trek audio dari video (sisi klien)" },

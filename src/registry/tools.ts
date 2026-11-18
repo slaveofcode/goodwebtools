@@ -2094,6 +2094,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'video-rotate',
+    name: "Rotate Video",
+    category: 'Media',
+    route: '/tools/video-rotate',
+    keywords: ["rotate video", "video rotation", "turn video", "flip video", "mirror video", "sideways video", "upside down video", "portrait", "landscape", "90 degrees", "without re-encoding"],
+    icon: RotateCw,
+    summary: "Rotate a video 90/180/270\u00b0 without re-encoding",
+    load: () => import('@/islands/media/VideoRotate'),
+    status: 'beta'
+  },
+  {
     id: 'video-compress',
     name: 'Video Compressor',
     category: 'Media',
