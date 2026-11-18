@@ -3216,7 +3216,7 @@ const en: Record<string, ToolSeoContent> = {
   'video-compress': {
     title: 'Free Video Compressor — Compress Video to a Target Size',
     description: 'Compress a video to a target file size (e.g. under 25 MB for Discord or 16 MB for WhatsApp) right in your browser. Nothing is uploaded — the video stays on your device.',
-    intro: 'This free video compressor shrinks a clip to a file size you choose — pick a preset like 16 MB (WhatsApp) or 25 MB (Discord), or type your own target, and it calculates the right bitrate and re-encodes to MP4 with ffmpeg running in your browser. Your video is never uploaded.',
+    intro: 'This free video compressor shrinks a clip to a file size you choose — pick a preset like 16 MB (WhatsApp) or 25 MB (Discord), or type your own target, and it calculates the right bitrate and re-encodes to MP4 in your browser — using your phone or computer’s hardware video encoder when the browser supports it, so even HD clips finish quickly. Your video is never uploaded.',
     howTo: [
       'Drop a video onto the box or click to browse for one.',
       'Pick a target size — 8/16/25/50/100 MB — or choose Custom and type your own.',
@@ -3224,10 +3224,10 @@ const en: Record<string, ToolSeoContent> = {
       'Click Compress, watch the progress bar, then preview and download the smaller MP4.',
     ],
     faqs: [
-      { q: 'Is my video uploaded to a server?', a: 'No. Compression runs entirely in your browser via ffmpeg.wasm, so the video never leaves your device — ideal for private clips or large files.' },
+      { q: 'Is my video uploaded to a server?', a: 'No. Compression runs entirely in your browser, so the video never leaves your device — ideal for private clips or large files.' },
       { q: 'How does compressing to a target size work?', a: 'The tool reads your clip\'s length, works out the bitrate that fits your chosen size, and encodes to that bitrate. The result usually lands just under the target so it clears upload limits like WhatsApp or Discord.' },
       { q: 'Why is the result sometimes bigger than my target?', a: 'If the target is very small for a long clip, video quality would be unusable, so a minimum quality is kept and the tool warns you. Try a shorter clip, a smaller width, or a larger target.' },
-      { q: 'Why is the first run slow?', a: 'The first compression downloads the video engine (about 31 MB) and encoding is CPU-bound, so long or high-resolution clips take longer. After the first load the engine is cached for next time.' },
+      { q: 'Why is it fast in one browser and slow in another?', a: 'In browsers that support WebCodecs (Chrome, Edge, Samsung Internet and most recent browsers) it uses your device’s hardware video encoder — the same chip that records video — so it is fast, even on phones. Other browsers use a compatibility mode that encodes in software: it downloads a video engine (about 31 MB) the first time and is much slower on long or high-resolution clips. The page shows which mode ran.' },
     ],
   },
   'video-convert': {
@@ -6721,7 +6721,7 @@ const id: Record<string, ToolSeoContent> = {
   'video-compress': {
     title: 'Kompres Video Gratis — Perkecil Video ke Ukuran Target',
     description: 'Kompres video ke ukuran file target (misalnya di bawah 25 MB untuk Discord atau 16 MB untuk WhatsApp) langsung di browser Anda. Tidak ada yang diunggah — video tetap di perangkat Anda.',
-    intro: 'Tool kompres video gratis ini memperkecil klip ke ukuran file yang Anda pilih — pilih preset seperti 16 MB (WhatsApp) atau 25 MB (Discord), atau ketik target Anda sendiri, lalu tool menghitung bitrate yang tepat dan meng-encode ulang ke MP4 dengan ffmpeg yang berjalan di browser Anda. Video Anda tidak pernah diunggah.',
+    intro: 'Tool kompres video gratis ini memperkecil klip ke ukuran file yang Anda pilih — pilih preset seperti 16 MB (WhatsApp) atau 25 MB (Discord), atau ketik target Anda sendiri, lalu tool menghitung bitrate yang tepat dan meng-encode ulang ke MP4 di browser Anda — memakai encoder video perangkat keras di HP atau komputer Anda bila browser mendukung, sehingga klip HD pun cepat selesai. Video Anda tidak pernah diunggah.',
     howTo: [
       'Jatuhkan video ke dalam kotak atau klik untuk memilihnya.',
       'Pilih ukuran target — 8/16/25/50/100 MB — atau pilih Custom dan ketik target Anda sendiri.',
@@ -6729,10 +6729,10 @@ const id: Record<string, ToolSeoContent> = {
       'Klik Compress, amati bilah progres, lalu pratinjau dan unduh MP4 yang lebih kecil.',
     ],
     faqs: [
-      { q: 'Apakah video saya diunggah ke server?', a: 'Tidak. Kompresi berjalan sepenuhnya di browser Anda melalui ffmpeg.wasm, jadi video tidak pernah meninggalkan perangkat Anda — ideal untuk klip pribadi atau file besar.' },
+      { q: 'Apakah video saya diunggah ke server?', a: 'Tidak. Kompresi berjalan sepenuhnya di browser Anda, jadi video tidak pernah meninggalkan perangkat Anda — ideal untuk klip pribadi atau file besar.' },
       { q: 'Bagaimana cara kerja kompres ke ukuran target?', a: 'Tool membaca durasi klip Anda, menghitung bitrate yang pas untuk ukuran pilihan Anda, lalu meng-encode ke bitrate itu. Hasilnya biasanya sedikit di bawah target agar lolos batas unggah seperti WhatsApp atau Discord.' },
       { q: 'Mengapa hasilnya kadang lebih besar dari target?', a: 'Jika target sangat kecil untuk klip yang panjang, kualitas video akan tidak layak, jadi kualitas minimum dipertahankan dan tool memberi peringatan. Coba klip lebih pendek, lebar lebih kecil, atau target lebih besar.' },
-      { q: 'Mengapa proses pertama lambat?', a: 'Kompresi pertama mengunduh engine video (sekitar 31 MB) dan encoding bergantung pada CPU, jadi klip yang panjang atau beresolusi tinggi memerlukan waktu lebih lama. Setelah pemuatan pertama, engine tersimpan di cache.' },
+      { q: 'Mengapa di satu browser cepat dan di browser lain lambat?', a: 'Di browser yang mendukung WebCodecs (Chrome, Edge, Samsung Internet, dan sebagian besar browser terbaru) tool memakai encoder video perangkat keras di perangkat Anda — chip yang sama dengan yang merekam video — sehingga cepat, bahkan di HP. Browser lain memakai mode kompatibilitas yang meng-encode secara software: mengunduh engine video (sekitar 31 MB) saat pertama kali dan jauh lebih lambat untuk klip yang panjang atau beresolusi tinggi. Halaman menampilkan mode mana yang berjalan.' },
     ],
   },
   'video-convert': {
