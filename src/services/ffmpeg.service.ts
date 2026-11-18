@@ -5,6 +5,8 @@
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let ffmpegPromise: Promise<any> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let ffmpegInstance: any = null;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadFFmpeg(): Promise<any> {
@@ -14,6 +16,7 @@ export async function loadFFmpeg(): Promise<any> {
       const { toBlobURL } = await import('@ffmpeg/util');
       const base = new URL('/models/ffmpeg/', location.origin).href;
       const ffmpeg = new FFmpeg();
+      ffmpegInstance = ffmpeg;
       await ffmpeg.load({
         coreURL: await toBlobURL(`${base}ffmpeg-core.js`, 'text/javascript'),
         wasmURL: await toBlobURL(`${base}ffmpeg-core.wasm`, 'application/wasm'),
@@ -22,6 +25,18 @@ export async function loadFFmpeg(): Promise<any> {
     })();
   }
   return ffmpegPromise;
+}
+
+/**
+ * Stop whatever ffmpeg is doing (the user pressed Cancel). ffmpeg.wasm can't
+ * abort a single job, so the worker is terminated; the next loadFFmpeg()
+ * starts a fresh instance.
+ */
+export function cancelFFmpeg(): void {
+  if (!ffmpegInstance) return;
+  try { ffmpegInstance.terminate(); } catch { /* already gone */ }
+  ffmpegInstance = null;
+  ffmpegPromise = null;
 }
 
 /** Read a File/Blob into a Uint8Array for ffmpeg.writeFile. */

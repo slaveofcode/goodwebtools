@@ -119,6 +119,12 @@ export default defineConfig({
           // jszip is shared with docx-preview, so it gets its own chunk rather than
           // being merged into epubjs.
           manualChunks(id) {
+            // Mediabunny (media engine) and its WASM audio-encoder add-ons load
+            // only when a media tool runs — stable names keep them out of the
+            // PWA precache via globIgnores.
+            if (id.includes('node_modules/@mediabunny/aac-encoder')) return 'mediabunny-aac';
+            if (id.includes('node_modules/@mediabunny/mp3-encoder')) return 'mediabunny-mp3';
+            if (id.includes('node_modules/mediabunny/')) return 'mediabunny';
             if (id.includes('node_modules/epubjs')) return 'epubjs';
             if (id.includes('node_modules/jszip')) return 'jszip';
             // Prettier (Code Beautifier) is large and lazily-imported per language.
@@ -153,7 +159,7 @@ export default defineConfig({
       // Vite doesn't discover them mid-request and force a reload that makes
       // in-flight dynamic imports fail ("Failed to fetch dynamically imported
       // module"). pdfjs worker is excluded — it's loaded via ?url.
-      include: ['pdf-lib', 'pdfjs-dist', 'marked', 'dompurify', 'qrcode', 'jsqr', 'comlink', 'fflate', 'gifenc', 'yaml', 'fast-xml-parser', 'smol-toml', 'hash-wasm', 'xlsx', 'turndown', 'highlight.js/lib/core', 'highlight.js/lib/languages/json', 'highlight.js/lib/languages/yaml', 'highlight.js/lib/languages/xml', 'highlight.js/lib/languages/ini', '@imgly/background-removal', '@mediapipe/tasks-vision', 'upscaler', '@tensorflow/tfjs',
+      include: ['mediabunny', '@mediabunny/aac-encoder', '@mediabunny/mp3-encoder', 'pdf-lib', 'pdfjs-dist', 'marked', 'dompurify', 'qrcode', 'jsqr', 'comlink', 'fflate', 'gifenc', 'yaml', 'fast-xml-parser', 'smol-toml', 'hash-wasm', 'xlsx', 'turndown', 'highlight.js/lib/core', 'highlight.js/lib/languages/json', 'highlight.js/lib/languages/yaml', 'highlight.js/lib/languages/xml', 'highlight.js/lib/languages/ini', '@imgly/background-removal', '@mediapipe/tasks-vision', 'upscaler', '@tensorflow/tfjs',
         // Pure-JS deps only reached via dynamic import (Code Beautifier / CSS tools) —
         // pre-bundle so they don't 404 on first use in dev. No effect on prod bundling.
         'three', 'three/examples/jsm/loaders/GLTFLoader.js', 'three/examples/jsm/loaders/DRACOLoader.js', 'three/examples/jsm/loaders/OBJLoader.js', 'three/examples/jsm/loaders/MTLLoader.js', 'three/examples/jsm/loaders/STLLoader.js', 'three/examples/jsm/loaders/FBXLoader.js', 'three/examples/jsm/loaders/PLYLoader.js', 'three/examples/jsm/libs/meshopt_decoder.module.js', 'three/examples/jsm/controls/OrbitControls.js', 'three/examples/jsm/environments/RoomEnvironment.js', 'jsblender', 'fzstd', 'csso', 'terser', 'prettier/standalone', 'prettier/plugins/babel', 'prettier/plugins/estree', 'prettier/plugins/html', 'prettier/plugins/markdown', 'prettier/plugins/postcss', 'prettier/plugins/typescript', 'prettier/plugins/yaml'],
@@ -190,6 +196,7 @@ export default defineConfig({
         // instead of precaching them into the service worker. The DB Diagram tool's
         // chunk (~16 MB, bundles @dbml/core + react-flow) is the same case.
         globIgnores: [
+          '**/mediabunny*.js',
           '**/ts.worker-*.js',
           '**/editor.worker-*.js',
           '**/json.worker-*.js',
