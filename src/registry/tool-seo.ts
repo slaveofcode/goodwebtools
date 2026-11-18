@@ -3264,6 +3264,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: "My editor still shows it sideways — what now?", a: "Some older players and editors ignore rotation information. Tick “Bake the rotation into the picture” and rotate again." },
     ],
   },
+  'video-audio-replace': {
+    title: "Remove or Replace Audio in a Video — Mute or Add Music Online",
+    description: "Free online tool to mute a video or replace its audio with music or a voice-over. The picture isn't re-encoded, so it's fast and full quality. In your browser — nothing uploaded.",
+    intro: "Remove or Replace Audio takes the sound out of a video, or puts different sound in. Muting copies the video exactly with the audio left out — instant, with no quality loss. Replacing keeps the picture as it is and adds your new audio file (music, a voice-over, or the sound from another video), looped to fill the video if it's shorter and cut where the video ends. Everything happens in your browser; nothing is uploaded.",
+    howTo: [
+      "Drop a video onto the box, or click to choose one.",
+      "Choose Remove audio, or Replace audio and drop the new audio file.",
+      "For a replacement, leave Loop on to repeat a short track until the video ends.",
+      "Press the button, then Download the new video.",
+    ],
+    faqs: [
+      { q: "Is my video uploaded?", a: "No. Both files are processed in your browser and never leave your device." },
+      { q: "Does it lower the video quality?", a: "No. The picture is copied as it is — never re-encoded. Only the new audio is encoded." },
+      { q: "What if the new audio is longer or shorter than the video?", a: "Longer audio is cut where the video ends. Shorter audio is looped to fill the video, or plays once and then stays silent if you turn Loop off." },
+      { q: "Can I take the sound from another video?", a: "Yes. Drop a video as the new audio and its soundtrack is used." },
+    ],
+  },
   'video-compress': {
     title: 'Free Video Compressor — Compress Video to a Target Size',
     description: 'Compress a video to a target file size (e.g. under 25 MB for Discord or 16 MB for WhatsApp) right in your browser. Nothing is uploaded — the video stays on your device.',
@@ -6818,6 +6835,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: "Apakah memutar video menurunkan kualitas?", a: "Tidak. Secara bawaan video tidak di-encode ulang sama sekali — hanya rotasi di dalam file yang berubah, jadi instan dan kualitasnya identik. Menanamkan rotasi meng-encode ulang dengan kualitas tinggi." },
       { q: "Kenapa hasilnya MP4?", a: "WebM dan beberapa format lain tidak bisa menyimpan rotasi, jadi video yang diputar disimpan sebagai MP4 (atau MOV untuk file MOV). Gambar dan suaranya disalin apa adanya." },
       { q: "Editor saya masih menampilkannya miring — lalu bagaimana?", a: "Beberapa pemutar dan editor lama mengabaikan informasi rotasi. Centang “Tanamkan rotasi ke gambar” lalu putar lagi." },
+    ],
+  },
+  'video-audio-replace': {
+    title: "Hapus atau Ganti Audio Video — Bisukan atau Tambah Musik Online",
+    description: "Tool online gratis untuk membisukan video atau mengganti audionya dengan musik atau sulih suara. Gambar tidak di-encode ulang, jadi cepat dan kualitas penuh. Di browser — tidak ada yang diunggah.",
+    intro: "Hapus atau Ganti Audio menghilangkan suara dari video, atau memasukkan suara lain. Membisukan menyalin video persis tanpa audionya — instan, tanpa penurunan kualitas. Mengganti audio mempertahankan gambar apa adanya dan menambahkan file audio baru Anda (musik, sulih suara, atau suara dari video lain), diulang hingga memenuhi video bila lebih pendek dan dipotong di akhir video. Semuanya terjadi di browser Anda; tidak ada yang diunggah.",
+    howTo: [
+      "Letakkan video di kotak, atau klik untuk memilihnya.",
+      "Pilih Hapus audio, atau Ganti audio lalu letakkan file audio barunya.",
+      "Untuk penggantian, biarkan Ulangi aktif agar lagu pendek diputar ulang sampai video selesai.",
+      "Tekan tombolnya, lalu Unduh video barunya.",
+    ],
+    faqs: [
+      { q: "Apakah video saya diunggah?", a: "Tidak. Kedua file diproses di browser Anda dan tidak pernah keluar dari perangkat." },
+      { q: "Apakah kualitas videonya turun?", a: "Tidak. Gambarnya disalin apa adanya — tidak pernah di-encode ulang. Hanya audio baru yang di-encode." },
+      { q: "Bagaimana jika audio baru lebih panjang atau lebih pendek dari video?", a: "Audio yang lebih panjang dipotong di akhir video. Audio yang lebih pendek diulang hingga memenuhi video, atau diputar sekali lalu hening jika Ulangi dimatikan." },
+      { q: "Bisakah mengambil suara dari video lain?", a: "Bisa. Letakkan video sebagai audio baru dan soundtrack-nya akan dipakai." },
     ],
   },
   'video-compress': {

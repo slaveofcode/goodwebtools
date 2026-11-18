@@ -2105,6 +2105,17 @@ export const tools: ToolDef[] = [
     status: 'beta'
   },
   {
+    id: 'video-audio-replace',
+    name: "Remove or Replace Audio",
+    category: 'Media',
+    route: '/tools/video-audio-replace',
+    keywords: ["remove audio from video", "mute video", "replace audio", "add music to video", "change video sound", "silent video", "swap audio", "background music", "dub"],
+    icon: AudioLines,
+    summary: "Mute a video or replace its audio with another file",
+    load: () => import('@/islands/media/AudioReplace'),
+    status: 'beta'
+  },
+  {
     id: 'video-compress',
     name: 'Video Compressor',
     category: 'Media',
