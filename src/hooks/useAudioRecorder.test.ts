@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAudioRecorder } from './useAudioRecorder';
 
 const trackStop = vi.fn();
@@ -47,7 +47,10 @@ describe('useAudioRecorder', () => {
     await act(async () => { await result.current.start(); });
     await act(async () => { result.current.stop(); });
     expect(result.current.recording).toBe(false);
-    expect(result.current.blob).toBeInstanceOf(Blob);
+    // The blob arrives after the (async) re-pack; this fake one can't be
+    // re-packed, so the original recording is kept.
+    await waitFor(() => expect(result.current.blob).toBeInstanceOf(Blob));
+    expect(result.current.blob!.size).toBe(1);
     expect(trackStop).toHaveBeenCalled();
   });
 
