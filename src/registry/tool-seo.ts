@@ -3281,6 +3281,23 @@ const en: Record<string, ToolSeoContent> = {
       { q: "Can I take the sound from another video?", a: "Yes. Drop a video as the new audio and its soundtrack is used." },
     ],
   },
+  'hls-to-mp4': {
+    title: "HLS / TS to MP4 — Join .ts Files or an .m3u8 Stream into MP4",
+    description: "Free online tool to join .ts segments or an unencrypted .m3u8 stream into one MP4 — copied, not re-encoded, so it's fast and full quality. In your browser.",
+    intro: "HLS / TS to MP4 turns streaming video into a normal file. Drop all the .ts segments of a video — they're put in the right order automatically (seg2 before seg10) — or paste a link to an .m3u8 playlist, and you get one MP4 that plays in any player and on any phone. The video and audio are copied as they are, so it takes seconds and keeps the original quality. Encrypted and live streams can't be saved, and some sites don't allow their streams to be fetched from another page. Everything happens in your browser.",
+    howTo: [
+      "Drop all the .ts segment files onto the box — or paste an .m3u8 link into the field.",
+      "Check the order shown, then press Join into MP4 (or Download as MP4 for a link).",
+      "Wait while the segments are downloaded and joined.",
+      "Press Download to save the MP4.",
+    ],
+    faqs: [
+      { q: "Is anything uploaded?", a: "No. The segments are joined and re-packed in your browser. A pasted link is fetched by your browser, straight from that site." },
+      { q: "Does it re-encode the video?", a: "No. The video and audio are copied into the MP4 as they are, so there's no quality loss and it's fast." },
+      { q: "Why won't my stream link work?", a: "The stream may be encrypted, still live, or on a site that doesn't let other pages download it. Those can't be saved here." },
+      { q: "Can I use the GoodWebTools Chrome extension instead?", a: "Yes. Its “Save images & media” action saves HLS streams from the page you're on as MP4." },
+    ],
+  },
   'video-compress': {
     title: 'Free Video Compressor — Compress Video to a Target Size',
     description: 'Compress a video to a target file size (e.g. under 25 MB for Discord or 16 MB for WhatsApp) right in your browser. Nothing is uploaded — the video stays on your device.',
@@ -6852,6 +6869,23 @@ const id: Record<string, ToolSeoContent> = {
       { q: "Apakah kualitas videonya turun?", a: "Tidak. Gambarnya disalin apa adanya — tidak pernah di-encode ulang. Hanya audio baru yang di-encode." },
       { q: "Bagaimana jika audio baru lebih panjang atau lebih pendek dari video?", a: "Audio yang lebih panjang dipotong di akhir video. Audio yang lebih pendek diulang hingga memenuhi video, atau diputar sekali lalu hening jika Ulangi dimatikan." },
       { q: "Bisakah mengambil suara dari video lain?", a: "Bisa. Letakkan video sebagai audio baru dan soundtrack-nya akan dipakai." },
+    ],
+  },
+  'hls-to-mp4': {
+    title: "HLS / TS ke MP4 — Gabungkan File .ts atau Stream .m3u8 ke MP4",
+    description: "Tool online gratis untuk menggabungkan segmen .ts atau stream .m3u8 yang tidak terenkripsi menjadi satu MP4 — disalin, tidak di-encode ulang, jadi cepat dan kualitas penuh. Di browser.",
+    intro: "HLS / TS ke MP4 mengubah video streaming menjadi file biasa. Letakkan semua segmen .ts dari sebuah video — urutannya diatur otomatis (seg2 sebelum seg10) — atau tempel link playlist .m3u8, dan Anda mendapat satu MP4 yang bisa diputar di pemutar mana pun dan di ponsel apa pun. Video dan audionya disalin apa adanya, jadi hanya butuh beberapa detik dan kualitasnya tetap. Stream terenkripsi dan live tidak bisa disimpan, dan beberapa situs tidak mengizinkan stream-nya diambil dari halaman lain. Semuanya terjadi di browser Anda.",
+    howTo: [
+      "Letakkan semua file segmen .ts di kotak — atau tempel link .m3u8 ke kolom.",
+      "Periksa urutan yang ditampilkan, lalu tekan Gabungkan ke MP4 (atau Unduh sebagai MP4 untuk link).",
+      "Tunggu selagi segmen diunduh dan digabungkan.",
+      "Tekan Unduh untuk menyimpan MP4.",
+    ],
+    faqs: [
+      { q: "Apakah ada yang diunggah?", a: "Tidak. Segmen digabung dan dikemas ulang di browser Anda. Link yang ditempel diambil oleh browser Anda, langsung dari situs tersebut." },
+      { q: "Apakah videonya di-encode ulang?", a: "Tidak. Video dan audio disalin ke MP4 apa adanya, jadi kualitasnya tidak turun dan prosesnya cepat." },
+      { q: "Kenapa link stream saya tidak berhasil?", a: "Stream-nya mungkin terenkripsi, masih live, atau berada di situs yang tidak mengizinkan halaman lain mengunduhnya. Yang seperti itu tidak bisa disimpan di sini." },
+      { q: "Bisakah memakai ekstensi Chrome GoodWebTools?", a: "Bisa. Aksi “Simpan gambar & media” menyimpan stream HLS dari halaman yang Anda buka sebagai MP4." },
     ],
   },
   'video-compress': {

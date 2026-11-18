@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Apple, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2, AlarmClock, Scale, Flame, GraduationCap, ArrowDownAZ, Box, ListTree, FileSearch } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Apple, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2, AlarmClock, Scale, Flame, GraduationCap, ArrowDownAZ, Box, ListTree, FileSearch, ListVideo } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -2113,6 +2113,17 @@ export const tools: ToolDef[] = [
     icon: AudioLines,
     summary: "Mute a video or replace its audio with another file",
     load: () => import('@/islands/media/AudioReplace'),
+    status: 'beta'
+  },
+  {
+    id: 'hls-to-mp4',
+    name: "HLS / TS to MP4",
+    category: 'Media',
+    route: '/tools/hls-to-mp4',
+    keywords: ["hls to mp4", "m3u8 to mp4", "ts to mp4", "join ts files", "merge ts segments", "mpeg-ts", "stream to mp4", "convert ts", "m3u8 downloader"],
+    icon: ListVideo,
+    summary: "Join .ts segments or an .m3u8 stream into one MP4 without re-encoding",
+    load: () => import('@/islands/media/HlsToMp4'),
     status: 'beta'
   },
   {
