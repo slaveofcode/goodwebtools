@@ -137,3 +137,17 @@ describe('trimMedia', () => {
     expect(execCalls[0]).toEqual(expect.arrayContaining(['-c:v', 'libx264', '-c:a', 'aac']));
   });
 });
+
+import { runFFmpeg } from './encode.lib';
+
+describe('runFFmpeg', () => {
+  it('writes every input under its name, runs the args and returns the output file', async () => {
+    readPayload = new Uint8Array([7, 7]);
+    const blob = await runFFmpeg({ in: new Blob(['v']), aud: new Blob(['a']) }, ['-i', 'in', '-i', 'aud', 'out.mp4'], { name: 'out.mp4', mime: 'video/mp4' });
+    expect(fakeFFmpeg.writeFile.mock.calls.map(c => (c as unknown[])[0])).toEqual(['in', 'aud']);
+    expect(execCalls).toEqual([['-i', 'in', '-i', 'aud', 'out.mp4']]);
+    expect(fakeFFmpeg.readFile).toHaveBeenCalledWith('out.mp4');
+    expect(blob.type).toBe('video/mp4');
+    expect(blob.size).toBe(2);
+  });
+});

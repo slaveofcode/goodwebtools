@@ -1,4 +1,4 @@
-import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Apple, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2, AlarmClock, Scale, Flame, GraduationCap, ArrowDownAZ, Box, ListTree } from 'lucide-react';
+import { Hash, Braces, Binary, Link, KeyRound, Fingerprint, KeySquare, FileDiff, Table, FileText, QrCode, ScanLine, Clock, Calculator, Palette, FilePlus2, Scissors, RotateCw, FileImage, FileX, Stamp, Image, Replace, Minimize2, Maximize2, Eraser, Archive, Lock, Unlock, Crop, Droplet, PenTool, Combine, ShieldCheck, FileCode, FileCode2, FileCog, FileArchive, FolderArchive, Sparkles, ScanFace, Scaling, Aperture, Wand2, PenLine, Shapes, Film, FileVideo, Music, AudioLines, MonitorPlay, Camera, Code2, Database, Keyboard, Contrast, Eye, ScanText, Receipt, Webcam, Mic, Send, Video, Wrench, Compass, Map, Waypoints, ImageDown, ScrollText, Ghost, FileSpreadsheet, BookOpen, FileType2, FileDown, GitCompare, FileOutput, CalendarClock, ClipboardPaste, PlugZap, Regex, Contact, Wallet, Network, Subtitles, Presentation, SquareUser, WholeWord, Percent, Baseline, CaseSensitive, Brush, AppWindow, ListOrdered, FileSignature, Shrink, Cake, Ruler, Timer, Highlighter, Gauge, Speech, Accessibility, Tags, Link2Off, Home, HeartHandshake, Gift, Barcode, Disc3, Sticker, Glasses, HeartPulse, BookCopy, Users, Grip, MailOpen, Scan, Activity, Grid3x3, Apple, Bird, ServerCog, Pilcrow, MonitorSmartphone, Volume2, Monitor, MousePointerClick, ListChecks, Landmark, Hourglass, Globe, Smile, StickyNote, Waves, Music4, ScanBarcode, Brain, ToyBrick, Footprints, Rabbit, ListMusic, Link2, AlarmClock, Scale, Flame, GraduationCap, ArrowDownAZ, Box, ListTree, FileSearch, ListVideo } from 'lucide-react';
 import type { ToolDef } from '@/types/tool';
 
 export const tools: ToolDef[] = [
@@ -2070,6 +2070,61 @@ export const tools: ToolDef[] = [
     summary: 'Convert, compress, trim or resize video (client-side)',
     load: () => import('@/islands/media/VideoConvert'),
     status: 'stable'
+  },
+  {
+    id: 'media-info',
+    name: "Media Info",
+    category: 'Media',
+    route: '/tools/media-info',
+    keywords: ["media info", "mediainfo", "video info", "codec", "bitrate", "frame rate", "fps", "resolution", "metadata", "probe", "ffprobe", "rotation", "sample rate", "tags"],
+    icon: FileSearch,
+    summary: "See a video or audio file's codecs, resolution, frame rate, bitrate and tags",
+    load: () => import('@/islands/media/MediaInfo'),
+    status: 'beta'
+  },
+  {
+    id: 'video-frames',
+    name: "Video Frame Grabber",
+    category: 'Media',
+    route: '/tools/video-frames',
+    keywords: ["video frame", "frame grabber", "screenshot from video", "extract frames", "video to image", "video to png", "video to jpg", "thumbnail", "still", "capture frame"],
+    icon: ImageDown,
+    summary: "Save a still frame from a video as PNG, JPG or WebP \u2014 or one every N seconds",
+    load: () => import('@/islands/media/VideoFrames'),
+    status: 'beta'
+  },
+  {
+    id: 'video-rotate',
+    name: "Rotate Video",
+    category: 'Media',
+    route: '/tools/video-rotate',
+    keywords: ["rotate video", "video rotation", "turn video", "flip video", "mirror video", "sideways video", "upside down video", "portrait", "landscape", "90 degrees", "without re-encoding"],
+    icon: RotateCw,
+    summary: "Rotate a video 90/180/270\u00b0 without re-encoding",
+    load: () => import('@/islands/media/VideoRotate'),
+    status: 'beta'
+  },
+  {
+    id: 'video-audio-replace',
+    name: "Remove or Replace Audio",
+    category: 'Media',
+    route: '/tools/video-audio-replace',
+    keywords: ["remove audio from video", "mute video", "replace audio", "add music to video", "change video sound", "silent video", "swap audio", "background music", "dub"],
+    icon: AudioLines,
+    summary: "Mute a video or replace its audio with another file",
+    load: () => import('@/islands/media/AudioReplace'),
+    status: 'beta'
+  },
+  {
+    id: 'hls-to-mp4',
+    name: "HLS / TS to MP4",
+    category: 'Media',
+    route: '/tools/hls-to-mp4',
+    keywords: ["hls to mp4", "m3u8 to mp4", "ts to mp4", "join ts files", "merge ts segments", "mpeg-ts", "stream to mp4", "convert ts", "m3u8 downloader"],
+    icon: ListVideo,
+    summary: "Join .ts segments or an .m3u8 stream into one MP4 without re-encoding",
+    load: () => import('@/islands/media/HlsToMp4'),
+    status: 'beta'
   },
   {
     id: 'video-compress',

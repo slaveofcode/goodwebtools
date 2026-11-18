@@ -20,7 +20,7 @@ const T = {
     empty: 'No images, video or audio found on this page.', denied: 'Site access is needed to read these files.',
     download: 'Download', convert: 'Convert', stream: 'Stream (HLS)',
     fetching: (got, total) => `Downloading ${got}${total ? ` of ${total}` : ''}…`, segments: (i, n) => `Downloading part ${i} of ${n}…`,
-    saved: (name, size) => `Saved ${name} (${size}).`, savedTs: 'Saved as .ts — the Video Converter can turn it into MP4.', packing: 'Saving as MP4…',
+    saved: (name, size) => `Saved ${name} (${size}).`, savedTs: 'Saved as .ts — HLS / TS to MP4 on GoodWebTools can turn it into MP4.', packing: 'Saving as MP4…', separateAudio: 'This stream keeps its sound in a separate track, so it can’t be saved yet.', byterange: 'This stream is stored in byte ranges, so it can’t be saved yet.',
     failed: 'Could not download this file (the site may block it).', encrypted: 'This stream is encrypted, so it can’t be saved.',
     live: 'This is a live stream, so there is no complete file to save.', tooBig: 'Too large to hand over — download it, then open it in the converter.',
     blocked: 'Saving video and audio isn’t available on YouTube or SoundCloud.',
@@ -37,7 +37,7 @@ const T = {
     empty: 'Tidak ada gambar, video, atau audio di halaman ini.', denied: 'Akses situs diperlukan untuk membaca berkas ini.',
     download: 'Unduh', convert: 'Konversi', stream: 'Stream (HLS)',
     fetching: (got, total) => `Mengunduh ${got}${total ? ` dari ${total}` : ''}…`, segments: (i, n) => `Mengunduh bagian ${i} dari ${n}…`,
-    saved: (name, size) => `${name} tersimpan (${size}).`, savedTs: 'Tersimpan sebagai .ts — Video Converter bisa mengubahnya ke MP4.', packing: 'Menyimpan sebagai MP4…',
+    saved: (name, size) => `${name} tersimpan (${size}).`, savedTs: 'Tersimpan sebagai .ts — HLS / TS ke MP4 di GoodWebTools bisa mengubahnya ke MP4.', packing: 'Menyimpan sebagai MP4…', separateAudio: 'Stream ini menyimpan suaranya di trek terpisah, jadi belum bisa disimpan.', byterange: 'Stream ini disimpan per rentang byte, jadi belum bisa disimpan.',
     failed: 'Berkas ini tidak bisa diunduh (situsnya mungkin memblokir).', encrypted: 'Stream ini terenkripsi, jadi tidak bisa disimpan.',
     live: 'Ini siaran langsung, jadi tidak ada berkas utuh untuk disimpan.', tooBig: 'Terlalu besar untuk dikirim — unduh dulu, lalu buka di konverter.',
     blocked: 'Menyimpan video dan audio tidak tersedia di YouTube atau SoundCloud.',
@@ -190,12 +190,14 @@ async function fetchHls(src, onProgress) {
   let pl = parseM3u8(await text(url), url);
   if (pl?.type === 'master') {
     if (!pl.variants.length) throw new MediaError(t.failed);
+    if (pl.variants[0].separateAudio) throw new MediaError(t.separateAudio); // video alone would be silent
     url = pl.variants[0].url;
     pl = parseM3u8(await text(url), url);
   }
   if (!pl || pl.type !== 'media' || !pl.segments.length) throw new MediaError(t.failed);
   if (pl.encrypted) throw new MediaError(t.encrypted);
   if (pl.live) throw new MediaError(t.live);
+  if (pl.byterange) throw new MediaError(t.byterange);
   const parts = [];
   if (pl.init) parts.push(await (await fetch(pl.init)).blob());
   for (let i = 0; i < pl.segments.length; i++) {
@@ -287,7 +289,8 @@ function mediaRow(item, index) {
   }));
   conv.addEventListener('click', () => run(async ({ blob, name: n }) => {
     if (!canHandOff(blob.size)) { save(blob, n); status.textContent = t.tooBig; return; }
-    const tool = item.kind === 'audio' || blob.type.startsWith('audio/') ? 'audio-convert' : 'video-convert';
+    // A stream that couldn't be re-packed here (.ts) goes to the tool made for it.
+    const tool = n.endsWith('.ts') ? 'hls-to-mp4' : item.kind === 'audio' || blob.type.startsWith('audio/') ? 'audio-convert' : 'video-convert';
     const base64 = bytesToBase64(new Uint8Array(await blob.arrayBuffer()));
     await chrome.runtime.sendMessage({ type: 'open-tool', tool, payload: { kind: 'file', name: n, type: blob.type || 'application/octet-stream', base64 } });
     status.textContent = '';
