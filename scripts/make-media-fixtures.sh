@@ -16,3 +16,10 @@ ffmpeg -y -loglevel error "${SRC[@]}" -c:v mpeg4 -q:v 24 -c:a libmp3lame -b:a 96
 ffmpeg -y -loglevel error -f lavfi -i "sine=frequency=440:sample_rate=48000:duration=3" -c:a pcm_s16le "$OUT/tone.wav"
 # MP4 whose video the browser can't decode (MPEG-4 Part 2) — stands in for HEVC on a phone.
 ffmpeg -y -loglevel error "${SRC[@]}" -c:v mpeg4 -q:v 24 -c:a aac -b:a 64k -shortest -movflags +faststart "$OUT/clip-undecodable.mp4"
+
+# Tagged music (title, artist, album, year, front cover) for the Music Player.
+ffmpeg -y -loglevel error -f lavfi -i "color=c=0x3366cc:s=64x64:d=1" -frames:v 1 "$OUT/cover.png"
+TAGS=(-metadata title="Test Tone" -metadata artist="GoodWebTools" -metadata album="Fixtures" -metadata date=2026)
+ffmpeg -y -loglevel error -i "$OUT/tone.wav" -i "$OUT/cover.png" -map 0:a -map 1 -t 2 -c:a aac -b:a 96k -c:v png -disposition:v attached_pic "${TAGS[@]}" "$OUT/tagged.m4a"
+ffmpeg -y -loglevel error -i "$OUT/tone.wav" -i "$OUT/cover.png" -map 0:a -map 1 -t 2 -c:a flac -c:v png -disposition:v attached_pic "${TAGS[@]}" "$OUT/tagged.flac"
+rm "$OUT/cover.png"

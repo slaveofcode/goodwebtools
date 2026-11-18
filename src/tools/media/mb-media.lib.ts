@@ -301,3 +301,34 @@ export async function mbConvertAudio(file: Blob, opts: MbConvertAudioOpts, onPro
 export async function mbRemux(file: Blob, ext: 'webm' | 'ogg' | 'mp4', onProgress?: EncodeProgress, signal?: AbortSignal): Promise<Blob> {
   return convert(file, ext, {}, onProgress, signal);
 }
+
+export interface MediaTags {
+  title?: string;
+  artist?: string;
+  album?: string;
+  year?: string;
+  picture?: { mime: string; data: Uint8Array };
+}
+
+/** Title, artist, album, year and cover art from any container mediabunny reads (M4A, FLAC, Ogg, WAV, MP3…). Never throws. */
+export async function readMediaTags(file: Blob): Promise<MediaTags> {
+  try {
+    const mb = await loadMediabunny();
+    const input = openInput(mb, file);
+    try {
+      const t = await input.getMetadataTags();
+      const out: MediaTags = {};
+      if (t.title) out.title = t.title;
+      if (t.artist || t.albumArtist) out.artist = t.artist || t.albumArtist;
+      if (t.album) out.album = t.album;
+      if (t.date && !Number.isNaN(t.date.getTime())) out.year = String(t.date.getUTCFullYear());
+      const img = t.images?.find(i => i.kind === 'coverFront') ?? t.images?.[0];
+      if (img?.data?.length) out.picture = { mime: img.mimeType || 'image/jpeg', data: img.data };
+      return out;
+    } finally {
+      input.dispose?.();
+    }
+  } catch {
+    return {};
+  }
+}

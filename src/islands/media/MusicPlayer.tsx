@@ -50,23 +50,34 @@ export default function MusicPlayer({ lang = 'en' }: { lang?: Lang }) {
 
   const current = pl.current;
 
-  // Read ID3 tags (first 512 KB is plenty for the tag + cover art).
+  // Tags + cover art: MP3 via the small ID3 reader (first 512 KB is plenty);
+  // M4A, FLAC, Ogg, WAV (or an MP3 without ID3) via mediabunny. Failure → filename.
   useEffect(() => {
     let alive = true;
     setTags({});
     if (artUrl.current) { URL.revokeObjectURL(artUrl.current); artUrl.current = ''; }
     setArt('');
     if (!current) return;
-    current.file.slice(0, 512 * 1024).arrayBuffer().then((buf) => {
+    const file = current.file;
+    const isMp3 = /\.mp3$/i.test(current.name) || file.type === 'audio/mpeg';
+    const hasAny = (t: Id3Tags) => !!(t.title || t.artist || t.album || t.picture);
+    const read = async (): Promise<Id3Tags> => {
+      if (isMp3) {
+        const id3 = parseId3(new Uint8Array(await file.slice(0, 512 * 1024).arrayBuffer()));
+        if (hasAny(id3)) return id3;
+      }
+      const { readMediaTags } = await import('@/tools/media/mb-media.lib');
+      return readMediaTags(file);
+    };
+    read().then((parsed) => {
       if (!alive) return;
-      const parsed = parseId3(new Uint8Array(buf));
       setTags(parsed);
       if (parsed.picture) {
         const url = URL.createObjectURL(new Blob([parsed.picture.data as BlobPart], { type: parsed.picture.mime }));
         artUrl.current = url;
         setArt(url);
       }
-    }).catch(() => { /* not an MP3 / unreadable — filename fallback */ });
+    }).catch(() => { /* unreadable — filename fallback */ });
     return () => { alive = false; };
   }, [current]);
 

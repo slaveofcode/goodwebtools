@@ -335,7 +335,7 @@ const en: Record<string, ToolSeoContent> = {
   },
   'music-player': {
     title: 'Free Online Music Player — Play Your Own MP3, WAV & FLAC',
-    description: 'Play music files from your device in the browser: playlist, album art from ID3 tags, visualizer, A–B loop and speed control. Nothing is uploaded.',
+    description: 'Play music files from your device in the browser: playlist, album art from the file’s tags (MP3, M4A, FLAC, OGG), visualizer, A–B loop and speed control. Nothing is uploaded.',
     intro: 'A free music player for the files already on your device. Drop in MP3, WAV, M4A, AAC, FLAC or OGG and it builds a playlist, reads the title, artist, album and cover art straight from the file’s tags, and shows a live visualizer. Shuffle, repeat, change speed, loop a section, and pick up where you left off. Your music never leaves your browser — nothing is uploaded.',
     howTo: [
       'Drop your music files in, or click to choose them.',
@@ -346,7 +346,7 @@ const en: Record<string, ToolSeoContent> = {
     faqs: [
       { q: 'Are my music files uploaded?', a: 'No. Files are played directly from your device using an in-memory reference — nothing is uploaded or stored on a server.' },
       { q: 'Which formats can it play?', a: 'Whatever your browser can decode — typically MP3, WAV, M4A/AAC, OGG, Opus and FLAC. Unsupported files are listed and can be converted with the Audio Converter.' },
-      { q: 'Where does the album art come from?', a: 'It is read from the file’s own ID3 tags (title, artist, album, cover) entirely in your browser.' },
+      { q: 'Where does the album art come from?', a: 'It is read from the file’s own tags — ID3 in MP3, and the built-in tags of M4A, FLAC and OGG files (title, artist, album, year, cover) — entirely in your browser.' },
       { q: 'Does it remember where I stopped?', a: 'Yes — playback position is saved per file on this device, so you can resume a long track or podcast later.' },
       { q: 'Does it work offline?', a: 'Yes. As a PWA it keeps working with no connection once loaded.' },
     ],
@@ -3840,7 +3840,7 @@ const id: Record<string, ToolSeoContent> = {
   },
   'music-player': {
     title: 'Pemutar Musik Online Gratis — Putar MP3, WAV & FLAC Anda',
-    description: 'Putar file musik dari perangkat Anda di browser: playlist, sampul album dari tag ID3, visualizer, loop A–B, dan kontrol kecepatan. Tidak ada yang diunggah.',
+    description: 'Putar file musik dari perangkat Anda di browser: playlist, sampul album dari tag file (MP3, M4A, FLAC, OGG), visualizer, loop A–B, dan kontrol kecepatan. Tidak ada yang diunggah.',
     intro: 'Pemutar musik gratis untuk file yang sudah ada di perangkat Anda. Letakkan MP3, WAV, M4A, AAC, FLAC, atau OGG dan playlist langsung terbentuk, judul, artis, album, serta sampul dibaca langsung dari tag file, plus visualizer langsung. Acak, ulangi, ubah kecepatan, loop satu bagian, dan lanjutkan dari posisi terakhir. Musik Anda tidak pernah meninggalkan browser — tidak ada yang diunggah.',
     howTo: [
       'Letakkan file musik Anda, atau klik untuk memilih.',
@@ -3851,7 +3851,7 @@ const id: Record<string, ToolSeoContent> = {
     faqs: [
       { q: 'Apakah file musik saya diunggah?', a: 'Tidak. File diputar langsung dari perangkat Anda memakai referensi di memori — tidak ada yang diunggah atau disimpan di server.' },
       { q: 'Format apa yang bisa diputar?', a: 'Apa pun yang bisa didekode browser Anda — umumnya MP3, WAV, M4A/AAC, OGG, Opus, dan FLAC. File yang tidak didukung akan didaftar dan bisa dikonversi dengan Audio Converter.' },
-      { q: 'Dari mana sampul albumnya?', a: 'Dibaca dari tag ID3 file itu sendiri (judul, artis, album, sampul) sepenuhnya di browser Anda.' },
+      { q: 'Dari mana sampul albumnya?', a: 'Dibaca dari tag file itu sendiri — ID3 pada MP3, serta tag bawaan file M4A, FLAC, dan OGG (judul, artis, album, tahun, sampul) — sepenuhnya di browser Anda.' },
       { q: 'Apakah mengingat posisi berhenti?', a: 'Ya — posisi putar disimpan per file di perangkat ini, jadi Anda bisa melanjutkan lagu panjang atau podcast nanti.' },
       { q: 'Apakah bekerja offline?', a: 'Ya. Sebagai PWA tetap berjalan tanpa koneksi setelah dimuat.' },
     ],
