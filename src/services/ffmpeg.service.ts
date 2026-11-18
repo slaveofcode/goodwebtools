@@ -7,9 +7,14 @@
 let ffmpegPromise: Promise<any> | null = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let ffmpegInstance: any = null;
+/** Set by cancelFFmpeg until the next job begins: a cancel that lands before ffmpeg exists still sticks. */
+let cancelled = false;
+
+const abortError = () => new DOMException('Cancelled', 'AbortError');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadFFmpeg(): Promise<any> {
+  if (cancelled) throw abortError();
   if (!ffmpegPromise) {
     ffmpegPromise = (async () => {
       const { FFmpeg } = await import('@ffmpeg/ffmpeg');
@@ -24,7 +29,10 @@ export async function loadFFmpeg(): Promise<any> {
       return ffmpeg;
     })();
   }
-  return ffmpegPromise;
+  const ffmpeg = await ffmpegPromise;
+  // Cancelled while it was loading: stop it now rather than let the job run on unseen.
+  if (cancelled) { cancelFFmpeg(); throw abortError(); }
+  return ffmpeg;
 }
 
 /**
@@ -33,10 +41,19 @@ export async function loadFFmpeg(): Promise<any> {
  * starts a fresh instance.
  */
 export function cancelFFmpeg(): void {
+  cancelled = true;
   if (!ffmpegInstance) return;
   try { ffmpegInstance.terminate(); } catch { /* already gone */ }
   ffmpegInstance = null;
   ffmpegPromise = null;
+}
+
+/**
+ * Start a new ffmpeg job (clears an earlier cancel). Also called once a cancelled
+ * job has fully stopped, so a cancel never blocks a later job or another tool.
+ */
+export function beginFFmpegJob(): void {
+  cancelled = false;
 }
 
 /** Read a File/Blob into a Uint8Array for ffmpeg.writeFile. */

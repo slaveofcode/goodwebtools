@@ -48,3 +48,9 @@ test('a video without audio says so', async ({ page }) => {
   await extract(page, 'clip-noaudio.mp4', 'Original audio (no quality loss)');
   await expect(page.getByText('This video has no audio track.')).toBeVisible({ timeout: 60_000 });
 });
+
+test('a video without audio says so for MP3 output too', async ({ page }) => {
+  test.setTimeout(120_000);
+  await extract(page, 'clip-noaudio.mp4', 'MP3');
+  await expect(page.getByText('This video has no audio track.')).toBeVisible({ timeout: 60_000 });
+});

@@ -2,7 +2,7 @@
 // ffmpeg.wasm as the safety net: if the fast run fails for any reason other
 // than the user cancelling, the same job runs once more on ffmpeg.
 import { getEncodeCaps } from '@/services/media/mediabunny.service';
-import { cancelFFmpeg } from '@/services/ffmpeg.service';
+import { cancelFFmpeg, beginFFmpegJob } from '@/services/ffmpeg.service';
 import { chooseEngine, type Engine, type MediaJob } from './engine.lib';
 
 /** A problem with the file itself (e.g. no audio track): shown to the user, never retried on ffmpeg. */
@@ -30,8 +30,19 @@ export async function runWithFallback<T>(
   slow: () => Promise<T>,
   signal: AbortSignal,
 ): Promise<{ value: T; engine: Engine; fellBack: boolean }> {
-  const runSlow = () => abortable(slow(), signal, cancelFFmpeg);
-  const { engine } = chooseEngine(job, await getEncodeCaps());
+  const runSlow = () => {
+    // Never start ffmpeg for a job that's already cancelled; give it a fresh cancel scope.
+    if (signal.aborted) return Promise.reject(abortError());
+    beginFFmpegJob();
+    const work = slow();
+    // Once a cancelled job has really stopped, lift the cancel for later jobs.
+    work.catch(() => {}).finally(() => { if (signal.aborted) beginFFmpegJob(); });
+    return abortable(work, signal, cancelFFmpeg);
+  };
+  // If the fast engine can't even load (network, stale page), use ffmpeg.
+  const caps = await getEncodeCaps().catch(() => null);
+  if (signal.aborted) throw abortError();
+  const { engine } = chooseEngine(job, caps);
   if (engine === 'ffmpeg') return { value: await runSlow(), engine: 'ffmpeg', fellBack: false };
   try {
     return { value: await fast(signal), engine: 'mediabunny', fellBack: false };

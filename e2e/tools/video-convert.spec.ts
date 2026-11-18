@@ -53,3 +53,9 @@ test('AVI → MP4 goes through compatibility mode', async ({ page }) => {
   await expect(page.getByTestId('engine-line')).toHaveText('Compatibility mode — slower in this browser', { timeout: 280_000 });
   expect(await downloadName(page)).toBe('clip.mp4');
 });
+
+test('a video the browser cannot decode falls back instead of losing its picture', async ({ page }) => {
+  test.setTimeout(300_000);
+  await convert(page, 'clip-undecodable.mp4', 'MP4 (H.264)');
+  await expect(page.getByTestId('engine-line')).toHaveText('Compatibility mode — slower in this browser', { timeout: 280_000 });
+});

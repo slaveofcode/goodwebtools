@@ -5,7 +5,13 @@ const canEncode = vi.fn(async (codec: string) => !!native[codec]);
 const registerAacEncoder = vi.fn();
 const registerMp3Encoder = vi.fn();
 
-vi.mock('mediabunny', () => ({ canEncode }));
+let failImport = false;
+vi.mock('mediabunny', () => ({
+  get canEncode() {
+    if (failImport) throw new Error('Failed to fetch dynamically imported module');
+    return canEncode;
+  },
+}));
 vi.mock('@mediabunny/aac-encoder', () => ({ registerAacEncoder }));
 vi.mock('@mediabunny/mp3-encoder', () => ({ registerMp3Encoder }));
 
@@ -39,6 +45,14 @@ describe('mediabunny service', () => {
     expect(caps?.audio.has('mp3')).toBe(true);
     expect(caps?.nativeAudio.has('aac')).toBe(false);
     expect(caps?.nativeAudio.has('opus')).toBe(true);
+  });
+
+  it('a failed engine download is not cached: the next call tries again', async () => {
+    failImport = true;
+    await expect(getEncodeCaps()).rejects.toThrow(/Failed to fetch/);
+    failImport = false;
+    Object.assign(native, { avc: true });
+    expect((await getEncodeCaps())?.video.has('avc')).toBe(true);
   });
 
   it('reports no capabilities when the browser has no WebCodecs', async () => {

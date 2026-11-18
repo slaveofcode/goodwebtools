@@ -27,7 +27,9 @@ const registered = new Set<string>();
 
 /** The mediabunny module, imported once. */
 export function loadMediabunny(): Promise<typeof import('mediabunny')> {
-  if (!libPromise) libPromise = import('mediabunny');
+  // A failed download (flaky network, or a page older than the current deploy)
+  // must not be cached, or every later run in this session fails the same way.
+  if (!libPromise) libPromise = import('mediabunny').catch((e) => { libPromise = null; throw e; });
   return libPromise;
 }
 
@@ -53,7 +55,7 @@ export function getEncodeCaps(): Promise<EncodeCaps | null> {
         if (await probe(codec)) { nativeAudio.add(key); audio.add(key); }
       }
       return { video, audio, nativeAudio };
-    })();
+    })().catch((e) => { capsPromise = null; throw e; });
   }
   return capsPromise;
 }

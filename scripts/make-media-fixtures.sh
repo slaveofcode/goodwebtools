@@ -12,3 +12,5 @@ ffmpeg -y -loglevel error -f lavfi -i "testsrc2=size=640x360:rate=30:duration=3"
 ffmpeg -y -loglevel error -display_rotation 90 -i "$OUT/clip-h264-aac.mp4" -c copy "$OUT/clip-portrait.mp4"
 ffmpeg -y -loglevel error "${SRC[@]}" -c:v mpeg4 -q:v 24 -c:a libmp3lame -b:a 96k -shortest "$OUT/clip.avi"
 ffmpeg -y -loglevel error -f lavfi -i "sine=frequency=440:sample_rate=48000:duration=3" -c:a pcm_s16le "$OUT/tone.wav"
+# MP4 whose video the browser can't decode (MPEG-4 Part 2) — stands in for HEVC on a phone.
+ffmpeg -y -loglevel error "${SRC[@]}" -c:v mpeg4 -q:v 24 -c:a aac -b:a 64k -shortest -movflags +faststart "$OUT/clip-undecodable.mp4"

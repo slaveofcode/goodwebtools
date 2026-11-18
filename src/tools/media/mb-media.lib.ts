@@ -5,6 +5,7 @@ import { loadMediabunny, ensureAudioEncoder, getEncodeCaps } from '@/services/me
 import { computeTargetBitrate, planResolution, sizeRetryKbps } from './video-compress.lib';
 import type { EncodeProgress } from './encode.lib';
 import { MediaInputError } from './run-media.lib';
+import { SparseFileWriter } from './sparse-writer.lib';
 
 type Mb = typeof import('mediabunny');
 type OutExt = 'mp4' | 'mov' | 'webm' | 'mkv' | 'mp3' | 'wav' | 'ogg' | 'flac' | 'm4a' | 'opus';
@@ -42,8 +43,10 @@ const MIME: Record<OutExt, string> = {
 
 function outputFormat(mb: Mb, ext: OutExt) {
   switch (ext) {
-    case 'mp4': case 'm4a': return new mb.Mp4OutputFormat({ fastStart: 'in-memory' });
-    case 'mov': return new mb.MovOutputFormat({ fastStart: 'in-memory' });
+    // fastStart: false writes as it goes (the index lands at the end) instead of
+    // holding every encoded sample in memory until the file is finished.
+    case 'mp4': case 'm4a': return new mb.Mp4OutputFormat({ fastStart: false });
+    case 'mov': return new mb.MovOutputFormat({ fastStart: false });
     case 'webm': return new mb.WebMOutputFormat();
     case 'mkv': return new mb.MkvOutputFormat();
     case 'mp3': return new mb.Mp3OutputFormat();
@@ -62,17 +65,37 @@ function openInput(mb: Mb, file: Blob) {
 
 type ConvertOpts = Omit<import('mediabunny').ConversionOptions, 'input' | 'output'>;
 
+const LOSS_REASONS = new Set(['unknown_source_codec', 'undecodable_source_codec', 'no_encodable_target_codec', 'cannot_copy', 'unknown_maximum_packet_count']);
+
+/**
+ * Audio/video tracks mediabunny would silently leave out (it can't decode or
+ * encode them). A conversion that loses one must not be reported as a success —
+ * e.g. an HEVC phone clip in a browser that can't decode HEVC would come out
+ * audio-only. Tracks we dropped on purpose, extra tracks, and subtitle/data
+ * tracks don't count.
+ */
+export function lostTracks(discarded: { reason: string; track: { type: string } }[]): string[] {
+  return discarded
+    .filter(d => (d.track.type === 'video' || d.track.type === 'audio') && LOSS_REASONS.has(d.reason))
+    .map(d => `${d.track.type}: ${d.reason}`);
+}
+
 /** Run one mediabunny conversion into memory; progress 0–1; abort → AbortError. */
 async function convert(file: Blob, ext: OutExt, opts: ConvertOpts, onProgress?: EncodeProgress, signal?: AbortSignal): Promise<Blob> {
   if (signal?.aborted) throw abortError();
   const mb = await loadMediabunny();
   const input = openInput(mb, file);
-  const output = new mb.Output({ format: outputFormat(mb, ext), target: new mb.BufferTarget() });
+  // Stream the output into pieces rather than one big buffer (memory on phones).
+  const out = new SparseFileWriter();
+  const target = new mb.StreamTarget(new WritableStream({ write(chunk) { out.write(chunk.data, chunk.position); } }));
+  const output = new mb.Output({ format: outputFormat(mb, ext), target });
   try {
     const conversion = await mb.Conversion.init({ input, output, showWarnings: false, ...opts });
     if (!conversion.isValid) {
       throw new Error(`mb-invalid: ${conversion.discardedTracks.map(d => d.reason).join(', ') || 'no usable tracks'}`);
     }
+    const lost = lostTracks(conversion.discardedTracks);
+    if (lost.length) throw new Error(`mb-dropped: ${lost.join(', ')}`); // → ffmpeg fallback
     conversion.onProgress = (p: number) => onProgress?.(Math.min(1, Math.max(0, p)));
     const onAbort = () => { void conversion.cancel(); };
     signal?.addEventListener('abort', onAbort, { once: true });
@@ -85,9 +108,8 @@ async function convert(file: Blob, ext: OutExt, opts: ConvertOpts, onProgress?: 
       signal?.removeEventListener('abort', onAbort);
     }
     if (signal?.aborted) throw abortError();
-    const buf = output.target.buffer;
-    if (!buf || buf.byteLength === 0) throw new Error('mb-empty');
-    return new Blob([buf], { type: MIME[ext] });
+    if (out.size === 0) throw new Error('mb-empty');
+    return out.toBlob(MIME[ext]);
   } finally {
     input.dispose?.();
   }
@@ -129,6 +151,8 @@ export interface MbCompressOpts { targetBytes: number; durationSec: number; maxW
 export async function mbCompressVideo(file: Blob, opts: MbCompressOpts, onProgress?: EncodeProgress, signal?: AbortSignal): Promise<{ blob: Blob; attempts: number; width: number; height: number }> {
   const probe = await probeMedia(file);
   if (!probe.video) throw new Error('mb-no-video');
+  // e.g. HEVC/10-bit from a phone in a browser that can't decode it → ffmpeg.
+  if (!probe.decodable) throw new Error('mb-cannot-decode');
   const keepAudio = !!probe.audio && opts.audioKbps > 0;
   const plan = computeTargetBitrate({ targetBytes: opts.targetBytes, durationSec: opts.durationSec, audioKbps: keepAudio ? opts.audioKbps : 0 });
   if (plan.audioKbps > 0) await ensureAudioEncoder('aac');
@@ -220,6 +244,8 @@ export interface MbConvertAudioOpts { format: 'mp3' | 'm4a' | 'opus' | 'flac' | 
 
 /** Convert audio between MP3, M4A (AAC), Opus, FLAC and WAV. */
 export async function mbConvertAudio(file: Blob, opts: MbConvertAudioOpts, onProgress?: EncodeProgress, signal?: AbortSignal): Promise<Blob> {
+  const probe = await probeMedia(file);
+  if (!probe.audio) throw new MediaInputError('no-audio');
   const codec = { mp3: 'mp3', m4a: 'aac', opus: 'opus', flac: 'flac', wav: 'pcm-s16' }[opts.format] as import('mediabunny').AudioCodec;
   if (codec === 'mp3' || codec === 'aac') await ensureAudioEncoder(codec);
   const lossy = codec === 'mp3' || codec === 'aac' || codec === 'opus';

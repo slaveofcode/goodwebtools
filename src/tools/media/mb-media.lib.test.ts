@@ -35,3 +35,19 @@ describe('qualityFromCrf — the converter quality slider as a hardware quality 
     expect(qualityFromCrf(crf)).toBe(q);
   });
 });
+
+import { lostTracks } from './mb-media.lib';
+
+describe('lostTracks — a real audio/video track mediabunny would silently drop', () => {
+  it('flags tracks the browser cannot decode or encode', () => {
+    expect(lostTracks([{ reason: 'undecodable_source_codec', track: { type: 'video' } }])).toEqual(['video: undecodable_source_codec']);
+    expect(lostTracks([{ reason: 'no_encodable_target_codec', track: { type: 'audio' } }])).toEqual(['audio: no_encodable_target_codec']);
+  });
+  it('ignores tracks we dropped on purpose, extra tracks, and non-media tracks', () => {
+    expect(lostTracks([
+      { reason: 'discarded_by_user', track: { type: 'video' } },
+      { reason: 'max_track_count_of_type_reached', track: { type: 'audio' } },
+      { reason: 'unknown_source_codec', track: { type: 'subtitle' } },
+    ])).toEqual([]);
+  });
+});
