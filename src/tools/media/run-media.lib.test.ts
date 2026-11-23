@@ -7,7 +7,7 @@ const { caps, cancelFFmpeg, beginFFmpegJob, getEncodeCaps } = vi.hoisted(() => {
 vi.mock('@/services/media/mediabunny.service', () => ({ getEncodeCaps }));
 vi.mock('@/services/ffmpeg.service', () => ({ cancelFFmpeg, beginFFmpegJob }));
 
-import { runWithFallback, MediaInputError } from './run-media.lib';
+import { runWithFallback, MediaInputError, TooBigForCompatibilityError, slowReasonOf, compatLimitBytes } from './run-media.lib';
 import type { MediaJob } from './engine.lib';
 
 const job: MediaJob = { kind: 'compress-video', inputExt: 'mp4', needVideo: 'avc', needAudio: 'aac' };
@@ -19,13 +19,13 @@ describe('runWithFallback', () => {
   it('uses the fast engine when it succeeds', async () => {
     const slow = vi.fn(async () => 'slow');
     const r = await runWithFallback(job, async () => 'fast', slow, new AbortController().signal);
-    expect(r).toEqual({ value: 'fast', engine: 'mediabunny', fellBack: false });
+    expect(r).toEqual({ value: 'fast', engine: 'mediabunny', fellBack: false, slowReason: null });
     expect(slow).not.toHaveBeenCalled();
   });
 
   it('falls back to ffmpeg once when the fast engine fails', async () => {
     const r = await runWithFallback(job, async () => { throw new Error('boom'); }, async () => 'slow', new AbortController().signal);
-    expect(r).toEqual({ value: 'slow', engine: 'ffmpeg', fellBack: true });
+    expect(r).toEqual({ value: 'slow', engine: 'ffmpeg', fellBack: true, slowReason: 'fast-failed' });
   });
 
   it('does not fall back when the user cancelled', async () => {
@@ -44,7 +44,7 @@ describe('runWithFallback', () => {
     const fast = vi.fn(async () => 'fast');
     const r = await runWithFallback({ ...job, inputExt: 'avi' }, fast, async () => 'slow', new AbortController().signal);
     expect(fast).not.toHaveBeenCalled();
-    expect(r).toEqual({ value: 'slow', engine: 'ffmpeg', fellBack: false });
+    expect(r).toMatchObject({ value: 'slow', engine: 'ffmpeg', fellBack: false });
   });
 
   it('cancelling a running ffmpeg job stops ffmpeg and rejects', async () => {
@@ -61,7 +61,7 @@ describe('runWithFallback', () => {
   it('if the fast engine cannot even load (network, stale page), ffmpeg runs', async () => {
     getEncodeCaps.mockRejectedValueOnce(new Error('Failed to fetch dynamically imported module'));
     const r = await runWithFallback(job, async () => 'fast', async () => 'slow', new AbortController().signal);
-    expect(r).toEqual({ value: 'slow', engine: 'ffmpeg', fellBack: false });
+    expect(r).toMatchObject({ value: 'slow', engine: 'ffmpeg', fellBack: false });
   });
 
   it('a cancel while choosing the engine never starts ffmpeg', async () => {
@@ -78,3 +78,45 @@ describe('runWithFallback', () => {
     expect(beginFFmpegJob).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('compatibility mode and big files', () => {
+  const MB = 1024 * 1024;
+  beforeEach(() => { getEncodeCaps.mockReset(); getEncodeCaps.mockImplementation(async () => caps); });
+
+  it('has a lower limit on phones than on computers', () => {
+    expect(compatLimitBytes(true)).toBe(300 * MB);
+    expect(compatLimitBytes(false)).toBe(1024 * MB);
+  });
+
+  it('does not hand a file too big for compatibility mode to ffmpeg after the fast engine fails — it says why', async () => {
+    const slow = vi.fn(async () => 'slow');
+    const err = await runWithFallback(job, async () => { throw new Error('mb-cannot-decode'); }, slow, new AbortController().signal, { inputBytes: 400 * MB, mobile: true })
+      .then(() => null, (e: unknown) => e);
+    expect(slow).not.toHaveBeenCalled();
+    expect(err).toBeInstanceOf(TooBigForCompatibilityError);
+    expect(err).toMatchObject({ reason: 'cannot-decode', bytes: 400 * MB, limit: 300 * MB });
+  });
+
+  it('refuses up front when the browser can’t use the fast engine and the file is too big', async () => {
+    getEncodeCaps.mockImplementation(async () => null as unknown as typeof caps); // no WebCodecs
+    const slow = vi.fn(async () => 'slow');
+    const err = await runWithFallback(job, async () => 'fast', slow, new AbortController().signal, { inputBytes: 2000 * MB, mobile: false })
+      .then(() => null, (e: unknown) => e);
+    expect(slow).not.toHaveBeenCalled();
+    expect(err).toMatchObject({ reason: 'no-webcodecs' });
+  });
+
+  it('still uses compatibility mode for a file that fits, and says why', async () => {
+    const r = await runWithFallback(job, async () => { throw new Error('mb-stalled'); }, async () => 'slow', new AbortController().signal, { inputBytes: 50 * MB, mobile: true });
+    expect(r).toMatchObject({ value: 'slow', engine: 'ffmpeg', fellBack: true, slowReason: 'stalled' });
+  });
+
+  it('names why the fast engine gave up', () => {
+    expect(slowReasonOf(new Error('mb-cannot-decode'))).toBe('cannot-decode');
+    expect(slowReasonOf(new Error('mb-dropped: video: undecodable_source_codec'))).toBe('cannot-decode');
+    expect(slowReasonOf(new Error('mb-stalled'))).toBe('stalled');
+    expect(slowReasonOf(new Error('mb-no-encoder'))).toBe('video-codec');
+    expect(slowReasonOf(new Error('EncodingError: Decoder failure'))).toBe('fast-failed');
+  });
+});
+

@@ -10,6 +10,8 @@ import { runFFmpeg } from '@/tools/media/encode.lib';
 import { mbRotate, ffmpegRotateArgs, type Turn } from '@/tools/media/video-rotate.lib';
 import type { Engine } from '@/tools/media/engine.lib';
 import type { Lang } from '@/i18n/config';
+import type { SlowReason } from '@/tools/media/run-media.lib';
+import { slowReasonText, mediaErrorText } from '@/tools/media/media-messages.lib';
 
 const TR: Record<Lang, {
   intro: string; drop: string; none: string; left: string; half: string; right: string; flip: string; bake: string; bakeHint: string;
@@ -48,6 +50,7 @@ export default function VideoRotate({ lang = 'en' }: { lang?: Lang }) {
   const [busy, setBusy] = useState(false);
   const [percent, setPercent] = useState(0);
   const [engine, setEngine] = useState<Engine | null>(null);
+  const [slowWhy, setSlowWhy] = useState<SlowReason | null>(null);
   const [result, setResult] = useState<{ blob: Blob; name: string } | null>(null);
   const [error, setError] = useState('');
   const abortRef = useRef<AbortController | null>(null);
@@ -78,10 +81,13 @@ export default function VideoRotate({ lang = 'en' }: { lang?: Lang }) {
           ext: 'mp4',
         }),
         ctrl.signal,
+        { inputBytes: file.size },
       );
-      setEngine(r.engine);
+      setEngine(r.engine); setSlowWhy(r.slowReason);
       setResult({ blob: r.value.blob, name: `${baseName(file.name)}-rotated.${r.value.ext}` });
     } catch (e) {
+      const known = mediaErrorText(e, lang);
+      if (known) { setError(known); return; }
       if (!(e instanceof DOMException && e.name === 'AbortError')) setError(t.failed);
     } finally {
       setBusy(false);
@@ -132,6 +138,7 @@ export default function VideoRotate({ lang = 'en' }: { lang?: Lang }) {
       {result && (
         <div className="space-y-2">
           {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
+          {engine === 'ffmpeg' && slowWhy && <p data-testid="slow-reason" className="text-xs text-muted-foreground">{lang === 'id' ? 'Alasan' : 'Reason'}: {slowReasonText(slowWhy, lang)}</p>}
           <Button onClick={() => downloadService.download(result.blob, result.name)}><Download className="h-4 w-4" />{t.download}</Button>
         </div>
       )}

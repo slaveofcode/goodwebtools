@@ -11,6 +11,8 @@ import { mbConvertAudio } from '@/tools/media/mb-media.lib';
 import { runWithFallback } from '@/tools/media/run-media.lib';
 import type { Engine, MediaJob } from '@/tools/media/engine.lib';
 import type { Lang } from '@/i18n/config';
+import type { SlowReason } from '@/tools/media/run-media.lib';
+import { slowReasonText, mediaErrorText } from '@/tools/media/media-messages.lib';
 
 type Fmt = 'mp3' | 'm4a' | 'wav' | 'opus' | 'flac';
 const FORMATS: { id: Fmt; label: string; mime: string; codec: string[]; ext: string; lossless?: boolean }[] = [
@@ -97,6 +99,7 @@ export default function AudioConvert({ lang = 'en' }: { lang?: Lang }) {
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
   const [engine, setEngine] = useState<Engine | null>(null);
+  const [slowWhy, setSlowWhy] = useState<SlowReason | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => { if (resultUrl) URL.revokeObjectURL(resultUrl); }, [resultUrl]);
@@ -153,14 +156,17 @@ export default function AudioConvert({ lang = 'en' }: { lang?: Lang }) {
         signal => mbConvertAudio(file, { format: fmt, kbps: bitrate, trimStart, trimDuration: trimLen }, onProgress, signal),
         () => runSlow(trimStart, trimLen),
         ctrl.signal,
+        { inputBytes: file.size },
       );
-      setEngine(r.engine);
+      setEngine(r.engine); setSlowWhy(r.slowReason);
       setResult(r.value);
       setResultUrl(prev => {
         if (prev) URL.revokeObjectURL(prev);
         return URL.createObjectURL(r.value);
       });
     } catch (e) {
+      const known = mediaErrorText(e, lang);
+      if (known) { setError(known); return; }
       if (!(e instanceof DOMException && e.name === 'AbortError')) setError(e instanceof Error ? e.message : t.convertError);
     } finally {
       abortRef.current = null;
@@ -234,6 +240,7 @@ export default function AudioConvert({ lang = 'en' }: { lang?: Lang }) {
             <span className="font-mono text-muted-foreground">{formatBytes(result.size)}</span>
           </div>
           {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
+          {engine === 'ffmpeg' && slowWhy && <p data-testid="slow-reason" className="text-xs text-muted-foreground">{lang === 'id' ? 'Alasan' : 'Reason'}: {slowReasonText(slowWhy, lang)}</p>}
           <audio src={resultUrl} controls className="block w-full max-w-md" />
           <Button onClick={download}>
             <Download className="h-4 w-4" />

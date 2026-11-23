@@ -10,6 +10,8 @@ import { runFFmpeg } from '@/tools/media/encode.lib';
 import { sortSegments, fetchHls, toMp4, mp4Name, HlsError, FFMPEG_TS_TO_MP4, type HlsReason } from '@/tools/media/hls-to-mp4.lib';
 import type { Engine } from '@/tools/media/engine.lib';
 import type { Lang } from '@/i18n/config';
+import type { SlowReason } from '@/tools/media/run-media.lib';
+import { slowReasonText, mediaErrorText } from '@/tools/media/media-messages.lib';
 
 const TR: Record<Lang, {
   intro: string; drop: string; order: string; or: string; url: string; urlNote: string; convertFiles: string; convertUrl: string;
@@ -62,6 +64,7 @@ export default function HlsToMp4({ lang = 'en' }: { lang?: Lang }) {
   const [stage, setStage] = useState('');
   const [percent, setPercent] = useState(0);
   const [engine, setEngine] = useState<Engine | null>(null);
+  const [slowWhy, setSlowWhy] = useState<SlowReason | null>(null);
   const [result, setResult] = useState<{ blob: Blob; name: string } | null>(null);
   const [error, setError] = useState('');
   const abortRef = useRef<AbortController | null>(null);
@@ -91,10 +94,13 @@ export default function HlsToMp4({ lang = 'en' }: { lang?: Lang }) {
         signal => toMp4(joined, onProgress, signal),
         () => runFFmpeg({ in: joined }, FFMPEG_TS_TO_MP4, { name: 'out.mp4', mime: 'video/mp4' }, onProgress),
         ctrl.signal,
+        { inputBytes: joined.size },
       );
-      setEngine(r.engine);
+      setEngine(r.engine); setSlowWhy(r.slowReason);
       setResult({ blob: r.value, name });
     } catch (e) {
+      const known = mediaErrorText(e, lang);
+      if (known) { setError(known); return; }
       if (e instanceof DOMException && e.name === 'AbortError') return;
       setError(e instanceof HlsError ? t.errors[e.reason] : t.failed);
     } finally {
@@ -139,6 +145,7 @@ export default function HlsToMp4({ lang = 'en' }: { lang?: Lang }) {
       {result && (
         <div className="space-y-2">
           {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
+          {engine === 'ffmpeg' && slowWhy && <p data-testid="slow-reason" className="text-xs text-muted-foreground">{lang === 'id' ? 'Alasan' : 'Reason'}: {slowReasonText(slowWhy, lang)}</p>}
           <Button onClick={() => downloadService.download(result.blob, result.name)}><Download className="h-4 w-4" />{t.download}</Button>
         </div>
       )}
