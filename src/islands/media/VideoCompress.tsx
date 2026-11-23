@@ -14,6 +14,8 @@ import type { Engine } from '@/tools/media/engine.lib';
 import { computeTargetBitrate, VIDEO_TARGET_PRESETS } from '@/tools/media/video-compress.lib';
 import { targetToBytes, pctSmaller, type SizeUnit } from '@/tools/files/compress-target.lib';
 import type { Lang } from '@/i18n/config';
+import type { SlowReason } from '@/tools/media/run-media.lib';
+import { slowReasonText, mediaErrorText } from '@/tools/media/media-messages.lib';
 
 /** Read a video's duration (seconds) from its metadata, in the browser. */
 function getVideoDuration(file: File): Promise<number> {
@@ -113,6 +115,7 @@ export default function VideoCompress({ lang = 'en' }: { lang?: Lang }) {
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
   const [engine, setEngine] = useState<Engine | null>(null);
+  const [slowWhy, setSlowWhy] = useState<SlowReason | null>(null);
   const [attempts, setAttempts] = useState(1);
   const [meta, setMeta] = useState('');
   const abortRef = useRef<AbortController | null>(null);
@@ -161,9 +164,10 @@ export default function VideoCompress({ lang = 'en' }: { lang?: Lang }) {
         signal => mbCompressVideo(file, opts, onProgress, signal),
         async () => ({ blob: await compressVideo(file, opts, onProgress), attempts: 1 }),
         ctrl.signal,
+        { inputBytes: file.size },
       );
       const blob = run.value.blob;
-      setEngine(run.engine);
+      setEngine(run.engine); setSlowWhy(run.slowReason);
       setAttempts(run.value.attempts);
       probeMedia(blob).then(m => setMeta([m.video?.codec, m.audio?.codec, m.video && `${m.video.width}×${m.video.height}`].filter(Boolean).join(' · '))).catch(() => {});
       setResult(blob);
@@ -172,6 +176,8 @@ export default function VideoCompress({ lang = 'en' }: { lang?: Lang }) {
         return URL.createObjectURL(blob);
       });
     } catch (e) {
+      const known = mediaErrorText(e, lang);
+      if (known) { setError(known); return; }
       if (!(e instanceof DOMException && e.name === 'AbortError')) setError(e instanceof Error && e.message ? e.message : t.error);
     } finally {
       abortRef.current = null;
@@ -274,6 +280,7 @@ export default function VideoCompress({ lang = 'en' }: { lang?: Lang }) {
             )}
           </div>
           {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fast : t.slow}</p>}
+          {engine === 'ffmpeg' && slowWhy && <p data-testid="slow-reason" className="text-xs text-muted-foreground">{lang === 'id' ? 'Alasan' : 'Reason'}: {slowReasonText(slowWhy, lang)}</p>}
           {meta && <p data-testid="result-meta" className="font-mono text-xs text-muted-foreground">{meta}</p>}
           {attempts > 1 && <p className="text-xs text-muted-foreground">{t.retried}</p>}
           {result.size > targetBytes * 1.02 && <p className="text-xs text-amber-600 dark:text-amber-400">{t.overTarget(formatBytes(result.size))}</p>}

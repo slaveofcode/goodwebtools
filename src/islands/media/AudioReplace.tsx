@@ -11,6 +11,8 @@ import { probeMedia, outputExtFor } from '@/tools/media/mb-media.lib';
 import { mbMute, mbReplaceAudio, replaceTarget, ffmpegMuteArgs, ffmpegReplaceArgs } from '@/tools/media/audio-replace.lib';
 import type { Engine } from '@/tools/media/engine.lib';
 import type { Lang } from '@/i18n/config';
+import type { SlowReason } from '@/tools/media/run-media.lib';
+import { slowReasonText, mediaErrorText } from '@/tools/media/media-messages.lib';
 
 type Mode = 'remove' | 'replace';
 
@@ -53,6 +55,7 @@ export default function AudioReplace({ lang = 'en' }: { lang?: Lang }) {
   const [busy, setBusy] = useState(false);
   const [percent, setPercent] = useState(0);
   const [engine, setEngine] = useState<Engine | null>(null);
+  const [slowWhy, setSlowWhy] = useState<SlowReason | null>(null);
   const [result, setResult] = useState<{ blob: Blob; name: string } | null>(null);
   const [error, setError] = useState('');
   const abortRef = useRef<AbortController | null>(null);
@@ -78,6 +81,7 @@ export default function AudioReplace({ lang = 'en' }: { lang?: Lang }) {
           signal => mbMute(video, onProgress, signal),
           async () => ({ blob: await runFFmpeg({ in: video }, ffmpegMuteArgs(ext), { name: `out.${ext}`, mime: video.type || 'video/mp4' }, onProgress), ext }),
           ctrl.signal,
+          { inputBytes: video.size },
         );
       } else {
         const target = replaceTarget(probe?.video?.codec ?? '', inputExt);
@@ -89,11 +93,14 @@ export default function AudioReplace({ lang = 'en' }: { lang?: Lang }) {
             ext: 'mp4',
           }),
           ctrl.signal,
+          { inputBytes: video.size },
         );
       }
-      setEngine(r.engine);
+      setEngine(r.engine); setSlowWhy(r.slowReason);
       setResult({ blob: r.value.blob, name: `${baseName(video.name)}-${mode === 'remove' ? 'muted' : 'new-audio'}.${r.value.ext}` });
     } catch (e) {
+      const known = mediaErrorText(e, lang);
+      if (known) { setError(known); return; }
       if (e instanceof DOMException && e.name === 'AbortError') return;
       const msg = e instanceof MediaInputError ? e.message : '';
       setError(msg === 'no-audio' ? t.noAudio : msg === 'no-audio-file' ? t.noAudioFile : t.failed);
@@ -146,6 +153,7 @@ export default function AudioReplace({ lang = 'en' }: { lang?: Lang }) {
       {result && (
         <div className="space-y-2">
           {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
+          {engine === 'ffmpeg' && slowWhy && <p data-testid="slow-reason" className="text-xs text-muted-foreground">{lang === 'id' ? 'Alasan' : 'Reason'}: {slowReasonText(slowWhy, lang)}</p>}
           <Button onClick={() => downloadService.download(result.blob, result.name)}><Download className="h-4 w-4" />{t.download}</Button>
         </div>
       )}

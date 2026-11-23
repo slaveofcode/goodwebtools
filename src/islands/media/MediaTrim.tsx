@@ -12,6 +12,8 @@ import { runWithFallback } from '@/tools/media/run-media.lib';
 import type { Engine } from '@/tools/media/engine.lib';
 import { parseTime, formatTime, validateTrim } from '@/tools/media/trim.lib';
 import type { Lang } from '@/i18n/config';
+import type { SlowReason } from '@/tools/media/run-media.lib';
+import { slowReasonText, mediaErrorText } from '@/tools/media/media-messages.lib';
 
 const TR: Record<Lang, {
   dropTitle: string; dropSubtitle: string; start: string; end: string; grabTime: string;
@@ -62,6 +64,7 @@ export default function MediaTrim({ lang = 'en' }: { lang?: Lang }) {
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
   const [engine, setEngine] = useState<Engine | null>(null);
+  const [slowWhy, setSlowWhy] = useState<SlowReason | null>(null);
   const [outExt, setOutExt] = useState('');
   const [meta, setMeta] = useState('');
   const abortRef = useRef<AbortController | null>(null);
@@ -120,14 +123,17 @@ export default function MediaTrim({ lang = 'en' }: { lang?: Lang }) {
         signal => mbTrim(file, { startSec: start, endSec: end }, onProgress, signal),
         () => trimMedia(file, { startSec: start, endSec: end, durationSec: duration, isVideo, fast, ext }, onProgress),
         ctrl.signal,
+        { inputBytes: file.size },
       );
       const blob = run.value.blob;
-      setEngine(run.engine);
+      setEngine(run.engine); setSlowWhy(run.slowReason);
       setOutExt(run.value.ext);
       probeMedia(blob).then(m => setMeta(`${m.durationSec.toFixed(2)} s`)).catch(() => {});
       setResult(blob);
       setResultUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(blob); });
     } catch (err) {
+      const known = mediaErrorText(err, lang);
+      if (known) { setError(known); return; }
       if (!(err instanceof DOMException && err.name === 'AbortError')) setError(err instanceof Error && err.message ? err.message : t.error);
     } finally {
       abortRef.current = null;
@@ -212,6 +218,7 @@ export default function MediaTrim({ lang = 'en' }: { lang?: Lang }) {
             <span className="font-mono text-muted-foreground">{formatBytes(result.size)}</span>
           </div>
           {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
+          {engine === 'ffmpeg' && slowWhy && <p data-testid="slow-reason" className="text-xs text-muted-foreground">{lang === 'id' ? 'Alasan' : 'Reason'}: {slowReasonText(slowWhy, lang)}</p>}
           {meta && <p data-testid="result-meta" className="font-mono text-xs text-muted-foreground">{meta}</p>}
           {isVideo
             ? <video src={resultUrl} controls className="block max-h-[60vh] w-auto max-w-full border-2 border-border" />

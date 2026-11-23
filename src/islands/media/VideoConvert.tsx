@@ -12,6 +12,8 @@ import { runWithFallback } from '@/tools/media/run-media.lib';
 import { getEncodeCaps } from '@/services/media/mediabunny.service';
 import type { Engine } from '@/tools/media/engine.lib';
 import type { Lang } from '@/i18n/config';
+import type { SlowReason } from '@/tools/media/run-media.lib';
+import { slowReasonText, mediaErrorText } from '@/tools/media/media-messages.lib';
 
 type Fmt = 'mp4' | 'webm' | 'mov' | 'mkv';
 const FORMATS: { id: Fmt; label: string; mime: string; vcodec: string; acodec: string; fastOnly?: boolean }[] = [
@@ -117,6 +119,7 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState('');
   const [engine, setEngine] = useState<Engine | null>(null);
+  const [slowWhy, setSlowWhy] = useState<SlowReason | null>(null);
   const [meta, setMeta] = useState('');
   const [fastAvailable, setFastAvailable] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -158,9 +161,10 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
           return convertVideo(file, { format: fmt, crf, scale, muted, trimStart, trimDuration }, onProgress);
         },
         ctrl.signal,
+        { inputBytes: file.size },
       );
       const blob = r.value;
-      setEngine(r.engine);
+      setEngine(r.engine); setSlowWhy(r.slowReason);
       probeMedia(blob).then(m => setMeta([m.video?.codec, m.audio?.codec].filter(Boolean).join(' · '))).catch(() => {});
       setResult(blob);
       setResultUrl(prev => {
@@ -168,6 +172,8 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
         return URL.createObjectURL(blob);
       });
     } catch (e) {
+      const known = mediaErrorText(e, lang);
+      if (known) { setError(known); return; }
       if (!(e instanceof DOMException && e.name === 'AbortError')) setError(e instanceof Error ? e.message : t.convertError);
     } finally {
       abortRef.current = null;
@@ -257,6 +263,7 @@ export default function VideoConvert({ lang = 'en' }: { lang?: Lang }) {
             {file && <span className="font-mono text-muted-foreground">{t.ofOriginal(Math.round((result.size / file.size) * 100))}</span>}
           </div>
           {engine && <p data-testid="engine-line" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{engine === 'mediabunny' ? t.fastMode : t.slowMode}</p>}
+          {engine === 'ffmpeg' && slowWhy && <p data-testid="slow-reason" className="text-xs text-muted-foreground">{lang === 'id' ? 'Alasan' : 'Reason'}: {slowReasonText(slowWhy, lang)}</p>}
           {meta && <p data-testid="result-meta" className="font-mono text-xs text-muted-foreground">{meta}</p>}
           <video src={resultUrl} controls className="block max-h-[70vh] w-auto max-w-full border-2 border-border" />
           <Button onClick={download}>
