@@ -24,6 +24,7 @@ All notable changes to GoodWebTools are documented here.
 - Video Call screen sharing, with a note that it's tested in Chrome.
 - Reopening the report form no longer leaves a stale spam-check widget running.
 - Pages no longer download the media engine (over 1 MB) up front; it loads only when a media tool runs.
+- On phones, a large video that fast mode can't handle (for example H.265/HDR) now gets a clear reason and what to try, instead of a long wait that ends in “ran out of memory”. When a media tool uses compatibility mode, it now says why.
 - The Video and Audio Converters no longer stall on some mono recordings when making M4A/MP4 at high quality, and a fast-mode job that stops making progress now switches to compatibility mode on its own.
 
 ## [1.0.0-beta.7] — 2026-10-09

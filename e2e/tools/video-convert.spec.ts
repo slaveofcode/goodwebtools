@@ -51,6 +51,7 @@ test('AVI → MP4 goes through compatibility mode', async ({ page }) => {
   test.setTimeout(300_000);
   await convert(page, 'clip.avi', 'MP4 (H.264)');
   await expect(page.getByTestId('engine-line')).toHaveText('Compatibility mode — slower in this browser', { timeout: 280_000 });
+  await expect(page.getByTestId('slow-reason')).toHaveText('Reason: this file type isn’t supported in fast mode');
   expect(await downloadName(page)).toBe('clip.mp4');
 });
 
